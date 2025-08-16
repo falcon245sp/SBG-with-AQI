@@ -223,56 +223,38 @@ export default function DocumentResults() {
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-slate-200">
-                          {results.map((question, index) => {
-                            // If there are multiple standards, create a row for each one
-                            if (question.result?.consensusStandards && question.result.consensusStandards.length > 0) {
-                              return question.result.consensusStandards.map((standard, stdIndex) => (
-                                <tr key={`${question.id}-${stdIndex}`} className="hover:bg-slate-50">
-                                  <td className="px-6 py-4 whitespace-nowrap">
-                                    {stdIndex === 0 && (
-                                      <div className="text-sm font-medium text-slate-900">
-                                        Question {question.questionNumber}
+                          {results.map((question, index) => (
+                            <tr key={question.id} className="hover:bg-slate-50">
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm font-medium text-slate-900">
+                                  Question {question.questionNumber}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                {question.result?.consensusStandards && question.result.consensusStandards.length > 0 ? (
+                                  <div className="space-y-2">
+                                    {question.result.consensusStandards.map((standard, stdIndex) => (
+                                      <div key={stdIndex} className="text-sm text-slate-900">
+                                        <Badge variant="outline" className="font-mono text-xs mr-2">
+                                          {standard.code}
+                                        </Badge>
+                                        {standard.description}
                                       </div>
-                                    )}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="text-sm text-slate-900">
-                                      <Badge variant="outline" className="font-mono text-xs mr-2">
-                                        {standard.code}
-                                      </Badge>
-                                      {standard.description}
-                                    </div>
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap">
-                                    {stdIndex === 0 && (
-                                      <RigorBadge level={question.result.consensusRigorLevel} />
-                                    )}
-                                  </td>
-                                </tr>
-                              ));
-                            } else {
-                              // No standards found for this question
-                              return (
-                                <tr key={question.id} className="hover:bg-slate-50">
-                                  <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="text-sm font-medium text-slate-900">
-                                      Question {question.questionNumber}
-                                    </div>
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap">
-                                    <span className="text-sm text-slate-400">No standards identified</span>
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap">
-                                    {question.result ? (
-                                      <RigorBadge level={question.result.consensusRigorLevel} />
-                                    ) : (
-                                      <span className="text-sm text-slate-400">Not analyzed</span>
-                                    )}
-                                  </td>
-                                </tr>
-                              );
-                            }
-                          })}
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <span className="text-sm text-slate-400">No standards identified</span>
+                                )}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                {question.result ? (
+                                  <RigorBadge level={question.result.consensusRigorLevel} />
+                                ) : (
+                                  <span className="text-sm text-slate-400">Not analyzed</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
                         </tbody>
                       </table>
                     </div>
