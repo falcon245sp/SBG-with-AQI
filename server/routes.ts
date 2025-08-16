@@ -118,7 +118,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const files = (req.files as Express.Multer.File[]) || [];
       
       console.log(`=== UPLOAD DEBUG ===`);
-      console.log(`Received ${files.length} files:`, files.map(f => f.originalname));
+      console.log(`Raw req.files:`, req.files);
+      console.log(`Parsed files array length: ${files.length}`);
+      console.log(`Files:`, files.map(f => ({ name: f.originalname, size: f.size, fieldname: f.fieldname })));
+      console.log(`Form body:`, req.body);
       
       if (!files || files.length === 0) {
         return res.status(400).json({ message: "No files uploaded" });
