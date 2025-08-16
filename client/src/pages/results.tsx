@@ -189,9 +189,9 @@ export default function ResultsPage() {
         ? question.questionText.substring(0, 60) + '...' 
         : question.questionText;
       
-      // Get rigor emoji text
-      const rigorText = effectiveRigor === 'mild' ? '🌶️ MILD' : 
-                       effectiveRigor === 'medium' ? '🌶️🌶️ MEDIUM' : '🌶️🌶️🌶️ SPICY';
+      // Get rigor text (no emojis for PDF compatibility)
+      const rigorText = effectiveRigor === 'mild' ? 'MILD (*)' : 
+                       effectiveRigor === 'medium' ? 'MEDIUM (**)' : 'SPICY (***)';
       
       const primaryStandard = effectiveStandards[0]?.code || 'No Standard';
       const criteria = `Q${question.questionNumber}: ${questionText}\n\n${primaryStandard}\n\n${rigorText}`;
@@ -200,20 +200,20 @@ export default function ResultsPage() {
       let fullCredit, partialCredit, minimalCredit, noCredit;
       
       if (effectiveRigor === 'mild') {
-        fullCredit = 'Correctly solves equation with accurate solution. ✓';
+        fullCredit = 'Correctly solves equation with accurate solution. [FULL MASTERY]';
         partialCredit = 'N/A';
-        minimalCredit = 'Attempts solution but with errors or no attempt. ✗';
-        noCredit = 'Irrelevant work or entirely incorrect. ✗';
+        minimalCredit = 'Attempts solution but with errors or no attempt. [NOT DEMONSTRATED]';
+        noCredit = 'Irrelevant work or entirely incorrect. [NOT DEMONSTRATED]';
       } else if (effectiveRigor === 'medium') {
-        fullCredit = 'Correctly solves equation with accurate solution. ✓';
-        partialCredit = 'Solves with minor errors in steps. ✓s';
-        minimalCredit = 'Attempts solution but with significant errors. ✗';
-        noCredit = 'No attempt or entirely incorrect. ✗';
+        fullCredit = 'Correctly solves equation with accurate solution. [FULL MASTERY]';
+        partialCredit = 'Solves with minor errors in steps. [PARTIAL MASTERY]';
+        minimalCredit = 'Attempts solution but with significant errors. [NOT DEMONSTRATED]';
+        noCredit = 'No attempt or entirely incorrect. [NOT DEMONSTRATED]';
       } else { // spicy
-        fullCredit = 'Correctly applies advanced concepts and solves with accurate solution. ✓';
-        partialCredit = 'Solves with minor errors in steps. ✓s';
-        minimalCredit = 'Attempts solution but with significant errors. ✗';
-        noCredit = 'No attempt or entirely incorrect. ✗';
+        fullCredit = 'Correctly applies advanced concepts and solves with accurate solution. [FULL MASTERY]';
+        partialCredit = 'Solves with minor errors in steps. [PARTIAL MASTERY]';
+        minimalCredit = 'Attempts solution but with significant errors. [NOT DEMONSTRATED]';
+        noCredit = 'No attempt or entirely incorrect. [NOT DEMONSTRATED]';
       }
       
       tableData.push([criteria, fullCredit, partialCredit, minimalCredit, noCredit]);
