@@ -6,28 +6,45 @@ const WEB_SERVICE_BASE_URL = process.env.NODE_ENV === 'production'
 
 export interface ProcessDocumentRequest {
   customerId: string;
-  file: File;
+  files: File[];
   jurisdictions: string[];
   focusStandards?: string[];
   callbackUrl?: string;
 }
 
 export interface ProcessDocumentResponse {
-  jobId: string;
-  status: 'submitted';
-  estimatedCompletionTime: string;
+  totalFiles: number;
+  successfulSubmissions: number;
+  failedSubmissions: number;
+  jobs: Array<{
+    jobId: string;
+    fileName: string;
+    status: 'submitted';
+    estimatedCompletionTime: string;
+    progress: number;
+    currentStep: string;
+  }>;
+  errors?: Array<{
+    fileName: string;
+    error: string;
+  }>;
   message: string;
 }
 
 class WebServiceClient {
   private apiKey = 'dps_demo_key_12345678901234567890'; // Demo API key
   
-  // Submit document for processing
-  async submitDocument(request: ProcessDocumentRequest): Promise<ProcessDocumentResponse> {
+  // Submit documents for processing (supports multiple files)
+  async submitDocuments(request: ProcessDocumentRequest): Promise<ProcessDocumentResponse> {
     // For now, use the existing upload endpoint and transform the response
     const formData = new FormData();
     formData.append('customerId', request.customerId);
-    formData.append('document', request.file);
+    
+    // Append each file as 'documents'
+    request.files.forEach(file => {
+      formData.append('documents', file);
+    });
+    
     formData.append('jurisdictions', request.jurisdictions.join(','));
     if (request.focusStandards) {
       formData.append('focusStandards', request.focusStandards.join(','));
@@ -42,17 +59,49 @@ class WebServiceClient {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to submit document');
+      throw new Error('Failed to submit documents');
     }
 
     const result = await response.json();
     
-    // Transform existing response to match new API format
+    // For backwards compatibility with single file uploads
+    if (result.jobId) {
+      return {
+        totalFiles: 1,
+        successfulSubmissions: 1,
+        failedSubmissions: 0,
+        jobs: [{
+          jobId: result.jobId,
+          fileName: request.files[0]?.name || 'unknown',
+          status: 'submitted',
+          estimatedCompletionTime: result.estimatedCompletionTime || new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+          progress: 0,
+          currentStep: 'queued'
+        }],
+        message: result.message
+      };
+    }
+    
+    // Return the multi-file response as-is
+    return result;
+  }
+  
+  // Legacy method for single file (for backwards compatibility)
+  async submitDocument(request: { customerId: string; file: File; jurisdictions: string[]; focusStandards?: string[]; callbackUrl?: string; }): Promise<{ jobId: string; status: 'submitted'; estimatedCompletionTime: string; message: string; }> {
+    const response = await this.submitDocuments({
+      ...request,
+      files: [request.file]
+    });
+    
+    if (response.jobs.length === 0) {
+      throw new Error('No jobs created');
+    }
+    
     return {
-      jobId: result.documentId,
-      status: 'submitted',
-      estimatedCompletionTime: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
-      message: result.message
+      jobId: response.jobs[0].jobId,
+      status: response.jobs[0].status,
+      estimatedCompletionTime: response.jobs[0].estimatedCompletionTime,
+      message: response.message
     };
   }
 }

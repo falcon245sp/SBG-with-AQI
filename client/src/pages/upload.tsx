@@ -22,12 +22,22 @@ export default function UploadPage() {
     status: string;
     estimatedCompletion: string;
   }>>([]);
+  const [useMultipleFiles, setUseMultipleFiles] = useState(false);
 
-  const handleFileUpload = async (file: File) => {
+  const handleFileUpload = async (files: File[]) => {
     if (!customerId || !jurisdictions) {
       toast({
         title: "Missing Information",
         description: "Please provide customer ID and jurisdictions before uploading.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (files.length === 0) {
+      toast({
+        title: "No Files Selected",
+        description: "Please select at least one file to upload.",
         variant: "destructive",
       });
       return;
@@ -43,26 +53,42 @@ export default function UploadPage() {
         undefined;
 
       // Submit to web service
-      const result = await webServiceClient.submitDocument({
+      const result = await webServiceClient.submitDocuments({
         customerId,
-        file,
+        files,
         jurisdictions: jurisdictionList,
         focusStandards: focusStandardsList,
         callbackUrl: callbackUrl || undefined
       });
       
-      // Add to submitted jobs list
-      setSubmittedJobs(prev => [{
-        jobId: result.jobId,
-        fileName: file.name,
-        status: result.status,
-        estimatedCompletion: result.estimatedCompletionTime
-      }, ...prev]);
+      // Add all jobs to submitted jobs list
+      const newJobs = result.jobs.map(job => ({
+        jobId: job.jobId,
+        fileName: job.fileName,
+        status: job.status,
+        estimatedCompletion: job.estimatedCompletionTime
+      }));
       
+      setSubmittedJobs(prev => [...newJobs, ...prev]);
+      
+      const fileNames = files.map(f => f.name).join(', ');
+      const successMessage = result.successfulSubmissions === files.length 
+        ? `All ${files.length} documents submitted successfully`
+        : `${result.successfulSubmissions} of ${files.length} documents submitted`;
+        
       toast({
-        title: "Document Submitted",
-        description: `Document "${file.name}" submitted for processing. Job ID: ${result.jobId}`,
+        title: "Documents Submitted",
+        description: `${successMessage}. Files: ${fileNames}`,
       });
+      
+      if (result.errors && result.errors.length > 0) {
+        const errorList = result.errors.map(e => `${e.fileName}: ${e.error}`).join('; ');
+        toast({
+          title: "Some Files Failed",
+          description: `Errors: ${errorList}`,
+          variant: "destructive",
+        });
+      }
 
       // Clear form
       setCustomerId("");
@@ -72,7 +98,7 @@ export default function UploadPage() {
     } catch (error) {
       toast({
         title: "Submission Failed",
-        description: "There was an error submitting your document for processing.",
+        description: "There was an error submitting your documents for processing.",
         variant: "destructive",
       });
     } finally {
@@ -114,9 +140,26 @@ export default function UploadPage() {
                 <CardContent className="space-y-6">
                   {/* File Upload Area */}
                   <div>
-                    <Label className="text-base font-medium">Document File</Label>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-base font-medium">Document Files</Label>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="multipleFiles"
+                          checked={useMultipleFiles}
+                          onChange={(e) => setUseMultipleFiles(e.target.checked)}
+                          className="rounded border-gray-300"
+                        />
+                        <Label htmlFor="multipleFiles" className="text-sm text-slate-600 cursor-pointer">
+                          Upload multiple files
+                        </Label>
+                      </div>
+                    </div>
                     <div className="mt-2">
-                      <FileUploader onFileUpload={handleFileUpload} />
+                      <FileUploader 
+                        onFilesUpload={handleFileUpload}
+                        multiple={useMultipleFiles}
+                      />
                     </div>
                   </div>
 

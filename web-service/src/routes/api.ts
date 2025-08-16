@@ -15,7 +15,8 @@ const jobStore = new JobStore();
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 50 * 1024 * 1024, // 50MB limit
+    fileSize: 50 * 1024 * 1024, // 50MB limit per file
+    files: 10, // Maximum 10 files per request
   },
   fileFilter: (req, file, cb) => {
     const allowedTypes = [
@@ -34,13 +35,13 @@ const upload = multer({
 });
 
 // Submit document for processing
-router.post('/process', validateApiKey, upload.single('document'), async (req, res) => {
+router.post('/process', validateApiKey, upload.array('documents', 10), async (req, res) => {
   try {
-    const file = req.file;
-    if (!file) {
+    const files = req.files as Express.Multer.File[];
+    if (!files || files.length === 0) {
       return res.status(400).json({
-        error: 'missing_file',
-        message: 'No file uploaded'
+        error: 'missing_files',
+        message: 'No files uploaded'
       });
     }
 
@@ -73,48 +74,87 @@ router.post('/process', validateApiKey, upload.single('document'), async (req, r
       });
     }
 
-    // Upload file to S3 in customer-specific area
-    const s3Result = await s3Service.uploadFile(customerId, file, file.originalname);
+    // Process each file and create separate jobs
+    const jobs = [];
+    const errors = [];
 
-    // Create processing job
-    const jobId = uuidv4();
-    const job: ProcessingJob = {
-      jobId,
-      customerId,
-      fileName: file.originalname,
-      fileSize: file.size,
-      mimeType: file.mimetype,
-      s3Key: s3Result.key,
-      s3Bucket: s3Result.bucket,
-      s3Url: s3Result.url,
-      jurisdictions: parsedJurisdictions,
-      focusStandards: parsedFocusStandards,
-      callbackUrl,
-      status: 'submitted',
-      progress: 0,
-      currentStep: 'queued',
-      startedAt: new Date()
+    for (const file of files) {
+      try {
+        // Upload file to S3 in customer-specific area
+        const s3Result = await s3Service.uploadFile(customerId, file, file.originalname);
+
+        // Create processing job
+        const jobId = uuidv4();
+        const job: ProcessingJob = {
+          jobId,
+          customerId,
+          fileName: file.originalname,
+          fileSize: file.size,
+          mimeType: file.mimetype,
+          s3Key: s3Result.key,
+          s3Bucket: s3Result.bucket,
+          s3Url: s3Result.url,
+          jurisdictions: parsedJurisdictions,
+          focusStandards: parsedFocusStandards,
+          callbackUrl,
+          status: 'submitted',
+          progress: 0,
+          currentStep: 'queued',
+          startedAt: new Date()
+        };
+
+        // Save job
+        await jobStore.saveJob(job);
+
+        // Start processing asynchronously
+        documentProcessor.processDocument(jobId, job).catch(error => {
+          console.error(`Processing failed for job ${jobId}:`, error);
+          jobStore.updateJobStatus(jobId, 'failed', 0, 'error', error.message);
+        });
+
+        const estimatedCompletionTime = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes estimate
+        
+        jobs.push({
+          jobId,
+          fileName: file.originalname,
+          status: 'submitted',
+          estimatedCompletionTime: estimatedCompletionTime.toISOString(),
+          progress: 0,
+          currentStep: 'queued'
+        });
+      } catch (fileError) {
+        console.error(`Failed to process file ${file.originalname}:`, fileError);
+        errors.push({
+          fileName: file.originalname,
+          error: fileError instanceof Error ? fileError.message : 'Failed to process file'
+        });
+      }
+    }
+
+    // Return response with all jobs and any errors
+    const response: any = {
+      totalFiles: files.length,
+      successfulSubmissions: jobs.length,
+      failedSubmissions: errors.length,
+      jobs
     };
 
-    // Save job
-    await jobStore.saveJob(job);
+    if (errors.length > 0) {
+      response.errors = errors;
+    }
 
-    // Start processing asynchronously
-    documentProcessor.processDocument(jobId, job).catch(error => {
-      console.error(`Processing failed for job ${jobId}:`, error);
-      jobStore.updateJobStatus(jobId, 'failed', 0, 'error', error.message);
-    });
+    if (jobs.length === 0) {
+      return res.status(500).json({
+        error: 'all_uploads_failed',
+        message: 'All file uploads failed',
+        ...response
+      });
+    }
 
-    // Return immediate response
-    const estimatedCompletionTime = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes estimate
-    
-    res.status(202).json({
-      jobId,
-      status: 'submitted',
-      estimatedCompletionTime: estimatedCompletionTime.toISOString(),
-      message: `Document "${file.originalname}" submitted for processing`,
-      progress: 0,
-      currentStep: 'queued'
+    const statusCode = errors.length > 0 ? 207 : 202; // 207 Multi-Status if some failed
+    res.status(statusCode).json({
+      message: `${jobs.length} of ${files.length} documents submitted for processing`,
+      ...response
     });
 
   } catch (error) {

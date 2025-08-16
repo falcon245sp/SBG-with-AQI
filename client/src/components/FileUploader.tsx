@@ -5,14 +5,17 @@ import { CloudUpload, X, FileText, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface FileUploaderProps {
-  onFileUpload: (file: File) => void;
+  onFileUpload?: (file: File) => void;
+  onFilesUpload?: (files: File[]) => void;
   maxSize?: number;
   acceptedTypes?: string[];
   className?: string;
+  multiple?: boolean;
 }
 
 export function FileUploader({ 
   onFileUpload, 
+  onFilesUpload,
   maxSize = 50 * 1024 * 1024, // 50MB
   acceptedTypes = [
     'application/pdf',
@@ -20,9 +23,10 @@ export function FileUploader({
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'application/vnd.google-apps.document'
   ],
-  className 
+  className,
+  multiple = false
 }: FileUploaderProps) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [error, setError] = useState<string>("");
 
   const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
@@ -41,9 +45,13 @@ export function FileUploader({
     }
 
     if (acceptedFiles.length > 0) {
-      setSelectedFile(acceptedFiles[0]);
+      if (multiple) {
+        setSelectedFiles(acceptedFiles);
+      } else {
+        setSelectedFiles([acceptedFiles[0]]);
+      }
     }
-  }, [maxSize]);
+  }, [maxSize, multiple]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -54,18 +62,26 @@ export function FileUploader({
       'application/vnd.google-apps.document': ['.gdoc']
     },
     maxSize,
-    multiple: false,
+    multiple,
   });
 
   const handleUpload = () => {
-    if (selectedFile) {
-      onFileUpload(selectedFile);
-      setSelectedFile(null);
+    if (selectedFiles.length > 0) {
+      if (multiple && onFilesUpload) {
+        onFilesUpload(selectedFiles);
+      } else if (!multiple && onFileUpload) {
+        onFileUpload(selectedFiles[0]);
+      }
+      setSelectedFiles([]);
     }
   };
 
-  const removeFile = () => {
-    setSelectedFile(null);
+  const removeFile = (index?: number) => {
+    if (index !== undefined) {
+      setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    } else {
+      setSelectedFiles([]);
+    }
     setError("");
   };
 
@@ -84,7 +100,7 @@ export function FileUploader({
 
   return (
     <div className={cn("space-y-4", className)}>
-      {!selectedFile ? (
+      {selectedFiles.length === 0 ? (
         <div
           {...getRootProps()}
           className={cn(
@@ -101,11 +117,11 @@ export function FileUploader({
           {isDragActive ? (
             <p className="text-lg font-medium text-blue-600 mb-2">Drop the file here</p>
           ) : (
-            <p className="text-lg font-medium text-slate-900 mb-2">Drag and drop files here</p>
+            <p className="text-lg font-medium text-slate-900 mb-2">Drag and drop {multiple ? 'files' : 'file'} here</p>
           )}
           
           <p className="text-sm text-slate-500 mb-4">
-            Support for PDF, Word, and Google Docs formats (max {Math.round(maxSize / (1024 * 1024))}MB)
+            Support for PDF, Word, and Google Docs formats (max {Math.round(maxSize / (1024 * 1024))}MB{multiple ? ' per file, up to 10 files' : ''})
           </p>
           
           <Button type="button" className="bg-blue-600 hover:bg-blue-700">
@@ -113,21 +129,34 @@ export function FileUploader({
           </Button>
         </div>
       ) : (
-        <div className="border border-slate-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              {getFileIcon(selectedFile.name)}
-              <div>
-                <p className="text-sm font-medium text-slate-900">{selectedFile.name}</p>
-                <p className="text-xs text-slate-500">{formatFileSize(selectedFile.size)}</p>
+        <div className="border border-slate-200 rounded-lg p-4 space-y-3">
+          {selectedFiles.map((file, index) => (
+            <div key={`${file.name}-${index}`} className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                {getFileIcon(file.name)}
+                <div>
+                  <p className="text-sm font-medium text-slate-900">{file.name}</p>
+                  <p className="text-xs text-slate-500">{formatFileSize(file.size)}</p>
+                </div>
               </div>
+              {multiple && (
+                <Button onClick={() => removeFile(index)} variant="outline" size="sm">
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
             </div>
+          ))}
+          
+          <div className="flex items-center justify-between pt-2 border-t border-slate-200">
+            <p className="text-sm text-slate-600">
+              {selectedFiles.length} file{selectedFiles.length !== 1 ? 's' : ''} selected
+            </p>
             <div className="flex items-center space-x-2">
               <Button onClick={handleUpload} size="sm" className="bg-green-600 hover:bg-green-700">
-                Upload
+                Upload {multiple ? 'All' : ''}
               </Button>
-              <Button onClick={removeFile} variant="outline" size="sm">
-                <X className="w-4 h-4" />
+              <Button onClick={() => removeFile()} variant="outline" size="sm">
+                Clear {multiple ? 'All' : ''}
               </Button>
             </div>
           </div>
