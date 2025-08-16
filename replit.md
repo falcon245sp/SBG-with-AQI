@@ -9,11 +9,18 @@ The Document Processing Service is a full-stack web application that provides AI
 ## Version History
 
 ### Version 0.7.0-dev (August 16, 2025) - Teacher Override Branch
-- **Development Setup**: Created feature branch for teacher override functionality
-  - Simplified UI for testing by removing customer ID and jurisdiction input fields
+- **Teacher Override System**: Complete implementation of crowd-sourced corrections
+  - Database schema with teacherOverrides table for storing teacher feedback
+  - API endpoints for saving/retrieving teacher corrections with upsert logic
+  - Dialog-based UI forms for overriding rigor levels and standards
+  - Confidence scoring (1-5 scale) for teacher assessment reliability
+  - Robust error handling and input validation to prevent form crashes
+  - Safe processing of comma-separated standards input with filtering
+- **Development Setup**: Simplified UI for testing and development
   - Fixed testing values: customer ID "123", jurisdiction "Common Core"
+  - Removed customer ID and jurisdiction input fields for streamlined testing
   - Added visual indicators showing current testing configuration
-  - Streamlined upload workflow for development and testing
+  - Enhanced form validation and defensive programming practices
 
 ### Version 0.6.0 (August 16, 2025)
 - **Multi-File Upload Support**: Added ability to upload and process multiple documents simultaneously

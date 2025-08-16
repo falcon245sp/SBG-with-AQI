@@ -392,20 +392,33 @@ function TeacherOverrideForm({
   
   const saveOverrideMutation = useMutation({
     mutationFn: async (data: any) => {
+      // Safely process standards input
+      const processStandards = (standardsInput: string) => {
+        if (!standardsInput || typeof standardsInput !== 'string') {
+          return [];
+        }
+        
+        return standardsInput
+          .split(',')
+          .map((code: string) => code.trim())
+          .filter((code: string) => code.length > 0)
+          .map((code: string) => ({
+            code,
+            description: `Teacher-specified standard: ${code}`,
+            jurisdiction: 'Common Core',
+            gradeLevel: '9-12',
+            subject: 'Mathematics'
+          }));
+      };
+
       return await apiRequest(`/api/questions/${questionId}/override`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           overriddenRigorLevel: data.rigorLevel,
-          overriddenStandards: data.standards.split(',').map((code: string) => ({
-            code: code.trim(),
-            description: `Teacher-specified standard: ${code.trim()}`,
-            jurisdiction: 'Common Core',
-            gradeLevel: '9-12',
-            subject: 'Mathematics'
-          })),
-          teacherJustification: data.justification,
-          confidenceLevel: data.confidence
+          overriddenStandards: processStandards(data.standards),
+          teacherJustification: data.justification || '',
+          confidenceLevel: data.confidence || 5
         })
       });
     },
@@ -413,9 +426,10 @@ function TeacherOverrideForm({
       onSuccess();
     },
     onError: (error) => {
+      console.error('Teacher override submission error:', error);
       toast({ 
         title: "Error saving override", 
-        description: "Failed to save your changes. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to save your changes. Please try again.",
         variant: "destructive" 
       });
     }
@@ -423,6 +437,26 @@ function TeacherOverrideForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Basic validation before submission
+    if (!formData.rigorLevel) {
+      toast({
+        title: "Validation Error",
+        description: "Please select a rigor level.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (formData.confidence < 1 || formData.confidence > 5) {
+      toast({
+        title: "Validation Error", 
+        description: "Confidence level must be between 1 and 5.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     saveOverrideMutation.mutate(formData);
   };
 
