@@ -11,8 +11,9 @@ import { Upload, FileText, CheckCircle, AlertCircle, Clock } from "lucide-react"
 
 export default function UploadPage() {
   const { toast } = useToast();
-  const [customerId, setCustomerId] = useState("");
-  const [jurisdictions, setJurisdictions] = useState("");
+  // Fixed values for testing - in production these come from API
+  const customerId = "test-customer-123";
+  const jurisdictions = "Common Core";
   const [focusStandards, setFocusStandards] = useState("");
   const [callbackUrl, setCallbackUrl] = useState("");
   const [isUploading, setIsUploading] = useState(false);
@@ -27,15 +28,6 @@ export default function UploadPage() {
     console.log('=== FRONTEND UPLOAD DEBUG ===');
     console.log('Files received in handleFileUpload:', files.length);
     console.log('File names:', files.map(f => f.name));
-    
-    if (!customerId || !jurisdictions) {
-      toast({
-        title: "Missing Information",
-        description: "Please provide customer ID and jurisdictions before uploading.",
-        variant: "destructive",
-      });
-      return;
-    }
     
     if (files.length === 0) {
       toast({
@@ -104,8 +96,6 @@ export default function UploadPage() {
       }
 
       // Clear form
-      setCustomerId("");
-      setJurisdictions("");
       setFocusStandards("");
       setCallbackUrl("");
     } catch (error) {
@@ -165,37 +155,20 @@ export default function UploadPage() {
                     </div>
                   </div>
 
+                  {/* Testing Configuration */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <span className="text-sm font-medium text-blue-800">Testing Configuration</span>
+                    </div>
+                    <div className="text-sm text-blue-700">
+                      <p>Customer: test-customer-123</p>
+                      <p>Jurisdiction: Common Core</p>
+                    </div>
+                  </div>
+                  
                   {/* Form Fields */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div>
-                      <Label htmlFor="customerId">Customer ID *</Label>
-                      <Input
-                        id="customerId"
-                        type="text"
-                        placeholder="Enter customer ID"
-                        value={customerId}
-                        onChange={(e) => setCustomerId(e.target.value)}
-                        className="mt-1"
-                        required
-                      />
-                      <p className="text-xs text-slate-500 mt-1">
-                        Unique identifier for the customer or organization
-                      </p>
-                    </div>
-                    <div>
-                      <Label htmlFor="jurisdictions">Educational Jurisdictions *</Label>
-                      <Input
-                        id="jurisdictions"
-                        placeholder="e.g., Common Core, NGSS, Texas TEKS"
-                        value={jurisdictions}
-                        onChange={(e) => setJurisdictions(e.target.value)}
-                        className="mt-1"
-                        required
-                      />
-                      <p className="text-xs text-slate-500 mt-1">
-                        Comma-separated list (maximum 3 jurisdictions)
-                      </p>
-                    </div>
                     <div>
                       <Label htmlFor="focusStandards">Focus Standards (Optional)</Label>
                       <Input

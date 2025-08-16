@@ -42,8 +42,9 @@ interface DocumentResult {
 
 export default function Dashboard() {
   const { toast } = useToast();
-  const [customerId, setCustomerId] = useState("");
-  const [jurisdictions, setJurisdictions] = useState("");
+  // Fixed values for testing - in production these come from API
+  const customerId = "test-customer-123";
+  const jurisdictions = "Common Core";
   const [useFocusStandards, setUseFocusStandards] = useState(false);
   const [focusStandards, setFocusStandards] = useState("");
 
@@ -66,15 +67,6 @@ export default function Dashboard() {
   // No need to fetch templates anymore - using direct input
 
   const handleFileUpload = async (files: File[]) => {
-    if (!customerId || !jurisdictions) {
-      toast({
-        title: "Missing Information",
-        description: "Please provide customer ID and jurisdictions before uploading.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (files.length === 0) {
       toast({
         title: "No Files Selected",
@@ -278,28 +270,15 @@ export default function Dashboard() {
                     multiple={true}
                   />
 
-                  {/* Customer ID and Jurisdiction Input */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-                    <div>
-                      <Label htmlFor="customerId">Customer ID</Label>
-                      <Input
-                        id="customerId"
-                        type="number"
-                        placeholder="Enter customer ID"
-                        value={customerId}
-                        onChange={(e) => setCustomerId(e.target.value)}
-                        className="mt-1"
-                      />
+                  {/* Testing Configuration - Fixed Values */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <span className="text-sm font-medium text-blue-800">Testing Configuration</span>
                     </div>
-                    <div>
-                      <Label htmlFor="jurisdictions">Educational Jurisdictions (max 3)</Label>
-                      <Input
-                        id="jurisdictions"
-                        placeholder="e.g., California, Common Core, Texas"
-                        value={jurisdictions}
-                        onChange={(e) => setJurisdictions(e.target.value)}
-                        className="mt-1"
-                      />
+                    <div className="text-sm text-blue-700">
+                      <p>Customer: test-customer-123</p>
+                      <p>Jurisdiction: Common Core</p>
                     </div>
                   </div>
 
