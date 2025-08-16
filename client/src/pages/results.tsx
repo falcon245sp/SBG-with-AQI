@@ -161,88 +161,52 @@ export default function ResultsPage() {
   };
 
   const generateMarkdownRubricContent = (doc: any, results: any[]) => {
-    const rubricTitle = `Standards-Based Rubric: ${doc.fileName}`;
-    const generatedDate = new Date().toLocaleDateString();
+    const rubricTitle = doc.fileName.replace(/\.[^/.]+$/, '');
     
-    const rigorDistribution = { mild: 0, medium: 0, spicy: 0 };
-    const standardsSet = new Set<string>();
-    
-    results.forEach(question => {
-      const effectiveRigor = question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild';
-      const effectiveStandards = question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [];
-      
-      rigorDistribution[effectiveRigor as keyof typeof rigorDistribution]++;
-      effectiveStandards.forEach((s: any) => standardsSet.add(s.code));
-    });
-    
-    const teacherOverrideCount = results.filter(q => q.teacherOverride).length;
-    
-    let content = `# ${rubricTitle}\n\n`;
-    content += `**Generated:** ${generatedDate}  \n`;
-    content += `**Source:** Standards Sherpa Analysis with Teacher Overrides  \n`;
-    if (teacherOverrideCount > 0) {
-      content += `**Teacher Overrides Applied:** ${teacherOverrideCount} of ${results.length} questions  \n`;
-    }
-    content += `\n---\n\n`;
-    
-    content += `## Assessment Overview\n\n`;
-    content += `- **Total Questions:** ${results.length}\n`;
-    content += `- **Rigor Distribution:** Mild (${rigorDistribution.mild}), Medium (${rigorDistribution.medium}), Spicy (${rigorDistribution.spicy})\n`;
-    content += `- **Standards Covered:** ${standardsSet.size} unique Common Core standards\n\n`;
-    
-    content += `## Rubric Criteria\n\n`;
-    content += `### Cognitive Rigor Levels (Based on Depth of Knowledge)\n\n`;
-    content += `| Level | Description | DOK Range |\n`;
-    content += `|-------|-------------|----------|\n`;
-    content += `| **MILD** | Basic recall, recognition, or simple application | DOK 1-2 |\n`;
-    content += `| **MEDIUM** | Multi-step problems, analysis, or interpretive tasks | DOK 2-3 |\n`;
-    content += `| **SPICY** | Synthesis, reasoning, or real-world application | DOK 3-4 |\n\n`;
-    
-    content += `### Performance Scale\n\n`;
-    content += `| Score | Performance Level | Description |\n`;
-    content += `|-------|-------------------|-------------|\n`;
-    content += `| **4** | **EXCEEDS STANDARD** | Student demonstrates mastery beyond grade level expectations |\n`;
-    content += `| **3** | **MEETS STANDARD** | Student demonstrates proficient understanding of the standard |\n`;
-    content += `| **2** | **APPROACHING STANDARD** | Student demonstrates developing understanding |\n`;
-    content += `| **1** | **BELOW STANDARD** | Student demonstrates beginning level understanding |\n\n`;
-    
-    content += `---\n\n`;
-    content += `## Question Analysis\n\n`;
+    let content = `${rubricTitle} \n\nRubric\n\n`;
+    content += `Criteria\n\n`;
+    content += `Points\n\n`;
+    content += `Full Credit\n\n`;
+    content += `Partial Credit\n\n`;
+    content += `Minimal Credit\n\n`;
+    content += `No Credit\n\n`;
     
     results.forEach((question, index) => {
       const effectiveStandards = question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [];
       const effectiveRigor = question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild';
-      const source = question.teacherOverride ? '👨‍🏫 Teacher Override' : '🎯 Standards Sherpa';
-      const justification = question.teacherOverride?.teacherJustification || question.aiResponses?.[0]?.rigorJustification || '';
+      const questionText = question.questionText.length > 50 
+        ? question.questionText.substring(0, 50) + '...' 
+        : question.questionText;
       
-      content += `### Question ${question.questionNumber} ${source}\n\n`;
+      // Get rigor emoji
+      const rigorEmoji = effectiveRigor === 'mild' ? '🌶️' : 
+                        effectiveRigor === 'medium' ? '🌶️🌶️' : '🌶️🌶️🌶️';
       
-      if (effectiveStandards.length > 0) {
-        content += `**Standards Alignment:**\n\n`;
-        content += `| Standard | Description |\n`;
-        content += `|----------|-------------|\n`;
-        effectiveStandards.forEach((standard: any) => {
-          content += `| **${standard.code}** | ${standard.description} |\n`;
-        });
-        content += `\n`;
-      }
+      // Get primary standard
+      const primaryStandard = effectiveStandards[0]?.code || 'No Standard';
       
-      content += `**Cognitive Rigor:** ${effectiveRigor.toUpperCase()}  \n`;
+      content += `Q${question.questionNumber}: ${questionText}\n\n\n\n`;
+      content += `${primaryStandard}\n\n`;
+      content += `${rigorEmoji}\n\n`;
       
-      if (justification) {
-        content += `**Analysis:** ${justification}  \n`;
-      }
-      
-      content += `\n**Question Text:**  \n`;
-      content += `> ${question.questionText}\n\n`;
-      
-      if (index < results.length - 1) {
-        content += `---\n\n`;
+      // Different rubric criteria based on rigor level
+      if (effectiveRigor === 'mild') {
+        content += `Correctly solves equation with accurate solution. ✔️\n\n`;
+        content += `N/A\n\n`;
+        content += `Attempts solution but with errors or no attempt. 𝔁\n\n`;
+        content += `Irrelevant work or entirely incorrect. 𝔁\n\n`;
+      } else if (effectiveRigor === 'medium') {
+        content += `Correctly solves equation with accurate solution. ✔️\n\n`;
+        content += `Solves with minor errors in steps. ✔️s\n\n`;
+        content += `Attempts solution but with significant errors. 𝔁\n\n`;
+        content += `No attempt or entirely incorrect. 𝔁\n\n`;
+      } else { // spicy
+        content += `Correctly applies advanced concepts and solves with accurate solution. ✔️\n\n`;
+        content += `Solves with minor errors in steps. ✔️s\n\n`;
+        content += `Attempts solution but with significant errors. 𝔁\n\n`;
+        content += `No attempt or entirely incorrect. 𝔁\n\n`;
       }
     });
-    
-    content += `\n---\n\n`;
-    content += `*This rubric was generated by Standards Sherpa and incorporates teacher professional judgment where overrides were applied. Standards alignment is based on Common Core State Standards.*`;
     
     return content;
   };
