@@ -57,13 +57,17 @@ function updateUserSession(
 async function upsertUser(
   claims: any,
 ) {
-  await storage.upsertUser({
+  const userData = {
     id: claims.sub,
     email: claims["email"],
     firstName: claims["first_name"],
     lastName: claims["last_name"],
     profileImageUrl: claims["profile_image_url"],
-  });
+  };
+  console.log('Auth Debug - Creating/updating user:', userData);
+  const result = await storage.upsertUser(userData);
+  console.log('Auth Debug - User upsert result:', result);
+  return result;
 }
 
 export async function setupAuth(app: Express) {
