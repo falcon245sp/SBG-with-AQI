@@ -342,16 +342,27 @@ Give special attention to identifying alignment with these specific standards.
       });
       
       // Check if Grok returned individual questions in the new JSON format
-      if (grokResult.jsonResponse && grokResult.jsonResponse.questions && Array.isArray(grokResult.jsonResponse.questions)) {
-        console.log(`Creating ${grokResult.jsonResponse.questions.length} individual question entries from JSON response`);
+      if (grokResult.jsonResponse && grokResult.jsonResponse.problems && Array.isArray(grokResult.jsonResponse.problems)) {
+        console.log(`Creating ${grokResult.jsonResponse.problems.length} individual question entries from JSON response`);
         return {
-          questions: grokResult.jsonResponse.questions.map((question: any) => ({
-            text: question.questionText || `Question ${question.questionNumber}`,
-            context: `Question ${question.questionNumber}: ${question.questionText || 'Educational content analysis'}`,
+          questions: grokResult.jsonResponse.problems.map((problem: any) => ({
+            text: `Problem ${problem.problemNumber}: ${problem.standardDescription}`,
+            context: `Question ${problem.problemNumber}: Analyzing ${problem.standardCode}`,
             aiResults: {
               grok: {
-                standards: question.standards || [],
-                rigor: question.rigor || { level: 'mild', dokLevel: 'DOK 1', justification: 'No analysis available', confidence: 0.1 },
+                standards: [{
+                  code: problem.standardCode,
+                  description: problem.standardDescription,
+                  jurisdiction: "Common Core",
+                  gradeLevel: "9-12",
+                  subject: "Mathematics"
+                }],
+                rigor: {
+                  level: problem.rigorLevel as 'mild' | 'medium' | 'spicy',
+                  dokLevel: problem.rigorLevel === 'mild' ? 'DOK 1' : problem.rigorLevel === 'medium' ? 'DOK 2' : 'DOK 3',
+                  justification: `${problem.rigorLevel} rigor level based on problem complexity`,
+                  confidence: 0.85
+                },
                 rawResponse: grokResult.rawResponse,
                 processingTime: grokResult.processingTime,
                 aiEngine: 'grok'
@@ -638,6 +649,7 @@ Give special attention to identifying alignment with these specific standards.
           rigor: firstQuestion.rigor,
           rawResponse: response,
           processingTime,
+          jsonResponse: parsedResponse, // Store the full parsed JSON response
           allQuestions: questions // Store all parsed questions
         };
       } catch (parseError) {
@@ -776,6 +788,7 @@ Give special attention to identifying alignment with these specific standards.
           rigor: firstQuestion.rigor,
           rawResponse: grokResponse,
           processingTime,
+          jsonResponse: parsedResponse, // Store the full parsed JSON response
           allQuestions: questions // Store all parsed questions
         };
       } catch (parseError) {
