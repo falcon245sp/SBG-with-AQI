@@ -126,35 +126,18 @@ export default function DocumentResults() {
 
   const { document, results } = documentResult;
 
-  // Sort results by question number (alphanumeric sorting)
+  // Sort results by numeric value only (extract number from 3A, 11B, etc.)
   const sortedResults = results.sort((a, b) => {
-    const parseQuestionNumber = (num: string | number) => {
+    const extractNumber = (num: string | number) => {
       const str = String(num);
-      const match = str.match(/^(\d+)([A-Za-z]*)$/);
-      if (match) {
-        return {
-          numeric: parseInt(match[1], 10),
-          alpha: match[2] || ''
-        };
-      }
-      // Fallback for pure numbers
-      const numericValue = parseInt(str, 10);
-      return {
-        numeric: isNaN(numericValue) ? 0 : numericValue,
-        alpha: ''
-      };
+      const match = str.match(/^(\d+)/);
+      return match ? parseInt(match[1], 10) : 0;
     };
 
-    const aParsed = parseQuestionNumber(a.questionNumber);
-    const bParsed = parseQuestionNumber(b.questionNumber);
-
-    // First sort by numeric part
-    if (aParsed.numeric !== bParsed.numeric) {
-      return aParsed.numeric - bParsed.numeric;
-    }
-
-    // Then sort by alphabetic part
-    return aParsed.alpha.localeCompare(bParsed.alpha);
+    const numA = extractNumber(a.questionNumber);
+    const numB = extractNumber(b.questionNumber);
+    
+    return numA - numB;
   });
 
   return (
