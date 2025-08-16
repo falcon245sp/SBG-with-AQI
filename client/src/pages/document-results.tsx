@@ -269,8 +269,8 @@ export default function DocumentResults() {
                                       <TooltipTrigger>
                                         <RigorBadge level={question.result.consensusRigorLevel} />
                                       </TooltipTrigger>
-                                      <TooltipContent className="max-w-lg p-3">
-                                        <p className="text-xs leading-relaxed">{question.aiResponses[0].rigorJustification}</p>
+                                      <TooltipContent className="max-w-sm min-w-48 max-h-64 overflow-y-auto p-4 bg-slate-800 text-white border-slate-700">
+                                        <p className="text-sm leading-6 whitespace-pre-wrap break-words">{question.aiResponses[0].rigorJustification}</p>
                                       </TooltipContent>
                                     </Tooltip>
                                   ) : (
