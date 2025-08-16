@@ -401,7 +401,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async revertToAI(questionId: string, userId: string): Promise<void> {
-    // Deactivate current active override and mark as reverted to AI
+    // Deactivate current active override and mark as reverted to Ms. Sage
     await db
       .update(teacherOverrides)
       .set({ 

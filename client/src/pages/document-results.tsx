@@ -128,15 +128,15 @@ export default function DocumentResults() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/documents/${documentId}/results`] });
       toast({
-        title: "Reverted to AI Analysis",
-        description: "Successfully restored the original AI analysis results.",
+        title: "Reverted to Ms. Sage Analysis",
+        description: "Successfully restored the original Ms. Sage analysis results.",
         variant: "default",
       });
     },
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: "Failed to revert to AI analysis. Please try again.",
+        description: "Failed to revert to Ms. Sage analysis. Please try again.",
         variant: "destructive",
       });
     },
@@ -369,7 +369,7 @@ export default function DocumentResults() {
                                     ) : (
                                       <RigorBadge level={question.result.consensusRigorLevel} />
                                     )}
-                                    <Badge variant="outline" className="text-xs text-blue-600 border-blue-300">AI</Badge>
+                                    <Badge variant="outline" className="text-xs text-blue-600 border-blue-300">MS. SAGE</Badge>
                                   </div>
                                 ) : (
                                   <span className="text-sm text-slate-400">Not analyzed</span>
@@ -412,7 +412,7 @@ export default function DocumentResults() {
                                       </DialogTrigger>
                                       <DialogContent className="max-w-2xl">
                                         <DialogHeader>
-                                          <DialogTitle>Override AI Analysis - Question {question.questionNumber}</DialogTitle>
+                                          <DialogTitle>Override Ms. Sage Analysis - Question {question.questionNumber}</DialogTitle>
                                         </DialogHeader>
                                         <TeacherOverrideForm 
                                           questionId={question.id}
@@ -438,7 +438,7 @@ export default function DocumentResults() {
                                         className="text-orange-600 border-orange-300 hover:bg-orange-50"
                                       >
                                         <RotateCcw className="w-4 h-4 mr-1" />
-                                        {revertToAiMutation.isPending ? 'Reverting...' : 'Revert to AI'}
+                                        {revertToAiMutation.isPending ? 'Reverting...' : 'Revert to Ms. Sage'}
                                       </Button>
                                     )}
                                   </div>

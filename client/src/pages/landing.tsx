@@ -27,7 +27,7 @@ export default function Landing() {
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl font-bold text-slate-900 sm:text-5xl md:text-6xl">
-            AI-Powered Educational
+            Ms. Sage Educational
             <span className="text-blue-600"> Standards Analysis</span>
           </h1>
           <p className="mt-6 max-w-2xl mx-auto text-xl text-slate-600">
@@ -59,7 +59,7 @@ export default function Landing() {
             <Card>
               <CardHeader>
                 <Brain className="h-8 w-8 text-blue-600 mb-2" />
-                <CardTitle>Multi-AI Analysis</CardTitle>
+                <CardTitle>Ms. Sage Multi-AI Analysis</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-slate-600">
@@ -156,9 +156,9 @@ export default function Landing() {
               <div className="flex items-center justify-center w-16 h-16 mx-auto bg-green-100 rounded-full">
                 <span className="text-2xl font-bold text-green-600">2</span>
               </div>
-              <h3 className="mt-4 text-lg font-semibold text-slate-900">AI Analysis</h3>
+              <h3 className="mt-4 text-lg font-semibold text-slate-900">Ms. Sage Analysis</h3>
               <p className="mt-2 text-slate-600">
-                Three AI engines analyze your content for standards and rigor levels
+                Ms. Sage uses three AI engines to analyze your content for standards and rigor levels
               </p>
             </div>
 
@@ -194,7 +194,7 @@ export default function Landing() {
               <span className="text-xl font-semibold">Document Processing Service</span>
             </div>
             <p className="text-slate-400">
-              AI-powered educational standards analysis and rigor assessment
+              Ms. Sage-powered educational standards analysis and rigor assessment
             </p>
           </div>
         </div>

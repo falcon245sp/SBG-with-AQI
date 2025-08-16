@@ -585,17 +585,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Revert to AI analysis (deactivate current override)
+  // Revert to Ms. Sage analysis (deactivate current override)
   app.post('/api/questions/:questionId/revert-to-ai', async (req: any, res) => {
     try {
       const userId = 'test-user-123'; // Mock user ID
       const questionId = req.params.questionId;
       
       await storage.revertToAI(questionId, userId);
-      res.json({ message: "Successfully reverted to AI analysis" });
+      res.json({ message: "Successfully reverted to Ms. Sage analysis" });
     } catch (error) {
-      console.error('Error reverting to AI:', error);
-      res.status(500).json({ message: 'Failed to revert to AI analysis' });
+      console.error('Error reverting to Ms. Sage:', error);
+      res.status(500).json({ message: 'Failed to revert to Ms. Sage analysis' });
     }
   });
 
