@@ -203,7 +203,7 @@ export default function ResultsPage() {
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => window.open(`/api/documents/${doc.id}/results`, '_blank')}
+                                      onClick={() => window.location.href = `/results/${doc.id}`}
                                     >
                                       <Eye className="w-4 h-4 mr-1" />
                                       View
