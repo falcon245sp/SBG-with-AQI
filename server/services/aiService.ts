@@ -593,7 +593,21 @@ Give special attention to identifying alignment with these specific standards.
         processingTime
       };
     } catch (error) {
-      console.error('Grok analysis error:', error);
+      console.error('=== GROK JSON PARSE ERROR DEBUG ===');
+      console.error('Error:', error instanceof Error ? error.message : 'Unknown error');
+      console.error('Raw response that failed to parse:');
+      try {
+        const failedContent = response?.choices?.[0]?.message?.content || 'No content';
+        console.error('Content length:', failedContent.length);
+        console.error('Content around position 4062:');
+        console.error('Position 4000-4100:', failedContent.substring(4000, 4100));
+        console.error('Full content (first 1000 chars):', failedContent.substring(0, 1000));
+        console.error('Full content (last 200 chars):', failedContent.slice(-200));
+      } catch (logError) {
+        console.error('Could not log response content:', logError);
+      }
+      console.error('=== END GROK ERROR DEBUG ===');
+      
       return {
         standards: [],
         rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'Error in analysis', confidence: 0.0 },
