@@ -557,28 +557,101 @@ Give special attention to identifying alignment with these specific standards.
           }
         ],
         max_tokens: 10000,
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "problem_analysis",
+            schema: {
+              type: "object",
+              properties: {
+                problems: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      problemNumber: { type: "string" },
+                      standardCode: { type: "string" },
+                      standardDescription: { type: "string" },
+                      rigorLevel: { 
+                        type: "string",
+                        enum: ["mild", "medium", "spicy"]
+                      }
+                    },
+                    required: ["problemNumber", "standardCode", "standardDescription", "rigorLevel"],
+                    additionalProperties: false
+                  }
+                }
+              },
+              required: ["problems"],
+              additionalProperties: false
+            },
+            strict: true
+          }
+        }
       });
 
       const processingTime = Date.now() - startTime;
       const rawContent = response.choices[0].message.content || '';
       
-      // Parse the natural language response for individual problems
-      const questions = this.parseGrokQuestionAnalysis(rawContent);
-      console.log(`analyzeGrokWithPrompt: Found ${questions.length} questions`);
+      console.log('=== GROK WITH PROMPT STRUCTURED JSON RESPONSE ===');
+      console.log(rawContent);
+      console.log('=== END STRUCTURED JSON RESPONSE ===');
       
-      // Return first question's data for compatibility, store all questions
-      const firstQuestion = questions[0] || {
-        standards: [],
-        rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'No questions found', confidence: 0.1 }
-      };
-      
-      return {
-        standards: firstQuestion.standards,
-        rigor: firstQuestion.rigor,
-        rawResponse: response,
-        processingTime,
-        allQuestions: questions // Store all parsed questions
-      };
+      try {
+        const parsedResponse = JSON.parse(rawContent);
+        const problems = parsedResponse.problems || [];
+        
+        console.log('=== GROK WITH PROMPT STRUCTURED PARSING DEBUG ===');
+        console.log('Number of problems parsed:', problems.length);
+        
+        const questions = problems.map((problem: any) => {
+          console.log(`Problem ${problem.problemNumber}: ${problem.standardCode} (${problem.rigorLevel})`);
+          return {
+            questionNumber: problem.problemNumber,
+            questionText: `Problem ${problem.problemNumber}: ${problem.standardDescription}`,
+            standards: [{
+              code: problem.standardCode,
+              description: problem.standardDescription,
+              jurisdiction: "Common Core",
+              gradeLevel: "9-12",
+              subject: "Mathematics"
+            }],
+            rigor: {
+              level: problem.rigorLevel as 'mild' | 'medium' | 'spicy',
+              dokLevel: problem.rigorLevel === 'mild' ? 'DOK 1' : problem.rigorLevel === 'medium' ? 'DOK 2' : 'DOK 3',
+              justification: `${problem.rigorLevel} rigor level based on problem complexity`,
+              confidence: 0.85
+            }
+          };
+        });
+        
+        console.log(`analyzeGrokWithPrompt: Successfully parsed ${questions.length} problems from structured output`);
+        
+        // Return first question's data for compatibility, store all questions
+        const firstQuestion = questions[0] || {
+          standards: [],
+          rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'No questions found', confidence: 0.1 }
+        };
+        
+        return {
+          standards: firstQuestion.standards,
+          rigor: firstQuestion.rigor,
+          rawResponse: response,
+          processingTime,
+          allQuestions: questions // Store all parsed questions
+        };
+      } catch (parseError) {
+        console.error('analyzeGrokWithPrompt: Failed to parse structured JSON response:', parseError);
+        console.error('Raw content:', rawContent);
+        
+        return {
+          standards: [],
+          rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'JSON parsing failed', confidence: 0.1 },
+          rawResponse: response,
+          processingTime,
+          allQuestions: []
+        };
+      }
     } catch (error) {
       console.error('Grok analysis error:', error);
       return {
