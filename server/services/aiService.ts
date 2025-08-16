@@ -88,7 +88,26 @@ Deduplicate standards exactly as in prior outputs.
 Analyze based solely on the provided documents; no external assumptions.
 Keep responses efficient: focus on accuracy, brevity, and structure for easy replication across units.
 
-Please provide a detailed analysis of each individual question/problem in the document.`;
+Please provide a detailed analysis of each individual question/problem in the document.
+
+Provide your analysis in JSON format:
+{
+  "standards": [
+    {
+      "code": "CCSS.MATH.5.NBT.A.1",
+      "description": "Recognize that in a multi-digit number...",
+      "jurisdiction": "Common Core",
+      "gradeLevel": "5",
+      "subject": "Mathematics"
+    }
+  ],
+  "rigor": {
+    "level": "medium",
+    "dokLevel": "DOK 2",
+    "justification": "This question requires students to apply concepts and make connections...",
+    "confidence": 0.85
+  }
+}`;
 
 export class AIService {
   private generatePromptWithStandards(focusStandards?: string[]): string {
