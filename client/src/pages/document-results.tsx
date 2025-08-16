@@ -124,7 +124,7 @@ export default function DocumentResults() {
   const revertToAiMutation = useMutation({
     mutationFn: async (questionId: string) => {
       console.log('Reverting to Sherpa for question:', questionId);
-      const response = await apiRequest(`/api/questions/${questionId}/revert-to-ai`, 'POST');
+      const response = await apiRequest('POST', `/api/questions/${questionId}/revert-to-ai`);
       console.log('Revert response:', response);
       return response;
     },
