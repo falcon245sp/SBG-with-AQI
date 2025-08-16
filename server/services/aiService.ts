@@ -75,7 +75,7 @@ const ANALYSIS_PROMPT = `You are an expert in high school education and Standard
 
 For each assessment (e.g., Quiz 1, Test Free Response), list every problem/question with:
 
-The primary standard(s) (e.g., F-IF.A.1 for domain/range), using a concise description like "Determine Domain F-IF.A.1".
+The most relevant standard(s) (e.g., F-IF.A.1 for domain/range), using a concise description like "Determine Domain F-IF.A.1".
 A rigor level: mild (for basic recall/application), medium (for multi-step or interpretive), or spicy (for synthesis, reasoning, or real-world application).
 
 At the end, provide a deduplicated list of all referenced standards across the unit.
