@@ -608,14 +608,21 @@ Give special attention to identifying alignment with these specific standards.
       console.log('Raw content (first 500 chars):', (grokResponse.choices?.[0]?.message?.content || '').substring(0, 500));
       console.log('Raw content (last 100 chars):', (grokResponse.choices?.[0]?.message?.content || '').slice(-100));
       
+      // Debug question parsing
+      const rawContent = grokResponse.choices?.[0]?.message?.content || '';
+      const questions = this.parseGrokQuestionAnalysis(rawContent);
+      console.log('=== QUESTION PARSING DEBUG ===');
+      console.log('Number of questions parsed:', questions.length);
+      questions.forEach((q, i) => {
+        console.log(`Question ${i + 1}: ${q.questionNumber} - ${q.questionText.substring(0, 50)}...`);
+        console.log(`  Standards count: ${q.standards.length}`);
+        console.log(`  Rigor level: ${q.rigor.level}`);
+      });
+      
       const processingTime = Date.now() - startTime;
-      const rawContent = grokResponse.choices[0].message.content || '';
       console.log('=== GROK NATURAL LANGUAGE RESPONSE ===');
       console.log(rawContent);
       console.log('=== END NATURAL LANGUAGE RESPONSE ===');
-      
-      // Parse the natural language response to extract individual questions
-      const questions = this.parseGrokQuestionAnalysis(rawContent);
       
       // For now, return the first question's analysis to maintain compatibility
       // TODO: Update system to handle multiple questions properly
