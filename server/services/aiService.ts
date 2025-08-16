@@ -793,7 +793,87 @@ Give special attention to identifying alignment with these specific standards.
     }> = [];
 
     try {
-      // Split content by question numbers (1., 2., 3A., etc.)
+      // First try new Grok format: #### Question X:
+      const newFormatMatches = content.match(/#### Question (\d+[A-Z]?):([\s\S]*?)(?=#### Question|### Deduplicated|$)/g);
+      
+      if (newFormatMatches) {
+        console.log(`Found ${newFormatMatches.length} question sections in new format`);
+        
+        for (const questionMatch of newFormatMatches) {
+          try {
+            // Extract question number
+            const headerMatch = questionMatch.match(/#### Question (\d+[A-Z]?):/);
+            if (!headerMatch) continue;
+            
+            const questionNumber = headerMatch[1];
+            console.log(`Parsing question ${questionNumber} in new format`);
+            
+            // Extract standards - look for "- **Standard(s):** Determine Domain F-IF.A.1"
+            const standardsMatch = questionMatch.match(/- \*\*Standard\(s\):\*\*\s*([^\n]+)/);
+            const standardsText = standardsMatch ? standardsMatch[1].trim() : '';
+            
+            // Parse standards - look for patterns like "Determine Domain F-IF.A.1"
+            const standards: EducationalStandard[] = [];
+            if (standardsText) {
+              const standardCodes = standardsText.match(/[A-Z]+-[A-Z]+\.[A-Z]+\.\d+/g) || [];
+              for (const code of standardCodes) {
+                // Extract description from the text before the code
+                const descMatch = standardsText.match(new RegExp(`([^,]+?)\\s+${code.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+                const description = descMatch ? descMatch[1].trim() : `Analysis for ${code}`;
+                
+                standards.push({
+                  code,
+                  description,
+                  jurisdiction: 'Common Core',
+                  gradeLevel: 'Grade 9-12',
+                  subject: 'Mathematics'
+                });
+              }
+            }
+            
+            // Extract rigor level - look for "- **Rigor Level:** Medium"
+            let rigorLevel: 'mild' | 'medium' | 'spicy' = 'mild';
+            const rigorMatch = questionMatch.match(/- \*\*Rigor Level:\*\*\s*(Mild|Medium|Spicy)/i);
+            if (rigorMatch) {
+              rigorLevel = rigorMatch[1].toLowerCase() as 'mild' | 'medium' | 'spicy';
+            }
+            
+            // Set DOK level based on rigor
+            let dokLevel = 'DOK 1';
+            if (rigorLevel === 'medium') dokLevel = 'DOK 2';
+            if (rigorLevel === 'spicy') dokLevel = 'DOK 3';
+            
+            // Generate justification based on standard and rigor
+            let justification = `${rigorLevel.charAt(0).toUpperCase() + rigorLevel.slice(1)} level analysis for ${standardsText}`;
+            
+            // Set confidence based on completeness  
+            let confidence = 0.8;
+            if (standards.length === 0) confidence = 0.3;
+            
+            questions.push({
+              questionNumber,
+              questionText: `Question ${questionNumber} analysis`,
+              standards,
+              rigor: {
+                level: rigorLevel,
+                dokLevel,
+                justification,
+                confidence
+              }
+            });
+            
+            console.log(`Successfully parsed question ${questionNumber} with ${standards.length} standards, rigor: ${rigorLevel}`);
+            
+          } catch (questionError) {
+            console.error('Error parsing individual question:', questionError);
+          }
+        }
+        
+        console.log(`Successfully parsed ${questions.length} questions in new format`);
+        return questions;
+      }
+      
+      // Fallback to old format: Split content by question numbers (1., 2., 3A., etc.)
       const questionMatches = content.match(/(\d+[A-Z]?\.\s\*\*[^*]+\*\*[\s\S]*?)(?=\d+[A-Z]?\.\s\*\*|$)/g);
       
       if (questionMatches) {
