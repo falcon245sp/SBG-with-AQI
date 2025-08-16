@@ -166,7 +166,7 @@ export default function ResultsPage() {
   };
 
   const generatePdfRubric = (doc: any, results: any[]) => {
-    const pdf = new jsPDF();
+    const pdf = new jsPDF('landscape'); // Set landscape orientation
     const rubricTitle = doc.fileName.replace(/\.[^/.]+$/, '');
     
     // Add title
@@ -182,8 +182,8 @@ export default function ResultsPage() {
     results.forEach((question) => {
       const effectiveStandards = question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [];
       const effectiveRigor = question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild';
-      const questionText = question.questionText.length > 40 
-        ? question.questionText.substring(0, 40) + '...' 
+      const questionText = question.questionText.length > 60 
+        ? question.questionText.substring(0, 60) + '...' 
         : question.questionText;
       
       // Get rigor emoji text
@@ -213,18 +213,18 @@ export default function ResultsPage() {
         noCredit = 'No attempt or entirely incorrect. ✗';
       }
       
-      tableData.push([criteria, '', fullCredit, partialCredit, minimalCredit, noCredit]);
+      tableData.push([criteria, fullCredit, partialCredit, minimalCredit, noCredit]);
     });
     
     // Add table
     autoTable(pdf, {
       startY: 55,
-      head: [['Criteria', 'Points', 'Full Credit', 'Partial Credit', 'Minimal Credit', 'No Credit']],
+      head: [['Criteria', 'Full Credit', 'Partial Credit', 'Minimal Credit', 'No Credit']],
       body: tableData,
       theme: 'grid',
       styles: {
-        fontSize: 8,
-        cellPadding: 3,
+        fontSize: 9,
+        cellPadding: 4,
       },
       headStyles: {
         fillColor: [41, 128, 185],
@@ -232,14 +232,13 @@ export default function ResultsPage() {
         fontStyle: 'bold'
       },
       columnStyles: {
-        0: { cellWidth: 50 }, // Criteria
-        1: { cellWidth: 15 }, // Points
-        2: { cellWidth: 30 }, // Full Credit
-        3: { cellWidth: 30 }, // Partial Credit
-        4: { cellWidth: 30 }, // Minimal Credit
-        5: { cellWidth: 30 }  // No Credit
+        0: { cellWidth: 80 }, // Criteria
+        1: { cellWidth: 50 }, // Full Credit
+        2: { cellWidth: 50 }, // Partial Credit
+        3: { cellWidth: 50 }, // Minimal Credit
+        4: { cellWidth: 50 }  // No Credit
       },
-      margin: { top: 55, left: 10, right: 10 }
+      margin: { top: 55, left: 15, right: 15 }
     });
     
     // Save the PDF
