@@ -33,6 +33,13 @@ export default function ResultsPage() {
     refetchIntervalInBackground: true,
   });
 
+  // Fetch queue status
+  const { data: queueStatus } = useQuery<any>({
+    queryKey: ["/api/queue"],
+    refetchInterval: 2000,
+    refetchIntervalInBackground: true,
+  });
+
   const filteredDocuments = documents?.filter((doc: any) => {
     const matchesSearch = doc.fileName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || doc.status === statusFilter;
@@ -79,6 +86,45 @@ export default function ResultsPage() {
           <div className="py-6">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
               
+              {/* Queue Status Card */}
+              {queueStatus?.queueSize > 0 && (
+                <Card className="mb-6 border-blue-200 bg-blue-50">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                          <span className="font-medium text-blue-800">Processing Queue</span>
+                        </div>
+                        <Badge variant="outline" className="text-blue-700 border-blue-300">
+                          {queueStatus.queueSize} files queued
+                        </Badge>
+                      </div>
+                      <div className="text-sm text-blue-600">
+                        Processor: {queueStatus.processor?.isProcessing ? 'Active' : 'Idle'}
+                      </div>
+                    </div>
+                    {queueStatus.items?.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-sm text-blue-700 mb-2">Files in queue:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {queueStatus.items.slice(0, 5).map((item: any, index: number) => (
+                            <Badge key={item.id} variant="outline" className="text-xs text-blue-600 border-blue-200">
+                              {item.document?.fileName || `Document ${index + 1}`}
+                            </Badge>
+                          ))}
+                          {queueStatus.items.length > 5 && (
+                            <Badge variant="outline" className="text-xs text-blue-600 border-blue-200">
+                              +{queueStatus.items.length - 5} more
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Search and Filters */}
               <Card className="mb-8">
                 <CardContent className="p-6">

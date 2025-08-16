@@ -158,7 +158,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`DEBUG: Created document ${document.id} for file ${file.originalname}`);
           
           // Add to processing queue
-          await storage.addToProcessingQueue(document.id);
+          const queueItem = await storage.addToProcessingQueue(document.id);
+          console.log(`DEBUG: Added document ${document.id} to queue with item ID ${queueItem.id}`);
           
           // Processing will be handled by the queue processor
           
@@ -251,6 +252,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching document results:", error);
       res.status(500).json({ message: "Failed to fetch document results" });
+    }
+  });
+
+  // Get processing queue status
+  app.get('/api/queue', async (req: any, res) => {
+    try {
+      const queueItems = await storage.getQueueStatus();
+      const processorStatus = queueProcessor.getStatus();
+      
+      res.json({
+        queueSize: queueItems.length,
+        items: queueItems,
+        processor: processorStatus
+      });
+    } catch (error) {
+      console.error("Error fetching queue status:", error);
+      res.status(500).json({ message: "Failed to fetch queue status" });
     }
   });
 

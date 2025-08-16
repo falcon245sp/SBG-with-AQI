@@ -54,6 +54,7 @@ export interface IStorage {
   addToProcessingQueue(documentId: string, priority?: number): Promise<ProcessingQueue>;
   getNextQueueItem(): Promise<ProcessingQueue | undefined>;
   removeFromQueue(id: string): Promise<void>;
+  getQueueStatus(): Promise<Array<ProcessingQueue & { document?: Document }>>;
   
   // Analytics operations
   getProcessingStats(userId?: string): Promise<{
@@ -256,6 +257,24 @@ export class DatabaseStorage implements IStorage {
 
   async removeFromQueue(id: string): Promise<void> {
     await db.delete(processingQueue).where(eq(processingQueue.id, id));
+  }
+
+  async getQueueStatus(): Promise<Array<ProcessingQueue & { document?: Document }>> {
+    const queueItems = await db
+      .select()
+      .from(processingQueue)
+      .orderBy(desc(processingQueue.priority), processingQueue.createdAt);
+    
+    const itemsWithDocuments = [];
+    for (const item of queueItems) {
+      const document = await this.getDocument(item.documentId);
+      itemsWithDocuments.push({
+        ...item,
+        document
+      });
+    }
+    
+    return itemsWithDocuments;
   }
 
   // Analytics operations
