@@ -3,7 +3,7 @@ import { aiService } from './aiService';
 import { rigorAnalyzer } from './rigorAnalyzer';
 import * as fs from 'fs';
 import * as path from 'path';
-import PDFExtract from 'pdf-extract';
+import pdf from 'pdf-parse';
 import mammoth from 'mammoth';
 
 export class DocumentProcessor {
@@ -288,42 +288,23 @@ export class DocumentProcessor {
   }
   
   private async extractTextFromPDF(filePath: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      try {
-        const pdfExtract = new (PDFExtract as any)();
-        pdfExtract.extract(filePath, {}, (err: any, data: any) => {
-          if (err) {
-            reject(new Error(`PDF extraction failed: ${err.message}`));
-            return;
-          }
-          
-          try {
-            let text = '';
-            if (data && data.pages) {
-              for (const page of data.pages) {
-                if (page.content) {
-                  for (const item of page.content) {
-                    if (item.str) {
-                      text += item.str + ' ';
-                    }
-                  }
-                }
-              }
-            }
-            
-            if (text.trim().length === 0) {
-              reject(new Error('No text content found in PDF'));
-            } else {
-              resolve(text.trim());
-            }
-          } catch (error) {
-            reject(new Error(`Error processing PDF data: ${error instanceof Error ? error.message : 'Unknown error'}`));
-          }
-        });
-      } catch (error) {
-        reject(new Error(`Failed to initialize PDF extractor: ${error instanceof Error ? error.message : 'Unknown error'}`));
+    try {
+      console.log(`Reading PDF file: ${filePath}`);
+      const dataBuffer = fs.readFileSync(filePath);
+      
+      console.log(`Parsing PDF buffer of size: ${dataBuffer.length} bytes`);
+      const data = await pdf(dataBuffer);
+      
+      if (!data.text || data.text.trim().length === 0) {
+        throw new Error('No text content found in PDF');
       }
-    });
+      
+      console.log(`Extracted ${data.text.length} characters from PDF`);
+      return data.text.trim();
+    } catch (error) {
+      console.error(`PDF extraction error:`, error);
+      throw new Error(`PDF extraction failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
   
   private async extractTextFromWord(filePath: string): Promise<string> {
