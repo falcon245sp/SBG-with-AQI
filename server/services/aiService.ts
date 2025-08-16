@@ -553,6 +553,12 @@ Give special attention to identifying alignment with these specific standards.
     const startTime = Date.now();
     
     try {
+      console.log('=== GROK API CALL DEBUG ===');
+      console.log('System prompt length:', `${ANALYSIS_PROMPT}\n\nFocus on these jurisdictions: ${jurisdictions.join(', ')}`.length);
+      console.log('User content length:', `Question: ${questionText}\n\nContext: ${context}`.length);
+      console.log('Model:', "grok-2-1212");
+      console.log('Max tokens:', 10000);
+      
       const response = await grok.chat.completions.create({
         model: "grok-2-1212",
         messages: [
@@ -569,8 +575,16 @@ Give special attention to identifying alignment with these specific standards.
         max_tokens: 10000,
       });
 
+      console.log('=== GROK RESPONSE DEBUG ===');
+      console.log('Response status:', response.choices?.[0]?.finish_reason);
+      console.log('Content length:', response.choices?.[0]?.message?.content?.length || 0);
+      console.log('Raw content (first 500 chars):', (response.choices?.[0]?.message?.content || '').substring(0, 500));
+      console.log('Raw content (last 100 chars):', (response.choices?.[0]?.message?.content || '').slice(-100));
+      
       const processingTime = Date.now() - startTime;
-      const result = JSON.parse(response.choices[0].message.content || '{}');
+      const rawContent = response.choices[0].message.content || '{}';
+      console.log('About to parse JSON, content preview:', rawContent.substring(0, 200));
+      const result = JSON.parse(rawContent);
       
       return {
         standards: result.standards || [],
