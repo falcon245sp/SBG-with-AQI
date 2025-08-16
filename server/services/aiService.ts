@@ -284,47 +284,28 @@ Give special attention to identifying alignment with these specific standards.
       text: string;
       context: string;
       aiResults: {
-        chatgpt: AIAnalysisResult;
         grok: AIAnalysisResult;
-        claude: AIAnalysisResult;
       };
     }>;
   }> {
     try {
-      console.log('Analyzing document with custom prompt configuration');
+      console.log('Analyzing document with custom prompt configuration (Grok only)');
       
-      // Update document status to processing
       const customPrompt = this.generateCustomPrompt(customization);
       
-      const [chatgptResult, grokResult, claudeResult] = await Promise.all([
-        this.analyzeChatGPTWithPrompt(
-          `Analyze this educational document (${mimeType}) for standards alignment and rigor level.`,
-          `Document path: ${filePath}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
-          jurisdictions,
-          customPrompt
-        ).catch(() => this.getDefaultResult()),
-        this.analyzeGrokWithPrompt(
-          `Analyze this educational document (${mimeType}) for standards alignment and rigor level.`,
-          `Document path: ${filePath}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
-          jurisdictions,
-          customPrompt
-        ).catch(() => this.getDefaultResult()),
-        this.analyzeClaudeWithPrompt(
-          `Analyze this educational document (${mimeType}) for standards alignment and rigor level.`,
-          `Document path: ${filePath}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
-          jurisdictions,
-          customPrompt
-        ).catch(() => this.getDefaultResult())
-      ]);
+      const grokResult = await this.analyzeGrokWithPrompt(
+        `Analyze this educational document (${mimeType}) for standards alignment and rigor level.`,
+        `Document path: ${filePath}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
+        jurisdictions,
+        customPrompt
+      ).catch(() => this.getDefaultResult());
       
       return {
         questions: [{
           text: "Educational content analysis from uploaded document",
           context: `Document type: ${mimeType}, Jurisdictions: ${jurisdictions.join(', ')}, Custom Analysis: ${customization ? 'Yes' : 'No'}`,
           aiResults: {
-            chatgpt: chatgptResult,
-            grok: grokResult,
-            claude: claudeResult
+            grok: grokResult
           }
         }]
       };
@@ -347,16 +328,14 @@ Give special attention to identifying alignment with these specific standards.
       text: string;
       context: string;
       aiResults: {
-        chatgpt: AIAnalysisResult;
         grok: AIAnalysisResult;
-        claude: AIAnalysisResult;
       };
     }>;
   }> {
     try {
       console.log('Analyzing document content with length:', documentContent.length);
       
-      console.log('Using Grok for document analysis');
+      console.log('Using Grok only for document analysis');
       const grokResult = await this.analyzeGrok(
         `Analyze this educational document content for standards alignment and rigor level.`,
         `Document content: ${documentContent}\n\nDocument type: ${mimeType}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
