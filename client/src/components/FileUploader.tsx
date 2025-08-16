@@ -45,11 +45,7 @@ export function FileUploader({
     }
 
     if (acceptedFiles.length > 0) {
-      if (multiple) {
-        setSelectedFiles(acceptedFiles);
-      } else {
-        setSelectedFiles([acceptedFiles[0]]);
-      }
+      setSelectedFiles(acceptedFiles);
     }
   }, [maxSize, multiple]);
 
@@ -62,7 +58,8 @@ export function FileUploader({
       'application/vnd.google-apps.document': ['.gdoc']
     },
     maxSize,
-    multiple,
+    multiple: true,
+    maxFiles: 10,
   });
 
   const handleUpload = () => {
