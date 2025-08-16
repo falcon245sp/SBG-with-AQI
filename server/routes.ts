@@ -14,7 +14,8 @@ import fs from "fs";
 const upload = multer({
   dest: 'uploads/',
   limits: {
-    fileSize: 50 * 1024 * 1024, // 50MB limit
+    fileSize: 50 * 1024 * 1024, // 50MB limit per file
+    files: 10, // Maximum 10 files per request
   },
   fileFilter: (req, file, cb) => {
     const allowedTypes = [
@@ -110,47 +111,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Document upload endpoint
-  app.post('/api/documents/upload', upload.single('document'), async (req: any, res) => {
+  app.post('/api/documents/upload', upload.array('documents', 10), async (req: any, res) => {
     try {
       const userId = 'test-user-123'; // Mock user ID
-      const file = req.file;
+      const files = req.files as Express.Multer.File[];
       
-      if (!file) {
-        return res.status(400).json({ message: "No file uploaded" });
+      if (!files || files.length === 0) {
+        return res.status(400).json({ message: "No files uploaded" });
       }
 
-      const { customerId, jurisdictions } = req.body;
+      const { customerId, jurisdictions, focusStandards, callbackUrl } = req.body;
       
-      // Validate request data
-      const validationResult = insertDocumentSchema.safeParse({
-        customerId: parseInt(customerId),
-        fileName: file.originalname,
-        originalPath: file.path,
-        mimeType: file.mimetype,
-        fileSize: file.size,
-        jurisdictions: jurisdictions.split(',').map((j: string) => j.trim()).slice(0, 3),
-      });
+      // Parse jurisdictions
+      const parsedJurisdictions = jurisdictions.split(',').map((j: string) => j.trim()).slice(0, 3);
+      
+      // Process each file and create separate documents
+      const jobs = [];
+      const errors = [];
+      
+      for (const file of files) {
+        try {
+          // Validate request data for each file
+          const validationResult = insertDocumentSchema.safeParse({
+            customerId: parseInt(customerId),
+            fileName: file.originalname,
+            originalPath: file.path,
+            mimeType: file.mimetype,
+            fileSize: file.size,
+            jurisdictions: parsedJurisdictions,
+          });
 
-      if (!validationResult.success) {
-        return res.status(400).json({ 
-          message: "Invalid request data",
-          errors: validationResult.error.errors 
+          if (!validationResult.success) {
+            errors.push({
+              fileName: file.originalname,
+              error: `Invalid file data: ${validationResult.error.errors.map(e => e.message).join(', ')}`
+            });
+            continue;
+          }
+
+          // Create document record
+          const document = await storage.createDocument(userId, validationResult.data);
+          
+          // Add to processing queue
+          await storage.addToProcessingQueue(document.id);
+          
+          // Start processing asynchronously
+          documentProcessor.processDocument(document.id).catch(console.error);
+          
+          jobs.push({
+            jobId: document.id,
+            fileName: file.originalname,
+            status: 'submitted',
+            estimatedCompletionTime: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+            progress: 0,
+            currentStep: 'queued'
+          });
+        } catch (fileError) {
+          console.error(`Failed to process file ${file.originalname}:`, fileError);
+          errors.push({
+            fileName: file.originalname,
+            error: fileError instanceof Error ? fileError.message : 'Failed to process file'
+          });
+        }
+      }
+      
+      // Return response matching the multi-file format
+      const response: any = {
+        totalFiles: files.length,
+        successfulSubmissions: jobs.length,
+        failedSubmissions: errors.length,
+        jobs
+      };
+
+      if (errors.length > 0) {
+        response.errors = errors;
+      }
+
+      if (jobs.length === 0) {
+        return res.status(500).json({
+          error: 'all_uploads_failed',
+          message: 'All file uploads failed',
+          ...response
         });
       }
 
-      // Create document record
-      const document = await storage.createDocument(userId, validationResult.data);
+      const statusCode = errors.length > 0 ? 207 : 202; // 207 Multi-Status if some failed
       
-      // Add to processing queue
-      await storage.addToProcessingQueue(document.id);
+      // For backwards compatibility, also include single-file response format
+      if (jobs.length === 1 && files.length === 1) {
+        response.message = "Document uploaded successfully";
+        response.documentId = jobs[0].jobId;
+        response.jobId = jobs[0].jobId;
+        response.status = jobs[0].status;
+        response.estimatedCompletionTime = jobs[0].estimatedCompletionTime;
+      } else {
+        response.message = `${jobs.length} of ${files.length} documents uploaded successfully`;
+      }
       
-      // Start processing asynchronously
-      documentProcessor.processDocument(document.id).catch(console.error);
-
-      res.json({ 
-        message: "Document uploaded successfully",
-        documentId: document.id 
-      });
+      res.status(statusCode).json(response);
     } catch (error) {
       console.error("Error uploading document:", error);
       res.status(500).json({ message: "Failed to upload document" });
