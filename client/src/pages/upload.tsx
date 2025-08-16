@@ -60,15 +60,25 @@ export default function UploadPage() {
         callbackUrl: callbackUrl || undefined
       });
       
-      // Add all jobs to submitted jobs list
-      const newJobs = result.jobs.map(job => ({
+      // Add all jobs to submitted jobs list with initial "queued" status
+      const newJobs = result.jobs.map((job, index) => ({
         jobId: job.jobId,
         fileName: job.fileName,
-        status: job.status,
+        status: index === 0 ? 'processing' : 'queued', // First file starts processing, others queued
         estimatedCompletion: job.estimatedCompletionTime
       }));
       
       setSubmittedJobs(prev => [...newJobs, ...prev]);
+      
+      // Simulate status updates for demo (in real app, this would come from polling)
+      setTimeout(() => {
+        setSubmittedJobs(prev => prev.map((job, index) => {
+          if (index < newJobs.length && job.status === 'queued') {
+            return { ...job, status: 'processing' };
+          }
+          return job;
+        }));
+      }, 2000 * (newJobs.findIndex(j => j.status === 'queued') + 1));
       
       const fileNames = files.map(f => f.name).join(', ');
       const successMessage = result.successfulSubmissions === files.length 
@@ -224,22 +234,62 @@ export default function UploadPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {submittedJobs.slice(0, 5).map((job) => (
-                        <div key={job.jobId} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                          <div className="flex-1">
-                            <p className="font-medium text-sm">{job.fileName}</p>
-                            <p className="text-xs text-slate-500">Job ID: {job.jobId}</p>
-                          </div>
-                          <div className="text-right">
-                            <div className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
-                              {job.status}
+                      {submittedJobs.slice(0, 5).map((job) => {
+                        const getStatusDisplay = (status: string) => {
+                          switch (status) {
+                            case 'queued':
+                              return {
+                                className: 'bg-gray-100 text-gray-700',
+                                text: 'Queued',
+                                icon: <Clock className="w-3 h-3 mr-1" />
+                              };
+                            case 'processing':
+                              return {
+                                className: 'bg-blue-100 text-blue-800',
+                                text: 'Processing',
+                                icon: <div className="w-3 h-3 mr-1 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                              };
+                            case 'completed':
+                              return {
+                                className: 'bg-green-100 text-green-800',
+                                text: 'Completed',
+                                icon: <CheckCircle className="w-3 h-3 mr-1" />
+                              };
+                            case 'failed':
+                              return {
+                                className: 'bg-red-100 text-red-800',
+                                text: 'Failed',
+                                icon: <AlertCircle className="w-3 h-3 mr-1" />
+                              };
+                            default:
+                              return {
+                                className: 'bg-gray-100 text-gray-700',
+                                text: status,
+                                icon: null
+                              };
+                          }
+                        };
+                        
+                        const statusDisplay = getStatusDisplay(job.status);
+                        
+                        return (
+                          <div key={job.jobId} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                            <div className="flex-1">
+                              <p className="font-medium text-sm">{job.fileName}</p>
+                              <p className="text-xs text-slate-500">Job ID: {job.jobId}</p>
                             </div>
-                            <p className="text-xs text-slate-500 mt-1">
-                              Est: {new Date(job.estimatedCompletion).toLocaleTimeString()}
-                            </p>
+                            <div className="text-right">
+                              <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${statusDisplay.className}`}>
+                                {statusDisplay.icon}
+                                {statusDisplay.text}
+                              </div>
+                              <p className="text-xs text-slate-500 mt-1">
+                                Est: {new Date(job.estimatedCompletion).toLocaleTimeString()}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })
                     </div>
                   </CardContent>
                 </Card>

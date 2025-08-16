@@ -118,6 +118,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = 'test-user-123'; // Mock user ID
       const files = (req.files as Express.Multer.File[]) || [];
       
+      console.log(`DEBUG: Received ${files.length} files:`, files.map(f => f.originalname));
+      
       if (!files || files.length === 0) {
         return res.status(400).json({ message: "No files uploaded" });
       }
@@ -153,6 +155,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // Create document record
           const document = await storage.createDocument(userId, validationResult.data);
+          
+          console.log(`DEBUG: Created document ${document.id} for file ${file.originalname}`);
           
           // Add to processing queue
           await storage.addToProcessingQueue(document.id);
