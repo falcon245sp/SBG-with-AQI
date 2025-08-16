@@ -1,8 +1,20 @@
 # Document Processing Service
 
+## Current Version: 0.5.0
+
 ## Overview
 
 The Document Processing Service is a full-stack web application that provides AI-powered educational document analysis. The system automatically analyzes educational documents (PDFs, Word docs, Google Docs) to identify standards alignment and determine cognitive rigor levels using multiple AI engines (ChatGPT, Grok, and Claude). The application features a RESTful API backend with Express.js and a modern React frontend with TypeScript, providing educational institutions and EdTech companies with automated document processing capabilities.
+
+## Version History
+
+### Version 0.5.0 (August 16, 2025)
+- **Enhanced Tooltip UX**: Improved hover tooltips for rigor justification text
+  - Added vertical growth with proper word wrapping
+  - Enhanced readability with dark theme contrast
+  - Flexible sizing with max-height and vertical scrolling
+  - Better text formatting with preserved line breaks
+- **UI Improvements**: Enhanced user experience for viewing AI analysis reasoning
 
 ## User Preferences
 
