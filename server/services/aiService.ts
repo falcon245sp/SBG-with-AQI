@@ -380,6 +380,27 @@ Give special attention to identifying alignment with these specific standards.
         return this.getDefaultResult();
       });
       
+      // If we have individual questions parsed, create separate question entries
+      if (grokResult.allQuestions && grokResult.allQuestions.length > 0) {
+        console.log(`Creating ${grokResult.allQuestions.length} individual question entries`);
+        return {
+          questions: grokResult.allQuestions.map((question, index) => ({
+            text: question.questionText,
+            context: `Question ${question.questionNumber}: ${question.questionText}`,
+            aiResults: {
+              grok: {
+                standards: question.standards,
+                rigor: question.rigor,
+                rawResponse: grokResult.rawResponse,
+                processingTime: grokResult.processingTime,
+                aiEngine: 'grok'
+              }
+            }
+          }))
+        };
+      }
+      
+      // Fallback to single question if parsing didn't work
       return {
         questions: [{
           text: "Educational content analysis from uploaded document",
