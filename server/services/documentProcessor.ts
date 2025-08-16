@@ -23,16 +23,26 @@ export class DocumentProcessor {
         throw new Error(`Document ${documentId} not found`);
       }
 
-      // Send document directly to AI engines for OCR and analysis
+      // Extract text content from the document
+      console.log(`Extracting text from document: ${document.originalPath}`);
+      const extractedText = await this.extractTextFromDocument(document.originalPath, document.mimeType);
+      
+      if (!extractedText || extractedText.trim().length === 0) {
+        throw new Error('No text content could be extracted from the document');
+      }
+      
+      console.log(`Extracted ${extractedText.length} characters from document`);
+      
+      // Send extracted text to AI engines for analysis
       const analysisResults = focusStandards && focusStandards.length > 0
         ? await aiService.analyzeDocumentWithStandards(
-            document.originalPath,
+            extractedText,
             document.mimeType,
             document.jurisdictions,
             focusStandards
           )
         : await aiService.analyzeDocument(
-            document.originalPath,
+            extractedText,
             document.mimeType,
             document.jurisdictions
           );
@@ -258,6 +268,73 @@ export class DocumentProcessor {
     }
   }
 
+
+  private async extractTextFromDocument(filePath: string, mimeType: string): Promise<string> {
+    try {
+      console.log(`Extracting text from ${mimeType} file: ${filePath}`);
+      
+      if (mimeType === 'application/pdf') {
+        return await this.extractTextFromPDF(filePath);
+      } else if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
+                 mimeType === 'application/msword') {
+        return await this.extractTextFromWord(filePath);
+      } else {
+        throw new Error(`Unsupported file type: ${mimeType}`);
+      }
+    } catch (error) {
+      console.error(`Error extracting text from ${filePath}:`, error);
+      throw error;
+    }
+  }
+  
+  private async extractTextFromPDF(filePath: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const pdfExtract = new PDFExtract();
+      pdfExtract.extract(filePath, {}, (err, data) => {
+        if (err) {
+          reject(new Error(`PDF extraction failed: ${err.message}`));
+          return;
+        }
+        
+        try {
+          let text = '';
+          if (data && data.pages) {
+            for (const page of data.pages) {
+              if (page.content) {
+                for (const item of page.content) {
+                  if (item.str) {
+                    text += item.str + ' ';
+                  }
+                }
+              }
+            }
+          }
+          
+          if (text.trim().length === 0) {
+            reject(new Error('No text content found in PDF'));
+          } else {
+            resolve(text.trim());
+          }
+        } catch (error) {
+          reject(new Error(`Error processing PDF data: ${error instanceof Error ? error.message : 'Unknown error'}`));
+        }
+      });
+    });
+  }
+  
+  private async extractTextFromWord(filePath: string): Promise<string> {
+    try {
+      const result = await mammoth.extractRawText({ path: filePath });
+      
+      if (!result.value || result.value.trim().length === 0) {
+        throw new Error('No text content found in Word document');
+      }
+      
+      return result.value.trim();
+    } catch (error) {
+      throw new Error(`Word document extraction failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
 
   private async sendCallback(callbackUrl: string, data: any): Promise<void> {
     try {
