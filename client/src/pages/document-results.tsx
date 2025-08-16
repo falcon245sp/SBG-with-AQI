@@ -194,7 +194,86 @@ export default function DocumentResults() {
                 </CardContent>
               </Card>
 
-              {/* Analysis Results */}
+              {/* Quick Overview for Teachers */}
+              {results && results.length > 0 && (
+                <Card className="mb-8">
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Brain className="w-5 h-5 mr-2" />
+                      Quick Overview - All Questions
+                    </CardTitle>
+                    <p className="text-sm text-slate-500">
+                      At-a-glance summary of standards and rigor levels for all questions in this document
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full">
+                        <thead>
+                          <tr className="border-b border-slate-200">
+                            <th className="text-left py-2 px-3 font-medium text-slate-700">Question</th>
+                            <th className="text-left py-2 px-3 font-medium text-slate-700">Rigor Level</th>
+                            <th className="text-left py-2 px-3 font-medium text-slate-700">Key Standards</th>
+                            <th className="text-left py-2 px-3 font-medium text-slate-700">Confidence</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {results.map((question, index) => (
+                            <tr key={question.id} className="hover:bg-slate-50">
+                              <td className="py-3 px-3">
+                                <div className="flex items-center">
+                                  <span className="font-medium text-slate-900">Q{question.questionNumber}</span>
+                                  <span className="ml-2 text-sm text-slate-600 truncate max-w-xs">
+                                    {question.questionText.length > 50 
+                                      ? `${question.questionText.substring(0, 50)}...` 
+                                      : question.questionText}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="py-3 px-3">
+                                {question.result ? (
+                                  <RigorBadge level={question.result.consensusRigorLevel} />
+                                ) : (
+                                  <span className="text-sm text-slate-400">Not analyzed</span>
+                                )}
+                              </td>
+                              <td className="py-3 px-3">
+                                {question.result?.consensusStandards ? (
+                                  <div className="flex flex-wrap gap-1">
+                                    {question.result.consensusStandards.slice(0, 2).map((std, stdIdx) => (
+                                      <Badge key={stdIdx} variant="outline" className="text-xs">
+                                        {std.code}
+                                      </Badge>
+                                    ))}
+                                    {question.result.consensusStandards.length > 2 && (
+                                      <Badge variant="secondary" className="text-xs">
+                                        +{question.result.consensusStandards.length - 2} more
+                                      </Badge>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span className="text-sm text-slate-400">No standards identified</span>
+                                )}
+                              </td>
+                              <td className="py-3 px-3">
+                                {question.result ? (
+                                  <span className="text-sm text-slate-600">
+                                    {Math.round(parseFloat(question.result.confidenceScore) * 100)}%
+                                  </span>
+                                ) : (
+                                  <span className="text-sm text-slate-400">—</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Detailed Analysis Results */}
               {results && results.length > 0 ? (
                 <div className="space-y-6">
                   {results.map((question, index) => (
@@ -262,31 +341,90 @@ export default function DocumentResults() {
                                 </div>
                               )}
 
-                              {/* Raw JSON Response */}
+                              {/* Teacher-Friendly Analysis Summary */}
                               <div>
-                                <h4 className="font-medium text-slate-900 mb-3 flex items-center">
-                                  <Brain className="w-4 h-4 mr-2" />
-                                  Structured JSON Response
+                                <h4 className="font-medium text-slate-900 mb-4 flex items-center">
+                                  <Target className="w-4 h-4 mr-2" />
+                                  Standards & Rigor Analysis Summary
                                 </h4>
-                                <div className="bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto">
-                                  <pre className="text-sm">
-{JSON.stringify({
-  "standards": question.result.consensusStandards.map(std => ({
-    "code": std.code,
-    "description": std.description,
-    "jurisdiction": std.jurisdiction,
-    "gradeLevel": std.gradeLevel || "Multiple",
-    "subject": std.subject || "General"
-  })),
-  "rigor": {
-    "level": question.result.consensusRigorLevel,
-    "dokLevel": question.result.consensusRigorLevel === 'mild' ? 'DOK 1' : 
-               question.result.consensusRigorLevel === 'medium' ? 'DOK 2' : 'DOK 3',
-    "justification": `${question.result.consensusRigorLevel.charAt(0).toUpperCase() + question.result.consensusRigorLevel.slice(1)} level analysis based on consensus from AI engines`,
-    "confidence": parseFloat(question.result.confidenceScore)
-  }
-}, null, 2)}
-                                  </pre>
+                                
+                                {/* Rigor Level Card */}
+                                <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
+                                  <div className="flex items-center justify-between mb-3">
+                                    <h5 className="font-semibold text-slate-800">Cognitive Rigor Level</h5>
+                                    <RigorBadge level={question.result.consensusRigorLevel} />
+                                  </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                    <div>
+                                      <p className="font-medium text-slate-700">Difficulty Level:</p>
+                                      <p className="text-slate-600 capitalize">{question.result.consensusRigorLevel}</p>
+                                    </div>
+                                    <div>
+                                      <p className="font-medium text-slate-700">Depth of Knowledge:</p>
+                                      <p className="text-slate-600">
+                                        {question.result.consensusRigorLevel === 'mild' ? 'DOK 1 - Recall & Reproduction' : 
+                                         question.result.consensusRigorLevel === 'medium' ? 'DOK 2 - Skills & Concepts' : 
+                                         'DOK 3 - Strategic Thinking'}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <p className="font-medium text-slate-700">Analysis Confidence:</p>
+                                      <p className="text-slate-600">{Math.round(parseFloat(question.result.confidenceScore) * 100)}% confident</p>
+                                    </div>
+                                  </div>
+                                  <div className="mt-3 p-3 bg-white rounded border-l-4 border-blue-400">
+                                    <p className="text-sm text-slate-700">
+                                      <strong>What this means:</strong> {
+                                        question.result.consensusRigorLevel === 'mild' 
+                                          ? 'This question tests basic recall and simple application of concepts. Students need to remember facts or follow simple procedures.'
+                                          : question.result.consensusRigorLevel === 'medium'
+                                          ? 'This question requires students to apply concepts, make connections, and use multi-step thinking. It goes beyond simple recall.'
+                                          : 'This question demands complex reasoning, analysis, and synthesis. Students must think strategically and justify their reasoning.'
+                                      }
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {/* Standards Breakdown */}
+                                <div className="space-y-3">
+                                  <h5 className="font-semibold text-slate-800">Educational Standards Identified</h5>
+                                  {question.result.consensusStandards.map((standard, stdIndex) => (
+                                    <div key={stdIndex} className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                                      <div className="flex items-start justify-between mb-2">
+                                        <div className="flex-1">
+                                          <div className="flex items-center gap-2 mb-1">
+                                            <Badge variant="outline" className="font-mono text-xs bg-white">
+                                              {standard.code}
+                                            </Badge>
+                                            <Badge variant="secondary" className="text-xs">
+                                              {standard.jurisdiction}
+                                            </Badge>
+                                            {standard.gradeLevel && (
+                                              <Badge variant="outline" className="text-xs">
+                                                {standard.gradeLevel}
+                                              </Badge>
+                                            )}
+                                          </div>
+                                          <p className="text-sm text-slate-700 font-medium mb-1">
+                                            {standard.description}
+                                          </p>
+                                          {standard.subject && (
+                                            <p className="text-xs text-slate-500">
+                                              Subject Area: {standard.subject}
+                                            </p>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                  
+                                  {question.result.consensusStandards.length === 0 && (
+                                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                                      <p className="text-sm text-amber-800">
+                                        No specific educational standards were identified for this question.
+                                      </p>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
 
