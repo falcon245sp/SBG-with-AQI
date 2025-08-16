@@ -180,8 +180,8 @@ export default function Dashboard() {
     const rubricTitle = doc.fileName.replace(/\.[^/.]+$/, '');
     
     let content = `# ${rubricTitle}\n\n## Rubric\n\n`;
-    content += `| Criteria | Points | Full Credit | Partial Credit | Minimal Credit | No Credit |\n`;
-    content += `|----------|--------|-------------|----------------|----------------|----------|\n`;
+    content += `| Criteria | Full Credit | Partial Credit | Minimal Credit | No Credit |\n`;
+    content += `|----------|-------------|----------------|----------------|----------|\n`;
     
     results.forEach((question, index) => {
       const effectiveStandards = question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [];
@@ -219,7 +219,7 @@ export default function Dashboard() {
         noCredit = 'No attempt or entirely incorrect. 𝔁';
       }
       
-      content += `| ${criteria} |  | ${fullCredit} | ${partialCredit} | ${minimalCredit} | ${noCredit} |\n`;
+      content += `| ${criteria} | ${fullCredit} | ${partialCredit} | ${minimalCredit} | ${noCredit} |\n`;
     });
     
     return content;
