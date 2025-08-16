@@ -121,8 +121,8 @@ export class DocumentProcessor {
       // Store individual AI responses
       await this.storeIndividualAIResponses(question, enhancedResults);
       
-      // Use new JSON-based consolidation
-      const consensusResult = rigorAnalyzer.consolidateJsonResponses(enhancedResults);
+      // Use single-engine analysis (Grok only)
+      const consensusResult = rigorAnalyzer.analyzeSingleEngineResult(enhancedResults);
       
       // Store consensus result
       await storage.createQuestionResult({
@@ -253,8 +253,8 @@ export class DocumentProcessor {
         processingTime: aiResults.claude.processingTime,
       });
 
-      // Consolidate responses using voting
-      const consensusResult = rigorAnalyzer.consolidateResponses(aiResults);
+      // Use single-engine analysis (Grok only)
+      const consensusResult = rigorAnalyzer.analyzeSingleEngineResult(aiResults);
 
       // Store consensus result
       await storage.createQuestionResult({

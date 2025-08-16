@@ -1,6 +1,6 @@
 import { AIAnalysisResult, EducationalStandard, RigorAssessment } from './aiService';
 
-interface VotingResult {
+interface AnalysisResult {
   consensusStandards: EducationalStandard[];
   consensusRigorLevel: 'mild' | 'medium' | 'spicy';
   standardsVotes: any;
@@ -10,13 +10,45 @@ interface VotingResult {
 
 export class RigorAnalyzer {
   /**
+   * Analyzes single AI engine result (Grok only)
+   */
+  analyzeSingleEngineResult(aiResult: { grok: AIAnalysisResult }): AnalysisResult {
+    console.log('Analyzing single engine (Grok) result');
+    
+    const grokResult = aiResult.grok;
+    
+    // Since we only have one engine, no voting is needed
+    const result: AnalysisResult = {
+      consensusStandards: grokResult.standards || [],
+      consensusRigorLevel: grokResult.rigor.level,
+      standardsVotes: {
+        'grok-only': {
+          count: 1,
+          sources: ['grok'],
+          standards: grokResult.standards || []
+        }
+      },
+      rigorVotes: {
+        [grokResult.rigor.level]: {
+          count: 1,
+          sources: ['grok'],
+          assessments: [grokResult.rigor]
+        }
+      },
+      confidenceScore: grokResult.rigor.confidence || 0.8
+    };
+    
+    console.log('Single engine analysis result:', result);
+    return result;
+  }
+  /**
    * Consolidates JSON responses from AI engines using voting methodology
    */
   consolidateJsonResponses(aiResults: {
     chatgpt: AIAnalysisResult;
     grok: AIAnalysisResult;
     claude: AIAnalysisResult;
-  }): VotingResult {
+  }): AnalysisResult {
     console.log('Starting JSON response consolidation with voting...');
     
     // Extract JSON responses from each AI engine
@@ -76,7 +108,7 @@ export class RigorAnalyzer {
     chatgpt: AIAnalysisResult;
     grok: AIAnalysisResult;
     claude: AIAnalysisResult;
-  }): VotingResult {
+  }): AnalysisResult {
     const { chatgpt, grok, claude } = aiResults;
     
     // Consolidate standards using voting

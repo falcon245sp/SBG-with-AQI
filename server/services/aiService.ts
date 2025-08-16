@@ -343,9 +343,7 @@ Give special attention to identifying alignment with these specific standards.
           text: "Document analysis",
           context: "Analysis failed",
           aiResults: {
-            chatgpt: this.getDefaultResult(),
-            grok: this.getDefaultResult(),
-            claude: this.getDefaultResult()
+            grok: this.getDefaultResult()
           }
         }]
       };
@@ -366,41 +364,22 @@ Give special attention to identifying alignment with these specific standards.
     try {
       console.log('Analyzing document content with length:', documentContent.length);
       
-      const [chatgptResult, grokResult, claudeResult] = await Promise.all([
-        this.analyzeChatGPT(
-          `Analyze this educational document content for standards alignment and rigor level.`,
-          `Document content: ${documentContent}\n\nDocument type: ${mimeType}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
-          jurisdictions
-        ).catch((error) => {
-          console.error('ChatGPT analysis failed:', error);
-          return this.getDefaultResult();
-        }),
-        this.analyzeGrok(
-          `Analyze this educational document content for standards alignment and rigor level.`,
-          `Document content: ${documentContent}\n\nDocument type: ${mimeType}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
-          jurisdictions
-        ).catch((error) => {
-          console.error('Grok analysis failed:', error);
-          return this.getDefaultResult();
-        }),
-        this.analyzeClaude(
-          `Analyze this educational document content for standards alignment and rigor level.`,
-          `Document content: ${documentContent}\n\nDocument type: ${mimeType}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
-          jurisdictions
-        ).catch((error) => {
-          console.error('Claude analysis failed:', error);
-          return this.getDefaultResult();
-        })
-      ]);
+      console.log('Using Grok for document analysis');
+      const grokResult = await this.analyzeGrok(
+        `Analyze this educational document content for standards alignment and rigor level.`,
+        `Document content: ${documentContent}\n\nDocument type: ${mimeType}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
+        jurisdictions
+      ).catch((error) => {
+        console.error('Grok analysis failed:', error);
+        return this.getDefaultResult();
+      });
       
       return {
         questions: [{
           text: "Educational content analysis from uploaded document",
           context: `Document type: ${mimeType}, Content length: ${documentContent.length} chars, Jurisdictions: ${jurisdictions.join(', ')}`,
           aiResults: {
-            chatgpt: chatgptResult,
-            grok: grokResult,
-            claude: claudeResult
+            grok: grokResult
           }
         }]
       };
@@ -411,9 +390,7 @@ Give special attention to identifying alignment with these specific standards.
           text: "Document analysis",
           context: "Analysis failed",
           aiResults: {
-            chatgpt: this.getDefaultResult(),
-            grok: this.getDefaultResult(),
-            claude: this.getDefaultResult()
+            grok: this.getDefaultResult()
           }
         }]
       };
@@ -698,20 +675,19 @@ Give special attention to identifying alignment with these specific standards.
     jurisdictions: string[], 
     customization?: PromptCustomization
   ): Promise<{
-    chatgpt: AIAnalysisResult;
     grok: AIAnalysisResult;
-    claude: AIAnalysisResult;
   }> {
     const customPrompt = customization ? this.generateCustomPrompt(customization) : undefined;
     
-    // Run all three AI analyses in parallel with custom prompt
-    const [chatgpt, grok, claude] = await Promise.all([
-      this.analyzeChatGPTWithPrompt(questionText, context, jurisdictions, customPrompt),
-      this.analyzeGrokWithPrompt(questionText, context, jurisdictions, customPrompt),
-      this.analyzeClaudeWithPrompt(questionText, context, jurisdictions, customPrompt),
-    ]);
+    // Use only Grok for analysis with custom prompt
+    console.log('Using Grok for question analysis with custom prompt');
+    const grok = await this.analyzeGrokWithPrompt(questionText, context, jurisdictions, customPrompt)
+      .catch((error) => {
+        console.error('Grok analysis with custom prompt failed:', error);
+        return this.getDefaultResult();
+      });
 
-    return { chatgpt, grok, claude };
+    return { grok };
   }
 
   async analyzeDocumentWithStandards(
@@ -724,9 +700,7 @@ Give special attention to identifying alignment with these specific standards.
       text: string;
       context: string;
       aiResults: {
-        chatgpt: AIAnalysisResult;
         grok: AIAnalysisResult;
-        claude: AIAnalysisResult;
       };
     }>;
   }> {
@@ -736,44 +710,23 @@ Give special attention to identifying alignment with these specific standards.
       
       const dynamicPrompt = this.generatePromptWithStandards(focusStandards);
       
-      const [chatgptResult, grokResult, claudeResult] = await Promise.all([
-        this.analyzeChatGPTWithPrompt(
-          `Analyze this educational document content for standards alignment and rigor level.`,
-          `Document content: ${documentContent}\n\nDocument type: ${mimeType}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
-          jurisdictions,
-          dynamicPrompt
-        ).catch((error) => {
-          console.error('ChatGPT analysis failed:', error);
-          return this.getDefaultResult();
-        }),
-        this.analyzeGrokWithPrompt(
-          `Analyze this educational document content for standards alignment and rigor level.`,
-          `Document content: ${documentContent}\n\nDocument type: ${mimeType}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
-          jurisdictions,
-          dynamicPrompt
-        ).catch((error) => {
-          console.error('Grok analysis failed:', error);
-          return this.getDefaultResult();
-        }),
-        this.analyzeClaudeWithPrompt(
-          `Analyze this educational document content for standards alignment and rigor level.`,
-          `Document content: ${documentContent}\n\nDocument type: ${mimeType}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
-          jurisdictions,
-          dynamicPrompt
-        ).catch((error) => {
-          console.error('Claude analysis failed:', error);
-          return this.getDefaultResult();
-        })
-      ]);
+      console.log('Using Grok for document analysis with standards');
+      const grokResult = await this.analyzeGrokWithPrompt(
+        `Analyze this educational document content for standards alignment and rigor level.`,
+        `Document content: ${documentContent}\n\nDocument type: ${mimeType}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
+        jurisdictions,
+        dynamicPrompt
+      ).catch((error) => {
+        console.error('Grok analysis failed:', error);
+        return this.getDefaultResult();
+      });
       
       return {
         questions: [{
           text: "Educational content analysis from uploaded document",
           context: `Document type: ${mimeType}, Content length: ${documentContent.length} chars, Jurisdictions: ${jurisdictions.join(', ')}, Focus Standards: ${focusStandards?.join(', ') || 'None specified'}`,
           aiResults: {
-            chatgpt: chatgptResult,
-            grok: grokResult,
-            claude: claudeResult
+            grok: grokResult
           }
         }]
       };
@@ -784,9 +737,7 @@ Give special attention to identifying alignment with these specific standards.
           text: "Document analysis",
           context: "Analysis failed",
           aiResults: {
-            chatgpt: this.getDefaultResult(),
-            grok: this.getDefaultResult(),
-            claude: this.getDefaultResult()
+            grok: this.getDefaultResult()
           }
         }]
       };
@@ -794,18 +745,17 @@ Give special attention to identifying alignment with these specific standards.
   }
 
   async analyzeQuestion(questionText: string, context: string, jurisdictions: string[]): Promise<{
-    chatgpt: AIAnalysisResult;
     grok: AIAnalysisResult;
-    claude: AIAnalysisResult;
   }> {
-    // Run all three AI analyses in parallel
-    const [chatgpt, grok, claude] = await Promise.all([
-      this.analyzeChatGPT(questionText, context, jurisdictions),
-      this.analyzeGrok(questionText, context, jurisdictions),
-      this.analyzeClaude(questionText, context, jurisdictions),
-    ]);
+    // Use only Grok for analysis
+    console.log('Using Grok for question analysis');
+    const grok = await this.analyzeGrok(questionText, context, jurisdictions)
+      .catch((error) => {
+        console.error('Grok analysis failed:', error);
+        return this.getDefaultResult();
+      });
 
-    return { chatgpt, grok, claude };
+    return { grok };
   }
 }
 
