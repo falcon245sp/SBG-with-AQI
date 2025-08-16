@@ -526,7 +526,7 @@ Give special attention to identifying alignment with these specific standards.
           }
         ],
         response_format: { type: "json_object" },
-        max_tokens: 1000,
+        max_tokens: 10000,
       });
 
       const processingTime = Date.now() - startTime;
@@ -566,7 +566,7 @@ Give special attention to identifying alignment with these specific standards.
           }
         ],
         response_format: { type: "json_object" },
-        max_tokens: 1000,
+        max_tokens: 10000,
       });
 
       const processingTime = Date.now() - startTime;
