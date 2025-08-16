@@ -19,33 +19,29 @@ export class DocumentProcessor {
         throw new Error(`Document ${documentId} not found`);
       }
 
-      // Extract text from document
-      const extractedText = await this.extractTextFromFile(
+      // Send document directly to AI engines for OCR and analysis
+      const analysisResults = await aiService.analyzeDocument(
         document.originalPath,
-        document.mimeType
+        document.mimeType,
+        document.jurisdictions
       );
       
-      // Update document with extracted text
-      await storage.updateDocumentStatus(documentId, 'processing');
-      
-      // Parse questions from extracted text
-      const questions = await this.parseQuestions(extractedText);
-      
-      // Create question records
+      // Create question records from AI analysis
       const questionRecords = [];
-      for (let i = 0; i < questions.length; i++) {
+      for (let i = 0; i < analysisResults.questions.length; i++) {
+        const questionData = analysisResults.questions[i];
         const question = await storage.createQuestion({
           documentId: document.id,
           questionNumber: i + 1,
-          questionText: questions[i].text,
-          context: questions[i].context,
+          questionText: questionData.text,
+          context: questionData.context || '',
         });
-        questionRecords.push(question);
+        questionRecords.push({ ...question, aiResults: questionData.aiResults });
       }
 
-      // Process each question with all AI engines
+      // Store AI analysis results for each question
       for (const question of questionRecords) {
-        await this.processQuestion(question, document.jurisdictions);
+        await this.storeAIResults(question, question.aiResults);
       }
 
       // Update status to completed
@@ -75,139 +71,8 @@ export class DocumentProcessor {
     }
   }
 
-  private async extractTextFromFile(filePath: string, mimeType: string): Promise<string> {
+  private async storeAIResults(question: any, aiResults: any): Promise<void> {
     try {
-      switch (mimeType) {
-        case 'application/pdf':
-          try {
-            return await this.extractFromPDF(filePath);
-          } catch (pdfError) {
-            console.warn('PDF extraction failed, using fallback text extraction:', pdfError);
-            // Fallback: return a sample text for testing
-            return 'Sample educational question for testing: What is the main idea of this passage? A) Option A B) Option B C) Option C D) Option D';
-          }
-        
-        case 'application/msword':
-        case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
-          return await this.extractFromWord(filePath);
-        
-        default:
-          throw new Error(`Unsupported file type: ${mimeType}`);
-      }
-    } catch (error) {
-      console.error('Text extraction error:', error);
-      throw new Error(`Failed to extract text: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }
-
-  private async extractFromPDF(filePath: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      try {
-        const extract = new PDFExtract();
-        extract.extract(filePath, {}, (err: any, data: any) => {
-          if (err) {
-            reject(new Error(`PDF extraction failed: ${err.message || err}`));
-            return;
-          }
-          
-          if (!data || !data.pages) {
-            reject(new Error('Invalid PDF data structure'));
-            return;
-          }
-          
-          let text = '';
-          data.pages.forEach((page: any) => {
-            if (page.content) {
-              page.content.forEach((item: any) => {
-                if (item.str) {
-                  text += item.str + ' ';
-                }
-              });
-            }
-          });
-          
-          resolve(text.trim());
-        });
-      } catch (error) {
-        reject(new Error(`PDF extraction setup failed: ${error instanceof Error ? error.message : 'Unknown error'}`));
-      }
-    });
-  }
-
-  private async extractFromWord(filePath: string): Promise<string> {
-    const buffer = fs.readFileSync(filePath);
-    const result = await mammoth.extractRawText({ buffer });
-    return result.value;
-  }
-
-  private async parseQuestions(text: string): Promise<Array<{ text: string; context: string }>> {
-    // Simple question parsing - look for numbered questions
-    const questions = [];
-    const lines = text.split('\n').filter(line => line.trim().length > 0);
-    
-    let currentQuestion = '';
-    let currentContext = '';
-    let inQuestion = false;
-    
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-      
-      // Check if line starts with a number followed by a period or parenthesis
-      const questionMatch = trimmedLine.match(/^(\d+)[\.\)]\s*(.+)/);
-      
-      if (questionMatch) {
-        // Save previous question if exists
-        if (inQuestion && currentQuestion) {
-          questions.push({
-            text: currentQuestion.trim(),
-            context: currentContext.trim()
-          });
-        }
-        
-        // Start new question
-        currentQuestion = questionMatch[2];
-        currentContext = '';
-        inQuestion = true;
-      } else if (inQuestion) {
-        // Check if this looks like an answer choice (A, B, C, D)
-        if (trimmedLine.match(/^[A-Z][\.\)]\s/)) {
-          currentQuestion += ' ' + trimmedLine;
-        } else if (trimmedLine.length > 10) { // Context line
-          currentContext += ' ' + trimmedLine;
-        } else {
-          currentQuestion += ' ' + trimmedLine;
-        }
-      }
-    }
-    
-    // Don't forget the last question
-    if (inQuestion && currentQuestion) {
-      questions.push({
-        text: currentQuestion.trim(),
-        context: currentContext.trim()
-      });
-    }
-    
-    // If no numbered questions found, treat the whole text as one question
-    if (questions.length === 0 && text.trim().length > 0) {
-      questions.push({
-        text: text.trim(),
-        context: ''
-      });
-    }
-    
-    return questions;
-  }
-
-  private async processQuestion(question: any, jurisdictions: string[]): Promise<void> {
-    try {
-      // Get AI analyses from all three engines
-      const aiResults = await aiService.analyzeQuestion(
-        question.questionText,
-        question.context || '',
-        jurisdictions
-      );
-
       // Store individual AI responses
       await storage.createAiResponse({
         questionId: question.id,
@@ -254,12 +119,12 @@ export class DocumentProcessor {
         rigorVotes: consensusResult.rigorVotes,
         confidenceScore: consensusResult.confidenceScore.toString(),
       });
-
     } catch (error) {
-      console.error(`Error processing question ${question.id}:`, error);
-      // Continue processing other questions even if one fails
+      console.error(`Error storing AI results for question ${question.id}:`, error);
+      throw error;
     }
   }
+
 
   private async sendCallback(callbackUrl: string, data: any): Promise<void> {
     try {
