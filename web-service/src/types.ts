@@ -12,6 +12,9 @@ export interface ProcessingJob {
   fileName: string;
   fileSize: number;
   mimeType: string;
+  s3Key: string;
+  s3Bucket: string;
+  s3Url: string;
   jurisdictions: string[];
   focusStandards?: string[];
   callbackUrl?: string;
@@ -69,6 +72,9 @@ export interface ProcessingResult {
     fileName: string;
     fileSize: number;
     mimeType: string;
+    s3Key: string;
+    s3Bucket: string;
+    s3Url: string;
     processedAt: Date;
   };
   results: QuestionResult[];

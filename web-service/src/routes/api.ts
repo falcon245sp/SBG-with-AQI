@@ -1,1 +1,212 @@
-import express from 'express';\nimport multer from 'multer';\nimport { v4 as uuidv4 } from 'uuid';\nimport { ProcessDocumentRequest, ProcessingJob } from '../types';\nimport { DocumentProcessor } from '../services/documentProcessor';\nimport { JobStore } from '../services/jobStore';\nimport { validateApiKey } from '../middleware/auth';\n\nconst router = express.Router();\nconst documentProcessor = new DocumentProcessor();\nconst jobStore = new JobStore();\n\n// Configure multer for file uploads\nconst upload = multer({\n  dest: 'uploads/',\n  limits: {\n    fileSize: 50 * 1024 * 1024, // 50MB limit\n  },\n  fileFilter: (req, file, cb) => {\n    const allowedTypes = [\n      'application/pdf',\n      'application/msword',\n      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',\n      'application/vnd.google-apps.document'\n    ];\n    \n    if (allowedTypes.includes(file.mimetype)) {\n      cb(null, true);\n    } else {\n      cb(new Error('Invalid file type. Only PDF, Word, and Google Docs are allowed.'));\n    }\n  }\n});\n\n// Submit document for processing\nrouter.post('/process', validateApiKey, upload.single('document'), async (req, res) => {\n  try {\n    const file = req.file;\n    if (!file) {\n      return res.status(400).json({\n        error: 'missing_file',\n        message: 'No file uploaded'\n      });\n    }\n\n    const { customerId, jurisdictions, focusStandards, callbackUrl } = req.body;\n    \n    if (!customerId || !jurisdictions) {\n      return res.status(400).json({\n        error: 'missing_parameters',\n        message: 'customerId and jurisdictions are required'\n      });\n    }\n\n    // Parse jurisdictions and focus standards\n    const parsedJurisdictions = typeof jurisdictions === 'string' \n      ? jurisdictions.split(',').map((j: string) => j.trim())\n      : jurisdictions;\n    \n    let parsedFocusStandards: string[] = [];\n    if (focusStandards) {\n      parsedFocusStandards = typeof focusStandards === 'string'\n        ? focusStandards.split(',').map((s: string) => s.trim()).filter(Boolean)\n        : focusStandards;\n    }\n\n    // Create processing job\n    const jobId = uuidv4();\n    const job: ProcessingJob = {\n      jobId,\n      customerId,\n      fileName: file.originalname,\n      fileSize: file.size,\n      mimeType: file.mimetype,\n      jurisdictions: parsedJurisdictions,\n      focusStandards: parsedFocusStandards,\n      callbackUrl,\n      status: 'submitted',\n      progress: 0,\n      currentStep: 'queued',\n      startedAt: new Date()\n    };\n\n    // Store job\n    await jobStore.saveJob(job);\n\n    // Start processing asynchronously\n    documentProcessor.processDocument(jobId, file, job).catch(error => {\n      console.error(`Processing failed for job ${jobId}:`, error);\n      job.status = 'failed';\n      job.errorMessage = error.message;\n      jobStore.saveJob(job);\n    });\n\n    res.status(202).json({\n      jobId,\n      status: 'submitted',\n      estimatedCompletionTime: new Date(Date.now() + 5 * 60 * 1000).toISOString(), // 5 minutes\n      message: 'Document submitted for processing'\n    });\n  } catch (error) {\n    console.error('Error submitting document:', error);\n    res.status(500).json({\n      error: 'processing_error',\n      message: 'Failed to submit document for processing'\n    });\n  }\n});\n\n// Check processing status\nrouter.get('/status/:jobId', validateApiKey, async (req, res) => {\n  try {\n    const { jobId } = req.params;\n    const job = await jobStore.getJob(jobId);\n    \n    if (!job) {\n      return res.status(404).json({\n        error: 'job_not_found',\n        message: 'Job not found'\n      });\n    }\n\n    res.json({\n      jobId: job.jobId,\n      status: job.status,\n      progress: job.progress,\n      currentStep: job.currentStep,\n      startedAt: job.startedAt.toISOString(),\n      completedAt: job.completedAt?.toISOString(),\n      errorMessage: job.errorMessage\n    });\n  } catch (error) {\n    console.error('Error fetching job status:', error);\n    res.status(500).json({\n      error: 'status_error',\n      message: 'Failed to fetch job status'\n    });\n  }\n});\n\n// Get processing results\nrouter.get('/results/:jobId', validateApiKey, async (req, res) => {\n  try {\n    const { jobId } = req.params;\n    const job = await jobStore.getJob(jobId);\n    \n    if (!job) {\n      return res.status(404).json({\n        error: 'job_not_found',\n        message: 'Job not found'\n      });\n    }\n\n    if (job.status !== 'completed') {\n      return res.status(202).json({\n        error: 'processing_incomplete',\n        message: 'Processing not yet complete',\n        status: job.status\n      });\n    }\n\n    const results = await jobStore.getJobResults(jobId);\n    if (!results) {\n      return res.status(404).json({\n        error: 'results_not_found',\n        message: 'Results not found'\n      });\n    }\n\n    res.json(results);\n  } catch (error) {\n    console.error('Error fetching results:', error);\n    res.status(500).json({\n      error: 'results_error',\n      message: 'Failed to fetch results'\n    });\n  }\n});\n\nexport { router as apiRoutes };\n
+import express from 'express';
+import multer from 'multer';
+import { v4 as uuidv4 } from 'uuid';
+import { ProcessDocumentRequest, ProcessingJob } from '../types';
+import { DocumentProcessor } from '../services/documentProcessor';
+import { JobStore } from '../services/jobStore';
+import { s3Service } from '../services/s3Service';
+import { validateApiKey } from '../middleware/auth';
+
+const router = express.Router();
+const documentProcessor = new DocumentProcessor();
+const jobStore = new JobStore();
+
+// Configure multer for in-memory storage (files will be uploaded to S3)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.google-apps.document'
+    ];
+    
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only PDF, Word, and Google Docs are allowed.'));
+    }
+  }
+});
+
+// Submit document for processing
+router.post('/process', validateApiKey, upload.single('document'), async (req, res) => {
+  try {
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({
+        error: 'missing_file',
+        message: 'No file uploaded'
+      });
+    }
+
+    const { customerId, jurisdictions, focusStandards, callbackUrl } = req.body;
+    
+    if (!customerId || !jurisdictions) {
+      return res.status(400).json({
+        error: 'missing_parameters',
+        message: 'customerId and jurisdictions are required'
+      });
+    }
+
+    // Parse jurisdictions and focus standards
+    const parsedJurisdictions = typeof jurisdictions === 'string' 
+      ? jurisdictions.split(',').map((j: string) => j.trim())
+      : jurisdictions;
+    
+    let parsedFocusStandards: string[] = [];
+    if (focusStandards) {
+      parsedFocusStandards = typeof focusStandards === 'string'
+        ? focusStandards.split(',').map((s: string) => s.trim())
+        : focusStandards;
+    }
+
+    // Validate jurisdictions limit
+    if (parsedJurisdictions.length > 3) {
+      return res.status(400).json({
+        error: 'too_many_jurisdictions',
+        message: 'Maximum 3 jurisdictions allowed'
+      });
+    }
+
+    // Upload file to S3 in customer-specific area
+    const s3Result = await s3Service.uploadFile(customerId, file, file.originalname);
+
+    // Create processing job
+    const jobId = uuidv4();
+    const job: ProcessingJob = {
+      jobId,
+      customerId,
+      fileName: file.originalname,
+      fileSize: file.size,
+      mimeType: file.mimetype,
+      s3Key: s3Result.key,
+      s3Bucket: s3Result.bucket,
+      s3Url: s3Result.url,
+      jurisdictions: parsedJurisdictions,
+      focusStandards: parsedFocusStandards,
+      callbackUrl,
+      status: 'submitted',
+      progress: 0,
+      currentStep: 'queued',
+      startedAt: new Date()
+    };
+
+    // Save job
+    await jobStore.saveJob(job);
+
+    // Start processing asynchronously
+    documentProcessor.processDocument(jobId, job).catch(error => {
+      console.error(`Processing failed for job ${jobId}:`, error);
+      jobStore.updateJobStatus(jobId, 'failed', 0, 'error', error.message);
+    });
+
+    // Return immediate response
+    const estimatedCompletionTime = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes estimate
+    
+    res.status(202).json({
+      jobId,
+      status: 'submitted',
+      estimatedCompletionTime: estimatedCompletionTime.toISOString(),
+      message: `Document "${file.originalname}" submitted for processing`,
+      progress: 0,
+      currentStep: 'queued'
+    });
+
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({
+      error: 'upload_failed',
+      message: error instanceof Error ? error.message : 'Failed to process upload'
+    });
+  }
+});
+
+// Get job status
+router.get('/status/:jobId', validateApiKey, async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const job = await jobStore.getJob(jobId);
+    
+    if (!job) {
+      return res.status(404).json({
+        error: 'job_not_found',
+        message: 'Job not found'
+      });
+    }
+
+    const response = {
+      jobId: job.jobId,
+      status: job.status,
+      progress: job.progress,
+      currentStep: job.currentStep,
+      startedAt: job.startedAt,
+      completedAt: job.completedAt,
+      estimatedCompletionTime: job.completedAt || new Date(job.startedAt.getTime() + 5 * 60 * 1000),
+      errorMessage: job.errorMessage
+    };
+
+    res.json(response);
+  } catch (error) {
+    console.error('Status check error:', error);
+    res.status(500).json({
+      error: 'status_check_failed',
+      message: 'Failed to check job status'
+    });
+  }
+});
+
+// Get processing results
+router.get('/results/:jobId', validateApiKey, async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const job = await jobStore.getJob(jobId);
+    
+    if (!job) {
+      return res.status(404).json({
+        error: 'job_not_found',
+        message: 'Job not found'
+      });
+    }
+
+    if (job.status !== 'completed') {
+      return res.status(202).json({
+        error: 'job_not_completed',
+        message: 'Job is not yet completed',
+        status: job.status,
+        progress: job.progress
+      });
+    }
+
+    const results = await jobStore.getJobResults(jobId);
+    if (!results) {
+      return res.status(404).json({
+        error: 'results_not_found',
+        message: 'Results not found for completed job'
+      });
+    }
+
+    res.json(results);
+  } catch (error) {
+    console.error('Results retrieval error:', error);
+    res.status(500).json({
+      error: 'results_retrieval_failed',
+      message: 'Failed to retrieve results'
+    });
+  }
+});
+
+// Health check endpoint
+router.get('/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    version: '0.5.0'
+  });
+});
+
+export default router;

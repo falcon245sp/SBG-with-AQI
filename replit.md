@@ -21,6 +21,11 @@ The Document Processing Service is a full-stack web application that provides AI
   - Updated frontend to use web service client with job-based processing
   - Added focus standards support to upload workflow
   - Implemented job tracking and status display for submitted documents
+- **S3 Storage Integration**: Added AWS S3 support for document storage
+  - Customer-specific upload areas: `customers/{customerId}/uploads/`
+  - Secure file isolation by customer ID
+  - Prepared for AWS Lambda deployment with S3 file processing
+  - Updated web service to handle S3 file downloads and processing
 
 ## User Preferences
 
