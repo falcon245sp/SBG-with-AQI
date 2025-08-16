@@ -106,7 +106,7 @@ export const questionResults = pgTable("question_results", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Teacher overrides for crowd-sourced corrections
+// Teacher overrides for crowd-sourced corrections (with edit history)
 export const teacherOverrides = pgTable("teacher_overrides", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   questionId: varchar("question_id").notNull().references(() => questions.id),
@@ -117,6 +117,8 @@ export const teacherOverrides = pgTable("teacher_overrides", {
   confidenceLevel: integer("confidence_level").notNull().default(5), // 1-5 scale
   hasDomainChange: boolean("has_domain_change").notNull().default(false), // Flag for cross-domain changes
   domainChangeDetails: jsonb("domain_change_details"), // Store domain change information
+  isActive: boolean("is_active").notNull().default(true), // Flag to track current active override
+  isRevertedToAi: boolean("is_reverted_to_ai").notNull().default(false), // Flag for AI reversion
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

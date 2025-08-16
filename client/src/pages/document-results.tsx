@@ -27,7 +27,9 @@ import {
   AlertCircle,
   Edit3,
   Save,
-  X
+  X,
+  RotateCcw,
+  History
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -116,6 +118,28 @@ export default function DocumentResults() {
       return (docStatus === 'processing' || docStatus === 'pending') ? 3000 : false;
     },
     refetchIntervalInBackground: true,
+  });
+
+  // Mutation for reverting to AI analysis
+  const revertToAiMutation = useMutation({
+    mutationFn: async (questionId: string) => {
+      return await apiRequest(`/api/questions/${questionId}/revert-to-ai`, 'POST');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/documents/${documentId}/results`] });
+      toast({
+        title: "Reverted to AI Analysis",
+        description: "Successfully restored the original AI analysis results.",
+        variant: "default",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: "Failed to revert to AI analysis. Please try again.",
+        variant: "destructive",
+      });
+    },
   });
 
   const formatProcessingTime = (start?: string, end?: string) => {
@@ -353,55 +377,71 @@ export default function DocumentResults() {
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 {question.result && (
-                                  <Dialog 
-                                    open={openDialogs[question.id] || false}
-                                    onOpenChange={(open) => {
-                                      setOpenDialogs(prev => ({ ...prev, [question.id]: open }));
-                                    }}
-                                  >
-                                    <DialogTrigger asChild>
+                                  <div className="flex space-x-2">
+                                    <Dialog 
+                                      open={openDialogs[question.id] || false}
+                                      onOpenChange={(open) => {
+                                        setOpenDialogs(prev => ({ ...prev, [question.id]: open }));
+                                      }}
+                                    >
+                                      <DialogTrigger asChild>
+                                        <Button 
+                                          variant="outline" 
+                                          size="sm"
+                                          onClick={() => {
+                                            setEditingQuestionId(question.id);
+                                            setOpenDialogs(prev => ({ ...prev, [question.id]: true }));
+                                            // Use teacher override data if it exists, otherwise use AI data
+                                            const currentData = question.teacherOverride ? {
+                                              rigorLevel: question.teacherOverride.overriddenRigorLevel,
+                                              standards: question.teacherOverride.overriddenStandards?.map(s => s.code).join(', ') || '',
+                                              justification: question.teacherOverride.teacherJustification || '',
+                                              confidence: question.teacherOverride.confidenceLevel || 5
+                                            } : {
+                                              rigorLevel: question.result?.consensusRigorLevel || 'mild',
+                                              standards: question.result?.consensusStandards?.map(s => s.code).join(', ') || '',
+                                              justification: question.aiResponses?.[0]?.rigorJustification || '',
+                                              confidence: 5
+                                            };
+                                            setOverrideFormData(currentData);
+                                          }}
+                                        >
+                                          <Edit3 className="w-4 h-4 mr-1" />
+                                          Override
+                                        </Button>
+                                      </DialogTrigger>
+                                      <DialogContent className="max-w-2xl">
+                                        <DialogHeader>
+                                          <DialogTitle>Override AI Analysis - Question {question.questionNumber}</DialogTitle>
+                                        </DialogHeader>
+                                        <TeacherOverrideForm 
+                                          questionId={question.id}
+                                          questionText={question.questionText}
+                                          initialData={overrideFormData}
+                                          onSuccess={() => {
+                                            toast({ title: "Override saved successfully" });
+                                            queryClient.invalidateQueries({ queryKey: [`/api/documents/${documentId}/results`] });
+                                            // Close the dialog
+                                            setOpenDialogs(prev => ({ ...prev, [question.id]: false }));
+                                          }}
+                                        />
+                                      </DialogContent>
+                                    </Dialog>
+                                    
+                                    {/* Show Revert to AI button if there's a teacher override */}
+                                    {question.teacherOverride && (
                                       <Button 
                                         variant="outline" 
                                         size="sm"
-                                        onClick={() => {
-                                          setEditingQuestionId(question.id);
-                                          setOpenDialogs(prev => ({ ...prev, [question.id]: true }));
-                                          // Use teacher override data if it exists, otherwise use AI data
-                                          const currentData = question.teacherOverride ? {
-                                            rigorLevel: question.teacherOverride.overriddenRigorLevel,
-                                            standards: question.teacherOverride.overriddenStandards?.map(s => s.code).join(', ') || '',
-                                            justification: question.teacherOverride.teacherJustification || '',
-                                            confidence: question.teacherOverride.confidenceLevel || 5
-                                          } : {
-                                            rigorLevel: question.result?.consensusRigorLevel || 'mild',
-                                            standards: question.result?.consensusStandards?.map(s => s.code).join(', ') || '',
-                                            justification: question.aiResponses?.[0]?.rigorJustification || '',
-                                            confidence: 5
-                                          };
-                                          setOverrideFormData(currentData);
-                                        }}
+                                        onClick={() => revertToAiMutation.mutate(question.id)}
+                                        disabled={revertToAiMutation.isPending}
+                                        className="text-orange-600 border-orange-300 hover:bg-orange-50"
                                       >
-                                        <Edit3 className="w-4 h-4 mr-1" />
-                                        Override
+                                        <RotateCcw className="w-4 h-4 mr-1" />
+                                        {revertToAiMutation.isPending ? 'Reverting...' : 'Revert to AI'}
                                       </Button>
-                                    </DialogTrigger>
-                                    <DialogContent className="max-w-2xl">
-                                      <DialogHeader>
-                                        <DialogTitle>Override AI Analysis - Question {question.questionNumber}</DialogTitle>
-                                      </DialogHeader>
-                                      <TeacherOverrideForm 
-                                        questionId={question.id}
-                                        questionText={question.questionText}
-                                        initialData={overrideFormData}
-                                        onSuccess={() => {
-                                          toast({ title: "Override saved successfully" });
-                                          queryClient.invalidateQueries({ queryKey: [`/api/documents/${documentId}/results`] });
-                                          // Close the dialog
-                                          setOpenDialogs(prev => ({ ...prev, [question.id]: false }));
-                                        }}
-                                      />
-                                    </DialogContent>
-                                  </Dialog>
+                                    )}
+                                  </div>
                                 )}
                               </td>
                             </tr>

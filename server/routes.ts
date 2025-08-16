@@ -573,6 +573,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get override history for a question
+  app.get('/api/questions/:questionId/override-history', async (req: any, res) => {
+    try {
+      const questionId = req.params.questionId;
+      const history = await storage.getQuestionOverrideHistory(questionId);
+      res.json(history);
+    } catch (error) {
+      console.error('Error fetching override history:', error);
+      res.status(500).json({ message: 'Failed to fetch override history' });
+    }
+  });
+
+  // Revert to AI analysis (deactivate current override)
+  app.post('/api/questions/:questionId/revert-to-ai', async (req: any, res) => {
+    try {
+      const userId = 'test-user-123'; // Mock user ID
+      const questionId = req.params.questionId;
+      
+      await storage.revertToAI(questionId, userId);
+      res.json({ message: "Successfully reverted to AI analysis" });
+    } catch (error) {
+      console.error('Error reverting to AI:', error);
+      res.status(500).json({ message: 'Failed to revert to AI analysis' });
+    }
+  });
+
   app.get('/api/questions/:questionId/override', async (req: any, res) => {
     try {
       const userId = 'test-user-123'; // Mock user ID

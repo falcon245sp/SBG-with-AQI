@@ -191,11 +191,14 @@ export class DatabaseStorage implements IStorage {
         .from(aiResponses)
         .where(eq(aiResponses.questionId, question.id));
 
-      // Get teacher override if exists
+      // Get active teacher override if exists
       const [teacherOverride] = await db
         .select()
         .from(teacherOverrides)
-        .where(eq(teacherOverrides.questionId, question.id))
+        .where(and(
+          eq(teacherOverrides.questionId, question.id),
+          eq(teacherOverrides.isActive, true)
+        ))
         .orderBy(desc(teacherOverrides.updatedAt))
         .limit(1);
 
@@ -351,13 +354,25 @@ export class DatabaseStorage implements IStorage {
     };
   }
   
-  // Teacher override operations
+  // Teacher override operations with edit history
   async createTeacherOverride(userId: string, override: InsertTeacherOverride): Promise<TeacherOverride> {
+    // First deactivate any existing active overrides for this question
+    await db
+      .update(teacherOverrides)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(and(
+        eq(teacherOverrides.questionId, override.questionId),
+        eq(teacherOverrides.isActive, true)
+      ));
+
+    // Create new override
     const [teacherOverride] = await db
       .insert(teacherOverrides)
       .values({
         ...override,
         userId,
+        isActive: true,
+        isRevertedToAi: false,
       })
       .returning();
     return teacherOverride;
@@ -365,8 +380,8 @@ export class DatabaseStorage implements IStorage {
 
   async getQuestionOverride(questionId: string, userId?: string): Promise<TeacherOverride | undefined> {
     const whereClause = userId 
-      ? and(eq(teacherOverrides.questionId, questionId), eq(teacherOverrides.userId, userId))
-      : eq(teacherOverrides.questionId, questionId);
+      ? and(eq(teacherOverrides.questionId, questionId), eq(teacherOverrides.userId, userId), eq(teacherOverrides.isActive, true))
+      : and(eq(teacherOverrides.questionId, questionId), eq(teacherOverrides.isActive, true));
     
     const [override] = await db
       .select()
@@ -375,6 +390,29 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(teacherOverrides.createdAt))
       .limit(1);
     return override;
+  }
+
+  async getQuestionOverrideHistory(questionId: string): Promise<TeacherOverride[]> {
+    return await db
+      .select()
+      .from(teacherOverrides)
+      .where(eq(teacherOverrides.questionId, questionId))
+      .orderBy(desc(teacherOverrides.createdAt));
+  }
+
+  async revertToAI(questionId: string, userId: string): Promise<void> {
+    // Deactivate current active override and mark as reverted to AI
+    await db
+      .update(teacherOverrides)
+      .set({ 
+        isActive: false, 
+        isRevertedToAi: true, 
+        updatedAt: new Date() 
+      })
+      .where(and(
+        eq(teacherOverrides.questionId, questionId),
+        eq(teacherOverrides.isActive, true)
+      ));
   }
 
   async updateTeacherOverride(overrideId: string, updates: Partial<InsertTeacherOverride>): Promise<void> {
