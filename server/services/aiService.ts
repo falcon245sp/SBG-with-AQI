@@ -49,6 +49,12 @@ export interface AIAnalysisResult {
   processingTime: number;
   jsonResponse?: any; // Parsed JSON response from AI
   aiEngine?: string; // Which AI engine produced this result
+  allQuestions?: Array<{
+    questionNumber: string;
+    questionText: string;
+    standards: EducationalStandard[];
+    rigor: RigorAssessment;
+  }>; // All parsed questions from response
 }
 
 export interface PromptCustomization {
@@ -82,24 +88,7 @@ Deduplicate standards exactly as in prior outputs.
 Analyze based solely on the provided documents; no external assumptions.
 Keep responses efficient: focus on accuracy, brevity, and structure for easy replication across units.
 
-Provide your analysis in JSON format:
-{
-  "standards": [
-    {
-      "code": "CCSS.MATH.5.NBT.A.1",
-      "description": "Recognize that in a multi-digit number...",
-      "jurisdiction": "Common Core",
-      "gradeLevel": "5",
-      "subject": "Mathematics"
-    }
-  ],
-  "rigor": {
-    "level": "medium",
-    "dokLevel": "DOK 2",
-    "justification": "This question requires students to apply concepts and make connections...",
-    "confidence": 0.85
-  }
-}`;
+Please provide a detailed analysis of each individual question/problem in the document.`;
 
 export class AIService {
   private generatePromptWithStandards(focusStandards?: string[]): string {
@@ -570,7 +559,6 @@ Give special attention to identifying alignment with these specific standards.
             content: `Question: ${questionText}\n\nContext: ${context}`
           }
         ],
-        response_format: { type: "json_object" },
         max_tokens: 10000,
       });
 
@@ -582,18 +570,26 @@ Give special attention to identifying alignment with these specific standards.
       
       const processingTime = Date.now() - startTime;
       const rawContent = grokResponse.choices[0].message.content || '';
-      console.log('=== GROK JSON RESPONSE ===');
+      console.log('=== GROK NATURAL LANGUAGE RESPONSE ===');
       console.log(rawContent);
-      console.log('=== END JSON RESPONSE ===');
+      console.log('=== END NATURAL LANGUAGE RESPONSE ===');
       
-      // Parse the JSON response
-      const result = JSON.parse(rawContent);
+      // Parse the natural language response to extract individual questions
+      const questions = this.parseGrokQuestionAnalysis(rawContent);
+      
+      // For now, return the first question's analysis to maintain compatibility
+      // TODO: Update system to handle multiple questions properly
+      const firstQuestion = questions[0] || {
+        standards: [],
+        rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'No questions found', confidence: 0.1 }
+      };
       
       return {
-        standards: result.standards || [],
-        rigor: result.rigor || { level: 'mild', dokLevel: 'DOK 1', justification: 'Unable to assess', confidence: 0.1 },
+        standards: firstQuestion.standards,
+        rigor: firstQuestion.rigor,
         rawResponse: grokResponse,
-        processingTime
+        processingTime,
+        allQuestions: questions // Store all questions for future use
       };
     } catch (error) {
       console.error('=== GROK JSON PARSE ERROR DEBUG ===');
@@ -779,6 +775,149 @@ Give special attention to identifying alignment with these specific standards.
     }
 
     return { standards, rigor };
+  }
+
+  private parseGrokQuestionAnalysis(content: string): Array<{
+    questionNumber: string;
+    questionText: string;
+    standards: EducationalStandard[];
+    rigor: RigorAssessment;
+  }> {
+    console.log('=== PARSING GROK QUESTION ANALYSIS ===');
+    
+    const questions: Array<{
+      questionNumber: string;
+      questionText: string;
+      standards: EducationalStandard[];
+      rigor: RigorAssessment;
+    }> = [];
+
+    try {
+      // Split content by question numbers (1., 2., 3A., etc.)
+      const questionMatches = content.match(/(\d+[A-Z]?\.\s\*\*[^*]+\*\*[\s\S]*?)(?=\d+[A-Z]?\.\s\*\*|$)/g);
+      
+      if (questionMatches) {
+        console.log(`Found ${questionMatches.length} question sections`);
+        
+        for (const questionMatch of questionMatches) {
+          try {
+            // Extract question number and text
+            const headerMatch = questionMatch.match(/(\d+[A-Z]?)\.\s\*\*([^*]+)\*\*/);
+            if (!headerMatch) continue;
+            
+            const questionNumber = headerMatch[1];
+            const questionText = headerMatch[2].trim();
+            
+            console.log(`Parsing question ${questionNumber}: ${questionText.substring(0, 50)}...`);
+            
+            // Extract primary standards
+            const standardsMatch = questionMatch.match(/\*\*Primary Standard\(s\):\*\*\s*([^\n]+)/);
+            const standardsText = standardsMatch ? standardsMatch[1].trim() : '';
+            
+            // Parse standards - look for patterns like "Determine Domain F-IF.A.1"
+            const standards: EducationalStandard[] = [];
+            if (standardsText) {
+              const standardCodes = standardsText.match(/[A-Z]+-[A-Z]+\.[A-Z]+\.\d+/g) || [];
+              for (const code of standardCodes) {
+                // Extract description from the text before the code
+                const descMatch = standardsText.match(new RegExp(`([^,]+?)\\s+${code.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+                const description = descMatch ? descMatch[1].trim() : `Analysis for ${code}`;
+                
+                standards.push({
+                  code,
+                  description,
+                  jurisdiction: 'Common Core',
+                  gradeLevel: 'Grade 9-12',
+                  subject: 'Mathematics'
+                });
+              }
+            }
+            
+            // Extract rigor information
+            let rigorLevel: 'mild' | 'medium' | 'spicy' = 'mild';
+            let dokLevel = 'DOK 1';
+            let justification = 'No justification provided';
+            let confidence = 0.5;
+            
+            // Extract rigor level
+            const rigorMatch = questionMatch.match(/\*\*Rigor Level:\*\*\s*(Mild|Medium|Spicy)/i);
+            if (rigorMatch) {
+              rigorLevel = rigorMatch[1].toLowerCase() as 'mild' | 'medium' | 'spicy';
+            }
+            
+            // Extract DOK level
+            const dokMatch = questionMatch.match(/\*\*DOK Level:\*\*\s*DOK\s*(\d)/);
+            if (dokMatch) {
+              dokLevel = `DOK ${dokMatch[1]}`;
+            }
+            
+            // Extract justification
+            const justificationMatch = questionMatch.match(/\*\*Justification:\*\*\s*([\s\S]*?)(?=\*\*|$)/);
+            if (justificationMatch) {
+              justification = justificationMatch[1].trim();
+            }
+            
+            // Extract confidence
+            const confidenceMatch = questionMatch.match(/\*\*Confidence Level:\*\*\s*(\d*\.?\d+)/);
+            if (confidenceMatch) {
+              confidence = parseFloat(confidenceMatch[1]);
+            }
+            
+            questions.push({
+              questionNumber,
+              questionText,
+              standards,
+              rigor: {
+                level: rigorLevel,
+                dokLevel,
+                justification,
+                confidence
+              }
+            });
+            
+            console.log(`Successfully parsed question ${questionNumber} with ${standards.length} standards, rigor: ${rigorLevel}`);
+            
+          } catch (questionError) {
+            console.error('Error parsing individual question:', questionError);
+          }
+        }
+      } else {
+        console.log('No question sections found, trying alternative parsing...');
+        
+        // Fallback: look for any standards mentioned in the overall text
+        const allStandardCodes = content.match(/[A-Z]+-[A-Z]+\.[A-Z]+\.\d+/g) || [];
+        if (allStandardCodes.length > 0) {
+          // Create a single question with all found standards
+          const uniqueCodes = [...new Set(allStandardCodes)];
+          const standards = uniqueCodes.map(code => ({
+            code,
+            description: `Analysis for ${code}`,
+            jurisdiction: 'Common Core',
+            gradeLevel: 'Grade 9-12',
+            subject: 'Mathematics'
+          }));
+          
+          questions.push({
+            questionNumber: '1',
+            questionText: 'Document analysis',
+            standards,
+            rigor: {
+              level: 'medium',
+              dokLevel: 'DOK 2',
+              justification: 'Comprehensive document analysis',
+              confidence: 0.7
+            }
+          });
+        }
+      }
+      
+      console.log(`Successfully parsed ${questions.length} questions`);
+      
+    } catch (error) {
+      console.error('Error parsing Grok question analysis:', error);
+    }
+
+    return questions;
   }
 
   async analyzeClaudeWithPrompt(
