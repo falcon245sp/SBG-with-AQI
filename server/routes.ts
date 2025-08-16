@@ -95,8 +95,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create document record
       const document = await storage.createDocument(userId, validationResult.data);
       
-      // Add to processing queue
-      await storage.addToProcessingQueue(document.id);
+      // Add to event-driven processing queue
+      await queueProcessor.addToQueue(document.id);
       
       // Processing will be handled by the queue processor
 
@@ -158,9 +158,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           console.log(`Created document ${document.id} for file ${file.originalname}`);
           
-          // Add to processing queue
-          const queueItem = await storage.addToProcessingQueue(document.id);
-          console.log(`Added document ${document.id} to queue with item ID ${queueItem.id}`);
+          // Add to event-driven processing queue  
+          await queueProcessor.addToQueue(document.id);
+          console.log(`Added document ${document.id} to event-driven queue`);
           
           // Processing will be handled by the queue processor
           
@@ -503,7 +503,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const document = await storage.createDocument(validatedKey.userId, validationResult.data);
-      await storage.addToProcessingQueue(document.id);
+      await queueProcessor.addToQueue(document.id);
       
       // Parse focus standards if provided
       let focusStandards: string[] = [];

@@ -433,57 +433,76 @@ export class DocumentProcessor {
   }
 }
 
-// Queue processor class for handling sequential document processing
+// Event-driven queue processor class for handling sequential document processing
 export class QueueProcessor {
   private isProcessing = false;
-  private processingInterval: NodeJS.Timeout | null = null;
+  private isStarted = false;
 
   constructor(private processor: DocumentProcessor) {}
 
   start() {
-    if (this.processingInterval) {
+    if (this.isStarted) {
       return; // Already started
     }
 
-    console.log('Starting queue processor...');
-    this.processingInterval = setInterval(async () => {
-      await this.processNextItem();
-    }, 5000); // Check every 5 seconds to allow UI to see queue
+    this.isStarted = true;
+    console.log('Event-driven queue processor started and ready');
+    
+    // Don't automatically process - only process when items are added
   }
 
   stop() {
-    if (this.processingInterval) {
-      clearInterval(this.processingInterval);
-      this.processingInterval = null;
-      console.log('Queue processor stopped');
+    this.isStarted = false;
+    console.log('Queue processor stopped');
+  }
+
+  // Push: Add item to queue and start processing if not already processing
+  async addToQueue(documentId: string, priority = 0): Promise<void> {
+    if (!this.isStarted) {
+      throw new Error('Queue processor not started');
+    }
+
+    console.log(`PUSH: Adding document ${documentId} to queue`);
+    await storage.addToProcessingQueue(documentId, priority);
+    
+    // Start processing if not already processing
+    if (!this.isProcessing) {
+      console.log('Queue was idle, starting processing immediately');
+      this.processNext();
+    } else {
+      console.log('Queue processor is busy, item will be processed next');
     }
   }
 
-  private async processNextItem() {
-    if (this.isProcessing) {
-      return; // Already processing something
+  // Pop: Process next item in queue
+  private async processNext(): Promise<void> {
+    if (!this.isStarted || this.isProcessing) {
+      return;
     }
 
+    const nextItem = await storage.getNextQueueItem();
+    if (!nextItem) {
+      console.log('Queue is empty, processor going idle');
+      return; // No items in queue - stop processing
+    }
+
+    this.isProcessing = true;
+    console.log(`POP: Processing document from queue: ${nextItem.documentId}`);
+
     try {
-      const nextItem = await storage.getNextQueueItem();
-      if (!nextItem) {
-        return; // No items in queue
-      }
-
-      this.isProcessing = true;
-      console.log(`Processing document from queue: ${nextItem.documentId}`);
-
       // Check if document still exists and is pending
       const document = await storage.getDocument(nextItem.documentId);
       if (!document || document.status !== 'pending') {
         console.log(`Skipping document ${nextItem.documentId} - invalid status: ${document?.status}`);
         await storage.removeFromQueue(nextItem.id);
+        this.isProcessing = false;
+        // Try next item since we skipped this one
+        this.processNext();
         return;
       }
 
-      // Add a 3-second delay before processing to allow UI to show queue status
-      console.log(`Waiting 3 seconds before processing ${document.fileName} to allow UI to display queue...`);
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Brief delay to allow UI to show queue status
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Process the document
       await this.processor.processDocument(nextItem.documentId);
@@ -491,10 +510,17 @@ export class QueueProcessor {
       // Remove from queue after successful processing
       await storage.removeFromQueue(nextItem.id);
       console.log(`Successfully processed and removed from queue: ${nextItem.documentId}`);
+      
     } catch (error) {
       console.error('Queue processing error:', error);
     } finally {
       this.isProcessing = false;
+      // Only continue processing if we're still started and processed an item
+      if (this.isStarted) {
+        console.log('Processing complete, checking for next item...');
+        // Use setTimeout to prevent stack overflow and allow other operations
+        setTimeout(() => this.processNext(), 100);
+      }
     }
   }
 
@@ -502,7 +528,7 @@ export class QueueProcessor {
   getStatus() {
     return {
       isProcessing: this.isProcessing,
-      isRunning: this.processingInterval !== null
+      isRunning: this.isStarted
     };
   }
 }

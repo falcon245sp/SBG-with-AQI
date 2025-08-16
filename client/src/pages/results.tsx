@@ -40,10 +40,7 @@ export default function ResultsPage() {
     refetchIntervalInBackground: true,
   });
 
-  // Debug logging
-  console.log('Queue status data:', queueStatus);
-  console.log('Queue error:', queueError);
-  console.log('Should show queue card:', queueStatus?.queueSize > 0);
+  // Queue status available for UI
 
   const filteredDocuments = documents?.filter((doc: any) => {
     const matchesSearch = doc.fileName.toLowerCase().includes(searchTerm.toLowerCase());
