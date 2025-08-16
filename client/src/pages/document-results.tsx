@@ -70,6 +70,12 @@ export default function DocumentResults() {
   const { data: documentResult, isLoading, error } = useQuery<DocumentResult>({
     queryKey: [`/api/documents/${documentId}/results`],
     enabled: !!documentId,
+    refetchInterval: (query) => {
+      // Poll every 3 seconds if the document is still processing
+      const docStatus = query.state.data?.document.status;
+      return (docStatus === 'processing' || docStatus === 'pending') ? 3000 : false;
+    },
+    refetchIntervalInBackground: true,
   });
 
   const formatProcessingTime = (start?: string, end?: string) => {

@@ -82,7 +82,29 @@ export class DocumentProcessor {
 
       console.log(`Completed processing for document: ${documentId}`);
     } catch (error) {
-      console.error(`Error processing document ${documentId}:`, error);
+      console.error(`=== DOCUMENT PROCESSING FAILURE ANALYSIS ===`);
+      console.error('Document ID:', documentId);
+      console.error('Error type:', error instanceof Error ? error.constructor.name : typeof error);
+      console.error('Error message:', error instanceof Error ? error.message : String(error));
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      console.error('Callback URL:', callbackUrl || 'None');
+      
+      // Additional context logging
+      try {
+        const document = await storage.getDocument(documentId);
+        console.error('Document details:', {
+          fileName: document?.fileName,
+          fileSize: document?.fileSize,
+          mimeType: document?.mimeType,
+          status: document?.status,
+          jurisdictions: document?.jurisdictions
+        });
+      } catch (docError) {
+        console.error('Could not retrieve document details:', docError);
+      }
+      
+      console.error('=== END PROCESSING FAILURE ANALYSIS ===');
+      
       await storage.updateDocumentStatus(documentId, 'failed', error instanceof Error ? error.message : 'Unknown error');
       
       if (callbackUrl) {
@@ -97,32 +119,31 @@ export class DocumentProcessor {
 
   private async storeAIResultsWithJsonVoting(question: any, aiResults: any): Promise<void> {
     try {
-      console.log(`Processing AI results with JSON voting for question ${question.id}`);
+      console.log(`Processing AI results for question ${question.id} (Grok only)`);
+      console.log('Raw AI results received:', JSON.stringify(aiResults, null, 2));
       
-      // Ensure each AI result has jsonResponse and aiEngine properties
+      // Validate Grok result exists
+      if (!aiResults.grok) {
+        throw new Error('Missing Grok analysis result');
+      }
+      
+      // Ensure Grok result has required properties and extract JSON
       const enhancedResults = {
-        chatgpt: {
-          ...aiResults.chatgpt,
-          jsonResponse: this.extractJsonFromResponse(aiResults.chatgpt, 'chatgpt'),
-          aiEngine: 'chatgpt'
-        },
         grok: {
           ...aiResults.grok,
           jsonResponse: this.extractJsonFromResponse(aiResults.grok, 'grok'),
           aiEngine: 'grok'
-        },
-        claude: {
-          ...aiResults.claude,
-          jsonResponse: this.extractJsonFromResponse(aiResults.claude, 'claude'),
-          aiEngine: 'claude'
         }
       };
       
-      // Store individual AI responses
+      console.log('Enhanced results:', JSON.stringify(enhancedResults, null, 2));
+      
+      // Store individual AI responses (only Grok)
       await this.storeIndividualAIResponses(question, enhancedResults);
       
       // Use single-engine analysis (Grok only)
       const consensusResult = rigorAnalyzer.analyzeSingleEngineResult(enhancedResults);
+      console.log('Consensus result:', JSON.stringify(consensusResult, null, 2));
       
       // Store consensus result
       await storage.createQuestionResult({
@@ -134,48 +155,91 @@ export class DocumentProcessor {
         confidenceScore: consensusResult.confidenceScore.toString(),
       });
       
-      console.log(`Successfully processed question ${question.id} with JSON voting`);
+      console.log(`Successfully processed question ${question.id} with single-engine analysis`);
     } catch (error) {
-      console.error(`Error storing AI results with JSON voting for question ${question.id}:`, error);
+      console.error(`=== DETAILED ERROR ANALYSIS for question ${question.id} ===`);
+      console.error('Error type:', error instanceof Error ? error.constructor.name : typeof error);
+      console.error('Error message:', error instanceof Error ? error.message : String(error));
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      console.error('Raw AI results structure:', JSON.stringify(aiResults, null, 2));
+      console.error('Question details:', JSON.stringify(question, null, 2));
+      console.error('=== END ERROR ANALYSIS ===');
+      
       // Fallback to original method
-      await this.storeAIResults(question, aiResults);
+      try {
+        console.log('Attempting fallback storage method...');
+        await this.storeAIResults(question, aiResults);
+        console.log('Fallback storage succeeded');
+      } catch (fallbackError) {
+        console.error('Fallback storage also failed:', fallbackError);
+        throw error; // Re-throw original error
+      }
     }
   }
   
   private extractJsonFromResponse(aiResult: any, engineName: string): any {
     try {
+      console.log(`=== JSON EXTRACTION ATTEMPT for ${engineName} ===`);
+      console.log('AI result has keys:', Object.keys(aiResult || {}));
+      
       // If jsonResponse already exists, use it
       if (aiResult.jsonResponse) {
+        console.log('Using existing jsonResponse');
         return aiResult.jsonResponse;
       }
       
       // Try to extract JSON from rawResponse
       if (aiResult.rawResponse) {
         let content = '';
+        console.log('Raw response structure:', Object.keys(aiResult.rawResponse));
         
-        if (engineName === 'claude' && aiResult.rawResponse.content) {
-          const contentItem = aiResult.rawResponse.content[0];
-          content = contentItem && contentItem.type === 'text' ? contentItem.text : '';
-        } else if ((engineName === 'chatgpt' || engineName === 'grok') && aiResult.rawResponse.choices) {
+        if (engineName === 'grok' && aiResult.rawResponse.choices) {
           content = aiResult.rawResponse.choices[0]?.message?.content || '';
+          console.log('Extracted content from Grok (first 200 chars):', content.substring(0, 200));
         }
         
         if (content) {
-          const parsed = JSON.parse(content);
-          console.log(`Extracted JSON from ${engineName}:`, parsed);
-          return parsed;
+          try {
+            const parsed = JSON.parse(content);
+            console.log(`Successfully extracted JSON from ${engineName}`);
+            return parsed;
+          } catch (parseError) {
+            console.error(`=== JSON PARSE ERROR for ${engineName} ===`);
+            console.error('Parse error:', parseError);
+            console.error('Content length:', content.length);
+            console.error('Content sample:', content.substring(0, 500));
+            console.error('=== END PARSE ERROR ===');
+            throw parseError;
+          }
+        } else {
+          console.warn(`No content found in ${engineName} rawResponse`);
         }
+      } else {
+        console.warn(`No rawResponse found for ${engineName}`);
       }
       
       // Fallback: construct from existing structured data
-      return {
+      console.log('Using fallback JSON construction');
+      const fallback = {
         standards: aiResult.standards || [],
         rigor: aiResult.rigor || { level: 'mild', dokLevel: 'DOK 1', justification: 'No data available', confidence: 0.1 }
       };
+      console.log('Fallback result:', fallback);
+      return fallback;
     } catch (error) {
-      console.error(`Error extracting JSON from ${engineName} response:`, error);
+      console.error(`=== JSON EXTRACTION FAILED for ${engineName} ===`);
+      console.error('Error type:', error instanceof Error ? error.constructor.name : typeof error);
+      console.error('Error message:', error instanceof Error ? error.message : String(error));
+      console.error('AI result structure:', JSON.stringify(aiResult, (key, value) => {
+        if (typeof value === 'string' && value.length > 100) {
+          return value.substring(0, 100) + '...[truncated]';
+        }
+        return value;
+      }, 2));
+      console.error('=== END JSON EXTRACTION FAILURE ===');
+      
       return {
-        error: 'Failed to parse JSON response',
+        error: `Failed to parse JSON response: ${error instanceof Error ? error.message : String(error)}`,
         standards: aiResult.standards || [],
         rigor: aiResult.rigor || { level: 'mild', dokLevel: 'DOK 1', justification: 'Parse error', confidence: 0.1 }
       };
@@ -183,64 +247,70 @@ export class DocumentProcessor {
   }
   
   private async storeIndividualAIResponses(question: any, enhancedResults: any): Promise<void> {
-    await storage.createAiResponse({
-      questionId: question.id,
-      aiEngine: 'chatgpt',
-      standardsIdentified: enhancedResults.chatgpt.standards,
-      rigorLevel: enhancedResults.chatgpt.rigor.level,
-      rigorJustification: enhancedResults.chatgpt.rigor.justification,
-      confidence: enhancedResults.chatgpt.rigor.confidence.toString(),
-      rawResponse: enhancedResults.chatgpt.rawResponse,
-      processingTime: enhancedResults.chatgpt.processingTime,
-    });
-
-    await storage.createAiResponse({
-      questionId: question.id,
-      aiEngine: 'grok',
-      standardsIdentified: enhancedResults.grok.standards,
-      rigorLevel: enhancedResults.grok.rigor.level,
-      rigorJustification: enhancedResults.grok.rigor.justification,
-      confidence: enhancedResults.grok.rigor.confidence.toString(),
-      rawResponse: enhancedResults.grok.rawResponse,
-      processingTime: enhancedResults.grok.processingTime,
-    });
-
-    await storage.createAiResponse({
-      questionId: question.id,
-      aiEngine: 'claude',
-      standardsIdentified: enhancedResults.claude.standards,
-      rigorLevel: enhancedResults.claude.rigor.level,
-      rigorJustification: enhancedResults.claude.rigor.justification,
-      confidence: enhancedResults.claude.rigor.confidence.toString(),
-      rawResponse: enhancedResults.claude.rawResponse,
-      processingTime: enhancedResults.claude.processingTime,
-    });
+    try {
+      console.log('Storing individual AI response for Grok engine');
+      
+      if (!enhancedResults.grok) {
+        throw new Error('Missing Grok result in enhanced results');
+      }
+      
+      const grokResult = enhancedResults.grok;
+      console.log('Grok result details:', {
+        hasStandards: !!grokResult.standards,
+        standardsCount: grokResult.standards?.length || 0,
+        rigorLevel: grokResult.rigor?.level,
+        confidence: grokResult.rigor?.confidence,
+        processingTime: grokResult.processingTime
+      });
+      
+      await storage.createAiResponse({
+        questionId: question.id,
+        aiEngine: 'grok',
+        standardsIdentified: grokResult.standards || [],
+        rigorLevel: grokResult.rigor?.level || 'mild',
+        rigorJustification: grokResult.rigor?.justification || 'No justification provided',
+        confidence: (grokResult.rigor?.confidence || 0.5).toString(),
+        rawResponse: grokResult.rawResponse || {},
+        processingTime: grokResult.processingTime || 0,
+      });
+      
+      console.log('Successfully stored Grok AI response');
+    } catch (error) {
+      console.error('Error storing individual AI responses:', error);
+      console.error('Enhanced results structure:', JSON.stringify(enhancedResults, null, 2));
+      throw error;
+    }
   }
 
   private async storeAIResults(question: any, aiResults: any): Promise<void> {
     try {
-      // Store individual AI responses
-      await storage.createAiResponse({
-        questionId: question.id,
-        aiEngine: 'chatgpt',
-        standardsIdentified: aiResults.chatgpt.standards,
-        rigorLevel: aiResults.chatgpt.rigor.level,
-        rigorJustification: aiResults.chatgpt.rigor.justification,
-        confidence: aiResults.chatgpt.rigor.confidence.toString(),
-        rawResponse: aiResults.chatgpt.rawResponse,
-        processingTime: aiResults.chatgpt.processingTime,
+      console.log('Storing AI results (Grok only)');
+      
+      if (!aiResults.grok) {
+        throw new Error('Missing Grok analysis result');
+      }
+      
+      const grokResult = aiResults.grok;
+      console.log('Storing Grok result with details:', {
+        hasStandards: !!grokResult.standards,
+        standardsCount: grokResult.standards?.length || 0,
+        rigorLevel: grokResult.rigor?.level,
+        confidence: grokResult.rigor?.confidence
       });
-
+      
+      // Store Grok AI response
       await storage.createAiResponse({
         questionId: question.id,
         aiEngine: 'grok',
-        standardsIdentified: aiResults.grok.standards,
-        rigorLevel: aiResults.grok.rigor.level,
-        rigorJustification: aiResults.grok.rigor.justification,
-        confidence: aiResults.grok.rigor.confidence.toString(),
-        rawResponse: aiResults.grok.rawResponse,
-        processingTime: aiResults.grok.processingTime,
+        standardsIdentified: grokResult.standards || [],
+        rigorLevel: grokResult.rigor?.level || 'mild',
+        rigorJustification: grokResult.rigor?.justification || 'No justification provided',
+        confidence: (grokResult.rigor?.confidence || 0.5).toString(),
+        rawResponse: grokResult.rawResponse || {},
+        processingTime: grokResult.processingTime || 0,
       });
+      
+      console.log('Successfully stored Grok AI result');
 
       await storage.createAiResponse({
         questionId: question.id,

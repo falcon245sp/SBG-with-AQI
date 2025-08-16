@@ -52,9 +52,15 @@ export default function Dashboard() {
     queryKey: ["/api/stats"],
   });
 
-  // Fetch recent documents
+  // Fetch recent documents with live polling for processing documents
   const { data: documents, isLoading: documentsLoading } = useQuery<any[]>({
     queryKey: ["/api/documents"],
+    refetchInterval: (query) => {
+      // Poll every 2 seconds if there are any processing documents
+      const hasProcessingDocs = query.state.data?.some((doc: any) => doc.status === 'processing' || doc.status === 'pending');
+      return hasProcessingDocs ? 2000 : false;
+    },
+    refetchIntervalInBackground: true,
   });
 
   // No need to fetch templates anymore - using direct input
