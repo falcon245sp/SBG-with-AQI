@@ -260,9 +260,16 @@ export default function DocumentResults() {
                                   <span className="text-sm text-slate-400">No standards identified</span>
                                 )}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
+                              <td className="px-6 py-4">
                                 {question.result ? (
-                                  <RigorBadge level={question.result.consensusRigorLevel} />
+                                  <div className="space-y-2">
+                                    <RigorBadge level={question.result.consensusRigorLevel} />
+                                    {question.aiResponses && question.aiResponses.length > 0 && question.aiResponses[0].rigorJustification && (
+                                      <div className="text-xs text-slate-600 max-w-xs">
+                                        {question.aiResponses[0].rigorJustification}
+                                      </div>
+                                    )}
+                                  </div>
                                 ) : (
                                   <span className="text-sm text-slate-400">Not analyzed</span>
                                 )}
