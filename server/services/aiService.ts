@@ -84,6 +84,7 @@ Return your analysis as a JSON object with a "problems" array. Each problem shou
 - standardCode: The standard code (e.g., "F-IF.A.1")
 - standardDescription: Brief description of what the standard covers
 - rigorLevel: Either "mild", "medium", or "spicy"
+- rigorJustification: Explain why you chose this rigor level for this specific problem
 
 Focus on:
 - Map to relevant mathematics standards (F-BF, F-IF, A-REI, etc.)
@@ -361,7 +362,7 @@ Give special attention to identifying alignment with these specific standards.
                 rigor: {
                   level: problem.rigorLevel as 'mild' | 'medium' | 'spicy',
                   dokLevel: problem.rigorLevel === 'mild' ? 'DOK 1' : problem.rigorLevel === 'medium' ? 'DOK 2' : 'DOK 3',
-                  justification: `${problem.rigorLevel} rigor level based on problem complexity`,
+                  justification: problem.rigorJustification || `${problem.rigorLevel} rigor level based on problem complexity`,
                   confidence: 0.85
                 },
                 rawResponse: grokResult.rawResponse,
@@ -589,9 +590,10 @@ Give special attention to identifying alignment with these specific standards.
                       rigorLevel: { 
                         type: "string",
                         enum: ["mild", "medium", "spicy"]
-                      }
+                      },
+                      rigorJustification: { type: "string" }
                     },
-                    required: ["problemNumber", "standardCode", "standardDescription", "rigorLevel"],
+                    required: ["problemNumber", "standardCode", "standardDescription", "rigorLevel", "rigorJustification"],
                     additionalProperties: false
                   }
                 }
@@ -721,9 +723,10 @@ Give special attention to identifying alignment with these specific standards.
                       rigorLevel: { 
                         type: "string",
                         enum: ["mild", "medium", "spicy"]
-                      }
+                      },
+                      rigorJustification: { type: "string" }
                     },
-                    required: ["problemNumber", "standardCode", "standardDescription", "rigorLevel"],
+                    required: ["problemNumber", "standardCode", "standardDescription", "rigorLevel", "rigorJustification"],
                     additionalProperties: false
                   }
                 }
