@@ -560,18 +560,28 @@ Give special attention to identifying alignment with these specific standards.
             content: `Question: ${questionText}\n\nContext: ${context}`
           }
         ],
-        response_format: { type: "json_object" },
         max_tokens: 10000,
       });
 
       const processingTime = Date.now() - startTime;
-      const result = JSON.parse(response.choices[0].message.content || '{}');
+      const rawContent = response.choices[0].message.content || '';
+      
+      // Parse the natural language response for individual problems
+      const questions = this.parseGrokQuestionAnalysis(rawContent);
+      console.log(`analyzeGrokWithPrompt: Found ${questions.length} questions`);
+      
+      // Return first question's data for compatibility, store all questions
+      const firstQuestion = questions[0] || {
+        standards: [],
+        rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'No questions found', confidence: 0.1 }
+      };
       
       return {
-        standards: result.standards || [],
-        rigor: result.rigor || { level: 'mild', dokLevel: 'DOK 1', justification: 'Unable to assess', confidence: 0.1 },
+        standards: firstQuestion.standards,
+        rigor: firstQuestion.rigor,
         rawResponse: response,
-        processingTime
+        processingTime,
+        allQuestions: questions // Store all parsed questions
       };
     } catch (error) {
       console.error('Grok analysis error:', error);
@@ -853,16 +863,22 @@ Give special attention to identifying alignment with these specific standards.
       // Split content by lines and look for problem lines
       const lines = content.split('\n');
       console.log('Analyzing content lines for bullet format...');
+      console.log('Total lines to analyze:', lines.length);
       
-      for (const line of lines) {
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
         const trimmedLine = line.trim();
+        
+        if (trimmedLine.length > 0) {
+          console.log(`Line ${i}: "${trimmedLine}"`);
+        }
         
         // Look for pattern: Problem X: F-IF.A.1 (description), (rigor)
         const bulletMatch = trimmedLine.match(/^Problem\s+(\d+):\s*([A-Z-]+\.[A-Z-]+\.[A-Z0-9]+)\s*\(([^)]+)\),?\s*\((\w+)\)/i);
         
         if (bulletMatch) {
           const [, questionNumber, standardCode, standardDescription, rigorLevel] = bulletMatch;
-          console.log(`Found problem ${questionNumber}: ${standardCode} (${rigorLevel})`);
+          console.log(`✓ MATCHED problem ${questionNumber}: ${standardCode} (${rigorLevel})`);
           
           questions.push({
             questionNumber,
