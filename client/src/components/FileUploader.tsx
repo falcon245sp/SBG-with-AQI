@@ -26,6 +26,10 @@ export function FileUploader({
   className,
   multiple = false
 }: FileUploaderProps) {
+  console.log('=== FILE UPLOADER PROPS DEBUG ===');
+  console.log('multiple prop:', multiple);
+  console.log('onFileUpload exists:', !!onFileUpload);
+  console.log('onFilesUpload exists:', !!onFilesUpload);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [error, setError] = useState<string>("");
 
