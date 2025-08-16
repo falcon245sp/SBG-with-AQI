@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Sidebar } from "@/components/Sidebar";
 import { RigorBadge } from "@/components/RigorBadge";
 import { ProcessingStatus } from "@/components/ProcessingStatus";
@@ -210,6 +211,7 @@ export default function DocumentResults() {
 
               {/* Simple Three-Column Analysis */}
               {sortedResults && sortedResults.length > 0 ? (
+                <TooltipProvider>
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center">
@@ -260,16 +262,20 @@ export default function DocumentResults() {
                                   <span className="text-sm text-slate-400">No standards identified</span>
                                 )}
                               </td>
-                              <td className="px-6 py-4">
+                              <td className="px-6 py-4 whitespace-nowrap">
                                 {question.result ? (
-                                  <div className="space-y-2">
+                                  question.aiResponses && question.aiResponses.length > 0 && question.aiResponses[0].rigorJustification ? (
+                                    <Tooltip>
+                                      <TooltipTrigger>
+                                        <RigorBadge level={question.result.consensusRigorLevel} />
+                                      </TooltipTrigger>
+                                      <TooltipContent className="max-w-sm p-3">
+                                        <p className="text-sm">{question.aiResponses[0].rigorJustification}</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  ) : (
                                     <RigorBadge level={question.result.consensusRigorLevel} />
-                                    {question.aiResponses && question.aiResponses.length > 0 && question.aiResponses[0].rigorJustification && (
-                                      <div className="text-xs text-slate-600 max-w-xs">
-                                        {question.aiResponses[0].rigorJustification}
-                                      </div>
-                                    )}
-                                  </div>
+                                  )
                                 ) : (
                                   <span className="text-sm text-slate-400">Not analyzed</span>
                                 )}
@@ -281,6 +287,7 @@ export default function DocumentResults() {
                     </div>
                   </CardContent>
                 </Card>
+                </TooltipProvider>
               ) : (
                 <Card>
                   <CardContent className="py-12 text-center">
