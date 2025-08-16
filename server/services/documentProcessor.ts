@@ -62,7 +62,7 @@ export class DocumentProcessor {
         const questionData = analysisResults.questions[i];
         const question = await storage.createQuestion({
           documentId: document.id,
-          questionNumber: (questionData as any).problemNumber || (i + 1), // Use actual problem number or fallback to sequential
+          questionNumber: questionData.problemNumber || String(i + 1), // Use actual problem number or fallback to sequential
           questionText: questionData.text,
           context: questionData.context || '',
         });

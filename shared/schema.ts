@@ -74,7 +74,7 @@ export const documents = pgTable("documents", {
 export const questions = pgTable("questions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   documentId: varchar("document_id").notNull().references(() => documents.id),
-  questionNumber: integer("question_number").notNull(),
+  questionNumber: text("question_number").notNull(),
   questionText: text("question_text").notNull(),
   context: text("context"),
   createdAt: timestamp("created_at").defaultNow(),
