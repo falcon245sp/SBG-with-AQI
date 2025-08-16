@@ -46,8 +46,8 @@ export function Sidebar() {
                 const isActive = location === item.href;
                 return (
                   <Link key={item.name} href={item.href}>
-                    <a className={cn(
-                      "group flex items-center px-2 py-2 text-sm font-medium rounded-md",
+                    <div className={cn(
+                      "group flex items-center px-2 py-2 text-sm font-medium rounded-md cursor-pointer",
                       isActive
                         ? "bg-blue-50 text-blue-700"
                         : "text-slate-600 hover:bg-slate-50"
@@ -57,7 +57,7 @@ export function Sidebar() {
                         isActive ? "text-blue-500" : "text-slate-400"
                       )} />
                       {item.name}
-                    </a>
+                    </div>
                   </Link>
                 );
               })}
