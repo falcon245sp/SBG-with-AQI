@@ -7,13 +7,14 @@ export interface CommonCoreStandard {
   subject: 'Math' | 'ELA';
   gradeLevel: string;
   domain?: string;
+  majorDomain?: 'Algebra' | 'Geometry' | 'Statistics' | 'Functions' | 'NumberSense' | 'Reading' | 'Writing' | 'Speaking' | 'Language';
 }
 
 export const COMMON_CORE_MATH_STANDARDS: CommonCoreStandard[] = [
   // Kindergarten
-  { code: 'K.CC.A.1', description: 'Count to 100 by ones and by tens', subject: 'Math', gradeLevel: 'K', domain: 'Counting & Cardinality' },
-  { code: 'K.CC.A.2', description: 'Count forward beginning from a given number', subject: 'Math', gradeLevel: 'K', domain: 'Counting & Cardinality' },
-  { code: 'K.CC.A.3', description: 'Write numbers from 0 to 20', subject: 'Math', gradeLevel: 'K', domain: 'Counting & Cardinality' },
+  { code: 'K.CC.A.1', description: 'Count to 100 by ones and by tens', subject: 'Math', gradeLevel: 'K', domain: 'Counting & Cardinality', majorDomain: 'NumberSense' },
+  { code: 'K.CC.A.2', description: 'Count forward beginning from a given number', subject: 'Math', gradeLevel: 'K', domain: 'Counting & Cardinality', majorDomain: 'NumberSense' },
+  { code: 'K.CC.A.3', description: 'Write numbers from 0 to 20', subject: 'Math', gradeLevel: 'K', domain: 'Counting & Cardinality', majorDomain: 'NumberSense' },
   
   // Grade 1
   { code: '1.OA.A.1', description: 'Use addition and subtraction within 20 to solve word problems', subject: 'Math', gradeLevel: '1', domain: 'Operations & Algebraic Thinking' },
@@ -57,42 +58,42 @@ export const COMMON_CORE_MATH_STANDARDS: CommonCoreStandard[] = [
   { code: '8.G.A.1', description: 'Verify experimentally the properties of rotations, reflections, and translations', subject: 'Math', gradeLevel: '8', domain: 'Geometry' },
   
   // High School Algebra
-  { code: 'A-SSE.A.1', description: 'Interpret expressions that represent a quantity in terms of its context', subject: 'Math', gradeLevel: '9-12', domain: 'Algebra - Seeing Structure in Expressions' },
-  { code: 'A-SSE.A.2', description: 'Use the structure of an expression to identify ways to rewrite it', subject: 'Math', gradeLevel: '9-12', domain: 'Algebra - Seeing Structure in Expressions' },
-  { code: 'A-APR.A.1', description: 'Understand that polynomials form a system analogous to the integers', subject: 'Math', gradeLevel: '9-12', domain: 'Algebra - Arithmetic with Polynomials and Rational Expressions' },
-  { code: 'A-CED.A.1', description: 'Create equations and inequalities in one variable', subject: 'Math', gradeLevel: '9-12', domain: 'Algebra - Creating Equations' },
-  { code: 'A-CED.A.2', description: 'Create equations in two or more variables to represent relationships', subject: 'Math', gradeLevel: '9-12', domain: 'Algebra - Creating Equations' },
-  { code: 'A-REI.A.1', description: 'Explain each step in solving a simple equation', subject: 'Math', gradeLevel: '9-12', domain: 'Algebra - Reasoning with Equations and Inequalities' },
-  { code: 'A-REI.B.3', description: 'Solve linear equations and inequalities in one variable', subject: 'Math', gradeLevel: '9-12', domain: 'Algebra - Reasoning with Equations and Inequalities' },
-  { code: 'A-REI.B.4', description: 'Solve quadratic equations in one variable', subject: 'Math', gradeLevel: '9-12', domain: 'Algebra - Reasoning with Equations and Inequalities' },
+  { code: 'A-SSE.A.1', description: 'Interpret expressions that represent a quantity in terms of its context', subject: 'Math', gradeLevel: '9-12', domain: 'Algebra - Seeing Structure in Expressions', majorDomain: 'Algebra' },
+  { code: 'A-SSE.A.2', description: 'Use the structure of an expression to identify ways to rewrite it', subject: 'Math', gradeLevel: '9-12', domain: 'Algebra - Seeing Structure in Expressions', majorDomain: 'Algebra' },
+  { code: 'A-APR.A.1', description: 'Understand that polynomials form a system analogous to the integers', subject: 'Math', gradeLevel: '9-12', domain: 'Algebra - Arithmetic with Polynomials and Rational Expressions', majorDomain: 'Algebra' },
+  { code: 'A-CED.A.1', description: 'Create equations and inequalities in one variable', subject: 'Math', gradeLevel: '9-12', domain: 'Algebra - Creating Equations', majorDomain: 'Algebra' },
+  { code: 'A-CED.A.2', description: 'Create equations in two or more variables to represent relationships', subject: 'Math', gradeLevel: '9-12', domain: 'Algebra - Creating Equations', majorDomain: 'Algebra' },
+  { code: 'A-REI.A.1', description: 'Explain each step in solving a simple equation', subject: 'Math', gradeLevel: '9-12', domain: 'Algebra - Reasoning with Equations and Inequalities', majorDomain: 'Algebra' },
+  { code: 'A-REI.B.3', description: 'Solve linear equations and inequalities in one variable', subject: 'Math', gradeLevel: '9-12', domain: 'Algebra - Reasoning with Equations and Inequalities', majorDomain: 'Algebra' },
+  { code: 'A-REI.B.4', description: 'Solve quadratic equations in one variable', subject: 'Math', gradeLevel: '9-12', domain: 'Algebra - Reasoning with Equations and Inequalities', majorDomain: 'Algebra' },
   
   // High School Functions
-  { code: 'F-IF.A.1', description: 'Understand that a function from one set assigns to each element', subject: 'Math', gradeLevel: '9-12', domain: 'Functions - Interpreting Functions' },
-  { code: 'F-IF.A.2', description: 'Use function notation, evaluate functions for inputs', subject: 'Math', gradeLevel: '9-12', domain: 'Functions - Interpreting Functions' },
-  { code: 'F-IF.B.4', description: 'For a function that models a relationship between two quantities', subject: 'Math', gradeLevel: '9-12', domain: 'Functions - Interpreting Functions' },
-  { code: 'F-BF.A.1', description: 'Write a function that describes a relationship between two quantities', subject: 'Math', gradeLevel: '9-12', domain: 'Functions - Building Functions' },
-  { code: 'F-BF.B.3', description: 'Identify the effect on the graph of replacing f(x) by f(x) + k', subject: 'Math', gradeLevel: '9-12', domain: 'Functions - Building Functions' },
+  { code: 'F-IF.A.1', description: 'Understand that a function from one set assigns to each element', subject: 'Math', gradeLevel: '9-12', domain: 'Functions - Interpreting Functions', majorDomain: 'Functions' },
+  { code: 'F-IF.A.2', description: 'Use function notation, evaluate functions for inputs', subject: 'Math', gradeLevel: '9-12', domain: 'Functions - Interpreting Functions', majorDomain: 'Functions' },
+  { code: 'F-IF.B.4', description: 'For a function that models a relationship between two quantities', subject: 'Math', gradeLevel: '9-12', domain: 'Functions - Interpreting Functions', majorDomain: 'Functions' },
+  { code: 'F-BF.A.1', description: 'Write a function that describes a relationship between two quantities', subject: 'Math', gradeLevel: '9-12', domain: 'Functions - Building Functions', majorDomain: 'Functions' },
+  { code: 'F-BF.B.3', description: 'Identify the effect on the graph of replacing f(x) by f(x) + k', subject: 'Math', gradeLevel: '9-12', domain: 'Functions - Building Functions', majorDomain: 'Functions' },
   
   // High School Geometry
-  { code: 'G-CO.A.1', description: 'Know precise definitions of angle, circle, perpendicular line', subject: 'Math', gradeLevel: '9-12', domain: 'Geometry - Congruence' },
-  { code: 'G-CO.B.6', description: 'Use geometric descriptions of rigid motions to transform figures', subject: 'Math', gradeLevel: '9-12', domain: 'Geometry - Congruence' },
-  { code: 'G-SRT.A.1', description: 'Verify experimentally the properties of dilations', subject: 'Math', gradeLevel: '9-12', domain: 'Geometry - Similarity, Right Triangles, and Trigonometry' },
-  { code: 'G-GPE.A.1', description: 'Derive the equation of a circle of given center and radius', subject: 'Math', gradeLevel: '9-12', domain: 'Geometry - Expressing Geometric Properties with Equations' },
+  { code: 'G-CO.A.1', description: 'Know precise definitions of angle, circle, perpendicular line', subject: 'Math', gradeLevel: '9-12', domain: 'Geometry - Congruence', majorDomain: 'Geometry' },
+  { code: 'G-CO.B.6', description: 'Use geometric descriptions of rigid motions to transform figures', subject: 'Math', gradeLevel: '9-12', domain: 'Geometry - Congruence', majorDomain: 'Geometry' },
+  { code: 'G-SRT.A.1', description: 'Verify experimentally the properties of dilations', subject: 'Math', gradeLevel: '9-12', domain: 'Geometry - Similarity, Right Triangles, and Trigonometry', majorDomain: 'Geometry' },
+  { code: 'G-GPE.A.1', description: 'Derive the equation of a circle of given center and radius', subject: 'Math', gradeLevel: '9-12', domain: 'Geometry - Expressing Geometric Properties with Equations', majorDomain: 'Geometry' },
   
   // High School Statistics
-  { code: 'S-ID.A.1', description: 'Represent data with plots on the real number line', subject: 'Math', gradeLevel: '9-12', domain: 'Statistics - Interpreting Categorical and Quantitative Data' },
-  { code: 'S-ID.B.6', description: 'Represent data on two quantitative variables on a scatter plot', subject: 'Math', gradeLevel: '9-12', domain: 'Statistics - Interpreting Categorical and Quantitative Data' },
-  { code: 'S-IC.A.1', description: 'Understand statistics as a process for making inferences', subject: 'Math', gradeLevel: '9-12', domain: 'Statistics - Making Inferences and Justifying Conclusions' },
+  { code: 'S-ID.A.1', description: 'Represent data with plots on the real number line', subject: 'Math', gradeLevel: '9-12', domain: 'Statistics - Interpreting Categorical and Quantitative Data', majorDomain: 'Statistics' },
+  { code: 'S-ID.B.6', description: 'Represent data on two quantitative variables on a scatter plot', subject: 'Math', gradeLevel: '9-12', domain: 'Statistics - Interpreting Categorical and Quantitative Data', majorDomain: 'Statistics' },
+  { code: 'S-IC.A.1', description: 'Understand statistics as a process for making inferences', subject: 'Math', gradeLevel: '9-12', domain: 'Statistics - Making Inferences and Justifying Conclusions', majorDomain: 'Statistics' },
 ];
 
 export const COMMON_CORE_ELA_STANDARDS: CommonCoreStandard[] = [
   // Reading Literature
-  { code: 'RL.K.1', description: 'With prompting and support, ask and answer questions about key details', subject: 'ELA', gradeLevel: 'K', domain: 'Reading Literature' },
-  { code: 'RL.1.1', description: 'Ask and answer questions about key details in a text', subject: 'ELA', gradeLevel: '1', domain: 'Reading Literature' },
-  { code: 'RL.2.1', description: 'Ask and answer such questions as who, what, where, when, why', subject: 'ELA', gradeLevel: '2', domain: 'Reading Literature' },
-  { code: 'RL.3.1', description: 'Ask and answer questions to demonstrate understanding of a text', subject: 'ELA', gradeLevel: '3', domain: 'Reading Literature' },
-  { code: 'RL.4.1', description: 'Refer to details and examples in a text when explaining what the text says', subject: 'ELA', gradeLevel: '4', domain: 'Reading Literature' },
-  { code: 'RL.5.1', description: 'Quote accurately from a text when explaining what the text says', subject: 'ELA', gradeLevel: '5', domain: 'Reading Literature' },
+  { code: 'RL.K.1', description: 'With prompting and support, ask and answer questions about key details', subject: 'ELA', gradeLevel: 'K', domain: 'Reading Literature', majorDomain: 'Reading' },
+  { code: 'RL.1.1', description: 'Ask and answer questions about key details in a text', subject: 'ELA', gradeLevel: '1', domain: 'Reading Literature', majorDomain: 'Reading' },
+  { code: 'RL.2.1', description: 'Ask and answer such questions as who, what, where, when, why', subject: 'ELA', gradeLevel: '2', domain: 'Reading Literature', majorDomain: 'Reading' },
+  { code: 'RL.3.1', description: 'Ask and answer questions to demonstrate understanding of a text', subject: 'ELA', gradeLevel: '3', domain: 'Reading Literature', majorDomain: 'Reading' },
+  { code: 'RL.4.1', description: 'Refer to details and examples in a text when explaining what the text says', subject: 'ELA', gradeLevel: '4', domain: 'Reading Literature', majorDomain: 'Reading' },
+  { code: 'RL.5.1', description: 'Quote accurately from a text when explaining what the text says', subject: 'ELA', gradeLevel: '5', domain: 'Reading Literature', majorDomain: 'Reading' },
   
   // Reading Informational Text
   { code: 'RI.K.1', description: 'With prompting and support, ask and answer questions about key details', subject: 'ELA', gradeLevel: 'K', domain: 'Reading Informational Text' },
@@ -100,9 +101,9 @@ export const COMMON_CORE_ELA_STANDARDS: CommonCoreStandard[] = [
   { code: 'RI.2.1', description: 'Ask and answer such questions as who, what, where, when, why', subject: 'ELA', gradeLevel: '2', domain: 'Reading Informational Text' },
   
   // Writing
-  { code: 'W.K.1', description: 'Use a combination of drawing, dictating, and writing to compose opinion pieces', subject: 'ELA', gradeLevel: 'K', domain: 'Writing' },
-  { code: 'W.1.1', description: 'Write opinion pieces in which they introduce the topic or name the book', subject: 'ELA', gradeLevel: '1', domain: 'Writing' },
-  { code: 'W.2.1', description: 'Write opinion pieces in which they introduce the topic or book', subject: 'ELA', gradeLevel: '2', domain: 'Writing' },
+  { code: 'W.K.1', description: 'Use a combination of drawing, dictating, and writing to compose opinion pieces', subject: 'ELA', gradeLevel: 'K', domain: 'Writing', majorDomain: 'Writing' },
+  { code: 'W.1.1', description: 'Write opinion pieces in which they introduce the topic or name the book', subject: 'ELA', gradeLevel: '1', domain: 'Writing', majorDomain: 'Writing' },
+  { code: 'W.2.1', description: 'Write opinion pieces in which they introduce the topic or book', subject: 'ELA', gradeLevel: '2', domain: 'Writing', majorDomain: 'Writing' },
   
   // Speaking and Listening
   { code: 'SL.K.1', description: 'Participate in collaborative conversations with diverse partners', subject: 'ELA', gradeLevel: 'K', domain: 'Speaking and Listening' },
@@ -175,4 +176,50 @@ export function validateStandardsList(codes: string[]): {
   }
   
   return { valid, invalid, suggestions };
+}
+
+// Domain change detection
+export function detectDomainChange(originalStandards: string[], newStandards: string[]): {
+  hasSignificantChange: boolean;
+  originalDomains: string[];
+  newDomains: string[];
+  changes: string[];
+} {
+  const getDomainsFromCodes = (codes: string[]) => {
+    return codes
+      .map(code => findCommonCoreStandard(code)?.majorDomain)
+      .filter((domain): domain is NonNullable<typeof domain> => !!domain);
+  };
+  
+  const originalDomains = getDomainsFromCodes(originalStandards);
+  const newDomains = getDomainsFromCodes(newStandards);
+  
+  const originalSet = new Set(originalDomains);
+  const newSet = new Set(newDomains);
+  
+  // Check for major domain changes
+  const addedDomains = Array.from(newSet).filter(d => !originalSet.has(d));
+  const removedDomains = Array.from(originalSet).filter(d => !newSet.has(d));
+  
+  const changes = [];
+  if (removedDomains.length > 0) {
+    changes.push(`Removed: ${removedDomains.join(', ')}`);
+  }
+  if (addedDomains.length > 0) {
+    changes.push(`Added: ${addedDomains.join(', ')}`);
+  }
+  
+  // Consider it significant if completely changing domains or going cross-domain
+  const hasSignificantChange = (
+    originalSet.size > 0 && 
+    newSet.size > 0 && 
+    !Array.from(originalSet).some(d => newSet.has(d))
+  ) || addedDomains.length > 0;
+  
+  return {
+    hasSignificantChange,
+    originalDomains: Array.from(originalSet),
+    newDomains: Array.from(newSet),
+    changes
+  };
 }

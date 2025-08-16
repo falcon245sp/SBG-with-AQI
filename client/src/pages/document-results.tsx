@@ -15,7 +15,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { RigorBadge } from "@/components/RigorBadge";
 import { ProcessingStatus } from "@/components/ProcessingStatus";
 import { apiRequest } from "@/lib/queryClient";
-import { validateStandardsList, type CommonCoreStandard } from "@shared/commonCoreStandards";
+import { validateStandardsList, detectDomainChange, type CommonCoreStandard } from "@shared/commonCoreStandards";
 import { 
   ArrowLeft, 
   FileText, 
@@ -88,11 +88,6 @@ export default function DocumentResults() {
     justification: string;
     confidence: number;
   }>({ rigorLevel: 'mild', standards: '', justification: '', confidence: 5 });
-  const [standardsValidation, setStandardsValidation] = useState<{
-    valid: CommonCoreStandard[];
-    invalid: string[];
-    suggestions: { [key: string]: CommonCoreStandard[] };
-  } | null>(null);
 
   const { data: documentResult, isLoading, error } = useQuery<DocumentResult>({
     queryKey: [`/api/documents/${documentId}/results`],
@@ -396,6 +391,17 @@ function TeacherOverrideForm({
 }) {
   const [formData, setFormData] = useState(initialData);
   const { toast } = useToast();
+  const [standardsValidation, setStandardsValidation] = useState<{
+    valid: CommonCoreStandard[];
+    invalid: string[];
+    suggestions: { [key: string]: CommonCoreStandard[] };
+  } | null>(null);
+  const [domainChangeWarning, setDomainChangeWarning] = useState<{
+    hasSignificantChange: boolean;
+    originalDomains: string[];
+    newDomains: string[];
+    changes: string[];
+  } | null>(null);
   
   const saveOverrideMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -433,16 +439,16 @@ function TeacherOverrideForm({
         return [...validStandards, ...invalidStandards];
       };
 
-      return await apiRequest(`/api/questions/${questionId}/override`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          overriddenRigorLevel: data.rigorLevel,
-          overriddenStandards: processStandards(data.standards),
-          teacherJustification: data.justification || '',
-          confidenceLevel: data.confidence || 5
-        })
-      });
+      const payload = {
+        overriddenRigorLevel: data.rigorLevel,
+        overriddenStandards: processStandards(data.standards),
+        teacherJustification: data.justification || '',
+        confidenceLevel: data.confidence || 5,
+        hasDomainChange: domainChangeWarning?.hasSignificantChange || false,
+        domainChangeDetails: domainChangeWarning || null
+      };
+      
+      return await apiRequest('POST', `/api/questions/${questionId}/override`, payload);
     },
     onSuccess: () => {
       onSuccess();
@@ -457,10 +463,11 @@ function TeacherOverrideForm({
     }
   });
 
-  // Validate standards whenever input changes
-  const validateStandards = (standardsInput: string) => {
+  // Validate standards and detect domain changes whenever input changes
+  const validateStandards = (standardsInput: string, originalStandards?: string[]) => {
     if (!standardsInput.trim()) {
       setStandardsValidation(null);
+      setDomainChangeWarning(null);
       return;
     }
     
@@ -471,6 +478,12 @@ function TeacherOverrideForm({
     
     const validation = validateStandardsList(codes);
     setStandardsValidation(validation);
+    
+    // Check for domain changes if we have original standards
+    if (originalStandards && originalStandards.length > 0) {
+      const domainChange = detectDomainChange(originalStandards, codes);
+      setDomainChangeWarning(domainChange.hasSignificantChange ? domainChange : null);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -503,6 +516,16 @@ function TeacherOverrideForm({
       if (!proceed) {
         return;
       }
+    }
+    
+    // Check for domain changes requiring justification
+    if (domainChangeWarning && !formData.justification.trim()) {
+      toast({
+        title: "Justification Required",
+        description: "Cross-domain changes require explanation. Please provide your reasoning in the justification field.",
+        variant: "destructive"
+      });
+      return;
     }
     
     saveOverrideMutation.mutate(formData);
@@ -540,10 +563,15 @@ function TeacherOverrideForm({
           value={formData.standards}
           onChange={(e) => {
             setFormData(prev => ({ ...prev, standards: e.target.value }));
-            validateStandards(e.target.value);
+            // Get original standards from initial data to detect domain changes
+            const originalCodes = initialData.standards
+              .split(',')
+              .map(s => s.trim())
+              .filter(s => s.length > 0);
+            validateStandards(e.target.value, originalCodes);
           }}
           placeholder="e.g., A-REI.B.4, F-BF.A.1, RL.3.1"
-          className={standardsValidation?.invalid.length ? "border-amber-300" : ""}
+          className={standardsValidation?.invalid.length || domainChangeWarning ? "border-amber-300" : ""}
         />
         <p className="text-xs text-slate-500">Enter valid Common Core standard codes separated by commas</p>
         
@@ -565,10 +593,28 @@ function TeacherOverrideForm({
                   {Object.entries(standardsValidation.suggestions).map(([invalid, suggestions]) => (
                     suggestions.length > 0 && (
                       <div key={invalid} className="mt-1">
-                        <strong>{invalid}</strong> - Did you mean: {suggestions.slice(0, 2).map(s => s.code).join(', ')}?
+                        <strong>{invalid}</strong> - Did you mean: {(suggestions as CommonCoreStandard[]).slice(0, 2).map(s => s.code).join(', ')}?
                       </div>
                     )
                   ))}
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {/* Domain Change Warning */}
+            {domainChangeWarning && (
+              <Alert className="border-orange-400 bg-orange-50">
+                <AlertDescription className="text-sm">
+                  <div className="mb-2 font-medium text-orange-800">
+                    ⚠️ Significant Domain Change Detected
+                  </div>
+                  <div className="text-xs text-orange-700 mb-2">
+                    {domainChangeWarning.changes.join(' • ')}
+                  </div>
+                  <div className="text-xs text-orange-600">
+                    You're changing from <strong>{domainChangeWarning.originalDomains.join(', ')}</strong> to <strong>{domainChangeWarning.newDomains.join(', ')}</strong>.
+                    Please provide additional justification below explaining why this change better reflects the question's content.
+                  </div>
                 </AlertDescription>
               </Alert>
             )}
@@ -578,13 +624,25 @@ function TeacherOverrideForm({
 
       {/* Justification */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-slate-700">Your Justification</label>
+        <label className="text-sm font-medium text-slate-700">
+          Your Justification
+          {domainChangeWarning && <span className="text-orange-600 ml-1">*Required for domain changes</span>}
+        </label>
         <Textarea
           value={formData.justification}
           onChange={(e) => setFormData(prev => ({ ...prev, justification: e.target.value }))}
-          placeholder="Explain your reasoning for this rigor level and standards alignment..."
-          rows={4}
+          placeholder={domainChangeWarning 
+            ? "Please explain why this cross-domain change better reflects the question's content..."
+            : "Explain your reasoning for this rigor level and standards alignment..."
+          }
+          rows={domainChangeWarning ? 5 : 4}
+          className={domainChangeWarning && !formData.justification.trim() ? "border-orange-300" : ""}
         />
+        {domainChangeWarning && (
+          <p className="text-xs text-orange-600">
+            Cross-domain changes require explanation to help improve our AI training and validate teacher corrections.
+          </p>
+        )}
       </div>
 
       {/* Confidence Level */}

@@ -115,6 +115,8 @@ export const teacherOverrides = pgTable("teacher_overrides", {
   overriddenRigorLevel: rigorLevelEnum("overridden_rigor_level"),
   teacherJustification: text("teacher_justification"), // Teacher's reasoning
   confidenceLevel: integer("confidence_level").notNull().default(5), // 1-5 scale
+  hasDomainChange: boolean("has_domain_change").notNull().default(false), // Flag for cross-domain changes
+  domainChangeDetails: jsonb("domain_change_details"), // Store domain change information
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
