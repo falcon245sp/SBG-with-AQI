@@ -50,9 +50,9 @@ export class DocumentProcessor {
         questionRecords.push({ ...question, aiResults: questionData.aiResults });
       }
 
-      // Store AI analysis results for each question
+      // Store AI analysis results for each question with JSON voting
       for (const question of questionRecords) {
-        await this.storeAIResults(question, question.aiResults);
+        await this.storeAIResultsWithJsonVoting(question, question.aiResults);
       }
 
       // Update status to completed
@@ -80,6 +80,128 @@ export class DocumentProcessor {
         });
       }
     }
+  }
+
+  private async storeAIResultsWithJsonVoting(question: any, aiResults: any): Promise<void> {
+    try {
+      console.log(`Processing AI results with JSON voting for question ${question.id}`);
+      
+      // Ensure each AI result has jsonResponse and aiEngine properties
+      const enhancedResults = {
+        chatgpt: {
+          ...aiResults.chatgpt,
+          jsonResponse: this.extractJsonFromResponse(aiResults.chatgpt, 'chatgpt'),
+          aiEngine: 'chatgpt'
+        },
+        grok: {
+          ...aiResults.grok,
+          jsonResponse: this.extractJsonFromResponse(aiResults.grok, 'grok'),
+          aiEngine: 'grok'
+        },
+        claude: {
+          ...aiResults.claude,
+          jsonResponse: this.extractJsonFromResponse(aiResults.claude, 'claude'),
+          aiEngine: 'claude'
+        }
+      };
+      
+      // Store individual AI responses
+      await this.storeIndividualAIResponses(question, enhancedResults);
+      
+      // Use new JSON-based consolidation
+      const consensusResult = rigorAnalyzer.consolidateJsonResponses(enhancedResults);
+      
+      // Store consensus result
+      await storage.createQuestionResult({
+        questionId: question.id,
+        consensusStandards: consensusResult.consensusStandards,
+        consensusRigorLevel: consensusResult.consensusRigorLevel,
+        standardsVotes: consensusResult.standardsVotes,
+        rigorVotes: consensusResult.rigorVotes,
+        confidenceScore: consensusResult.confidenceScore.toString(),
+      });
+      
+      console.log(`Successfully processed question ${question.id} with JSON voting`);
+    } catch (error) {
+      console.error(`Error storing AI results with JSON voting for question ${question.id}:`, error);
+      // Fallback to original method
+      await this.storeAIResults(question, aiResults);
+    }
+  }
+  
+  private extractJsonFromResponse(aiResult: any, engineName: string): any {
+    try {
+      // If jsonResponse already exists, use it
+      if (aiResult.jsonResponse) {
+        return aiResult.jsonResponse;
+      }
+      
+      // Try to extract JSON from rawResponse
+      if (aiResult.rawResponse) {
+        let content = '';
+        
+        if (engineName === 'claude' && aiResult.rawResponse.content) {
+          const contentItem = aiResult.rawResponse.content[0];
+          content = contentItem && contentItem.type === 'text' ? contentItem.text : '';
+        } else if ((engineName === 'chatgpt' || engineName === 'grok') && aiResult.rawResponse.choices) {
+          content = aiResult.rawResponse.choices[0]?.message?.content || '';
+        }
+        
+        if (content) {
+          const parsed = JSON.parse(content);
+          console.log(`Extracted JSON from ${engineName}:`, parsed);
+          return parsed;
+        }
+      }
+      
+      // Fallback: construct from existing structured data
+      return {
+        standards: aiResult.standards || [],
+        rigor: aiResult.rigor || { level: 'mild', dokLevel: 'DOK 1', justification: 'No data available', confidence: 0.1 }
+      };
+    } catch (error) {
+      console.error(`Error extracting JSON from ${engineName} response:`, error);
+      return {
+        error: 'Failed to parse JSON response',
+        standards: aiResult.standards || [],
+        rigor: aiResult.rigor || { level: 'mild', dokLevel: 'DOK 1', justification: 'Parse error', confidence: 0.1 }
+      };
+    }
+  }
+  
+  private async storeIndividualAIResponses(question: any, enhancedResults: any): Promise<void> {
+    await storage.createAiResponse({
+      questionId: question.id,
+      aiEngine: 'chatgpt',
+      standardsIdentified: enhancedResults.chatgpt.standards,
+      rigorLevel: enhancedResults.chatgpt.rigor.level,
+      rigorJustification: enhancedResults.chatgpt.rigor.justification,
+      confidence: enhancedResults.chatgpt.rigor.confidence.toString(),
+      rawResponse: enhancedResults.chatgpt.rawResponse,
+      processingTime: enhancedResults.chatgpt.processingTime,
+    });
+
+    await storage.createAiResponse({
+      questionId: question.id,
+      aiEngine: 'grok',
+      standardsIdentified: enhancedResults.grok.standards,
+      rigorLevel: enhancedResults.grok.rigor.level,
+      rigorJustification: enhancedResults.grok.rigor.justification,
+      confidence: enhancedResults.grok.rigor.confidence.toString(),
+      rawResponse: enhancedResults.grok.rawResponse,
+      processingTime: enhancedResults.grok.processingTime,
+    });
+
+    await storage.createAiResponse({
+      questionId: question.id,
+      aiEngine: 'claude',
+      standardsIdentified: enhancedResults.claude.standards,
+      rigorLevel: enhancedResults.claude.rigor.level,
+      rigorJustification: enhancedResults.claude.rigor.justification,
+      confidence: enhancedResults.claude.rigor.confidence.toString(),
+      rawResponse: enhancedResults.claude.rawResponse,
+      processingTime: enhancedResults.claude.processingTime,
+    });
   }
 
   private async storeAIResults(question: any, aiResults: any): Promise<void> {

@@ -47,6 +47,8 @@ export interface AIAnalysisResult {
   rigor: RigorAssessment;
   rawResponse: any;
   processingTime: number;
+  jsonResponse?: any; // Parsed JSON response from AI
+  aiEngine?: string; // Which AI engine produced this result
 }
 
 export interface PromptCustomization {

@@ -10,7 +10,67 @@ interface VotingResult {
 
 export class RigorAnalyzer {
   /**
-   * Consolidates responses from three AI engines using voting methodology
+   * Consolidates JSON responses from AI engines using voting methodology
+   */
+  consolidateJsonResponses(aiResults: {
+    chatgpt: AIAnalysisResult;
+    grok: AIAnalysisResult;
+    claude: AIAnalysisResult;
+  }): VotingResult {
+    console.log('Starting JSON response consolidation with voting...');
+    
+    // Extract JSON responses from each AI engine
+    const jsonResponses = {
+      chatgpt: aiResults.chatgpt.jsonResponse || {},
+      grok: aiResults.grok.jsonResponse || {},
+      claude: aiResults.claude.jsonResponse || {}
+    };
+    
+    console.log('JSON Responses:');
+    console.log('ChatGPT:', JSON.stringify(jsonResponses.chatgpt, null, 2));
+    console.log('Grok:', JSON.stringify(jsonResponses.grok, null, 2));
+    console.log('Claude:', JSON.stringify(jsonResponses.claude, null, 2));
+    
+    // Extract standards from JSON responses
+    const standardsFromJson = [
+      jsonResponses.chatgpt.standards || [],
+      jsonResponses.grok.standards || [],
+      jsonResponses.claude.standards || []
+    ];
+    
+    // Extract rigor assessments from JSON responses
+    const rigorFromJson = [
+      jsonResponses.chatgpt.rigor || { level: 'mild', dokLevel: 'DOK 1', justification: 'No data', confidence: 0.1 },
+      jsonResponses.grok.rigor || { level: 'mild', dokLevel: 'DOK 1', justification: 'No data', confidence: 0.1 },
+      jsonResponses.claude.rigor || { level: 'mild', dokLevel: 'DOK 1', justification: 'No data', confidence: 0.1 }
+    ];
+    
+    // Vote on standards
+    const standardsResult = this.voteOnStandards(standardsFromJson);
+    console.log('Standards voting result:', standardsResult);
+    
+    // Vote on rigor levels
+    const rigorResult = this.voteOnRigorLevel(rigorFromJson);
+    console.log('Rigor voting result:', rigorResult);
+    
+    // Calculate confidence based on JSON agreement
+    const confidenceScore = this.calculateJsonConfidence(jsonResponses);
+    console.log('Overall confidence score:', confidenceScore);
+    
+    const result = {
+      consensusStandards: standardsResult.standards,
+      consensusRigorLevel: rigorResult.consensusLevel,
+      standardsVotes: standardsResult.votes,
+      rigorVotes: rigorResult.votes,
+      confidenceScore
+    };
+    
+    console.log('Final consolidated result:', result);
+    return result;
+  }
+  
+  /**
+   * Original method for backward compatibility
    */
   consolidateResponses(aiResults: {
     chatgpt: AIAnalysisResult;
@@ -203,6 +263,59 @@ export class RigorAnalyzer {
       rigorAgreement * 0.4 +
       standardsOverlap * 0.3 +
       avgIndividualConfidence * 0.3
+    );
+    
+    return Math.round(overallConfidence * 100) / 100;
+  }
+  
+  private calculateJsonConfidence(jsonResponses: {
+    chatgpt: any;
+    grok: any;
+    claude: any;
+  }): number {
+    // Extract rigor levels for comparison
+    const rigorLevels = [
+      jsonResponses.chatgpt.rigor?.level || 'mild',
+      jsonResponses.grok.rigor?.level || 'mild', 
+      jsonResponses.claude.rigor?.level || 'mild'
+    ];
+    
+    // Calculate rigor agreement
+    const rigorAgreement = this.calculateAgreementScore(rigorLevels);
+    
+    // Extract all standards for overlap calculation
+    const allStandards = [
+      ...(jsonResponses.chatgpt.standards || []).map((s: any) => s.code),
+      ...(jsonResponses.grok.standards || []).map((s: any) => s.code),
+      ...(jsonResponses.claude.standards || []).map((s: any) => s.code)
+    ];
+    
+    const uniqueStandards = new Set(allStandards);
+    const standardsOverlap = allStandards.length > 0 ? 
+      (allStandards.length - uniqueStandards.size) / allStandards.length : 0;
+    
+    // Average individual confidence scores from JSON
+    const confidenceScores = [
+      jsonResponses.chatgpt.rigor?.confidence || 0.1,
+      jsonResponses.grok.rigor?.confidence || 0.1,
+      jsonResponses.claude.rigor?.confidence || 0.1
+    ];
+    
+    const avgIndividualConfidence = confidenceScores.reduce((sum, conf) => sum + conf, 0) / confidenceScores.length;
+    
+    // Count successful JSON responses (not error responses)
+    const successfulResponses = Object.values(jsonResponses).filter(response => 
+      response && !response.error && (response.standards || response.rigor)
+    ).length;
+    
+    const responseSuccessRate = successfulResponses / 3;
+    
+    // Weighted confidence calculation
+    const overallConfidence = (
+      rigorAgreement * 0.3 +
+      standardsOverlap * 0.25 +
+      avgIndividualConfidence * 0.25 +
+      responseSuccessRate * 0.2
     );
     
     return Math.round(overallConfidence * 100) / 100;
