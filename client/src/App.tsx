@@ -11,10 +11,7 @@ import UploadPage from "@/pages/upload";
 import ResultsPage from "@/pages/results";
 
 function Router() {
-  const { isAuthenticated, isLoading, user } = useAuth();
-
-  // Debug logging
-  console.log('Auth Debug:', { isAuthenticated, isLoading, user });
+  const { isAuthenticated, isLoading } = useAuth();
 
   return (
     <Switch>
