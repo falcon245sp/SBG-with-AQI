@@ -30,6 +30,10 @@ export function FileUploader({
   const [error, setError] = useState<string>("");
 
   const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
+    console.log('=== FILE UPLOADER onDrop DEBUG ===');
+    console.log('acceptedFiles:', acceptedFiles.length, acceptedFiles.map(f => f.name));
+    console.log('rejectedFiles:', rejectedFiles.length);
+    
     setError("");
     
     if (rejectedFiles.length > 0) {
@@ -45,6 +49,7 @@ export function FileUploader({
     }
 
     if (acceptedFiles.length > 0) {
+      console.log('Setting selectedFiles to:', acceptedFiles.length, 'files');
       setSelectedFiles(acceptedFiles);
     }
   }, [maxSize, multiple]);
@@ -63,10 +68,18 @@ export function FileUploader({
   });
 
   const handleUpload = () => {
+    console.log('=== FILE UPLOADER handleUpload DEBUG ===');
+    console.log('selectedFiles.length:', selectedFiles.length);
+    console.log('multiple:', multiple);
+    console.log('onFilesUpload exists:', !!onFilesUpload);
+    console.log('onFileUpload exists:', !!onFileUpload);
+    
     if (selectedFiles.length > 0) {
       if (multiple && onFilesUpload) {
+        console.log('Calling onFilesUpload with', selectedFiles.length, 'files');
         onFilesUpload(selectedFiles);
       } else if (!multiple && onFileUpload) {
+        console.log('Calling onFileUpload with single file');
         onFileUpload(selectedFiles[0]);
       }
       setSelectedFiles([]);
