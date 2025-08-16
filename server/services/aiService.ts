@@ -82,16 +82,24 @@ Deduplicate standards exactly as in prior outputs.
 Analyze based solely on the provided documents; no external assumptions.
 Keep responses efficient: focus on accuracy, brevity, and structure for easy replication across units.
 
-Provide your analysis in this format:
-
-STANDARDS IDENTIFIED:
-[List each standard with code, description, jurisdiction, grade level, and subject]
-
-RIGOR ASSESSMENT:
-[State the rigor level: mild, medium, or spicy]
-[State the DOK level: DOK 1, DOK 2, DOK 3, or DOK 4]
-[Provide justification for the rigor level]
-[State your confidence level as a decimal from 0.0 to 1.0]`;
+Provide your analysis in JSON format:
+{
+  "standards": [
+    {
+      "code": "CCSS.MATH.5.NBT.A.1",
+      "description": "Recognize that in a multi-digit number...",
+      "jurisdiction": "Common Core",
+      "gradeLevel": "5",
+      "subject": "Mathematics"
+    }
+  ],
+  "rigor": {
+    "level": "medium",
+    "dokLevel": "DOK 2",
+    "justification": "This question requires students to apply concepts and make connections...",
+    "confidence": 0.85
+  }
+}`;
 
 export class AIService {
   private generatePromptWithStandards(focusStandards?: string[]): string {
@@ -562,6 +570,7 @@ Give special attention to identifying alignment with these specific standards.
             content: `Question: ${questionText}\n\nContext: ${context}`
           }
         ],
+        response_format: { type: "json_object" },
         max_tokens: 10000,
       });
 
@@ -573,12 +582,12 @@ Give special attention to identifying alignment with these specific standards.
       
       const processingTime = Date.now() - startTime;
       const rawContent = grokResponse.choices[0].message.content || '';
-      console.log('=== FULL GROK NATURAL RESPONSE ===');
+      console.log('=== GROK JSON RESPONSE ===');
       console.log(rawContent);
-      console.log('=== END FULL RESPONSE ===');
+      console.log('=== END JSON RESPONSE ===');
       
-      // Parse the natural language response
-      const result = this.parseNaturalLanguageResponse(rawContent);
+      // Parse the JSON response
+      const result = JSON.parse(rawContent);
       
       return {
         standards: result.standards || [],
