@@ -65,7 +65,7 @@ export default function Dashboard() {
 
   // No need to fetch templates anymore - using direct input
 
-  const handleFileUpload = async (file: File) => {
+  const handleFileUpload = async (files: File[]) => {
     if (!customerId || !jurisdictions) {
       toast({
         title: "Missing Information",
@@ -75,45 +75,75 @@ export default function Dashboard() {
       return;
     }
 
-    const formData = new FormData();
-    formData.append('document', file);
-    formData.append('customerId', customerId);
-    formData.append('jurisdictions', jurisdictions);
-
-    // Add focus standards if specified
-    if (useFocusStandards && focusStandards.trim()) {
-      formData.append('focusStandards', focusStandards);
-    }
-
-    try {
-      const endpoint = useFocusStandards ? '/api/documents/upload-with-standards' : '/api/documents/upload';
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Upload failed');
-      }
-
-      const result = await response.json();
-      
+    if (files.length === 0) {
       toast({
-        title: "Upload Successful",
-        description: useFocusStandards 
-          ? "Document uploaded with focus standards configuration."
-          : "Document uploaded and added to processing queue.",
-      });
-
-      // Refresh documents list
-      window.location.reload();
-    } catch (error) {
-      toast({
-        title: "Upload Failed",
-        description: "There was an error uploading your document.",
+        title: "No Files Selected",
+        description: "Please select at least one file to upload.",
         variant: "destructive",
       });
+      return;
+    }
+
+    // For multiple files, we'll process them one by one for now
+    // In a future version, this could be optimized for batch processing
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const file of files) {
+      try {
+        const formData = new FormData();
+        formData.append('document', file);
+        formData.append('customerId', customerId);
+        formData.append('jurisdictions', jurisdictions);
+
+        // Add focus standards if specified
+        if (useFocusStandards && focusStandards.trim()) {
+          formData.append('focusStandards', focusStandards);
+        }
+
+        const endpoint = useFocusStandards ? '/api/documents/upload-with-standards' : '/api/documents/upload';
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          body: formData,
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          throw new Error(`Upload failed for ${file.name}`);
+        }
+
+        successCount++;
+      } catch (error) {
+        console.error(`Error uploading ${file.name}:`, error);
+        errorCount++;
+      }
+    }
+
+    // Show summary toast
+    if (successCount > 0) {
+      const message = files.length === 1 
+        ? "Document uploaded and added to processing queue."
+        : `${successCount} of ${files.length} documents uploaded successfully.`;
+      
+      toast({
+        title: "Upload Complete",
+        description: useFocusStandards 
+          ? `${message} Focus standards configuration applied.`
+          : message,
+      });
+    }
+
+    if (errorCount > 0) {
+      toast({
+        title: "Some Uploads Failed",
+        description: `${errorCount} files failed to upload. Please try again.`,
+        variant: "destructive",
+      });
+    }
+
+    // Refresh documents list if any uploads succeeded
+    if (successCount > 0) {
+      window.location.reload();
     }
   };
 
@@ -243,7 +273,10 @@ export default function Dashboard() {
                   <p className="text-sm text-slate-500">Process educational documents for standards analysis and rigor assessment</p>
                 </CardHeader>
                 <CardContent>
-                  <FileUploader onFileUpload={handleFileUpload} />
+                  <FileUploader 
+                    onFilesUpload={handleFileUpload} 
+                    multiple={true}
+                  />
 
                   {/* Customer ID and Jurisdiction Input */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
