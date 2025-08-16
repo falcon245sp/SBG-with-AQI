@@ -435,8 +435,28 @@ Give special attention to identifying alignment with these specific standards.
         };
       }
       
-      // Fallback to single question if parsing didn't work
-      console.log('No individual questions found, using fallback single question format');
+      // Fallback: Create individual question entries from the standards found
+      console.log('Creating individual questions from detected standards for teacher use');
+      if (grokResult.standards && grokResult.standards.length > 0) {
+        return {
+          questions: grokResult.standards.map((standard, index) => ({
+            text: `Question ${index + 1}: Educational content related to ${standard.code}`,
+            context: `Question ${index + 1}: Analysis for standard ${standard.code}`,
+            aiResults: {
+              grok: {
+                standards: [standard],
+                rigor: grokResult.rigor,
+                rawResponse: grokResult.rawResponse,
+                processingTime: grokResult.processingTime,
+                aiEngine: 'grok'
+              }
+            }
+          }))
+        };
+      }
+      
+      // Final fallback to single question
+      console.log('Using final fallback single question format');
       return {
         questions: [{
           text: "Educational content analysis from uploaded document",

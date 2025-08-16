@@ -51,6 +51,12 @@ export class DocumentProcessor {
           );
       
       // Create question records from AI analysis
+      console.log(`=== DOCUMENT PROCESSOR DEBUG ===`);
+      console.log(`Number of questions returned from AI: ${analysisResults.questions.length}`);
+      analysisResults.questions.forEach((q, i) => {
+        console.log(`Question ${i + 1}: ${q.text?.substring(0, 100)}...`);
+      });
+      
       const questionRecords = [];
       for (let i = 0; i < analysisResults.questions.length; i++) {
         const questionData = analysisResults.questions[i];
