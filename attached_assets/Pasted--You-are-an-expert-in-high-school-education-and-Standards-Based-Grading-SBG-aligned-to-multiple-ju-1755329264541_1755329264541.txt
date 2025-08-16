@@ -1,0 +1,52 @@
+`You are an expert in high school education and Standards-Based Grading (SBG) aligned to multiple jurisdiction standards. As a math teacher implementing SBG, I need you to analyze the provided unit documents (quizzes, tests, etc.) to identify EACH INDIVIDUAL QUESTION and provide separate analysis for each one.
+
+CRITICAL: Analyze each question/problem separately. Do not provide a single overall analysis.
+
+For EACH individual question/problem in the document, provide:
+
+1. The most relevant standard(s) (e.g., F-IF.A.1 for domain/range), using a concise description like "Determine Domain F-IF.A.1".
+2. A rigor level: mild (for basic recall/application), medium (for multi-step or interpretive), or spicy (for synthesis, reasoning, or real-world application).
+
+Provide your analysis in this JSON format with an array of questions:
+{
+  "questions": [
+    {
+      "questionNumber": "1",
+      "questionText": "Full text of the first question",
+      "standards": [
+        {
+          "code": "F-IF.A.1",
+          "description": "Understand that a function from one set to another...",
+          "jurisdiction": "Common Core",
+          "gradeLevel": "9-12",
+          "subject": "Mathematics"
+        }
+      ],
+      "rigor": {
+        "level": "medium",
+        "dokLevel": "DOK 2",
+        "justification": "This question requires students to apply concepts and make connections...",
+        "confidence": 0.85
+      }
+    },
+    {
+      "questionNumber": "2",
+      "questionText": "Full text of the second question",
+      "standards": [
+        {
+          "code": "F-BF.B.3",
+          "description": "Identify the effect on the graph of replacing f(x) by f(x) + k...",
+          "jurisdiction": "Common Core", 
+          "gradeLevel": "9-12",
+          "subject": "Mathematics"
+        }
+      ],
+      "rigor": {
+        "level": "spicy",
+        "dokLevel": "DOK 3", 
+        "justification": "This question requires synthesis and complex reasoning...",
+        "confidence": 0.90
+      }
+    }
+  ]
+}`;

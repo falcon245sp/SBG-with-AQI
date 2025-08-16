@@ -71,42 +71,57 @@ export interface PromptCustomization {
   outputFormat?: 'detailed' | 'concise' | 'standardized'; // Output format preference
 }
 
-const ANALYSIS_PROMPT = `You are an expert in high school education and Standards-Based Grading (SBG) aligned to multiple jurisdiction standards. As a math teacher implementing SBG, I need you to analyze the provided unit documents (quizzes, tests, etc.) to:
+const ANALYSIS_PROMPT = `You are an expert in high school education and Standards-Based Grading (SBG) aligned to multiple jurisdiction standards. As a math teacher implementing SBG, I need you to analyze the provided unit documents (quizzes, tests, etc.) to identify EACH INDIVIDUAL QUESTION and provide separate analysis for each one.
 
-For each assessment (e.g., Quiz 1, Test Free Response), list every problem/question with:
+CRITICAL: Analyze each question/problem separately. Do not provide a single overall analysis.
 
-The most relevant standard(s) (e.g., F-IF.A.1 for domain/range), using a concise description like "Determine Domain F-IF.A.1".
-A rigor level: mild (for basic recall/application), medium (for multi-step or interpretive), or spicy (for synthesis, reasoning, or real-world application).
+For EACH individual question/problem in the document, provide:
 
-At the end, provide a deduplicated list of all referenced standards across the unit.
+1. The most relevant standard(s) (e.g., F-IF.A.1 for domain/range), using a concise description like "Determine Domain F-IF.A.1".
+2. A rigor level: mild (for basic recall/application), medium (for multi-step or interpretive), or spicy (for synthesis, reasoning, or real-world application).
 
-Ensure consistency:
-
-Map to relevant standards (e.g., F-BF, F-IF, A-REI, etc.).
-Base rigor on problem complexity (use examples from past analyses: basic domain is mild; transformations with graphs medium; optimization/contextual synthesis spicy).
-Deduplicate standards exactly as in prior outputs.
-Analyze based solely on the provided documents; no external assumptions.
-Keep responses efficient: focus on accuracy, brevity, and structure for easy replication across units.
-
-Please provide a detailed analysis of each individual question/problem in the document.
-
-Provide your analysis in JSON format:
+Provide your analysis in this JSON format with an array of questions:
 {
-  "standards": [
+  "questions": [
     {
-      "code": "CCSS.MATH.5.NBT.A.1",
-      "description": "Recognize that in a multi-digit number...",
-      "jurisdiction": "Common Core",
-      "gradeLevel": "5",
-      "subject": "Mathematics"
+      "questionNumber": "1",
+      "questionText": "Full text of the first question",
+      "standards": [
+        {
+          "code": "F-IF.A.1",
+          "description": "Understand that a function from one set to another...",
+          "jurisdiction": "Common Core",
+          "gradeLevel": "9-12",
+          "subject": "Mathematics"
+        }
+      ],
+      "rigor": {
+        "level": "medium",
+        "dokLevel": "DOK 2",
+        "justification": "This question requires students to apply concepts and make connections...",
+        "confidence": 0.85
+      }
+    },
+    {
+      "questionNumber": "2",
+      "questionText": "Full text of the second question",
+      "standards": [
+        {
+          "code": "F-BF.B.3",
+          "description": "Identify the effect on the graph of replacing f(x) by f(x) + k...",
+          "jurisdiction": "Common Core", 
+          "gradeLevel": "9-12",
+          "subject": "Mathematics"
+        }
+      ],
+      "rigor": {
+        "level": "spicy",
+        "dokLevel": "DOK 3", 
+        "justification": "This question requires synthesis and complex reasoning...",
+        "confidence": 0.90
+      }
     }
-  ],
-  "rigor": {
-    "level": "medium",
-    "dokLevel": "DOK 2",
-    "justification": "This question requires students to apply concepts and make connections...",
-    "confidence": 0.85
-  }
+  ]
 }`;
 
 export class AIService {
@@ -380,9 +395,29 @@ Give special attention to identifying alignment with these specific standards.
         return this.getDefaultResult();
       });
       
-      // If we have individual questions parsed, create separate question entries
+      // Check if Grok returned individual questions in the new JSON format
+      if (grokResult.jsonResponse && grokResult.jsonResponse.questions && Array.isArray(grokResult.jsonResponse.questions)) {
+        console.log(`Creating ${grokResult.jsonResponse.questions.length} individual question entries from JSON response`);
+        return {
+          questions: grokResult.jsonResponse.questions.map((question: any) => ({
+            text: question.questionText || `Question ${question.questionNumber}`,
+            context: `Question ${question.questionNumber}: ${question.questionText || 'Educational content analysis'}`,
+            aiResults: {
+              grok: {
+                standards: question.standards || [],
+                rigor: question.rigor || { level: 'mild', dokLevel: 'DOK 1', justification: 'No analysis available', confidence: 0.1 },
+                rawResponse: grokResult.rawResponse,
+                processingTime: grokResult.processingTime,
+                aiEngine: 'grok'
+              }
+            }
+          }))
+        };
+      }
+      
+      // If we have individual questions parsed from natural language, create separate question entries  
       if (grokResult.allQuestions && grokResult.allQuestions.length > 0) {
-        console.log(`Creating ${grokResult.allQuestions.length} individual question entries`);
+        console.log(`Creating ${grokResult.allQuestions.length} individual question entries from parsed response`);
         return {
           questions: grokResult.allQuestions.map((question, index) => ({
             text: question.questionText,
@@ -401,6 +436,7 @@ Give special attention to identifying alignment with these specific standards.
       }
       
       // Fallback to single question if parsing didn't work
+      console.log('No individual questions found, using fallback single question format');
       return {
         questions: [{
           text: "Educational content analysis from uploaded document",
