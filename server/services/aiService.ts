@@ -641,9 +641,10 @@ Give special attention to identifying alignment with these specific standards.
   }
 
   private parseNaturalLanguageResponse(content: string): { standards: EducationalStandard[], rigor: RigorAssessment } {
-    console.log('=== PARSING NATURAL LANGUAGE RESPONSE ===');
+    console.log('=== PARSING RESPONSE (JSON OR NATURAL LANGUAGE) ===');
+    console.log('Content preview:', content.substring(0, 200));
     
-    const standards: EducationalStandard[] = [];
+    let standards: EducationalStandard[] = [];
     let rigor: RigorAssessment = {
       level: 'mild',
       dokLevel: 'DOK 1',
@@ -652,24 +653,59 @@ Give special attention to identifying alignment with these specific standards.
     };
 
     try {
+      // First, try to parse as JSON (Grok seems to prefer JSON even without explicit request)
+      if (content.trim().startsWith('{') || content.includes('"standards"') || content.includes('"rigor"')) {
+        console.log('Attempting JSON parsing...');
+        
+        try {
+          const jsonResult = JSON.parse(content);
+          console.log('Successfully parsed JSON:', jsonResult);
+          
+          // Extract standards from JSON
+          if (jsonResult.standards && Array.isArray(jsonResult.standards)) {
+            standards = jsonResult.standards.map((std: any) => ({
+              code: std.code || 'UNKNOWN',
+              description: std.description || '',
+              jurisdiction: std.jurisdiction || 'General',
+              gradeLevel: std.gradeLevel || 'Multiple',
+              subject: std.subject || 'General'
+            }));
+          }
+          
+          // Extract rigor from JSON
+          if (jsonResult.rigor) {
+            rigor = {
+              level: jsonResult.rigor.level || 'mild',
+              dokLevel: jsonResult.rigor.dokLevel || 'DOK 1',
+              justification: jsonResult.rigor.justification || 'No justification provided',
+              confidence: parseFloat(jsonResult.rigor.confidence) || 0.5
+            };
+          }
+          
+          console.log('JSON parsing successful - Standards:', standards.length, 'Rigor:', rigor.level);
+          return { standards, rigor };
+          
+        } catch (jsonError) {
+          console.log('JSON parsing failed, trying natural language parsing...', jsonError);
+        }
+      }
+
+      // Fallback to natural language parsing
+      console.log('Using natural language parsing...');
+      
       // Extract standards section
-      const standardsMatch = content.match(/STANDARDS IDENTIFIED:(.+?)(?:RIGOR ASSESSMENT:|$)/is);
+      const standardsMatch = content.match(/STANDARDS IDENTIFIED:([\s\S]+?)(?:RIGOR ASSESSMENT:|$)/i);
       if (standardsMatch) {
         const standardsText = standardsMatch[1].trim();
         console.log('Standards section found:', standardsText);
         
-        // Parse individual standards - look for patterns like:
-        // - F-IF.A.1: Description (Common Core, Grade 9-12, Mathematics)
-        // - CCSS.MATH.HSF.IF.A.1: Description (Common Core, High School, Mathematics)
         const standardLines = standardsText.split('\n').filter(line => line.trim());
         
         for (const line of standardLines) {
-          // Try to extract standard code and description
           const standardMatch = line.match(/([A-Z-.\d]+):\s*(.+?)(?:\s*\((.+?)\))?$/i);
           if (standardMatch) {
             const [, code, description, details] = standardMatch;
             
-            // Parse details like "Common Core, Grade 9-12, Mathematics"
             let jurisdiction = 'General';
             let gradeLevel = 'Multiple';
             let subject = 'General';
@@ -700,44 +736,37 @@ Give special attention to identifying alignment with these specific standards.
         const rigorText = rigorMatch[1].trim();
         console.log('Rigor section found:', rigorText);
         
-        // Extract rigor level (mild, medium, spicy)
         const levelMatch = rigorText.match(/(mild|medium|spicy)/i);
         if (levelMatch) {
           rigor.level = levelMatch[1].toLowerCase() as 'mild' | 'medium' | 'spicy';
         }
         
-        // Extract DOK level
         const dokMatch = rigorText.match(/DOK\s*(\d)/i);
         if (dokMatch) {
           rigor.dokLevel = `DOK ${dokMatch[1]}`;
         }
         
-        // Extract justification (look for explanatory text)
         const justificationMatch = rigorText.match(/(?:because|justification|reason):\s*(.+?)(?:\n|confidence|$)/is);
         if (justificationMatch) {
           rigor.justification = justificationMatch[1].trim();
         } else {
-          // Use the whole rigor text as justification if no specific pattern found
           rigor.justification = rigorText.replace(/(mild|medium|spicy|DOK\s*\d)/gi, '').trim() || 'No specific justification provided';
         }
         
-        // Extract confidence
         const confidenceMatch = rigorText.match(/confidence[:\s]*(\d*\.?\d+)/i);
         if (confidenceMatch) {
           rigor.confidence = parseFloat(confidenceMatch[1]);
-          // Ensure confidence is between 0 and 1
           if (rigor.confidence > 1) rigor.confidence = rigor.confidence / 100;
         } else {
-          // Default confidence based on whether we found data
           rigor.confidence = standards.length > 0 ? 0.7 : 0.3;
         }
       }
 
-      console.log('Parsed standards:', standards);
-      console.log('Parsed rigor:', rigor);
+      console.log('Final parsed standards:', standards.length);
+      console.log('Final parsed rigor:', rigor);
       
     } catch (error) {
-      console.error('Error parsing natural language response:', error);
+      console.error('Error parsing response:', error);
     }
 
     return { standards, rigor };
