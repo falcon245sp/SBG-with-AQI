@@ -348,6 +348,7 @@ Give special attention to identifying alignment with these specific standards.
           questions: grokResult.jsonResponse.problems.map((problem: any) => ({
             text: `Problem ${problem.problemNumber}: ${problem.standardDescription}`,
             context: `Question ${problem.problemNumber}: Analyzing ${problem.standardCode}`,
+            problemNumber: problem.problemNumber, // Include the actual problem number
             aiResults: {
               grok: {
                 standards: [{
@@ -379,6 +380,7 @@ Give special attention to identifying alignment with these specific standards.
           questions: grokResult.allQuestions.map((question, index) => ({
             text: question.questionText,
             context: `Question ${question.questionNumber}: ${question.questionText}`,
+            problemNumber: question.questionNumber, // Include the actual problem number
             aiResults: {
               grok: {
                 standards: question.standards,
@@ -399,6 +401,7 @@ Give special attention to identifying alignment with these specific standards.
           questions: grokResult.standards.map((standard, index) => ({
             text: `Question ${index + 1}: Educational content related to ${standard.code}`,
             context: `Question ${index + 1}: Analysis for standard ${standard.code}`,
+            problemNumber: `${index + 1}`, // Use sequential numbering as fallback
             aiResults: {
               grok: {
                 standards: [standard],
