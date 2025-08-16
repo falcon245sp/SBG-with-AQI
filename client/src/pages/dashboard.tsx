@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ import {
   Clock,
   Bell,
   ArrowRight,
+  Eye,
   Upload,
   CheckCircle,
   Settings
@@ -320,9 +322,11 @@ export default function Dashboard() {
                     <CardTitle>Recent Processing Results</CardTitle>
                     <p className="text-sm text-slate-500">Latest document analysis results with AI consensus</p>
                   </div>
-                  <Button variant="outline" size="sm">
-                    View All Results <ArrowRight className="ml-1 w-4 h-4" />
-                  </Button>
+                  <Link href="/results">
+                    <Button variant="outline" size="sm">
+                      View All Results <ArrowRight className="ml-1 w-4 h-4" />
+                    </Button>
+                  </Link>
                 </CardHeader>
                 <CardContent>
                   {documents && documents.length > 0 ? (
@@ -333,6 +337,7 @@ export default function Dashboard() {
                             <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Document</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Created</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-slate-200">
@@ -351,6 +356,18 @@ export default function Dashboard() {
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                                 {new Date(doc.createdAt).toLocaleString()}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                {doc.status === 'completed' ? (
+                                  <Link href={`/results/${doc.id}`}>
+                                    <Button variant="outline" size="sm">
+                                      <Eye className="w-4 h-4 mr-1" />
+                                      View
+                                    </Button>
+                                  </Link>
+                                ) : (
+                                  <span className="text-slate-400 text-xs">Processing...</span>
+                                )}
                               </td>
                             </tr>
                           ))}
