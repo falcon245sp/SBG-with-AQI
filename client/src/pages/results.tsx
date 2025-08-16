@@ -176,10 +176,13 @@ export default function ResultsPage() {
     pdf.setFontSize(16);
     pdf.text('Rubric', 20, 45);
     
-    // Prepare table data
+    // Prepare table data with proper numerical sorting
     const tableData: string[][] = [];
     
-    results.forEach((question) => {
+    // Sort questions numerically by question number
+    const sortedResults = [...results].sort((a, b) => a.questionNumber - b.questionNumber);
+    
+    sortedResults.forEach((question) => {
       const effectiveStandards = question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [];
       const effectiveRigor = question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild';
       const questionText = question.questionText.length > 60 
@@ -258,7 +261,10 @@ export default function ResultsPage() {
     content += `| Criteria | Full Credit | Partial Credit | Minimal Credit | No Credit |\n`;
     content += `|----------|-------------|----------------|----------------|----------|\n`;
     
-    results.forEach((question, index) => {
+    // Sort questions numerically by question number
+    const sortedResults = [...results].sort((a, b) => a.questionNumber - b.questionNumber);
+    
+    sortedResults.forEach((question, index) => {
       const effectiveStandards = question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [];
       const effectiveRigor = question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild';
       const questionText = question.questionText.length > 40 
