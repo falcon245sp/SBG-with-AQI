@@ -62,7 +62,7 @@ export class DocumentProcessor {
         const questionData = analysisResults.questions[i];
         const question = await storage.createQuestion({
           documentId: document.id,
-          questionNumber: questionData.problemNumber || String(i + 1), // Use actual problem number or fallback to sequential
+          questionNumber: String(i + 1), // Use sequential numbering
           questionText: questionData.text,
           context: questionData.context || '',
         });
@@ -433,4 +433,75 @@ export class DocumentProcessor {
   }
 }
 
+// Queue processor class for handling sequential document processing
+export class QueueProcessor {
+  private isProcessing = false;
+  private processingInterval: NodeJS.Timeout | null = null;
+
+  constructor(private processor: DocumentProcessor) {}
+
+  start() {
+    if (this.processingInterval) {
+      return; // Already started
+    }
+
+    console.log('Starting queue processor...');
+    this.processingInterval = setInterval(async () => {
+      await this.processNextItem();
+    }, 2000); // Check every 2 seconds
+  }
+
+  stop() {
+    if (this.processingInterval) {
+      clearInterval(this.processingInterval);
+      this.processingInterval = null;
+      console.log('Queue processor stopped');
+    }
+  }
+
+  private async processNextItem() {
+    if (this.isProcessing) {
+      return; // Already processing something
+    }
+
+    try {
+      const nextItem = await storage.getNextQueueItem();
+      if (!nextItem) {
+        return; // No items in queue
+      }
+
+      this.isProcessing = true;
+      console.log(`Processing document from queue: ${nextItem.documentId}`);
+
+      // Check if document still exists and is pending
+      const document = await storage.getDocument(nextItem.documentId);
+      if (!document || document.status !== 'pending') {
+        console.log(`Skipping document ${nextItem.documentId} - invalid status: ${document?.status}`);
+        await storage.removeFromQueue(nextItem.id);
+        return;
+      }
+
+      // Process the document
+      await this.processor.processDocument(nextItem.documentId);
+      
+      // Remove from queue after successful processing
+      await storage.removeFromQueue(nextItem.id);
+      console.log(`Successfully processed and removed from queue: ${nextItem.documentId}`);
+    } catch (error) {
+      console.error('Queue processing error:', error);
+    } finally {
+      this.isProcessing = false;
+    }
+  }
+
+  // Get current processing status
+  getStatus() {
+    return {
+      isProcessing: this.isProcessing,
+      isRunning: this.processingInterval !== null
+    };
+  }
+}
+
 export const documentProcessor = new DocumentProcessor();
+export const queueProcessor = new QueueProcessor(documentProcessor);

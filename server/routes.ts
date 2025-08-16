@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { documentProcessor } from "./services/documentProcessor";
+import { documentProcessor, queueProcessor } from "./services/documentProcessor";
 import { insertDocumentSchema } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
@@ -98,8 +98,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add to processing queue
       await storage.addToProcessingQueue(document.id);
       
-      // Start processing asynchronously with focus standards
-      documentProcessor.processDocument(document.id, undefined, standards).catch(console.error);
+      // Processing will be handled by the queue processor
 
       res.json({ 
         message: "Document uploaded successfully with focus standards",
@@ -161,8 +160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Add to processing queue
           await storage.addToProcessingQueue(document.id);
           
-          // Start processing asynchronously
-          documentProcessor.processDocument(document.id).catch(console.error);
+          // Processing will be handled by the queue processor
           
           jobs.push({
             jobId: document.id,
@@ -497,8 +495,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Start processing
-      documentProcessor.processDocument(document.id, callbackUrl, focusStandards).catch(console.error);
+      // Processing will be handled by the queue processor
 
       res.json({ 
         message: "Document submitted for processing",
@@ -510,6 +507,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to process document" });
     }
   });
+
+  // Start the queue processor for sequential document processing
+  queueProcessor.start();
+  console.log('Queue processor started for sequential document processing');
 
   const httpServer = createServer(app);
   return httpServer;
