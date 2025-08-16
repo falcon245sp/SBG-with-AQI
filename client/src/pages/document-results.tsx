@@ -262,6 +262,34 @@ export default function DocumentResults() {
                                 </div>
                               )}
 
+                              {/* Raw JSON Response */}
+                              <div>
+                                <h4 className="font-medium text-slate-900 mb-3 flex items-center">
+                                  <Brain className="w-4 h-4 mr-2" />
+                                  Structured JSON Response
+                                </h4>
+                                <div className="bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto">
+                                  <pre className="text-sm">
+{JSON.stringify({
+  "standards": question.result.consensusStandards.map(std => ({
+    "code": std.code,
+    "description": std.description,
+    "jurisdiction": std.jurisdiction,
+    "gradeLevel": std.gradeLevel || "Multiple",
+    "subject": std.subject || "General"
+  })),
+  "rigor": {
+    "level": question.result.consensusRigorLevel,
+    "dokLevel": question.result.consensusRigorLevel === 'mild' ? 'DOK 1' : 
+               question.result.consensusRigorLevel === 'medium' ? 'DOK 2' : 'DOK 3',
+    "justification": `${question.result.consensusRigorLevel.charAt(0).toUpperCase() + question.result.consensusRigorLevel.slice(1)} level analysis based on consensus from AI engines`,
+    "confidence": parseFloat(question.result.confidenceScore)
+  }
+}, null, 2)}
+                                  </pre>
+                                </div>
+                              </div>
+
                               {/* AI Engine Breakdown */}
                               <div>
                                 <h4 className="font-medium text-slate-900 mb-3 flex items-center">
