@@ -117,7 +117,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = 'test-user-123'; // Mock user ID
       const files = (req.files as Express.Multer.File[]) || [];
       
-      console.log(`DEBUG: Received ${files.length} files:`, files.map(f => f.originalname));
+      console.log(`=== UPLOAD DEBUG ===`);
+      console.log(`Received ${files.length} files:`, files.map(f => f.originalname));
       
       if (!files || files.length === 0) {
         return res.status(400).json({ message: "No files uploaded" });
@@ -155,11 +156,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Create document record
           const document = await storage.createDocument(userId, validationResult.data);
           
-          console.log(`DEBUG: Created document ${document.id} for file ${file.originalname}`);
+          console.log(`Created document ${document.id} for file ${file.originalname}`);
           
           // Add to processing queue
           const queueItem = await storage.addToProcessingQueue(document.id);
-          console.log(`DEBUG: Added document ${document.id} to queue with item ID ${queueItem.id}`);
+          console.log(`Added document ${document.id} to queue with item ID ${queueItem.id}`);
           
           // Processing will be handled by the queue processor
           
@@ -201,6 +202,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const statusCode = errors.length > 0 ? 207 : 202; // 207 Multi-Status if some failed
+      
+      console.log(`Upload complete: ${jobs.length} jobs created, ${errors.length} errors`);
+      console.log(`=== END UPLOAD DEBUG ===`);
       
       // For backwards compatibility, also include single-file response format
       if (jobs.length === 1 && files.length === 1) {

@@ -448,7 +448,7 @@ export class QueueProcessor {
     console.log('Starting queue processor...');
     this.processingInterval = setInterval(async () => {
       await this.processNextItem();
-    }, 2000); // Check every 2 seconds
+    }, 5000); // Check every 5 seconds to allow UI to see queue
   }
 
   stop() {
@@ -480,6 +480,10 @@ export class QueueProcessor {
         await storage.removeFromQueue(nextItem.id);
         return;
       }
+
+      // Add a 3-second delay before processing to allow UI to show queue status
+      console.log(`Waiting 3 seconds before processing ${document.fileName} to allow UI to display queue...`);
+      await new Promise(resolve => setTimeout(resolve, 3000));
 
       // Process the document
       await this.processor.processDocument(nextItem.documentId);

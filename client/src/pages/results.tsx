@@ -34,11 +34,16 @@ export default function ResultsPage() {
   });
 
   // Fetch queue status
-  const { data: queueStatus } = useQuery<any>({
+  const { data: queueStatus, error: queueError } = useQuery<any>({
     queryKey: ["/api/queue"],
     refetchInterval: 2000,
     refetchIntervalInBackground: true,
   });
+
+  // Debug logging
+  console.log('Queue status data:', queueStatus);
+  console.log('Queue error:', queueError);
+  console.log('Should show queue card:', queueStatus?.queueSize > 0);
 
   const filteredDocuments = documents?.filter((doc: any) => {
     const matchesSearch = doc.fileName.toLowerCase().includes(searchTerm.toLowerCase());
