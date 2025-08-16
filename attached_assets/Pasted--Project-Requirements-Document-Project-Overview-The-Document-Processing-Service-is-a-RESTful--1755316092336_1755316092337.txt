@@ -1,0 +1,61 @@
+# Project Requirements Document
+
+## Project Overview
+The "Document Processing Service" is a RESTful API designed to analyze educational documents and determine the educational standards and levels of rigor for each question within those documents. The service accepts input in the form of a numeric customer ID, an array of educational jurisdiction names, and one or more document files in PDF, Word, or Google Doc format. The documents are submitted to three AI engines, each tasked with identifying up to two educational standards and their corresponding levels of rigor. The service then consolidates the responses using a voting method to determine the most likely standards and rigor levels. The final output is a JSON response containing the question number, identified standards, and rigor levels. This service operates asynchronously and notifies clients via a callback URL upon completion of processing.
+
+## Tech Stack and Tools
+- **Programming Languages**: Node.js, Python, Java
+- **Database**: DynamoDB
+- **Cloud Services**: AWS (for hosting and deploying the API)
+- **Testing Framework**: Testing Library
+- **Other Tools**: 
+  - REST API Development Tools
+  - Webhooks for asynchronous notification
+  - Queue Management System
+  - Admin Dashboard for monitoring
+  - Log Viewer for debugging and analysis
+
+## Target Audience
+- **Educational Institutions**: Schools, colleges, and universities looking to streamline the process of aligning exam questions with educational standards.
+- **EdTech Companies**: Companies providing educational technology solutions that require integration with educational standards.
+- **Educational Content Creators**: Individuals or organizations developing educational materials that need to be mapped to specific standards.
+
+### User Needs
+- Accurate identification of educational standards for exam questions.
+- Reliable and fast processing of documents.
+- Easy integration with existing systems via RESTful API.
+- Asynchronous processing with callback notifications.
+
+## Features
+- **REST API**: Allows clients to submit documents and receive processed results.
+- **API Documentation**: Comprehensive documentation for developers to integrate and utilize the API effectively.
+- **Webhook Support**: Enables asynchronous processing by notifying users via callback URLs.
+- **Data Import/Export**: Supports importing documents in PDF, Word, and Google Doc formats and exporting results in JSON format.
+- **Queue Management**: Manages document processing requests efficiently.
+- **Admin Dashboard**: Provides an interface for monitoring and managing the API operations.
+- **Log Viewer**: Allows viewing logs for debugging and analysis purposes.
+
+## Authentication
+- **User Registration**: Users will sign up through a secure registration process.
+- **Login**: Users will log in using a secure login mechanism.
+- **Account Management**: Users can manage their accounts, including updating their information and resetting passwords.
+
+## New User Flow
+1. **Sign Up**: User registers for an account using their email and a secure password.
+2. **Email Confirmation**: User receives an email to verify their account.
+3. **Login**: User logs into the system with their credentials.
+4. **API Key Generation**: User generates an API key for accessing the document processing service.
+5. **Submit Documents**: User submits documents via the REST API, providing necessary input parameters.
+6. **Receive Callback**: Upon processing completion, the user is notified via the callback URL with the results.
+
+## Constraints
+- **Technical Limitations**: 
+  - The service can process a maximum of three jurisdiction names per request.
+  - The service is limited to processing documents in PDF, Word, and Google Doc formats.
+- **Browser Support**: The admin dashboard and API documentation should support modern web browsers (e.g., Chrome, Firefox, Safari, Edge).
+- **Performance Requirements**: The API should handle a high volume of requests efficiently, with minimal latency in processing.
+
+## Known Issues
+- **Document Format Compatibility**: Some complex document formats may not be fully supported, potentially affecting processing accuracy.
+- **AI Engine Discrepancies**: Differences in AI engine outputs may lead to occasional discrepancies in the voting method results.
+- **Scalability**: As the user base grows, additional infrastructure may be required to maintain performance.
