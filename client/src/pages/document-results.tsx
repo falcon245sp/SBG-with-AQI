@@ -174,19 +174,19 @@ export default function DocumentResults() {
     }
   };
 
-  const generateMarkdownRubric = (document: DocumentResult['document'], results: DocumentResult['results']) => {
+  const generateMarkdownRubric = (doc: DocumentResult['document'], results: DocumentResult['results']) => {
     // Create markdown rubric content that can be pasted into Google Docs
-    const markdownContent = generateMarkdownRubricContent(document, results);
+    const markdownContent = generateMarkdownRubricContent(doc, results);
     
     // Download as markdown file
     const blob = new Blob([markdownContent], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
     const a = window.document.createElement('a');
     a.href = url;
-    a.download = `${document.fileName.replace(/\.[^/.]+$/, '')}_rubric.md`;
-    document.body.appendChild(a);
+    a.download = `${doc.fileName.replace(/\.[^/.]+$/, '')}_rubric.md`;
+    window.document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
+    window.document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
     toast({
@@ -196,7 +196,7 @@ export default function DocumentResults() {
     });
   };
 
-  const generateCSVExport = (document: DocumentResult['document'], results: DocumentResult['results']) => {
+  const generateCSVExport = (doc: DocumentResult['document'], results: DocumentResult['results']) => {
     const csvRows = [
       ['Question Number', 'Question Text', 'Standards', 'Rigor Level', 'DOK Level', 'Source', 'Confidence', 'Justification']
     ];
@@ -229,10 +229,10 @@ export default function DocumentResults() {
     const url = URL.createObjectURL(blob);
     const a = window.document.createElement('a');
     a.href = url;
-    a.download = `${document.fileName.replace(/\.[^/.]+$/, '')}_analysis.csv`;
-    document.body.appendChild(a);
+    a.download = `${doc.fileName.replace(/\.[^/.]+$/, '')}_analysis.csv`;
+    window.document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
+    window.document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
     toast({
@@ -242,17 +242,17 @@ export default function DocumentResults() {
     });
   };
 
-  const generateStandardsSummary = (document: DocumentResult['document'], results: DocumentResult['results']) => {
-    const summaryContent = generateStandardsSummaryContent(document, results);
+  const generateStandardsSummary = (doc: DocumentResult['document'], results: DocumentResult['results']) => {
+    const summaryContent = generateStandardsSummaryContent(doc, results);
     
     const blob = new Blob([summaryContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = window.document.createElement('a');
     a.href = url;
-    a.download = `${document.fileName.replace(/\.[^/.]+$/, '')}_standards_summary.txt`;
-    document.body.appendChild(a);
+    a.download = `${doc.fileName.replace(/\.[^/.]+$/, '')}_standards_summary.txt`;
+    window.document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
+    window.document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
     toast({
@@ -262,8 +262,8 @@ export default function DocumentResults() {
     });
   };
 
-  const generateMarkdownRubricContent = (document: DocumentResult['document'], results: DocumentResult['results']) => {
-    const rubricTitle = `Standards-Based Rubric: ${document.fileName}`;
+  const generateMarkdownRubricContent = (doc: DocumentResult['document'], results: DocumentResult['results']) => {
+    const rubricTitle = `Standards-Based Rubric: ${doc.fileName}`;
     const generatedDate = new Date().toLocaleDateString();
     
     // Count rigor distribution using teacher overrides as truth
@@ -351,8 +351,8 @@ export default function DocumentResults() {
     return content;
   };
 
-  const generateStandardsSummaryContent = (document: DocumentResult['document'], results: DocumentResult['results']) => {
-    const summaryTitle = `Standards Coverage Summary: ${document.fileName}`;
+  const generateStandardsSummaryContent = (doc: DocumentResult['document'], results: DocumentResult['results']) => {
+    const summaryTitle = `Standards Coverage Summary: ${doc.fileName}`;
     const generatedDate = new Date().toLocaleDateString();
     
     let content = `${summaryTitle}\n`;

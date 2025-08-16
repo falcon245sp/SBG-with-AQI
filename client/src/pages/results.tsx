@@ -4,7 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Sidebar } from "@/components/Sidebar";
+import { useToast } from "@/hooks/use-toast";
 import { RigorBadge } from "@/components/RigorBadge";
 import { ProcessingStatus } from "@/components/ProcessingStatus";
 import { 
@@ -14,10 +16,13 @@ import {
   Download,
   Eye,
   Calendar,
-  Brain
+  Brain,
+  ChevronDown,
+  GraduationCap
 } from "lucide-react";
 
 export default function ResultsPage() {
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [rigorFilter, setRigorFilter] = useState("all");
@@ -55,6 +60,257 @@ export default function ResultsPage() {
     const minutes = Math.floor(diff / 60000);
     const seconds = Math.floor((diff % 60000) / 1000);
     return `${minutes}m ${seconds}s`;
+  };
+
+  // Export functionality (identical to dashboard)
+  const handleExport = async (documentId: string, format: 'rubric-markdown' | 'csv' | 'standards-summary') => {
+    try {
+      const response = await fetch(`/api/documents/${documentId}/results`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch document results');
+      }
+      const documentResult = await response.json();
+      const { document, results } = documentResult;
+      
+      switch (format) {
+        case 'rubric-markdown':
+          generateMarkdownRubric(document, results);
+          break;
+        case 'csv':
+          generateCSVExport(document, results);
+          break;
+        case 'standards-summary':
+          generateStandardsSummary(document, results);
+          break;
+      }
+    } catch (error: any) {
+      toast({
+        title: "Export Failed",
+        description: `Failed to export document: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const generateMarkdownRubric = (doc: any, results: any[]) => {
+    const markdownContent = generateMarkdownRubricContent(doc, results);
+    downloadFile(markdownContent, `${doc.fileName.replace(/\.[^/.]+$/, '')}_rubric.md`, 'text/markdown');
+    
+    toast({
+      title: "Rubric Generated",
+      description: "Markdown rubric ready for Google Docs - just copy and paste!",
+    });
+  };
+
+  const generateCSVExport = (doc: any, results: any[]) => {
+    const csvRows = [
+      ['Question Number', 'Question Text', 'Standards', 'Rigor Level', 'DOK Level', 'Source', 'Confidence', 'Justification']
+    ];
+    
+    results.forEach(question => {
+      const effectiveStandards = question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [];
+      const effectiveRigor = question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild';
+      const source = question.teacherOverride ? 'Teacher Override' : 'Standards Sherpa';
+      const confidence = question.teacherOverride?.confidenceLevel || question.result?.confidenceScore || 'N/A';
+      const justification = question.teacherOverride?.teacherJustification || question.aiResponses?.[0]?.rigorJustification || '';
+      
+      const standardsCodes = effectiveStandards.map((s: any) => s.code).join('; ');
+      const dokLevel = effectiveRigor === 'mild' ? 'DOK 1-2' : effectiveRigor === 'medium' ? 'DOK 2-3' : 'DOK 3-4';
+      
+      csvRows.push([
+        question.questionNumber.toString(),
+        `"${question.questionText.replace(/"/g, '""')}"`,
+        `"${standardsCodes}"`,
+        effectiveRigor,
+        dokLevel,
+        source,
+        confidence.toString(),
+        `"${justification.replace(/"/g, '""')}"`
+      ]);
+    });
+    
+    const csvContent = csvRows.map(row => row.join(',')).join('\n');
+    downloadFile(csvContent, `${doc.fileName.replace(/\.[^/.]+$/, '')}_analysis.csv`, 'text/csv');
+    
+    toast({
+      title: "CSV Export Complete",
+      description: "Analysis data exported successfully",
+    });
+  };
+
+  const generateStandardsSummary = (doc: any, results: any[]) => {
+    const summaryContent = generateStandardsSummaryContent(doc, results);
+    downloadFile(summaryContent, `${doc.fileName.replace(/\.[^/.]+$/, '')}_standards_summary.txt`, 'text/plain');
+    
+    toast({
+      title: "Standards Summary Generated",
+      description: "Standards summary downloaded successfully",
+    });
+  };
+
+  const downloadFile = (content: string, filename: string, mimeType: string) => {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = window.document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    window.document.body.appendChild(a);
+    a.click();
+    window.document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const generateMarkdownRubricContent = (doc: any, results: any[]) => {
+    const rubricTitle = `Standards-Based Rubric: ${doc.fileName}`;
+    const generatedDate = new Date().toLocaleDateString();
+    
+    const rigorDistribution = { mild: 0, medium: 0, spicy: 0 };
+    const standardsSet = new Set<string>();
+    
+    results.forEach(question => {
+      const effectiveRigor = question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild';
+      const effectiveStandards = question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [];
+      
+      rigorDistribution[effectiveRigor as keyof typeof rigorDistribution]++;
+      effectiveStandards.forEach((s: any) => standardsSet.add(s.code));
+    });
+    
+    const teacherOverrideCount = results.filter(q => q.teacherOverride).length;
+    
+    let content = `# ${rubricTitle}\n\n`;
+    content += `**Generated:** ${generatedDate}  \n`;
+    content += `**Source:** Standards Sherpa Analysis with Teacher Overrides  \n`;
+    if (teacherOverrideCount > 0) {
+      content += `**Teacher Overrides Applied:** ${teacherOverrideCount} of ${results.length} questions  \n`;
+    }
+    content += `\n---\n\n`;
+    
+    content += `## Assessment Overview\n\n`;
+    content += `- **Total Questions:** ${results.length}\n`;
+    content += `- **Rigor Distribution:** Mild (${rigorDistribution.mild}), Medium (${rigorDistribution.medium}), Spicy (${rigorDistribution.spicy})\n`;
+    content += `- **Standards Covered:** ${standardsSet.size} unique Common Core standards\n\n`;
+    
+    content += `## Rubric Criteria\n\n`;
+    content += `### Cognitive Rigor Levels (Based on Depth of Knowledge)\n\n`;
+    content += `| Level | Description | DOK Range |\n`;
+    content += `|-------|-------------|----------|\n`;
+    content += `| **MILD** | Basic recall, recognition, or simple application | DOK 1-2 |\n`;
+    content += `| **MEDIUM** | Multi-step problems, analysis, or interpretive tasks | DOK 2-3 |\n`;
+    content += `| **SPICY** | Synthesis, reasoning, or real-world application | DOK 3-4 |\n\n`;
+    
+    content += `### Performance Scale\n\n`;
+    content += `| Score | Performance Level | Description |\n`;
+    content += `|-------|-------------------|-------------|\n`;
+    content += `| **4** | **EXCEEDS STANDARD** | Student demonstrates mastery beyond grade level expectations |\n`;
+    content += `| **3** | **MEETS STANDARD** | Student demonstrates proficient understanding of the standard |\n`;
+    content += `| **2** | **APPROACHING STANDARD** | Student demonstrates developing understanding |\n`;
+    content += `| **1** | **BELOW STANDARD** | Student demonstrates beginning level understanding |\n\n`;
+    
+    content += `---\n\n`;
+    content += `## Question Analysis\n\n`;
+    
+    results.forEach((question, index) => {
+      const effectiveStandards = question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [];
+      const effectiveRigor = question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild';
+      const source = question.teacherOverride ? '👨‍🏫 Teacher Override' : '🎯 Standards Sherpa';
+      const justification = question.teacherOverride?.teacherJustification || question.aiResponses?.[0]?.rigorJustification || '';
+      
+      content += `### Question ${question.questionNumber} ${source}\n\n`;
+      
+      if (effectiveStandards.length > 0) {
+        content += `**Standards Alignment:**\n\n`;
+        content += `| Standard | Description |\n`;
+        content += `|----------|-------------|\n`;
+        effectiveStandards.forEach((standard: any) => {
+          content += `| **${standard.code}** | ${standard.description} |\n`;
+        });
+        content += `\n`;
+      }
+      
+      content += `**Cognitive Rigor:** ${effectiveRigor.toUpperCase()}  \n`;
+      
+      if (justification) {
+        content += `**Analysis:** ${justification}  \n`;
+      }
+      
+      content += `\n**Question Text:**  \n`;
+      content += `> ${question.questionText}\n\n`;
+      
+      if (index < results.length - 1) {
+        content += `---\n\n`;
+      }
+    });
+    
+    content += `\n---\n\n`;
+    content += `*This rubric was generated by Standards Sherpa and incorporates teacher professional judgment where overrides were applied. Standards alignment is based on Common Core State Standards.*`;
+    
+    return content;
+  };
+
+  const generateStandardsSummaryContent = (doc: any, results: any[]) => {
+    const summaryTitle = `Standards Coverage Summary: ${doc.fileName}`;
+    const generatedDate = new Date().toLocaleDateString();
+    
+    let content = `${summaryTitle}\n`;
+    content += `Generated: ${generatedDate}\n`;
+    content += `Source: Standards Sherpa with Teacher Overrides\n`;
+    content += `\n${"=".repeat(60)}\n\n`;
+    
+    const standardsMap = new Map<string, {
+      code: string;
+      description: string;
+      questions: number[];
+      rigorLevels: string[];
+      teacherModified: boolean[];
+    }>();
+    
+    results.forEach(question => {
+      const effectiveStandards = question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [];
+      const effectiveRigor = question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild';
+      const isTeacherModified = !!question.teacherOverride;
+      
+      effectiveStandards.forEach((standard: any) => {
+        if (!standardsMap.has(standard.code)) {
+          standardsMap.set(standard.code, {
+            code: standard.code,
+            description: standard.description,
+            questions: [],
+            rigorLevels: [],
+            teacherModified: []
+          });
+        }
+        const entry = standardsMap.get(standard.code)!;
+        entry.questions.push(question.questionNumber);
+        entry.rigorLevels.push(effectiveRigor);
+        entry.teacherModified.push(isTeacherModified);
+      });
+    });
+    
+    content += `STANDARDS COVERAGE SUMMARY\n`;
+    content += `Total Questions: ${results.length}\n`;
+    content += `Standards Addressed: ${standardsMap.size}\n`;
+    
+    const teacherOverrides = results.filter(q => q.teacherOverride).length;
+    if (teacherOverrides > 0) {
+      content += `Teacher Overrides Applied: ${teacherOverrides} questions\n`;
+    }
+    
+    content += `\n${"=".repeat(60)}\n\n`;
+    
+    Array.from(standardsMap.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .forEach(([code, data]) => {
+        const modifiedCount = data.teacherModified.filter(m => m).length;
+        const modifiedIndicator = modifiedCount > 0 ? ` (${modifiedCount} teacher-modified)` : '';
+        
+        content += `${data.code}${modifiedIndicator}\n`;
+        content += `Description: ${data.description}\n`;
+        content += `Questions: ${data.questions.join(', ')}\n`;
+        content += `Rigor Distribution: ${data.rigorLevels.join(', ')}\n`;
+        content += `${"-".repeat(40)}\n\n`;
+      });
+    
+    return content;
   };
 
   if (isLoading) {
@@ -263,17 +519,31 @@ export default function ResultsPage() {
                                       View
                                     </Button>
                                   )}
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      // Export functionality would go here
-                                      console.log('Export document:', doc.id);
-                                    }}
-                                  >
-                                    <Download className="w-4 h-4 mr-1" />
-                                    Export
-                                  </Button>
+                                  {doc.status === 'completed' && (
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button variant="outline" size="sm">
+                                          <Download className="w-4 h-4 mr-1" />
+                                          Export
+                                          <ChevronDown className="w-3 h-3 ml-1" />
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onClick={() => handleExport(doc.id, 'rubric-markdown')}>
+                                          <FileText className="w-4 h-4 mr-2" />
+                                          Rubric (Markdown)
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleExport(doc.id, 'csv')}>
+                                          <Download className="w-4 h-4 mr-2" />
+                                          CSV Data
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleExport(doc.id, 'standards-summary')}>
+                                          <GraduationCap className="w-4 h-4 mr-2" />
+                                          Standards Summary
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  )}
                                 </div>
                               </td>
                             </tr>
