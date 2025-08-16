@@ -592,10 +592,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const questionId = req.params.questionId;
       
       await storage.revertToAI(questionId, userId);
-      res.json({ message: "Successfully reverted to Ms. Sage analysis" });
+      res.json({ message: "Successfully reverted to Sherpa analysis" });
     } catch (error) {
-      console.error('Error reverting to Ms. Sage:', error);
-      res.status(500).json({ message: 'Failed to revert to Ms. Sage analysis' });
+      console.error('Error reverting to Sherpa:', error);
+      res.status(500).json({ message: 'Failed to revert to Sherpa analysis' });
     }
   });
 

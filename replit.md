@@ -8,7 +8,7 @@ The Document Processing Service is a full-stack web application that provides AI
 
 ## Version History
 
-### Version 0.7.0-dev (August 16, 2025) - Teacher Override & Ms. Sage Persona
+### Version 0.7.0-dev (August 16, 2025) - Teacher Override & Standards Sherpa Persona
 - **Teacher Override System**: Complete implementation of crowd-sourced corrections
   - Database schema with teacherOverrides table for storing teacher feedback
   - API endpoints for saving/retrieving teacher corrections with upsert logic
@@ -19,13 +19,13 @@ The Document Processing Service is a full-stack web application that provides AI
 - **Edit History & Revert Functionality**: Complete teacher override history tracking
   - Enhanced database schema with isActive and isRevertedToAi flags for edit history
   - Preserves all teacher override versions instead of overwriting
-  - "Revert to Ms. Sage" button for restoring original AI analysis
+  - "Revert to Sherpa" button for restoring original AI analysis
   - API endpoints for override history viewing and revert operations
   - Automatic dialog closure after successful override submission
-- **Ms. Sage Persona**: Personified AI platform as seasoned educator assistant
-  - Replaced "AI" references with "Ms. Sage" throughout user interface
+- **Standards Sherpa Persona**: Personified AI platform as educational guide assistant
+  - Replaced "AI" references with "Standards Sherpa" or "Sherpa" throughout user interface
   - Updated landing page, results display, and all user-facing text
-  - Positioned as a trusted educational mentor and analysis partner
+  - Positioned as a trusted educational guide and analysis partner
 - **Development Setup**: Simplified UI for testing and development
   - Fixed testing values: customer ID "123", jurisdiction "Common Core"
   - Removed customer ID and jurisdiction input fields for streamlined testing
@@ -72,16 +72,16 @@ The Document Processing Service is a full-stack web application that provides AI
 
 Preferred communication style: Simple, everyday language.
 
-## Ms. Sage Platform Persona
+## Standards Sherpa Platform Persona
 
-The platform is personified as "Ms. Sage" - a seasoned, wise educator who serves as a trusted assistant to teachers. Ms. Sage represents:
-- Professional expertise and educational wisdom
-- Collaborative partnership with teachers, not replacement
+The platform is personified as "Standards Sherpa" or "Sherpa" for short - a knowledgeable guide who helps teachers navigate educational standards and analysis. Standards Sherpa represents:
+- Expert guidance through complex educational terrain
+- Collaborative partnership with teachers as a trusted guide
 - Reliability and trustworthiness in educational analysis
 - Clear, approachable communication style
 - Support for teacher judgment and expertise
 
-All user-facing references use "Ms. Sage" instead of generic "AI" terms to create a more personal, educational relationship.
+All user-facing references use "Standards Sherpa" or "Sherpa" instead of generic "AI" terms to create a more personal, educational relationship. The persona suggests cartoon sherpa iconography for branding to reinforce the guiding, supportive nature of the platform.
 
 ## System Architecture
 

@@ -120,7 +120,7 @@ export default function DocumentResults() {
     refetchIntervalInBackground: true,
   });
 
-  // Mutation for reverting to AI analysis
+  // Mutation for reverting to Sherpa analysis
   const revertToAiMutation = useMutation({
     mutationFn: async (questionId: string) => {
       return await apiRequest(`/api/questions/${questionId}/revert-to-ai`, 'POST');
@@ -128,15 +128,15 @@ export default function DocumentResults() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/documents/${documentId}/results`] });
       toast({
-        title: "Reverted to Ms. Sage Analysis",
-        description: "Successfully restored the original Ms. Sage analysis results.",
+        title: "Reverted to Sherpa Analysis",
+        description: "Successfully restored the original Sherpa analysis results.",
         variant: "default",
       });
     },
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: "Failed to revert to Ms. Sage analysis. Please try again.",
+        description: "Failed to revert to Sherpa analysis. Please try again.",
         variant: "destructive",
       });
     },
@@ -412,7 +412,7 @@ export default function DocumentResults() {
                                       </DialogTrigger>
                                       <DialogContent className="max-w-2xl">
                                         <DialogHeader>
-                                          <DialogTitle>Override Ms. Sage Analysis - Question {question.questionNumber}</DialogTitle>
+                                          <DialogTitle>Override Sherpa Analysis - Question {question.questionNumber}</DialogTitle>
                                         </DialogHeader>
                                         <TeacherOverrideForm 
                                           questionId={question.id}
@@ -428,7 +428,7 @@ export default function DocumentResults() {
                                       </DialogContent>
                                     </Dialog>
                                     
-                                    {/* Show Revert to AI button if there's a teacher override */}
+                                    {/* Show Revert to Sherpa button if there's a teacher override */}
                                     {question.teacherOverride && (
                                       <Button 
                                         variant="outline" 
@@ -438,7 +438,7 @@ export default function DocumentResults() {
                                         className="text-orange-600 border-orange-300 hover:bg-orange-50"
                                       >
                                         <RotateCcw className="w-4 h-4 mr-1" />
-                                        {revertToAiMutation.isPending ? 'Reverting...' : 'Revert to Ms. Sage'}
+                                        {revertToAiMutation.isPending ? 'Reverting...' : 'Revert to Sherpa'}
                                       </Button>
                                     )}
                                   </div>
