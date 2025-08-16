@@ -585,7 +585,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Revert to Ms. Sage analysis (deactivate current override)
+  // Revert to Sherpa analysis (deactivate current override)
   app.post('/api/questions/:questionId/revert-to-ai', async (req: any, res) => {
     try {
       const userId = 'test-user-123'; // Mock user ID

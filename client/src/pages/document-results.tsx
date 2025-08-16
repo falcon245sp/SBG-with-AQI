@@ -369,7 +369,7 @@ export default function DocumentResults() {
                                     ) : (
                                       <RigorBadge level={question.result.consensusRigorLevel} />
                                     )}
-                                    <Badge variant="outline" className="text-xs text-blue-600 border-blue-300">MS. SAGE</Badge>
+                                    <Badge variant="outline" className="text-xs text-blue-600 border-blue-300">SHERPA</Badge>
                                   </div>
                                 ) : (
                                   <span className="text-sm text-slate-400">Not analyzed</span>

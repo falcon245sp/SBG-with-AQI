@@ -211,7 +211,7 @@ export default function Dashboard() {
                       </div>
                       <div className="ml-5 w-0 flex-1">
                         <dl>
-                          <dt className="text-sm font-medium text-slate-500 truncate">AI Analyses</dt>
+                          <dt className="text-sm font-medium text-slate-500 truncate">Sherpa Analyses</dt>
                           <dd className="text-3xl font-semibold text-slate-900">
                             {stats?.aiAnalyses || 0}
                           </dd>
