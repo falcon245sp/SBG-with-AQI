@@ -71,29 +71,25 @@ export interface PromptCustomization {
   outputFormat?: 'detailed' | 'concise' | 'standardized'; // Output format preference
 }
 
-const ANALYSIS_PROMPT = `You are an expert in high school precalculus education and Standards-Based Grading (SBG) aligned to {JURISDICTIONS}. As a math teacher implementing SBG, I need you to analyze the provided unit documents (quizzes, tests, etc.) to:
+const ANALYSIS_PROMPT = `You are an expert in high school precalculus education and Standards-Based Grading (SBG) aligned to {JURISDICTIONS}. As a math teacher implementing SBG, I need you to analyze the provided unit documents (quizzes, tests, etc.).
 
-For each assessment list every problem/question with:
+For each individual problem/question in the document, identify:
 
-The most relevant standards (no more than 2), using a concise description like "Determine Domain F-IF.A.1".
-A rigor level: mild (for basic recall/application), medium (for multi-step or interpretive), or spicy (for synthesis, reasoning, or real-world application).  Include a brief justification for your rigor level assignment.
+1. The most relevant standard (e.g., F-IF.A.1, F-BF.B.3, A-REI.B.4)
+2. A concise description of what the standard covers 
+3. A rigor level: mild (basic recall/application), medium (multi-step/interpretive), or spicy (synthesis/reasoning/real-world application)
 
+Return your analysis as a JSON object with a "problems" array. Each problem should have:
+- problemNumber: The question/problem number (e.g., "1", "2", "3")  
+- standardCode: The standard code (e.g., "F-IF.A.1")
+- standardDescription: Brief description of what the standard covers
+- rigorLevel: Either "mild", "medium", or "spicy"
 
-Group the output by assessment, using headings like "### Unit X Quiz Y". Output in a bullet-point list per problem, e.g.:
-
-Problem 1: F-IF.A.1 (Understand domain and range of functions), (mild)
-
-At the end, provide a deduplicated list of all referenced standards across the unit, one per line, like:
-
-F-IF.A.1
-
-Ensure consistency:
-
-Map to relevant mathematic standards (e.g., F-BF, F-IF, A-REI, etc.).
-Base rigor on problem complexity (use examples from past analyses: basic domain is mild; transformations with graphs medium; optimization/contextual synthesis spicy).
-Deduplicate standards exactly as in prior outputs.
-Analyze based solely on the provided documents; no external assumptions.
-Keep responses efficient: focus on accuracy, brevity, and structure for easy replication across units.`;
+Focus on:
+- Map to relevant mathematics standards (F-BF, F-IF, A-REI, etc.)
+- Base rigor on problem complexity: basic domain/range is mild; transformations with graphs are medium; optimization/contextual synthesis is spicy
+- Analyze each problem individually 
+- Be accurate and consistent`;
 
 export class AIService {
   private generatePromptWithStandards(focusStandards?: string[]): string {
@@ -619,6 +615,37 @@ Give special attention to identifying alignment with these specific standards.
           }
         ],
         max_tokens: 10000,
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "problem_analysis",
+            schema: {
+              type: "object",
+              properties: {
+                problems: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      problemNumber: { type: "string" },
+                      standardCode: { type: "string" },
+                      standardDescription: { type: "string" },
+                      rigorLevel: { 
+                        type: "string",
+                        enum: ["mild", "medium", "spicy"]
+                      }
+                    },
+                    required: ["problemNumber", "standardCode", "standardDescription", "rigorLevel"],
+                    additionalProperties: false
+                  }
+                }
+              },
+              required: ["problems"],
+              additionalProperties: false
+            },
+            strict: true
+          }
+        }
       });
 
       console.log('=== GROK RESPONSE DEBUG ===');
@@ -627,36 +654,69 @@ Give special attention to identifying alignment with these specific standards.
       console.log('Raw content (first 500 chars):', (grokResponse.choices?.[0]?.message?.content || '').substring(0, 500));
       console.log('Raw content (last 100 chars):', (grokResponse.choices?.[0]?.message?.content || '').slice(-100));
       
-      // Debug question parsing
+      // Parse structured JSON response
       const rawContent = grokResponse.choices?.[0]?.message?.content || '';
-      const questions = this.parseGrokQuestionAnalysis(rawContent);
-      console.log('=== QUESTION PARSING DEBUG ===');
-      console.log('Number of questions parsed:', questions.length);
-      questions.forEach((q, i) => {
-        console.log(`Question ${i + 1}: ${q.questionNumber} - ${q.questionText.substring(0, 50)}...`);
-        console.log(`  Standards count: ${q.standards.length}`);
-        console.log(`  Rigor level: ${q.rigor.level}`);
-      });
-      
       const processingTime = Date.now() - startTime;
-      console.log('=== GROK NATURAL LANGUAGE RESPONSE ===');
+      
+      console.log('=== GROK STRUCTURED JSON RESPONSE ===');
       console.log(rawContent);
-      console.log('=== END NATURAL LANGUAGE RESPONSE ===');
+      console.log('=== END STRUCTURED JSON RESPONSE ===');
       
-      // For now, return the first question's analysis to maintain compatibility
-      // TODO: Update system to handle multiple questions properly
-      const firstQuestion = questions[0] || {
-        standards: [],
-        rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'No questions found', confidence: 0.1 }
-      };
-      
-      return {
-        standards: firstQuestion.standards,
-        rigor: firstQuestion.rigor,
-        rawResponse: grokResponse,
-        processingTime,
-        allQuestions: questions // Store all questions for future use
-      };
+      try {
+        const parsedResponse = JSON.parse(rawContent);
+        const problems = parsedResponse.problems || [];
+        
+        console.log('=== STRUCTURED PARSING DEBUG ===');
+        console.log('Number of problems parsed:', problems.length);
+        
+        const questions = problems.map((problem: any) => {
+          console.log(`Problem ${problem.problemNumber}: ${problem.standardCode} (${problem.rigorLevel})`);
+          return {
+            questionNumber: problem.problemNumber,
+            questionText: `Problem ${problem.problemNumber}: ${problem.standardDescription}`,
+            standards: [{
+              code: problem.standardCode,
+              description: problem.standardDescription,
+              jurisdiction: "Common Core",
+              gradeLevel: "9-12",
+              subject: "Mathematics"
+            }],
+            rigor: {
+              level: problem.rigorLevel as 'mild' | 'medium' | 'spicy',
+              dokLevel: problem.rigorLevel === 'mild' ? 'DOK 1' : problem.rigorLevel === 'medium' ? 'DOK 2' : 'DOK 3',
+              justification: `${problem.rigorLevel} rigor level based on problem complexity`,
+              confidence: 0.85
+            }
+          };
+        });
+        
+        console.log(`Successfully parsed ${questions.length} problems from structured output`);
+        
+        // Return first question's data for compatibility, store all questions
+        const firstQuestion = questions[0] || {
+          standards: [],
+          rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'No questions found', confidence: 0.1 }
+        };
+        
+        return {
+          standards: firstQuestion.standards,
+          rigor: firstQuestion.rigor,
+          rawResponse: grokResponse,
+          processingTime,
+          allQuestions: questions // Store all parsed questions
+        };
+      } catch (parseError) {
+        console.error('Failed to parse structured JSON response:', parseError);
+        console.error('Raw content:', rawContent);
+        
+        return {
+          standards: [],
+          rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'JSON parsing failed', confidence: 0.1 },
+          rawResponse: grokResponse,
+          processingTime,
+          allQuestions: []
+        };
+      }
     } catch (error) {
       console.error('=== GROK JSON PARSE ERROR DEBUG ===');
       console.error('Error:', error instanceof Error ? error.message : 'Unknown error');
