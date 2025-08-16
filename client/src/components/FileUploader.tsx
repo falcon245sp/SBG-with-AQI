@@ -117,11 +117,11 @@ export function FileUploader({
           {isDragActive ? (
             <p className="text-lg font-medium text-blue-600 mb-2">Drop the file here</p>
           ) : (
-            <p className="text-lg font-medium text-slate-900 mb-2">Drag and drop {multiple ? 'files' : 'file'} here</p>
+            <p className="text-lg font-medium text-slate-900 mb-2">Drag and drop files here</p>
           )}
           
           <p className="text-sm text-slate-500 mb-4">
-            Support for PDF, Word, and Google Docs formats (max {Math.round(maxSize / (1024 * 1024))}MB{multiple ? ' per file, up to 10 files' : ''})
+            Support for PDF, Word, and Google Docs formats (max {Math.round(maxSize / (1024 * 1024))}MB per file, up to 10 files)
           </p>
           
           <Button type="button" className="bg-blue-600 hover:bg-blue-700">
@@ -139,11 +139,9 @@ export function FileUploader({
                   <p className="text-xs text-slate-500">{formatFileSize(file.size)}</p>
                 </div>
               </div>
-              {multiple && (
-                <Button onClick={() => removeFile(index)} variant="outline" size="sm">
-                  <X className="w-4 h-4" />
-                </Button>
-              )}
+              <Button onClick={() => removeFile(index)} variant="outline" size="sm">
+                <X className="w-4 h-4" />
+              </Button>
             </div>
           ))}
           
@@ -153,10 +151,10 @@ export function FileUploader({
             </p>
             <div className="flex items-center space-x-2">
               <Button onClick={handleUpload} size="sm" className="bg-green-600 hover:bg-green-700">
-                Upload {multiple ? 'All' : ''}
+                Upload {selectedFiles.length > 1 ? 'All' : ''}
               </Button>
               <Button onClick={() => removeFile()} variant="outline" size="sm">
-                Clear {multiple ? 'All' : ''}
+                Clear {selectedFiles.length > 1 ? 'All' : ''}
               </Button>
             </div>
           </div>

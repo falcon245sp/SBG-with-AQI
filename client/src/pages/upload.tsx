@@ -22,7 +22,6 @@ export default function UploadPage() {
     status: string;
     estimatedCompletion: string;
   }>>([]);
-  const [useMultipleFiles, setUseMultipleFiles] = useState(false);
 
   const handleFileUpload = async (files: File[]) => {
     if (!customerId || !jurisdictions) {
@@ -140,25 +139,14 @@ export default function UploadPage() {
                 <CardContent className="space-y-6">
                   {/* File Upload Area */}
                   <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <Label className="text-base font-medium">Document Files</Label>
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id="multipleFiles"
-                          checked={useMultipleFiles}
-                          onChange={(e) => setUseMultipleFiles(e.target.checked)}
-                          className="rounded border-gray-300"
-                        />
-                        <Label htmlFor="multipleFiles" className="text-sm text-slate-600 cursor-pointer">
-                          Upload multiple files
-                        </Label>
-                      </div>
-                    </div>
+                    <Label className="text-base font-medium">Document Files</Label>
+                    <p className="text-sm text-slate-500 mb-2">
+                      Select one or multiple files for processing
+                    </p>
                     <div className="mt-2">
                       <FileUploader 
                         onFilesUpload={handleFileUpload}
-                        multiple={useMultipleFiles}
+                        multiple={true}
                       />
                     </div>
                   </div>
