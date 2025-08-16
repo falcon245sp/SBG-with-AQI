@@ -123,10 +123,17 @@ export default function DocumentResults() {
   // Mutation for reverting to Sherpa analysis
   const revertToAiMutation = useMutation({
     mutationFn: async (questionId: string) => {
-      return await apiRequest(`/api/questions/${questionId}/revert-to-ai`, 'POST');
+      console.log('Reverting to Sherpa for question:', questionId);
+      const response = await apiRequest(`/api/questions/${questionId}/revert-to-ai`, 'POST');
+      console.log('Revert response:', response);
+      return response;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/documents/${documentId}/results`] });
+    onSuccess: async (data, questionId) => {
+      console.log('Revert successful, invalidating queries...');
+      // Invalidate and refetch the queries
+      await queryClient.invalidateQueries({ queryKey: [`/api/documents/${documentId}/results`] });
+      await queryClient.refetchQueries({ queryKey: [`/api/documents/${documentId}/results`] });
+      console.log('Query refetch completed');
       toast({
         title: "Reverted to Sherpa Analysis",
         description: "Successfully restored the original Sherpa analysis results.",
@@ -134,6 +141,7 @@ export default function DocumentResults() {
       });
     },
     onError: (error: Error) => {
+      console.error('Revert failed:', error);
       toast({
         title: "Error",
         description: "Failed to revert to Sherpa analysis. Please try again.",

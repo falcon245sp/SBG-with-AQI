@@ -201,6 +201,14 @@ export class DatabaseStorage implements IStorage {
         ))
         .orderBy(desc(teacherOverrides.updatedAt))
         .limit(1);
+      
+      // Debug logging for specific question
+      if (question.id === '98a5b027-17d4-42f0-9b04-94c0d21a0abc') {
+        console.log(`Question ${question.id}: found ${teacherOverride ? 'active' : 'no active'} override`);
+        if (teacherOverride) {
+          console.log(`Override details: id=${teacherOverride.id}, isActive=${teacherOverride.isActive}, isRevertedToAi=${teacherOverride.isRevertedToAi}`);
+        }
+      }
 
       results.push({
         ...question,
@@ -402,7 +410,7 @@ export class DatabaseStorage implements IStorage {
 
   async revertToAI(questionId: string, userId: string): Promise<void> {
     // Deactivate current active override and mark as reverted to Sherpa
-    await db
+    const result = await db
       .update(teacherOverrides)
       .set({ 
         isActive: false, 
@@ -412,7 +420,10 @@ export class DatabaseStorage implements IStorage {
       .where(and(
         eq(teacherOverrides.questionId, questionId),
         eq(teacherOverrides.isActive, true)
-      ));
+      ))
+      .returning();
+    
+    console.log(`Reverted ${result.length} override(s) for question ${questionId}:`, result.map(r => ({ id: r.id, isActive: r.isActive, isRevertedToAi: r.isRevertedToAi })));
   }
 
   async updateTeacherOverride(overrideId: string, updates: Partial<InsertTeacherOverride>): Promise<void> {
