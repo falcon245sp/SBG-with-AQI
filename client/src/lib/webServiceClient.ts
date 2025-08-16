@@ -36,14 +36,21 @@ class WebServiceClient {
   
   // Submit documents for processing (supports multiple files)
   async submitDocuments(request: ProcessDocumentRequest): Promise<ProcessDocumentResponse> {
+    console.log('=== WEB SERVICE CLIENT DEBUG ===');
+    console.log('Files to submit:', request.files.length);
+    console.log('File details:', request.files.map(f => ({ name: f.name, size: f.size })));
+    
     // For now, use the existing upload endpoint and transform the response
     const formData = new FormData();
     formData.append('customerId', request.customerId);
     
     // Append each file as 'documents'
-    request.files.forEach(file => {
+    request.files.forEach((file, index) => {
+      console.log(`Appending file ${index + 1}: ${file.name}`);
       formData.append('documents', file);
     });
+    
+    console.log('FormData created with files appended');
     
     formData.append('jurisdictions', request.jurisdictions.join(','));
     if (request.focusStandards) {

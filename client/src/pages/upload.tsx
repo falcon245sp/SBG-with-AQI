@@ -24,6 +24,10 @@ export default function UploadPage() {
   }>>([]);
 
   const handleFileUpload = async (files: File[]) => {
+    console.log('=== FRONTEND UPLOAD DEBUG ===');
+    console.log('Files received in handleFileUpload:', files.length);
+    console.log('File names:', files.map(f => f.name));
+    
     if (!customerId || !jurisdictions) {
       toast({
         title: "Missing Information",
