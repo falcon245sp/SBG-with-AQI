@@ -3,7 +3,10 @@ import { aiService } from './aiService';
 import { rigorAnalyzer } from './rigorAnalyzer';
 import * as fs from 'fs';
 import * as path from 'path';
-import pdf from 'pdf-parse';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
 import mammoth from 'mammoth';
 
 export class DocumentProcessor {
@@ -289,18 +292,32 @@ export class DocumentProcessor {
   
   private async extractTextFromPDF(filePath: string): Promise<string> {
     try {
-      console.log(`Reading PDF file: ${filePath}`);
-      const dataBuffer = fs.readFileSync(filePath);
+      console.log(`Extracting text from PDF using PDFMiner: ${filePath}`);
       
-      console.log(`Parsing PDF buffer of size: ${dataBuffer.length} bytes`);
-      const data = await pdf(dataBuffer);
+      // Get absolute path to the Python script
+      const scriptPath = path.join(process.cwd(), 'server', 'scripts', 'extract_pdf_text.py');
       
-      if (!data.text || data.text.trim().length === 0) {
+      // Execute Python script with the PDF file path
+      const { stdout, stderr } = await execAsync(`python3 "${scriptPath}" "${filePath}"`);
+      
+      if (stderr) {
+        console.warn(`PDFMiner warnings: ${stderr}`);
+      }
+      
+      // Parse JSON response from Python script
+      const result = JSON.parse(stdout.trim());
+      
+      if (!result.success) {
+        throw new Error(result.error || 'PDF extraction failed');
+      }
+      
+      if (!result.text || result.text.trim().length === 0) {
         throw new Error('No text content found in PDF');
       }
       
-      console.log(`Extracted ${data.text.length} characters from PDF`);
-      return data.text.trim();
+      console.log(`Successfully extracted ${result.length} characters from PDF`);
+      return result.text.trim();
+      
     } catch (error) {
       console.error(`PDF extraction error:`, error);
       throw new Error(`PDF extraction failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
