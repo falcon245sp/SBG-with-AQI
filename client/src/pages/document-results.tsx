@@ -9,11 +9,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { Sidebar } from "@/components/Sidebar";
 import { RigorBadge } from "@/components/RigorBadge";
 import { ProcessingStatus } from "@/components/ProcessingStatus";
 import { apiRequest } from "@/lib/queryClient";
+import { validateStandardsList, type CommonCoreStandard } from "@shared/commonCoreStandards";
 import { 
   ArrowLeft, 
   FileText, 
@@ -86,6 +88,11 @@ export default function DocumentResults() {
     justification: string;
     confidence: number;
   }>({ rigorLevel: 'mild', standards: '', justification: '', confidence: 5 });
+  const [standardsValidation, setStandardsValidation] = useState<{
+    valid: CommonCoreStandard[];
+    invalid: string[];
+    suggestions: { [key: string]: CommonCoreStandard[] };
+  } | null>(null);
 
   const { data: documentResult, isLoading, error } = useQuery<DocumentResult>({
     queryKey: [`/api/documents/${documentId}/results`],
@@ -392,23 +399,38 @@ function TeacherOverrideForm({
   
   const saveOverrideMutation = useMutation({
     mutationFn: async (data: any) => {
-      // Safely process standards input
+      // Safely process and validate standards input
       const processStandards = (standardsInput: string) => {
         if (!standardsInput || typeof standardsInput !== 'string') {
           return [];
         }
         
-        return standardsInput
+        const codes = standardsInput
           .split(',')
           .map((code: string) => code.trim())
-          .filter((code: string) => code.length > 0)
-          .map((code: string) => ({
-            code,
-            description: `Teacher-specified standard: ${code}`,
-            jurisdiction: 'Common Core',
-            gradeLevel: '9-12',
-            subject: 'Mathematics'
-          }));
+          .filter((code: string) => code.length > 0);
+        
+        const validation = validateStandardsList(codes);
+        
+        // For valid standards, use the full Common Core information
+        const validStandards = validation.valid.map(standard => ({
+          code: standard.code,
+          description: standard.description,
+          jurisdiction: 'Common Core',
+          gradeLevel: standard.gradeLevel,
+          subject: standard.subject
+        }));
+        
+        // For invalid standards, still include them but mark as teacher-specified
+        const invalidStandards = validation.invalid.map(code => ({
+          code,
+          description: `Teacher-specified standard: ${code} (not validated)`,
+          jurisdiction: 'Common Core',
+          gradeLevel: '9-12',
+          subject: 'Mathematics'
+        }));
+        
+        return [...validStandards, ...invalidStandards];
       };
 
       return await apiRequest(`/api/questions/${questionId}/override`, {
@@ -435,6 +457,22 @@ function TeacherOverrideForm({
     }
   });
 
+  // Validate standards whenever input changes
+  const validateStandards = (standardsInput: string) => {
+    if (!standardsInput.trim()) {
+      setStandardsValidation(null);
+      return;
+    }
+    
+    const codes = standardsInput
+      .split(',')
+      .map((code: string) => code.trim())
+      .filter((code: string) => code.length > 0);
+    
+    const validation = validateStandardsList(codes);
+    setStandardsValidation(validation);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -455,6 +493,16 @@ function TeacherOverrideForm({
         variant: "destructive"
       });
       return;
+    }
+    
+    // Check if there are any invalid standards
+    if (standardsValidation && standardsValidation.invalid.length > 0) {
+      const proceed = window.confirm(
+        `Warning: The following standards are not recognized Common Core standards: ${standardsValidation.invalid.join(', ')}. Do you want to proceed anyway?`
+      );
+      if (!proceed) {
+        return;
+      }
     }
     
     saveOverrideMutation.mutate(formData);
@@ -490,10 +538,42 @@ function TeacherOverrideForm({
         <label className="text-sm font-medium text-slate-700">Standards (comma-separated codes)</label>
         <Input
           value={formData.standards}
-          onChange={(e) => setFormData(prev => ({ ...prev, standards: e.target.value }))}
-          placeholder="e.g., A-REI.B.4, F-BF.A.1"
+          onChange={(e) => {
+            setFormData(prev => ({ ...prev, standards: e.target.value }));
+            validateStandards(e.target.value);
+          }}
+          placeholder="e.g., A-REI.B.4, F-BF.A.1, RL.3.1"
+          className={standardsValidation?.invalid.length ? "border-amber-300" : ""}
         />
-        <p className="text-xs text-slate-500">Enter standard codes separated by commas</p>
+        <p className="text-xs text-slate-500">Enter valid Common Core standard codes separated by commas</p>
+        
+        {/* Validation Feedback */}
+        {standardsValidation && (
+          <div className="space-y-2">
+            {standardsValidation.valid.length > 0 && (
+              <div className="text-xs text-green-600">
+                ✓ Valid standards: {standardsValidation.valid.map(s => s.code).join(', ')}
+              </div>
+            )}
+            
+            {standardsValidation.invalid.length > 0 && (
+              <Alert className="border-amber-300 bg-amber-50">
+                <AlertDescription className="text-xs">
+                  <div className="mb-1">
+                    <strong>Unrecognized standards:</strong> {standardsValidation.invalid.join(', ')}
+                  </div>
+                  {Object.entries(standardsValidation.suggestions).map(([invalid, suggestions]) => (
+                    suggestions.length > 0 && (
+                      <div key={invalid} className="mt-1">
+                        <strong>{invalid}</strong> - Did you mean: {suggestions.slice(0, 2).map(s => s.code).join(', ')}?
+                      </div>
+                    )
+                  ))}
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Justification */}
