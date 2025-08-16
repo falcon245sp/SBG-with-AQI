@@ -253,8 +253,8 @@ export default function Dashboard() {
         : question.questionText;
       
       // Get rigor emoji text
-      const rigorText = effectiveRigor === 'mild' ? 'MILD' : 
-                       effectiveRigor === 'medium' ? 'MEDIUM' : 'SPICY';
+      const rigorText = effectiveRigor === 'mild' ? '🌶️ MILD' : 
+                       effectiveRigor === 'medium' ? '🌶️🌶️ MEDIUM' : '🌶️🌶️🌶️ SPICY';
       
       const primaryStandard = effectiveStandards[0]?.code || 'No Standard';
       const criteria = `Q${question.questionNumber}: ${questionText}\n\n${primaryStandard}\n\n${rigorText}`;
