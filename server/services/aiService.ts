@@ -70,11 +70,9 @@ const ANALYSIS_PROMPT = `You are an expert in high school education and Standard
 For each assessment (e.g., Quiz 1, Test Free Response), list every problem/question with:
 
 The primary standard(s) (e.g., F-IF.A.1 for domain/range), using a concise description like "Determine Domain F-IF.A.1".
-A rigor level: mild (for basic recall/applicat, medium (for multi-step or interpretive), or spicy (for synthesis, reasoning, or real-world application).
+A rigor level: mild (for basic recall/application), medium (for multi-step or interpretive), or spicy (for synthesis, reasoning, or real-world application).
 
-At the end, provide a deduplicated list of all referenced standards across the unit, one per line, like:
-
-F-IF.A.1
+At the end, provide a deduplicated list of all referenced standards across the unit.
 
 Ensure consistency:
 
@@ -84,24 +82,16 @@ Deduplicate standards exactly as in prior outputs.
 Analyze based solely on the provided documents; no external assumptions.
 Keep responses efficient: focus on accuracy, brevity, and structure for easy replication across units.
 
-Provide your analysis in JSON format:
-{
-  "standards": [
-    {
-      "code": "CCSS.MATH.5.NBT.A.1",
-      "description": "Recognize that in a multi-digit number...",
-      "jurisdiction": "Common Core",
-      "gradeLevel": "5",
-      "subject": "Mathematics"
-    }
-  ],
-  "rigor": {
-    "level": "medium",
-    "dokLevel": "DOK 2",
-    "justification": "This question requires students to apply concepts and make connections...",
-    "confidence": 0.85
-  }
-}`;
+Provide your analysis in this format:
+
+STANDARDS IDENTIFIED:
+[List each standard with code, description, jurisdiction, grade level, and subject]
+
+RIGOR ASSESSMENT:
+[State the rigor level: mild, medium, or spicy]
+[State the DOK level: DOK 1, DOK 2, DOK 3, or DOK 4]
+[Provide justification for the rigor level]
+[State your confidence level as a decimal from 0.0 to 1.0]`;
 
 export class AIService {
   private generatePromptWithStandards(focusStandards?: string[]): string {
@@ -572,7 +562,6 @@ Give special attention to identifying alignment with these specific standards.
             content: `Question: ${questionText}\n\nContext: ${context}`
           }
         ],
-        response_format: { type: "json_object" },
         max_tokens: 10000,
       });
 
@@ -583,9 +572,13 @@ Give special attention to identifying alignment with these specific standards.
       console.log('Raw content (last 100 chars):', (grokResponse.choices?.[0]?.message?.content || '').slice(-100));
       
       const processingTime = Date.now() - startTime;
-      const rawContent = grokResponse.choices[0].message.content || '{}';
-      console.log('About to parse JSON, content preview:', rawContent.substring(0, 200));
-      const result = JSON.parse(rawContent);
+      const rawContent = grokResponse.choices[0].message.content || '';
+      console.log('=== FULL GROK NATURAL RESPONSE ===');
+      console.log(rawContent);
+      console.log('=== END FULL RESPONSE ===');
+      
+      // Parse the natural language response
+      const result = this.parseNaturalLanguageResponse(rawContent);
       
       return {
         standards: result.standards || [],
@@ -645,6 +638,109 @@ Give special attention to identifying alignment with these specific standards.
         processingTime: Date.now() - startTime
       };
     }
+  }
+
+  private parseNaturalLanguageResponse(content: string): { standards: EducationalStandard[], rigor: RigorAssessment } {
+    console.log('=== PARSING NATURAL LANGUAGE RESPONSE ===');
+    
+    const standards: EducationalStandard[] = [];
+    let rigor: RigorAssessment = {
+      level: 'mild',
+      dokLevel: 'DOK 1',
+      justification: 'Unable to parse response',
+      confidence: 0.1
+    };
+
+    try {
+      // Extract standards section
+      const standardsMatch = content.match(/STANDARDS IDENTIFIED:(.+?)(?:RIGOR ASSESSMENT:|$)/is);
+      if (standardsMatch) {
+        const standardsText = standardsMatch[1].trim();
+        console.log('Standards section found:', standardsText);
+        
+        // Parse individual standards - look for patterns like:
+        // - F-IF.A.1: Description (Common Core, Grade 9-12, Mathematics)
+        // - CCSS.MATH.HSF.IF.A.1: Description (Common Core, High School, Mathematics)
+        const standardLines = standardsText.split('\n').filter(line => line.trim());
+        
+        for (const line of standardLines) {
+          // Try to extract standard code and description
+          const standardMatch = line.match(/([A-Z-.\d]+):\s*(.+?)(?:\s*\((.+?)\))?$/i);
+          if (standardMatch) {
+            const [, code, description, details] = standardMatch;
+            
+            // Parse details like "Common Core, Grade 9-12, Mathematics"
+            let jurisdiction = 'General';
+            let gradeLevel = 'Multiple';
+            let subject = 'General';
+            
+            if (details) {
+              const parts = details.split(',').map(p => p.trim());
+              if (parts.length >= 3) {
+                jurisdiction = parts[0];
+                gradeLevel = parts[1];
+                subject = parts[2];
+              }
+            }
+            
+            standards.push({
+              code: code.trim(),
+              description: description.trim(),
+              jurisdiction,
+              gradeLevel,
+              subject
+            });
+          }
+        }
+      }
+
+      // Extract rigor assessment
+      const rigorMatch = content.match(/RIGOR ASSESSMENT:(.+?)$/is);
+      if (rigorMatch) {
+        const rigorText = rigorMatch[1].trim();
+        console.log('Rigor section found:', rigorText);
+        
+        // Extract rigor level (mild, medium, spicy)
+        const levelMatch = rigorText.match(/(mild|medium|spicy)/i);
+        if (levelMatch) {
+          rigor.level = levelMatch[1].toLowerCase() as 'mild' | 'medium' | 'spicy';
+        }
+        
+        // Extract DOK level
+        const dokMatch = rigorText.match(/DOK\s*(\d)/i);
+        if (dokMatch) {
+          rigor.dokLevel = `DOK ${dokMatch[1]}`;
+        }
+        
+        // Extract justification (look for explanatory text)
+        const justificationMatch = rigorText.match(/(?:because|justification|reason):\s*(.+?)(?:\n|confidence|$)/is);
+        if (justificationMatch) {
+          rigor.justification = justificationMatch[1].trim();
+        } else {
+          // Use the whole rigor text as justification if no specific pattern found
+          rigor.justification = rigorText.replace(/(mild|medium|spicy|DOK\s*\d)/gi, '').trim() || 'No specific justification provided';
+        }
+        
+        // Extract confidence
+        const confidenceMatch = rigorText.match(/confidence[:\s]*(\d*\.?\d+)/i);
+        if (confidenceMatch) {
+          rigor.confidence = parseFloat(confidenceMatch[1]);
+          // Ensure confidence is between 0 and 1
+          if (rigor.confidence > 1) rigor.confidence = rigor.confidence / 100;
+        } else {
+          // Default confidence based on whether we found data
+          rigor.confidence = standards.length > 0 ? 0.7 : 0.3;
+        }
+      }
+
+      console.log('Parsed standards:', standards);
+      console.log('Parsed rigor:', rigor);
+      
+    } catch (error) {
+      console.error('Error parsing natural language response:', error);
+    }
+
+    return { standards, rigor };
   }
 
   async analyzeClaudeWithPrompt(
