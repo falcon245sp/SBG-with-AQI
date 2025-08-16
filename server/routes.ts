@@ -113,10 +113,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Document upload endpoint
-  app.post('/api/documents/upload', upload.fields([{ name: 'documents', maxCount: 10 }]), async (req: any, res) => {
+  app.post('/api/documents/upload', upload.any(), async (req: any, res) => {
     try {
       const userId = 'test-user-123'; // Mock user ID
-      const files = (req.files as any)?.documents || [];
+      const files = (req.files as Express.Multer.File[]) || [];
       
       if (!files || files.length === 0) {
         return res.status(400).json({ message: "No files uploaded" });
