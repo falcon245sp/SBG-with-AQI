@@ -1,21 +1,22 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Brain, BarChart3, Zap, Shield, Clock } from "lucide-react";
+import { FileText, Brain, BarChart3, Zap, Shield, Clock, BookOpen, GraduationCap } from "lucide-react";
+import scholarImage from "@assets/0224610c-557c-40f4-8e83-145ab9891ae5_1755384997064.jpg";
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-slate-200">
+      <header className="bg-card shadow-sm border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <FileText className="h-8 w-8 text-blue-600 mr-3" />
-              <h1 className="text-xl font-semibold text-slate-900">Document Processing Service</h1>
+              <GraduationCap className="h-8 w-8 text-primary mr-3" />
+              <h1 className="text-xl font-semibold text-foreground">Standards Sherpa</h1>
             </div>
             <Button 
               onClick={() => window.location.href = '/api/login'}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-primary hover:bg-primary/90"
             >
               Sign In
             </Button>
@@ -23,107 +24,171 @@ export default function Landing() {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl font-bold text-slate-900 sm:text-5xl md:text-6xl">
-            Standards Sherpa
-            <span className="text-blue-600"> Educational Analysis</span>
-          </h1>
-          <p className="mt-6 max-w-2xl mx-auto text-xl text-slate-600">
-            Automatically analyze educational documents to identify standards alignment and determine cognitive rigor levels using multiple AI engines.
-          </p>
-          <div className="mt-10">
-            <Button 
-              onClick={() => window.location.href = '/api/login'}
-              size="lg"
-              className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-3"
-            >
-              Get Started
-            </Button>
+      {/* Hero Section with Educational Imagery */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0">
+          <img 
+            src={scholarImage} 
+            alt="Educational scholar with books"
+            className="w-full h-full object-cover opacity-30"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/70 to-background/90"></div>
+        </div>
+        
+        <div className="relative py-24 lg:py-32">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <h1 className="text-4xl font-bold text-foreground sm:text-5xl lg:text-6xl">
+                  Your Educational
+                  <span className="text-primary block mt-2">Standards Sherpa</span>
+                </h1>
+                <p className="mt-6 text-xl text-muted-foreground max-w-lg">
+                  Navigate the complex terrain of educational standards with your trusted guide. 
+                  Automatically analyze documents for standards alignment and cognitive rigor using advanced AI.
+                </p>
+                <div className="mt-8 flex flex-col sm:flex-row gap-4">
+                  <Button 
+                    onClick={() => window.location.href = '/api/login'}
+                    size="lg"
+                    className="bg-primary hover:bg-primary/90 text-lg px-8 py-4"
+                  >
+                    <BookOpen className="h-5 w-5 mr-2" />
+                    Start Your Journey
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="lg"
+                    className="text-lg px-8 py-4 border-primary/20 hover:bg-primary/5"
+                  >
+                    Learn More
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="relative">
+                <div className="bg-card/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-border">
+                  <div className="flex items-center mb-4">
+                    <div className="bg-primary/10 p-3 rounded-xl">
+                      <GraduationCap className="h-8 w-8 text-primary" />
+                    </div>
+                    <div className="ml-4">
+                      <h3 className="text-lg font-semibold text-foreground">Expert Analysis</h3>
+                      <p className="text-sm text-muted-foreground">Multi-AI consensus for accuracy</p>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-accent rounded-lg">
+                      <span className="text-sm font-medium">Standards Alignment</span>
+                      <span className="text-xs px-2 py-1 bg-primary/20 text-primary rounded-full">98% Accuracy</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-accent rounded-lg">
+                      <span className="text-sm font-medium">Rigor Assessment</span>
+                      <span className="text-xs px-2 py-1 bg-primary/20 text-primary rounded-full">DOK 1-4</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-accent rounded-lg">
+                      <span className="text-sm font-medium">Teacher Override</span>
+                      <span className="text-xs px-2 py-1 bg-primary/20 text-primary rounded-full">Full Control</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Features */}
-      <section className="py-16 bg-white">
+      <section className="py-20 bg-muted/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-slate-900">Powerful Features</h2>
-            <p className="mt-4 text-lg text-slate-600">
-              Everything you need for comprehensive educational document analysis
+            <h2 className="text-3xl font-bold text-foreground">Your Guide Through Educational Standards</h2>
+            <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+              Like a trusted sherpa navigating mountain paths, Standards Sherpa guides you through the complex terrain of educational analysis
             </p>
           </div>
 
           <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            <Card>
+            <Card className="border-border/50 bg-card/60 backdrop-blur-sm hover:shadow-lg transition-all duration-300">
               <CardHeader>
-                <Brain className="h-8 w-8 text-blue-600 mb-2" />
-                <CardTitle>Sherpa Multi-AI Analysis</CardTitle>
+                <div className="bg-primary/10 w-fit p-3 rounded-xl">
+                  <Brain className="h-8 w-8 text-primary" />
+                </div>
+                <CardTitle className="text-foreground">Multi-AI Consensus</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-600">
-                  Leverage ChatGPT, Grok, and Claude for comprehensive analysis with consensus voting for accurate results.
+                <p className="text-muted-foreground">
+                  Three expert AI engines (ChatGPT, Grok, Claude) work together to provide the most reliable analysis, like having multiple guides confirm the best path forward.
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-border/50 bg-card/60 backdrop-blur-sm hover:shadow-lg transition-all duration-300">
               <CardHeader>
-                <BarChart3 className="h-8 w-8 text-green-600 mb-2" />
-                <CardTitle>Rigor Assessment</CardTitle>
+                <div className="bg-chart-4/20 w-fit p-3 rounded-xl">
+                  <BarChart3 className="h-8 w-8 text-chart-4" />
+                </div>
+                <CardTitle className="text-foreground">Cognitive Rigor Mapping</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-600">
-                  DOK-based cognitive rigor analysis with easy-to-understand mild, medium, and spicy classifications.
+                <p className="text-muted-foreground">
+                  DOK-based cognitive rigor analysis with intuitive mild 🍃, medium 🌶️, and spicy 🔥 classifications that teachers understand at a glance.
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-border/50 bg-card/60 backdrop-blur-sm hover:shadow-lg transition-all duration-300">
               <CardHeader>
-                <FileText className="h-8 w-8 text-purple-600 mb-2" />
-                <CardTitle>Standards Identification</CardTitle>
+                <div className="bg-chart-2/20 w-fit p-3 rounded-xl">
+                  <FileText className="h-8 w-8 text-chart-2" />
+                </div>
+                <CardTitle className="text-foreground">Standards Navigation</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-600">
-                  Automatic identification of educational standards including Common Core, state standards, and more.
+                <p className="text-muted-foreground">
+                  Expert identification of Common Core, state standards, and more - your Sherpa knows all the educational terrain.
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-border/50 bg-card/60 backdrop-blur-sm hover:shadow-lg transition-all duration-300">
               <CardHeader>
-                <Zap className="h-8 w-8 text-amber-600 mb-2" />
-                <CardTitle>Fast Processing</CardTitle>
+                <div className="bg-chart-3/20 w-fit p-3 rounded-xl">
+                  <Zap className="h-8 w-8 text-chart-3" />
+                </div>
+                <CardTitle className="text-foreground">Swift Analysis</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-600">
-                  Efficient processing pipeline with real-time status updates and queue management.
+                <p className="text-muted-foreground">
+                  No waiting at base camp - efficient processing with real-time updates gets you to your destination quickly.
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-border/50 bg-card/60 backdrop-blur-sm hover:shadow-lg transition-all duration-300">
               <CardHeader>
-                <Shield className="h-8 w-8 text-red-600 mb-2" />
-                <CardTitle>Secure & Reliable</CardTitle>
+                <div className="bg-destructive/10 w-fit p-3 rounded-xl">
+                  <Shield className="h-8 w-8 text-destructive" />
+                </div>
+                <CardTitle className="text-foreground">Teacher Override</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-600">
-                  Enterprise-grade security with user authentication and API key management.
+                <p className="text-muted-foreground">
+                  You're always in control. Override Sherpa's analysis with your expert judgment and maintain full edit history.
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-border/50 bg-card/60 backdrop-blur-sm hover:shadow-lg transition-all duration-300">
               <CardHeader>
-                <Clock className="h-8 w-8 text-indigo-600 mb-2" />
-                <CardTitle>Historical Data</CardTitle>
+                <div className="bg-chart-5/20 w-fit p-3 rounded-xl">
+                  <Clock className="h-8 w-8 text-chart-5" />
+                </div>
+                <CardTitle className="text-foreground">Journey History</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-600">
-                  Complete audit trail with searchable historical results and detailed analytics.
+                <p className="text-muted-foreground">
+                  Complete trail log of every analysis, override, and revert - never lose track of your educational journey.
                 </p>
               </CardContent>
             </Card>
@@ -132,39 +197,39 @@ export default function Landing() {
       </section>
 
       {/* How It Works */}
-      <section className="py-16 bg-slate-50">
+      <section className="py-20 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-slate-900">How It Works</h2>
-            <p className="mt-4 text-lg text-slate-600">
-              Simple process to get comprehensive educational analysis
+            <h2 className="text-3xl font-bold text-foreground">Your Journey with Standards Sherpa</h2>
+            <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+              Four simple steps to reach the summit of educational analysis
             </p>
           </div>
 
           <div className="mt-16 grid grid-cols-1 gap-8 lg:grid-cols-4">
             <div className="text-center">
-              <div className="flex items-center justify-center w-16 h-16 mx-auto bg-blue-100 rounded-full">
-                <span className="text-2xl font-bold text-blue-600">1</span>
+              <div className="flex items-center justify-center w-16 h-16 mx-auto bg-primary/10 rounded-full">
+                <span className="text-2xl font-bold text-primary">1</span>
               </div>
-              <h3 className="mt-4 text-lg font-semibold text-slate-900">Upload Document</h3>
-              <p className="mt-2 text-slate-600">
-                Upload your PDF, Word, or Google Doc file with educational content
+              <h3 className="mt-4 text-lg font-semibold text-foreground">Upload Your Documents</h3>
+              <p className="mt-2 text-muted-foreground">
+                Share your educational materials - PDFs, Word docs, or Google Docs. Your Sherpa is ready for any terrain.
               </p>
             </div>
 
             <div className="text-center">
-              <div className="flex items-center justify-center w-16 h-16 mx-auto bg-green-100 rounded-full">
-                <span className="text-2xl font-bold text-green-600">2</span>
+              <div className="flex items-center justify-center w-16 h-16 mx-auto bg-chart-4/20 rounded-full">
+                <span className="text-2xl font-bold text-chart-4">2</span>
               </div>
-              <h3 className="mt-4 text-lg font-semibold text-slate-900">Sherpa Analysis</h3>
-              <p className="mt-2 text-slate-600">
-                Sherpa uses three AI engines to analyze your content for standards and rigor levels
+              <h3 className="mt-4 text-lg font-semibold text-foreground">Expert Multi-AI Analysis</h3>
+              <p className="mt-2 text-muted-foreground">
+                Three AI experts work together to map standards and assess cognitive rigor with expert precision.
               </p>
             </div>
 
             <div className="text-center">
-              <div className="flex items-center justify-center w-16 h-16 mx-auto bg-purple-100 rounded-full">
-                <span className="text-2xl font-bold text-purple-600">3</span>
+              <div className="flex items-center justify-center w-16 h-16 mx-auto bg-chart-2/20 rounded-full">
+                <span className="text-2xl font-bold text-chart-2">3</span>
               </div>
               <h3 className="mt-4 text-lg font-semibold text-slate-900">Consensus Voting</h3>
               <p className="mt-2 text-slate-600">

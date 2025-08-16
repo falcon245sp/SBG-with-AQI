@@ -3,99 +3,101 @@
 @tailwind utilities;
 
 :root {
-  --background: hsl(0 0% 100%);
-  --foreground: hsl(210 25% 7.8431%);
-  --card: hsl(180 6.6667% 97.0588%);
-  --card-foreground: hsl(210 25% 7.8431%);
-  --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(210 25% 7.8431%);
-  --primary: hsl(203.8863 88.2845% 53.1373%);
+  /* Warm scholarly palette inspired by educational imagery */
+  --background: hsl(35 15% 96%); /* Warm off-white like paper */
+  --foreground: hsl(210 15% 15%); /* Deep charcoal like ink */
+  --card: hsl(35 12% 98%); /* Slightly warmer white for cards */
+  --card-foreground: hsl(210 15% 15%);
+  --popover: hsl(35 15% 96%);
+  --popover-foreground: hsl(210 15% 15%);
+  --primary: hsl(210 85% 45%); /* Rich educational blue from books */
   --primary-foreground: hsl(0 0% 100%);
-  --secondary: hsl(210 25% 7.8431%);
+  --secondary: hsl(25 8% 55%); /* Warm gray from sweater */
   --secondary-foreground: hsl(0 0% 100%);
-  --muted: hsl(240 1.9608% 90%);
-  --muted-foreground: hsl(210 25% 7.8431%);
-  --accent: hsl(211.5789 51.3514% 92.7451%);
-  --accent-foreground: hsl(203.8863 88.2845% 53.1373%);
-  --destructive: hsl(356.3033 90.5579% 54.3137%);
+  --muted: hsl(35 8% 90%); /* Soft warm gray */
+  --muted-foreground: hsl(210 12% 35%);
+  --accent: hsl(210 30% 88%); /* Light blue accent */
+  --accent-foreground: hsl(210 85% 45%);
+  --destructive: hsl(356 75% 53%);
   --destructive-foreground: hsl(0 0% 100%);
-  --border: hsl(201.4286 30.4348% 90.9804%);
-  --input: hsl(200 23.0769% 97.4510%);
-  --ring: hsl(202.8169 89.1213% 53.1373%);
-  --chart-1: hsl(203.8863 88.2845% 53.1373%);
-  --chart-2: hsl(159.7826 100% 36.0784%);
-  --chart-3: hsl(42.0290 92.8251% 56.2745%);
-  --chart-4: hsl(147.1429 78.5047% 41.9608%);
-  --chart-5: hsl(341.4894 75.2000% 50.9804%);
-  --sidebar: hsl(180 6.6667% 97.0588%);
-  --sidebar-foreground: hsl(210 25% 7.8431%);
-  --sidebar-primary: hsl(203.8863 88.2845% 53.1373%);
+  --border: hsl(35 12% 85%); /* Warm border color */
+  --input: hsl(35 15% 95%); /* Warm input background */
+  --ring: hsl(210 85% 45%);
+  --chart-1: hsl(210 85% 45%); /* Educational blue */
+  --chart-2: hsl(25 65% 55%); /* Warm wood tone */
+  --chart-3: hsl(42 85% 60%); /* Golden accent */
+  --chart-4: hsl(160 60% 45%); /* Sage green */
+  --chart-5: hsl(340 65% 55%); /* Warm accent */
+  --sidebar: hsl(35 12% 96%);
+  --sidebar-foreground: hsl(210 15% 15%);
+  --sidebar-primary: hsl(210 85% 45%);
   --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(211.5789 51.3514% 92.7451%);
-  --sidebar-accent-foreground: hsl(203.8863 88.2845% 53.1373%);
-  --sidebar-border: hsl(205.0000 25.0000% 90.5882%);
-  --sidebar-ring: hsl(202.8169 89.1213% 53.1373%);
-  --font-sans: Open Sans, sans-serif;
-  --font-serif: Georgia, serif;
-  --font-mono: Menlo, monospace;
-  --radius: 1.3rem;
-  --shadow-2xs: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-xs: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-sm: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 1px 2px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 1px 2px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-md: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 2px 4px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-lg: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 4px 6px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-xl: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 8px 10px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-2xl: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
+  --sidebar-accent: hsl(210 30% 88%);
+  --sidebar-accent-foreground: hsl(210 85% 45%);
+  --sidebar-border: hsl(35 12% 88%);
+  --sidebar-ring: hsl(210 85% 45%);
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Times New Roman", Georgia, serif;
+  --font-mono: "SF Mono", Monaco, "Cascadia Code", monospace;
+  --radius: 0.75rem;
+  --shadow-2xs: 0px 1px 2px 0px hsl(210 15% 15% / 0.05);
+  --shadow-xs: 0px 1px 2px 0px hsl(210 15% 15% / 0.05);
+  --shadow-sm: 0px 1px 2px 0px hsl(210 15% 15% / 0.05), 0px 1px 3px 0px hsl(210 15% 15% / 0.1);
+  --shadow: 0px 1px 2px 0px hsl(210 15% 15% / 0.05), 0px 2px 4px 0px hsl(210 15% 15% / 0.1);
+  --shadow-md: 0px 2px 4px 0px hsl(210 15% 15% / 0.05), 0px 4px 8px 0px hsl(210 15% 15% / 0.1);
+  --shadow-lg: 0px 4px 6px 0px hsl(210 15% 15% / 0.05), 0px 10px 15px 0px hsl(210 15% 15% / 0.1);
+  --shadow-xl: 0px 8px 10px 0px hsl(210 15% 15% / 0.05), 0px 20px 25px 0px hsl(210 15% 15% / 0.1);
+  --shadow-2xl: 0px 25px 50px 0px hsl(210 15% 15% / 0.25);
   --tracking-normal: 0em;
   --spacing: 0.25rem;
 }
 
 .dark {
-  --background: hsl(0 0% 0%);
-  --foreground: hsl(200 6.6667% 91.1765%);
-  --card: hsl(228 9.8039% 10%);
-  --card-foreground: hsl(0 0% 85.0980%);
-  --popover: hsl(0 0% 0%);
-  --popover-foreground: hsl(200 6.6667% 91.1765%);
-  --primary: hsl(203.7736 87.6033% 52.5490%);
+  /* Dark scholarly theme - warm library at night */
+  --background: hsl(210 15% 8%); /* Deep navy like evening library */
+  --foreground: hsl(35 8% 88%); /* Warm light text */
+  --card: hsl(210 12% 12%); /* Dark card background */
+  --card-foreground: hsl(35 8% 85%);
+  --popover: hsl(210 15% 8%);
+  --popover-foreground: hsl(35 8% 88%);
+  --primary: hsl(210 80% 55%); /* Brighter blue for dark mode */
   --primary-foreground: hsl(0 0% 100%);
-  --secondary: hsl(195.0000 15.3846% 94.9020%);
-  --secondary-foreground: hsl(210 25% 7.8431%);
-  --muted: hsl(0 0% 9.4118%);
-  --muted-foreground: hsl(210 3.3898% 46.2745%);
-  --accent: hsl(205.7143 70% 7.8431%);
-  --accent-foreground: hsl(203.7736 87.6033% 52.5490%);
-  --destructive: hsl(356.3033 90.5579% 54.3137%);
+  --secondary: hsl(25 8% 25%); /* Warm dark gray */
+  --secondary-foreground: hsl(35 8% 88%);
+  --muted: hsl(210 8% 18%); /* Dark muted background */
+  --muted-foreground: hsl(35 5% 65%);
+  --accent: hsl(210 35% 20%); /* Dark blue accent */
+  --accent-foreground: hsl(210 80% 65%);
+  --destructive: hsl(356 75% 60%);
   --destructive-foreground: hsl(0 0% 100%);
-  --border: hsl(210 5.2632% 14.9020%);
-  --input: hsl(207.6923 27.6596% 18.4314%);
-  --ring: hsl(202.8169 89.1213% 53.1373%);
-  --chart-1: hsl(203.8863 88.2845% 53.1373%);
-  --chart-2: hsl(159.7826 100% 36.0784%);
-  --chart-3: hsl(42.0290 92.8251% 56.2745%);
-  --chart-4: hsl(147.1429 78.5047% 41.9608%);
-  --chart-5: hsl(341.4894 75.2000% 50.9804%);
-  --sidebar: hsl(228 9.8039% 10%);
-  --sidebar-foreground: hsl(0 0% 85.0980%);
-  --sidebar-primary: hsl(202.8169 89.1213% 53.1373%);
+  --border: hsl(210 12% 22%); /* Warm dark border */
+  --input: hsl(210 15% 15%); /* Dark input background */
+  --ring: hsl(210 80% 55%);
+  --chart-1: hsl(210 80% 55%); /* Educational blue */
+  --chart-2: hsl(25 65% 45%); /* Warm wood tone */
+  --chart-3: hsl(42 85% 50%); /* Golden accent */
+  --chart-4: hsl(160 60% 40%); /* Sage green */
+  --chart-5: hsl(340 65% 50%); /* Warm accent */
+  --sidebar: hsl(210 12% 12%);
+  --sidebar-foreground: hsl(35 8% 85%);
+  --sidebar-primary: hsl(210 80% 55%);
   --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(205.7143 70% 7.8431%);
-  --sidebar-accent-foreground: hsl(203.7736 87.6033% 52.5490%);
-  --sidebar-border: hsl(205.7143 15.7895% 26.0784%);
-  --sidebar-ring: hsl(202.8169 89.1213% 53.1373%);
-  --font-sans: Open Sans, sans-serif;
-  --font-serif: Georgia, serif;
-  --font-mono: Menlo, monospace;
-  --radius: 1.3rem;
-  --shadow-2xs: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-xs: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-sm: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 1px 2px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 1px 2px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-md: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 2px 4px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-lg: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 4px 6px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-xl: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 8px 10px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-2xl: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
+  --sidebar-accent: hsl(210 35% 20%);
+  --sidebar-accent-foreground: hsl(210 80% 65%);
+  --sidebar-border: hsl(210 12% 25%);
+  --sidebar-ring: hsl(210 80% 55%);
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Times New Roman", Georgia, serif;
+  --font-mono: "SF Mono", Monaco, "Cascadia Code", monospace;
+  --radius: 0.75rem;
+  --shadow-2xs: 0px 1px 2px 0px hsl(0 0% 0% / 0.1);
+  --shadow-xs: 0px 1px 2px 0px hsl(0 0% 0% / 0.1);
+  --shadow-sm: 0px 1px 2px 0px hsl(0 0% 0% / 0.1), 0px 1px 3px 0px hsl(0 0% 0% / 0.15);
+  --shadow: 0px 1px 2px 0px hsl(0 0% 0% / 0.1), 0px 2px 4px 0px hsl(0 0% 0% / 0.15);
+  --shadow-md: 0px 2px 4px 0px hsl(0 0% 0% / 0.1), 0px 4px 8px 0px hsl(0 0% 0% / 0.15);
+  --shadow-lg: 0px 4px 6px 0px hsl(0 0% 0% / 0.1), 0px 10px 15px 0px hsl(0 0% 0% / 0.15);
+  --shadow-xl: 0px 8px 10px 0px hsl(0 0% 0% / 0.1), 0px 20px 25px 0px hsl(0 0% 0% / 0.15);
+  --shadow-2xl: 0px 25px 50px 0px hsl(0 0% 0% / 0.35);
 }
 
 @layer base {
