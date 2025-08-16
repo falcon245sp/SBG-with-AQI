@@ -71,58 +71,29 @@ export interface PromptCustomization {
   outputFormat?: 'detailed' | 'concise' | 'standardized'; // Output format preference
 }
 
-const ANALYSIS_PROMPT = `You are an expert in high school education and Standards-Based Grading (SBG) aligned to multiple jurisdiction standards. As a math teacher implementing SBG, I need you to analyze the provided unit documents (quizzes, tests, etc.) to identify EACH INDIVIDUAL QUESTION and provide separate analysis for each one.
+const ANALYSIS_PROMPT = `You are an expert in high school precalculus education and Standards-Based Grading (SBG) aligned to {JURISDICTIONS}. As a math teacher implementing SBG, I need you to analyze the provided unit documents (quizzes, tests, etc.) to:
 
-CRITICAL: Analyze each question/problem separately. Do not provide a single overall analysis.
+For each assessment list every problem/question with:
 
-For EACH individual question/problem in the document, provide:
+The most relevant standards (no more than 2), using a concise description like "Determine Domain F-IF.A.1".
+A rigor level: mild (for basic recall/application), medium (for multi-step or interpretive), or spicy (for synthesis, reasoning, or real-world application).  Include a brief justification for your rigor level assignment.
 
-1. The most relevant standard(s) (e.g., F-IF.A.1 for domain/range), using a concise description like "Determine Domain F-IF.A.1".
-2. A rigor level: mild (for basic recall/application), medium (for multi-step or interpretive), or spicy (for synthesis, reasoning, or real-world application).
 
-Provide your analysis in this JSON format with an array of questions:
-{
-  "questions": [
-    {
-      "questionNumber": "1",
-      "questionText": "Full text of the first question",
-      "standards": [
-        {
-          "code": "F-IF.A.1",
-          "description": "Understand that a function from one set to another...",
-          "jurisdiction": "Common Core",
-          "gradeLevel": "9-12",
-          "subject": "Mathematics"
-        }
-      ],
-      "rigor": {
-        "level": "medium",
-        "dokLevel": "DOK 2",
-        "justification": "This question requires students to apply concepts and make connections...",
-        "confidence": 0.85
-      }
-    },
-    {
-      "questionNumber": "2",
-      "questionText": "Full text of the second question",
-      "standards": [
-        {
-          "code": "F-BF.B.3",
-          "description": "Identify the effect on the graph of replacing f(x) by f(x) + k...",
-          "jurisdiction": "Common Core", 
-          "gradeLevel": "9-12",
-          "subject": "Mathematics"
-        }
-      ],
-      "rigor": {
-        "level": "spicy",
-        "dokLevel": "DOK 3", 
-        "justification": "This question requires synthesis and complex reasoning...",
-        "confidence": 0.90
-      }
-    }
-  ]
-}`;
+Group the output by assessment, using headings like "### Unit X Quiz Y". Output in a bullet-point list per problem, e.g.:
+
+Problem 1: F-IF.A.1 (Understand domain and range of functions), (mild)
+
+At the end, provide a deduplicated list of all referenced standards across the unit, one per line, like:
+
+F-IF.A.1
+
+Ensure consistency:
+
+Map to relevant mathematic standards (e.g., F-BF, F-IF, A-REI, etc.).
+Base rigor on problem complexity (use examples from past analyses: basic domain is mild; transformations with graphs medium; optimization/contextual synthesis spicy).
+Deduplicate standards exactly as in prior outputs.
+Analyze based solely on the provided documents; no external assumptions.
+Keep responses efficient: focus on accuracy, brevity, and structure for easy replication across units.`;
 
 export class AIService {
   private generatePromptWithStandards(focusStandards?: string[]): string {
@@ -507,7 +478,8 @@ Give special attention to identifying alignment with these specific standards.
     customPrompt?: string
   ): Promise<AIAnalysisResult> {
     const startTime = Date.now();
-    const prompt = customPrompt || ANALYSIS_PROMPT;
+    const basePrompt = customPrompt || ANALYSIS_PROMPT;
+    const prompt = basePrompt.replace('{JURISDICTIONS}', jurisdictions.join(' and '));
     
     try {
       const response = await openai.chat.completions.create({
@@ -515,7 +487,7 @@ Give special attention to identifying alignment with these specific standards.
         messages: [
           {
             role: "system",
-            content: `${prompt}\n\nFocus on these jurisdictions: ${jurisdictions.join(', ')}`
+            content: prompt
           },
           {
             role: "user",
@@ -555,7 +527,7 @@ Give special attention to identifying alignment with these specific standards.
         messages: [
           {
             role: "system",
-            content: `${ANALYSIS_PROMPT}\n\nFocus on these jurisdictions: ${jurisdictions.join(', ')}`
+            content: ANALYSIS_PROMPT.replace('{JURISDICTIONS}', jurisdictions.join(' and '))
           },
           {
             role: "user",
@@ -593,7 +565,8 @@ Give special attention to identifying alignment with these specific standards.
     customPrompt?: string
   ): Promise<AIAnalysisResult> {
     const startTime = Date.now();
-    const prompt = customPrompt || ANALYSIS_PROMPT;
+    const basePrompt = customPrompt || ANALYSIS_PROMPT;
+    const prompt = basePrompt.replace('{JURISDICTIONS}', jurisdictions.join(' and '));
     
     try {
       const response = await grok.chat.completions.create({
@@ -601,7 +574,7 @@ Give special attention to identifying alignment with these specific standards.
         messages: [
           {
             role: "system",
-            content: `${prompt}\n\nFocus on these jurisdictions: ${jurisdictions.join(', ')}`
+            content: prompt
           },
           {
             role: "user",
@@ -638,7 +611,8 @@ Give special attention to identifying alignment with these specific standards.
     
     try {
       console.log('=== GROK API CALL DEBUG ===');
-      console.log('System prompt length:', `${ANALYSIS_PROMPT}\n\nFocus on these jurisdictions: ${jurisdictions.join(', ')}`.length);
+      const dynamicPrompt = ANALYSIS_PROMPT.replace('{JURISDICTIONS}', jurisdictions.join(' and '));
+      console.log('System prompt length:', dynamicPrompt.length);
       console.log('User content length:', `Question: ${questionText}\n\nContext: ${context}`.length);
       console.log('Model:', "grok-2-1212");
       console.log('Max tokens:', 10000);
@@ -648,7 +622,7 @@ Give special attention to identifying alignment with these specific standards.
         messages: [
           {
             role: "system",
-            content: `${ANALYSIS_PROMPT}\n\nFocus on these jurisdictions: ${jurisdictions.join(', ')}`
+            content: dynamicPrompt
           },
           {
             role: "user",
@@ -1110,7 +1084,8 @@ Give special attention to identifying alignment with these specific standards.
     customPrompt?: string
   ): Promise<AIAnalysisResult> {
     const startTime = Date.now();
-    const prompt = customPrompt || ANALYSIS_PROMPT;
+    const basePrompt = customPrompt || ANALYSIS_PROMPT;
+    const prompt = basePrompt.replace('{JURISDICTIONS}', jurisdictions.join(' and '));
     
     try {
       const response = await anthropic.messages.create({
@@ -1118,7 +1093,7 @@ Give special attention to identifying alignment with these specific standards.
         messages: [
           {
             role: 'user',
-            content: `${prompt}\n\nFocus on these jurisdictions: ${jurisdictions.join(', ')}\n\nQuestion: ${questionText}\n\nContext: ${context}`
+            content: `${prompt}\n\nQuestion: ${questionText}\n\nContext: ${context}`
           }
         ],
         // "claude-sonnet-4-20250514"
@@ -1150,12 +1125,13 @@ Give special attention to identifying alignment with these specific standards.
     const startTime = Date.now();
     
     try {
+      const prompt = ANALYSIS_PROMPT.replace('{JURISDICTIONS}', jurisdictions.join(' and '));
       const response = await anthropic.messages.create({
         max_tokens: 1024,
         messages: [
           {
             role: 'user',
-            content: `${ANALYSIS_PROMPT}\n\nFocus on these jurisdictions: ${jurisdictions.join(', ')}\n\nQuestion: ${questionText}\n\nContext: ${context}`
+            content: `${prompt}\n\nQuestion: ${questionText}\n\nContext: ${context}`
           }
         ],
         // "claude-sonnet-4-20250514"
