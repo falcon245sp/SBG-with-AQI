@@ -16,6 +16,8 @@ const upload = multer({
   limits: {
     fileSize: 50 * 1024 * 1024, // 50MB limit per file
     files: 10, // Maximum 10 files per request
+    fields: 10, // Allow additional form fields
+    fieldSize: 1024 * 1024 // 1MB limit for text fields
   },
   fileFilter: (req, file, cb) => {
     const allowedTypes = [
