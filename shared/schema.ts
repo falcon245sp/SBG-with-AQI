@@ -106,6 +106,19 @@ export const questionResults = pgTable("question_results", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Teacher overrides for crowd-sourced corrections
+export const teacherOverrides = pgTable("teacher_overrides", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  questionId: varchar("question_id").notNull().references(() => questions.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  overriddenStandards: jsonb("overridden_standards").notNull(), // Teacher's corrected standards
+  overriddenRigorLevel: rigorLevelEnum("overridden_rigor_level"),
+  teacherJustification: text("teacher_justification"), // Teacher's reasoning
+  confidenceLevel: integer("confidence_level").notNull().default(5), // 1-5 scale
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // API keys for users
 export const apiKeys = pgTable("api_keys", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -170,6 +183,14 @@ export const insertApiKeySchema = createInsertSchema(apiKeys).pick({
   keyHash: true,
 });
 
+export const insertTeacherOverrideSchema = createInsertSchema(teacherOverrides).pick({
+  questionId: true,
+  overriddenStandards: true,
+  overriddenRigorLevel: true,
+  teacherJustification: true,
+  confidenceLevel: true,
+});
+
 // Types
 export type UpsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -179,8 +200,10 @@ export type AiResponse = typeof aiResponses.$inferSelect;
 export type QuestionResult = typeof questionResults.$inferSelect;
 export type ApiKey = typeof apiKeys.$inferSelect;
 export type ProcessingQueue = typeof processingQueue.$inferSelect;
+export type TeacherOverride = typeof teacherOverrides.$inferSelect;
 
 export type InsertDocument = z.infer<typeof insertDocumentSchema>;
 export type InsertQuestion = z.infer<typeof insertQuestionSchema>;
 export type InsertAiResponse = z.infer<typeof insertAiResponseSchema>;
 export type InsertApiKey = z.infer<typeof insertApiKeySchema>;
+export type InsertTeacherOverride = z.infer<typeof insertTeacherOverrideSchema>;

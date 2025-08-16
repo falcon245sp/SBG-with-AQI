@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { documentProcessor, queueProcessor } from "./services/documentProcessor";
-import { insertDocumentSchema } from "@shared/schema";
+import { insertDocumentSchema, insertTeacherOverrideSchema } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
 import { aiService } from "./services/aiService";
@@ -536,6 +536,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Start the queue processor for sequential document processing
   queueProcessor.start();
   console.log('Queue processor started for sequential document processing');
+
+  // Teacher override endpoints
+  app.post('/api/questions/:questionId/override', async (req: any, res) => {
+    try {
+      const userId = 'test-user-123'; // Mock user ID
+      const questionId = req.params.questionId;
+      
+      const validationResult = insertTeacherOverrideSchema.safeParse({
+        questionId,
+        ...req.body
+      });
+
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid override data",
+          errors: validationResult.error.errors 
+        });
+      }
+
+      // Check if override already exists for this user/question
+      const existingOverride = await storage.getQuestionOverride(questionId, userId);
+      
+      if (existingOverride) {
+        // Update existing override
+        await storage.updateTeacherOverride(existingOverride.id, validationResult.data);
+        res.json({ message: "Override updated successfully", overrideId: existingOverride.id });
+      } else {
+        // Create new override
+        const override = await storage.createTeacherOverride(userId, validationResult.data);
+        res.json({ message: "Override created successfully", overrideId: override.id });
+      }
+    } catch (error) {
+      console.error('Error saving teacher override:', error);
+      res.status(500).json({ message: 'Failed to save override' });
+    }
+  });
+
+  app.get('/api/questions/:questionId/override', async (req: any, res) => {
+    try {
+      const userId = 'test-user-123'; // Mock user ID
+      const questionId = req.params.questionId;
+      
+      const override = await storage.getQuestionOverride(questionId, userId);
+      
+      if (override) {
+        res.json(override);
+      } else {
+        res.status(404).json({ message: 'No override found' });
+      }
+    } catch (error) {
+      console.error('Error fetching teacher override:', error);
+      res.status(500).json({ message: 'Failed to fetch override' });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

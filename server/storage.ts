@@ -6,6 +6,7 @@ import {
   questionResults,
   apiKeys,
   processingQueue,
+  teacherOverrides,
   type User,
   type UpsertUser,
   type Document,
@@ -14,10 +15,12 @@ import {
   type QuestionResult,
   type ApiKey,
   type ProcessingQueue,
+  type TeacherOverride,
   type InsertDocument,
   type InsertQuestion,
   type InsertAiResponse,
   type InsertApiKey,
+  type InsertTeacherOverride,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, inArray, sql } from "drizzle-orm";
@@ -55,6 +58,12 @@ export interface IStorage {
   getNextQueueItem(): Promise<ProcessingQueue | undefined>;
   removeFromQueue(id: string): Promise<void>;
   getQueueStatus(): Promise<Array<ProcessingQueue & { document?: Document }>>;
+  
+  // Teacher override operations
+  createTeacherOverride(userId: string, override: InsertTeacherOverride): Promise<TeacherOverride>;
+  getQuestionOverride(questionId: string, userId?: string): Promise<TeacherOverride | undefined>;
+  updateTeacherOverride(overrideId: string, updates: Partial<InsertTeacherOverride>): Promise<void>;
+  getQuestionWithOverrides(questionId: string): Promise<Array<Question & { override?: TeacherOverride; result?: QuestionResult; aiResponses: AiResponse[] }>>;
   
   // Analytics operations
   getProcessingStats(userId?: string): Promise<{
@@ -331,6 +340,74 @@ export class DatabaseStorage implements IStorage {
       medium: stats?.medium || 0,
       spicy: stats?.spicy || 0,
     };
+  }
+  
+  // Teacher override operations
+  async createTeacherOverride(userId: string, override: InsertTeacherOverride): Promise<TeacherOverride> {
+    const [teacherOverride] = await db
+      .insert(teacherOverrides)
+      .values({
+        ...override,
+        userId,
+      })
+      .returning();
+    return teacherOverride;
+  }
+
+  async getQuestionOverride(questionId: string, userId?: string): Promise<TeacherOverride | undefined> {
+    const whereClause = userId 
+      ? and(eq(teacherOverrides.questionId, questionId), eq(teacherOverrides.userId, userId))
+      : eq(teacherOverrides.questionId, questionId);
+    
+    const [override] = await db
+      .select()
+      .from(teacherOverrides)
+      .where(whereClause)
+      .orderBy(desc(teacherOverrides.createdAt))
+      .limit(1);
+    return override;
+  }
+
+  async updateTeacherOverride(overrideId: string, updates: Partial<InsertTeacherOverride>): Promise<void> {
+    await db
+      .update(teacherOverrides)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(teacherOverrides.id, overrideId));
+  }
+
+  async getQuestionWithOverrides(questionId: string): Promise<Array<Question & { override?: TeacherOverride; result?: QuestionResult; aiResponses: AiResponse[] }>> {
+    // Get the question
+    const [question] = await db
+      .select()
+      .from(questions)
+      .where(eq(questions.id, questionId));
+    
+    if (!question) return [];
+    
+    // Get teacher override for this question
+    const override = await this.getQuestionOverride(questionId);
+    
+    // Get AI result
+    const [result] = await db
+      .select()
+      .from(questionResults)
+      .where(eq(questionResults.questionId, questionId));
+    
+    // Get AI responses
+    const aiResponsesData = await db
+      .select()
+      .from(aiResponses)
+      .where(eq(aiResponses.questionId, questionId));
+
+    return [{
+      ...question,
+      override,
+      result,
+      aiResponses: aiResponsesData,
+    }];
   }
 }
 

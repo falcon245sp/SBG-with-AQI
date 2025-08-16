@@ -1,12 +1,19 @@
 import { useParams } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useToast } from "@/hooks/use-toast";
 import { Sidebar } from "@/components/Sidebar";
 import { RigorBadge } from "@/components/RigorBadge";
 import { ProcessingStatus } from "@/components/ProcessingStatus";
+import { apiRequest } from "@/lib/queryClient";
 import { 
   ArrowLeft, 
   FileText, 
@@ -15,7 +22,10 @@ import {
   TrendingUp,
   Clock,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Edit3,
+  Save,
+  X
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -67,6 +77,15 @@ interface DocumentResult {
 export default function DocumentResults() {
   const params = useParams<{ id: string }>();
   const documentId = params?.id;
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
+  const [overrideFormData, setOverrideFormData] = useState<{
+    rigorLevel: 'mild' | 'medium' | 'spicy';
+    standards: string;
+    justification: string;
+    confidence: number;
+  }>({ rigorLevel: 'mild', standards: '', justification: '', confidence: 5 });
 
   const { data: documentResult, isLoading, error } = useQuery<DocumentResult>({
     queryKey: [`/api/documents/${documentId}/results`],
@@ -236,6 +255,9 @@ export default function DocumentResults() {
                             <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                               Rigor
                             </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                              Actions
+                            </th>
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-slate-200">
@@ -264,20 +286,61 @@ export default function DocumentResults() {
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 {question.result ? (
-                                  question.aiResponses && question.aiResponses.length > 0 && question.aiResponses[0].rigorJustification ? (
-                                    <Tooltip>
-                                      <TooltipTrigger>
-                                        <RigorBadge level={question.result.consensusRigorLevel} />
-                                      </TooltipTrigger>
-                                      <TooltipContent className="max-w-sm min-w-48 max-h-64 overflow-y-auto p-4 bg-slate-800 text-white border-slate-700">
-                                        <p className="text-sm leading-6 whitespace-pre-wrap break-words">{question.aiResponses[0].rigorJustification}</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  ) : (
-                                    <RigorBadge level={question.result.consensusRigorLevel} />
-                                  )
+                                  <div className="flex items-center space-x-2">
+                                    {question.aiResponses && question.aiResponses.length > 0 && question.aiResponses[0].rigorJustification ? (
+                                      <Tooltip>
+                                        <TooltipTrigger>
+                                          <RigorBadge level={question.result.consensusRigorLevel} />
+                                        </TooltipTrigger>
+                                        <TooltipContent className="max-w-sm min-w-48 max-h-64 overflow-y-auto p-4 bg-slate-800 text-white border-slate-700">
+                                          <p className="text-sm leading-6 whitespace-pre-wrap break-words">{question.aiResponses[0].rigorJustification}</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    ) : (
+                                      <RigorBadge level={question.result.consensusRigorLevel} />
+                                    )}
+                                    <Badge variant="outline" className="text-xs text-blue-600 border-blue-300">AI</Badge>
+                                  </div>
                                 ) : (
                                   <span className="text-sm text-slate-400">Not analyzed</span>
+                                )}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                {question.result && (
+                                  <Dialog>
+                                    <DialogTrigger asChild>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => {
+                                          setEditingQuestionId(question.id);
+                                          setOverrideFormData({
+                                            rigorLevel: question.result?.consensusRigorLevel || 'mild',
+                                            standards: question.result?.consensusStandards?.map(s => s.code).join(', ') || '',
+                                            justification: question.aiResponses?.[0]?.rigorJustification || '',
+                                            confidence: 5
+                                          });
+                                        }}
+                                      >
+                                        <Edit3 className="w-4 h-4 mr-1" />
+                                        Override
+                                      </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="max-w-2xl">
+                                      <DialogHeader>
+                                        <DialogTitle>Override AI Analysis - Question {question.questionNumber}</DialogTitle>
+                                      </DialogHeader>
+                                      <TeacherOverrideForm 
+                                        questionId={question.id}
+                                        questionText={question.questionText}
+                                        initialData={overrideFormData}
+                                        onSuccess={() => {
+                                          toast({ title: "Override saved successfully" });
+                                          queryClient.invalidateQueries({ queryKey: [`/api/documents/${documentId}/results`] });
+                                        }}
+                                      />
+                                    </DialogContent>
+                                  </Dialog>
                                 )}
                               </td>
                             </tr>
@@ -304,5 +367,146 @@ export default function DocumentResults() {
         </main>
       </div>
     </div>
+  );
+}
+
+// Teacher Override Form Component
+function TeacherOverrideForm({ 
+  questionId, 
+  questionText, 
+  initialData, 
+  onSuccess 
+}: {
+  questionId: string;
+  questionText: string;
+  initialData: {
+    rigorLevel: 'mild' | 'medium' | 'spicy';
+    standards: string;
+    justification: string;
+    confidence: number;
+  };
+  onSuccess: () => void;
+}) {
+  const [formData, setFormData] = useState(initialData);
+  const { toast } = useToast();
+  
+  const saveOverrideMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return await apiRequest(`/api/questions/${questionId}/override`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          overriddenRigorLevel: data.rigorLevel,
+          overriddenStandards: data.standards.split(',').map((code: string) => ({
+            code: code.trim(),
+            description: `Teacher-specified standard: ${code.trim()}`,
+            jurisdiction: 'Common Core',
+            gradeLevel: '9-12',
+            subject: 'Mathematics'
+          })),
+          teacherJustification: data.justification,
+          confidenceLevel: data.confidence
+        })
+      });
+    },
+    onSuccess: () => {
+      onSuccess();
+    },
+    onError: (error) => {
+      toast({ 
+        title: "Error saving override", 
+        description: "Failed to save your changes. Please try again.",
+        variant: "destructive" 
+      });
+    }
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    saveOverrideMutation.mutate(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Question Preview */}
+      <div className="bg-slate-50 p-4 rounded-lg">
+        <h4 className="font-medium text-slate-900 mb-2">Question Text:</h4>
+        <p className="text-sm text-slate-700">{questionText}</p>
+      </div>
+
+      {/* Rigor Level Override */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-slate-700">Rigor Level</label>
+        <Select value={formData.rigorLevel} onValueChange={(value: 'mild' | 'medium' | 'spicy') => 
+          setFormData(prev => ({ ...prev, rigorLevel: value }))
+        }>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="mild">🍃 Mild (DOK 1-2) - Basic recall & application</SelectItem>
+            <SelectItem value="medium">🌶️ Medium (DOK 2-3) - Analysis & reasoning</SelectItem>
+            <SelectItem value="spicy">🔥 Spicy (DOK 3-4) - Synthesis & evaluation</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Standards Override */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-slate-700">Standards (comma-separated codes)</label>
+        <Input
+          value={formData.standards}
+          onChange={(e) => setFormData(prev => ({ ...prev, standards: e.target.value }))}
+          placeholder="e.g., A-REI.B.4, F-BF.A.1"
+        />
+        <p className="text-xs text-slate-500">Enter standard codes separated by commas</p>
+      </div>
+
+      {/* Justification */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-slate-700">Your Justification</label>
+        <Textarea
+          value={formData.justification}
+          onChange={(e) => setFormData(prev => ({ ...prev, justification: e.target.value }))}
+          placeholder="Explain your reasoning for this rigor level and standards alignment..."
+          rows={4}
+        />
+      </div>
+
+      {/* Confidence Level */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-slate-700">Confidence Level (1-5)</label>
+        <Select value={formData.confidence.toString()} onValueChange={(value) => 
+          setFormData(prev => ({ ...prev, confidence: parseInt(value) }))
+        }>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="1">1 - Low confidence</SelectItem>
+            <SelectItem value="2">2 - Below average</SelectItem>
+            <SelectItem value="3">3 - Average</SelectItem>
+            <SelectItem value="4">4 - High confidence</SelectItem>
+            <SelectItem value="5">5 - Very high confidence</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Submit Button */}
+      <div className="flex justify-end space-x-3">
+        <Button 
+          type="submit" 
+          disabled={saveOverrideMutation.isPending}
+          className="bg-green-600 hover:bg-green-700"
+        >
+          {saveOverrideMutation.isPending ? (
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+          ) : (
+            <Save className="w-4 h-4 mr-2" />
+          )}
+          Save Override
+        </Button>
+      </div>
+    </form>
   );
 }
