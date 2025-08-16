@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
@@ -29,7 +30,9 @@ import {
   Save,
   X,
   RotateCcw,
-  History
+  History,
+  Download,
+  ChevronDown
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -152,6 +155,242 @@ export default function DocumentResults() {
     },
   });
 
+  // Export functions
+  const exportRubric = (format: 'google-classroom' | 'csv' | 'standards-summary') => {
+    if (!documentResult) return;
+    
+    const { document, results } = documentResult;
+    
+    switch (format) {
+      case 'google-classroom':
+        generateGoogleClassroomRubric(document, results);
+        break;
+      case 'csv':
+        generateCSVExport(document, results);
+        break;
+      case 'standards-summary':
+        generateStandardsSummary(document, results);
+        break;
+    }
+  };
+
+  const generateGoogleClassroomRubric = (document: DocumentResult['document'], results: DocumentResult['results']) => {
+    // Create rubric content incorporating teacher overrides as truth
+    const rubricContent = generateRubricContent(document, results);
+    
+    // Download as text file that can be used in Google Classroom
+    const blob = new Blob([rubricContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = window.document.createElement('a');
+    a.href = url;
+    a.download = `${document.fileName.replace(/\.[^/.]+$/, '')}_rubric.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Rubric Generated",
+      description: "Google Classroom rubric downloaded successfully",
+      variant: "default",
+    });
+  };
+
+  const generateCSVExport = (document: DocumentResult['document'], results: DocumentResult['results']) => {
+    const csvRows = [
+      ['Question Number', 'Question Text', 'Standards', 'Rigor Level', 'DOK Level', 'Source', 'Confidence', 'Justification']
+    ];
+    
+    results.forEach(question => {
+      // Use teacher override as truth if available, otherwise use Sherpa analysis
+      const effectiveStandards = question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [];
+      const effectiveRigor = question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild';
+      const source = question.teacherOverride ? 'Teacher Override' : 'Standards Sherpa';
+      const confidence = question.teacherOverride?.confidenceLevel || question.result?.confidenceScore || 'N/A';
+      const justification = question.teacherOverride?.teacherJustification || question.aiResponses?.[0]?.rigorJustification || '';
+      
+      const standardsCodes = effectiveStandards.map(s => s.code).join('; ');
+      const dokLevel = effectiveRigor === 'mild' ? 'DOK 1-2' : effectiveRigor === 'medium' ? 'DOK 2-3' : 'DOK 3-4';
+      
+      csvRows.push([
+        question.questionNumber.toString(),
+        `"${question.questionText.replace(/"/g, '""')}"`,
+        `"${standardsCodes}"`,
+        effectiveRigor,
+        dokLevel,
+        source,
+        confidence.toString(),
+        `"${justification.replace(/"/g, '""')}"`
+      ]);
+    });
+    
+    const csvContent = csvRows.map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = window.document.createElement('a');
+    a.href = url;
+    a.download = `${document.fileName.replace(/\.[^/.]+$/, '')}_analysis.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "CSV Export Complete",
+      description: "Analysis data exported successfully",
+      variant: "default",
+    });
+  };
+
+  const generateStandardsSummary = (document: DocumentResult['document'], results: DocumentResult['results']) => {
+    const summaryContent = generateStandardsSummaryContent(document, results);
+    
+    const blob = new Blob([summaryContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = window.document.createElement('a');
+    a.href = url;
+    a.download = `${document.fileName.replace(/\.[^/.]+$/, '')}_standards_summary.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Standards Summary Generated",
+      description: "Standards summary downloaded successfully",
+      variant: "default",
+    });
+  };
+
+  const generateRubricContent = (document: DocumentResult['document'], results: DocumentResult['results']) => {
+    const rubricTitle = `Standards-Based Rubric: ${document.fileName}`;
+    const generatedDate = new Date().toLocaleDateString();
+    
+    let content = `${rubricTitle}\n`;
+    content += `Generated: ${generatedDate}\n`;
+    content += `Source: Standards Sherpa Analysis with Teacher Overrides\n`;
+    content += `\n${"=".repeat(60)}\n\n`;
+    
+    content += `ASSESSMENT OVERVIEW\n`;
+    content += `Total Questions: ${results.length}\n`;
+    
+    // Count rigor distribution using teacher overrides as truth
+    const rigorDistribution = { mild: 0, medium: 0, spicy: 0 };
+    const standardsSet = new Set<string>();
+    
+    results.forEach(question => {
+      const effectiveRigor = question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild';
+      const effectiveStandards = question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [];
+      
+      rigorDistribution[effectiveRigor]++;
+      effectiveStandards.forEach(s => standardsSet.add(s.code));
+    });
+    
+    content += `Rigor Distribution: Mild (${rigorDistribution.mild}), Medium (${rigorDistribution.medium}), Spicy (${rigorDistribution.spicy})\n`;
+    content += `Standards Covered: ${standardsSet.size} unique standards\n`;
+    content += `\n${"=".repeat(60)}\n\n`;
+    
+    content += `RUBRIC CRITERIA\n\n`;
+    content += `RIGOR LEVEL DEFINITIONS:\n`;
+    content += `• MILD (DOK 1-2): Basic recall, recognition, or simple application\n`;
+    content += `• MEDIUM (DOK 2-3): Multi-step problems, analysis, or interpretive tasks\n`;
+    content += `• SPICY (DOK 3-4): Synthesis, reasoning, or real-world application\n\n`;
+    
+    content += `PERFORMANCE LEVELS:\n`;
+    content += `• 4 - EXCEEDS STANDARD: Student demonstrates mastery beyond grade level expectations\n`;
+    content += `• 3 - MEETS STANDARD: Student demonstrates proficient understanding of the standard\n`;
+    content += `• 2 - APPROACHING STANDARD: Student demonstrates developing understanding\n`;
+    content += `• 1 - BELOW STANDARD: Student demonstrates beginning level understanding\n\n`;
+    
+    content += `${"=".repeat(60)}\n\n`;
+    content += `QUESTION-BY-QUESTION BREAKDOWN\n\n`;
+    
+    results.forEach(question => {
+      const effectiveStandards = question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [];
+      const effectiveRigor = question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild';
+      const source = question.teacherOverride ? '(Teacher Override)' : '(Standards Sherpa)';
+      const justification = question.teacherOverride?.teacherJustification || question.aiResponses?.[0]?.rigorJustification || '';
+      
+      content += `QUESTION ${question.questionNumber} ${source}\n`;
+      content += `Standards: ${effectiveStandards.map(s => s.code).join(', ')}\n`;
+      content += `Rigor: ${effectiveRigor.toUpperCase()}\n`;
+      if (justification) {
+        content += `Analysis: ${justification}\n`;
+      }
+      content += `\nQuestion Text: ${question.questionText}\n`;
+      content += `${"-".repeat(40)}\n\n`;
+    });
+    
+    return content;
+  };
+
+  const generateStandardsSummaryContent = (document: DocumentResult['document'], results: DocumentResult['results']) => {
+    const summaryTitle = `Standards Coverage Summary: ${document.fileName}`;
+    const generatedDate = new Date().toLocaleDateString();
+    
+    let content = `${summaryTitle}\n`;
+    content += `Generated: ${generatedDate}\n`;
+    content += `Source: Standards Sherpa with Teacher Overrides\n`;
+    content += `\n${"=".repeat(60)}\n\n`;
+    
+    // Group questions by standards, respecting teacher overrides
+    const standardsMap = new Map<string, {
+      code: string;
+      description: string;
+      questions: number[];
+      rigorLevels: string[];
+      teacherModified: boolean[];
+    }>();
+    
+    results.forEach(question => {
+      const effectiveStandards = question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [];
+      const effectiveRigor = question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild';
+      const isTeacherModified = !!question.teacherOverride;
+      
+      effectiveStandards.forEach(standard => {
+        if (!standardsMap.has(standard.code)) {
+          standardsMap.set(standard.code, {
+            code: standard.code,
+            description: standard.description,
+            questions: [],
+            rigorLevels: [],
+            teacherModified: []
+          });
+        }
+        const entry = standardsMap.get(standard.code)!;
+        entry.questions.push(question.questionNumber);
+        entry.rigorLevels.push(effectiveRigor);
+        entry.teacherModified.push(isTeacherModified);
+      });
+    });
+    
+    content += `STANDARDS COVERAGE SUMMARY\n`;
+    content += `Total Questions: ${results.length}\n`;
+    content += `Standards Addressed: ${standardsMap.size}\n`;
+    
+    const teacherOverrides = results.filter(q => q.teacherOverride).length;
+    if (teacherOverrides > 0) {
+      content += `Teacher Overrides Applied: ${teacherOverrides} questions\n`;
+    }
+    
+    content += `\n${"=".repeat(60)}\n\n`;
+    
+    Array.from(standardsMap.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .forEach(([code, data]) => {
+        const modifiedCount = data.teacherModified.filter(m => m).length;
+        const modifiedIndicator = modifiedCount > 0 ? ` (${modifiedCount} teacher-modified)` : '';
+        
+        content += `${data.code}${modifiedIndicator}\n`;
+        content += `Description: ${data.description}\n`;
+        content += `Questions: ${data.questions.join(', ')}\n`;
+        content += `Rigor Distribution: ${data.rigorLevels.join(', ')}\n`;
+        content += `${"-".repeat(40)}\n\n`;
+      });
+    
+    return content;
+  };
+
   const formatProcessingTime = (start?: string, end?: string) => {
     if (!start || !end) return "N/A";
     const diff = new Date(end).getTime() - new Date(start).getTime();
@@ -232,6 +471,33 @@ export default function DocumentResults() {
               <h2 className="text-2xl font-semibold text-slate-800">
                 Analysis Results: {document.fileName}
               </h2>
+            </div>
+            
+            {/* Export Dropdown */}
+            <div className="flex items-center space-x-3">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Download className="w-4 h-4 mr-2" />
+                    Export
+                    <ChevronDown className="w-4 h-4 ml-1" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => exportRubric('google-classroom')}>
+                    <FileText className="w-4 h-4 mr-2" />
+                    Google Classroom Rubric
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => exportRubric('csv')}>
+                    <Download className="w-4 h-4 mr-2" />
+                    CSV Data Export
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => exportRubric('standards-summary')}>
+                    <Target className="w-4 h-4 mr-2" />
+                    Standards Summary
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
