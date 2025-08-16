@@ -49,22 +49,24 @@ export interface AIAnalysisResult {
   processingTime: number;
 }
 
-const ANALYSIS_PROMPT = `You are an expert educational standards analyst with OCR capabilities. Analyze the provided educational document or question and provide:
+const ANALYSIS_PROMPT = `You are an expert in high school education and Standards-Based Grading (SBG) aligned to multiple jurisdiction standards. As a math teacher implementing SBG, I need you to analyze the provided unit documents (quizzes, tests, etc.) to:
 
-1. Educational Standards: Identify up to 2 educational standards that this content aligns with. Consider Common Core State Standards, Next Generation Science Standards, state-specific standards, and other recognized frameworks.
+For each assessment (e.g., Quiz 1, Test Free Response), list every problem/question with:
 
-2. Rigor Level Assessment: Determine the cognitive rigor level using Webb's Depth of Knowledge (DOK) framework:
-   - DOK 1 (Recall): Basic recall of facts, definitions, terms, simple procedures
-   - DOK 2 (Skill/Concept): Mental processing beyond recall; requires some decision making
-   - DOK 3 (Strategic Thinking): Requires reasoning, planning, using evidence, complex thinking
-   - DOK 4 (Extended Thinking): Requires investigation, complex connections across disciplines
+The primary standard(s) (e.g., F-IF.A.1 for domain/range), using a concise description like "Determine Domain F-IF.A.1".
+A rigor level: mild (for basic recall/applicat, medium (for multi-step or interpretive), or spicy (for synthesis, reasoning, or real-world application).
 
-Map DOK levels to our rigor categories:
-- "mild": DOK 1-2 (basic recall and simple application)
-- "medium": DOK 2-3 (application and analysis)
-- "spicy": DOK 3-4 (synthesis, evaluation, and creation)
+At the end, provide a deduplicated list of all referenced standards across the unit, one per line, like:
 
-For documents, extract and analyze the educational content. If multiple questions exist, provide an overall assessment.
+F-IF.A.1
+
+Ensure consistency:
+
+Map to relevant standards (e.g., F-BF, F-IF, A-REI, etc.).
+Base rigor on problem complexity (use examples from past analyses: basic domain is mild; transformations with graphs medium; optimization/contextual synthesis spicy).
+Deduplicate standards exactly as in prior outputs.
+Analyze based solely on the provided documents; no external assumptions.
+Keep responses efficient: focus on accuracy, brevity, and structure for easy replication across units.
 
 Provide your analysis in JSON format:
 {
