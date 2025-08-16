@@ -551,6 +551,7 @@ Give special attention to identifying alignment with these specific standards.
 
   async analyzeGrok(questionText: string, context: string, jurisdictions: string[]): Promise<AIAnalysisResult> {
     const startTime = Date.now();
+    let grokResponse: any = null;
     
     try {
       console.log('=== GROK API CALL DEBUG ===');
@@ -559,7 +560,7 @@ Give special attention to identifying alignment with these specific standards.
       console.log('Model:', "grok-2-1212");
       console.log('Max tokens:', 10000);
       
-      const response = await grok.chat.completions.create({
+      grokResponse = await grok.chat.completions.create({
         model: "grok-2-1212",
         messages: [
           {
@@ -576,37 +577,66 @@ Give special attention to identifying alignment with these specific standards.
       });
 
       console.log('=== GROK RESPONSE DEBUG ===');
-      console.log('Response status:', response.choices?.[0]?.finish_reason);
-      console.log('Content length:', response.choices?.[0]?.message?.content?.length || 0);
-      console.log('Raw content (first 500 chars):', (response.choices?.[0]?.message?.content || '').substring(0, 500));
-      console.log('Raw content (last 100 chars):', (response.choices?.[0]?.message?.content || '').slice(-100));
+      console.log('Response status:', grokResponse.choices?.[0]?.finish_reason);
+      console.log('Content length:', grokResponse.choices?.[0]?.message?.content?.length || 0);
+      console.log('Raw content (first 500 chars):', (grokResponse.choices?.[0]?.message?.content || '').substring(0, 500));
+      console.log('Raw content (last 100 chars):', (grokResponse.choices?.[0]?.message?.content || '').slice(-100));
       
       const processingTime = Date.now() - startTime;
-      const rawContent = response.choices[0].message.content || '{}';
+      const rawContent = grokResponse.choices[0].message.content || '{}';
       console.log('About to parse JSON, content preview:', rawContent.substring(0, 200));
       const result = JSON.parse(rawContent);
       
       return {
         standards: result.standards || [],
         rigor: result.rigor || { level: 'mild', dokLevel: 'DOK 1', justification: 'Unable to assess', confidence: 0.1 },
-        rawResponse: response,
+        rawResponse: grokResponse,
         processingTime
       };
     } catch (error) {
       console.error('=== GROK JSON PARSE ERROR DEBUG ===');
       console.error('Error:', error instanceof Error ? error.message : 'Unknown error');
-      console.error('Raw response that failed to parse:');
-      try {
-        const failedContent = response?.choices?.[0]?.message?.content || 'No content';
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      
+      // Now we can access the response from the outer scope
+      if (grokResponse?.choices?.[0]?.message?.content) {
+        const failedContent = grokResponse.choices[0].message.content;
+        console.error('=== MALFORMED JSON CONTENT ANALYSIS ===');
         console.error('Content length:', failedContent.length);
-        console.error('Content around position 4062:');
-        console.error('Position 4000-4100:', failedContent.substring(4000, 4100));
-        console.error('Full content (first 1000 chars):', failedContent.substring(0, 1000));
-        console.error('Full content (last 200 chars):', failedContent.slice(-200));
-      } catch (logError) {
-        console.error('Could not log response content:', logError);
+        
+        // Find the error position if it's a JSON parse error
+        if (error instanceof Error && error.message.includes('position')) {
+          const positionMatch = error.message.match(/position (\d+)/);
+          if (positionMatch) {
+            const errorPos = parseInt(positionMatch[1]);
+            console.error(`Content around error position ${errorPos}:`);
+            console.error(`Position ${Math.max(0, errorPos - 50)} to ${errorPos + 50}:`, 
+              failedContent.substring(Math.max(0, errorPos - 50), errorPos + 50));
+            
+            // Show character codes around the error position
+            const errorChar = failedContent[errorPos];
+            console.error(`Character at error position: "${errorChar}" (code: ${errorChar?.charCodeAt(0) || 'N/A'})`);
+          }
+        }
+        
+        console.error('Full content (first 1000 chars):');
+        console.error(failedContent.substring(0, 1000));
+        console.error('Full content (last 500 chars):');
+        console.error(failedContent.slice(-500));
+        
+        // Check for common JSON formatting issues
+        const hasUnescapedQuotes = failedContent.includes('"') && failedContent.includes('\\"');
+        const hasTrailingCommas = /,\s*[}\]]/g.test(failedContent);
+        const hasUnterminatedStrings = /"\s*$/m.test(failedContent);
+        
+        console.error('JSON formatting analysis:');
+        console.error('- Has unescaped quotes:', hasUnescapedQuotes);
+        console.error('- Has trailing commas:', hasTrailingCommas);
+        console.error('- Has unterminated strings:', hasUnterminatedStrings);
+        console.error('=== END MALFORMED JSON ANALYSIS ===');
+      } else {
+        console.error('No response content available for analysis');
       }
-      console.error('=== END GROK ERROR DEBUG ===');
       
       return {
         standards: [],
