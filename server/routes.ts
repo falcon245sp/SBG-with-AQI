@@ -36,29 +36,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
 
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      
-      // Temporary debug response
-      res.json({
-        debug: true,
-        userId: userId,
-        userFromDB: user,
-        claims: req.user.claims,
-        actualUser: user
-      });
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user", error: error.message });
-    }
+  app.get('/api/auth/user', async (req: any, res) => {
+    // Mock user for testing
+    res.json({
+      id: 'test-user-123',
+      email: 'test@example.com',
+      firstName: 'Test',
+      lastName: 'User',
+      profileImageUrl: null
+    });
   });
 
   // Document upload endpoint
-  app.post('/api/documents/upload', isAuthenticated, upload.single('document'), async (req: any, res) => {
+  app.post('/api/documents/upload', upload.single('document'), async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = 'test-user-123'; // Mock user ID
       const file = req.file;
       
       if (!file) {
@@ -104,9 +96,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user documents
-  app.get('/api/documents', isAuthenticated, async (req: any, res) => {
+  app.get('/api/documents', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = 'test-user-123'; // Mock user ID
       const documents = await storage.getUserDocuments(userId);
       res.json(documents);
     } catch (error) {
@@ -116,9 +108,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get document details with results
-  app.get('/api/documents/:id/results', isAuthenticated, async (req: any, res) => {
+  app.get('/api/documents/:id/results', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = 'test-user-123'; // Mock user ID
       const { id } = req.params;
       
       const document = await storage.getDocument(id);
@@ -139,9 +131,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get processing stats
-  app.get('/api/stats', isAuthenticated, async (req: any, res) => {
+  app.get('/api/stats', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = 'test-user-123'; // Mock user ID
       const stats = await storage.getProcessingStats(userId);
       const rigorDistribution = await storage.getRigorDistribution(userId);
       
@@ -156,9 +148,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // API Key management
-  app.post('/api/api-keys', isAuthenticated, async (req: any, res) => {
+  app.post('/api/api-keys', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = 'test-user-123'; // Mock user ID
       const { keyName } = req.body;
       
       if (!keyName) {
@@ -186,9 +178,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/api-keys', isAuthenticated, async (req: any, res) => {
+  app.get('/api/api-keys', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = 'test-user-123'; // Mock user ID
       const keys = await storage.getUserApiKeys(userId);
       
       // Don't return the actual key hash
