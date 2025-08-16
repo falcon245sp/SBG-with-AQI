@@ -142,9 +142,11 @@ export default function DocumentResults() {
     },
     onError: (error: Error) => {
       console.error('Revert failed:', error);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
       toast({
         title: "Error",
-        description: "Failed to revert to Sherpa analysis. Please try again.",
+        description: `Failed to revert to Sherpa analysis: ${error.message}`,
         variant: "destructive",
       });
     },

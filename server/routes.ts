@@ -591,11 +591,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = 'test-user-123'; // Mock user ID
       const questionId = req.params.questionId;
       
+      console.log(`Processing revert request for question ${questionId}`);
       await storage.revertToAI(questionId, userId);
+      console.log(`Successfully reverted question ${questionId} to Sherpa analysis`);
       res.json({ message: "Successfully reverted to Sherpa analysis" });
     } catch (error) {
       console.error('Error reverting to Sherpa:', error);
-      res.status(500).json({ message: 'Failed to revert to Sherpa analysis' });
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      res.status(500).json({ 
+        message: 'Failed to revert to Sherpa analysis',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
