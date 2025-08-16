@@ -156,14 +156,14 @@ export default function DocumentResults() {
   });
 
   // Export functions
-  const exportRubric = (format: 'google-classroom' | 'csv' | 'standards-summary') => {
+  const exportRubric = (format: 'rubric-markdown' | 'csv' | 'standards-summary') => {
     if (!documentResult) return;
     
     const { document, results } = documentResult;
     
     switch (format) {
-      case 'google-classroom':
-        generateGoogleClassroomRubric(document, results);
+      case 'rubric-markdown':
+        generateMarkdownRubric(document, results);
         break;
       case 'csv':
         generateCSVExport(document, results);
@@ -174,16 +174,16 @@ export default function DocumentResults() {
     }
   };
 
-  const generateGoogleClassroomRubric = (document: DocumentResult['document'], results: DocumentResult['results']) => {
-    // Create rubric content incorporating teacher overrides as truth
-    const rubricContent = generateRubricContent(document, results);
+  const generateMarkdownRubric = (document: DocumentResult['document'], results: DocumentResult['results']) => {
+    // Create markdown rubric content that can be pasted into Google Docs
+    const markdownContent = generateMarkdownRubricContent(document, results);
     
-    // Download as text file that can be used in Google Classroom
-    const blob = new Blob([rubricContent], { type: 'text/plain' });
+    // Download as markdown file
+    const blob = new Blob([markdownContent], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
     const a = window.document.createElement('a');
     a.href = url;
-    a.download = `${document.fileName.replace(/\.[^/.]+$/, '')}_rubric.txt`;
+    a.download = `${document.fileName.replace(/\.[^/.]+$/, '')}_rubric.md`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -191,7 +191,7 @@ export default function DocumentResults() {
     
     toast({
       title: "Rubric Generated",
-      description: "Google Classroom rubric downloaded successfully",
+      description: "Markdown rubric ready for Google Docs - just copy and paste!",
       variant: "default",
     });
   };
@@ -262,17 +262,9 @@ export default function DocumentResults() {
     });
   };
 
-  const generateRubricContent = (document: DocumentResult['document'], results: DocumentResult['results']) => {
+  const generateMarkdownRubricContent = (document: DocumentResult['document'], results: DocumentResult['results']) => {
     const rubricTitle = `Standards-Based Rubric: ${document.fileName}`;
     const generatedDate = new Date().toLocaleDateString();
-    
-    let content = `${rubricTitle}\n`;
-    content += `Generated: ${generatedDate}\n`;
-    content += `Source: Standards Sherpa Analysis with Teacher Overrides\n`;
-    content += `\n${"=".repeat(60)}\n\n`;
-    
-    content += `ASSESSMENT OVERVIEW\n`;
-    content += `Total Questions: ${results.length}\n`;
     
     // Count rigor distribution using teacher overrides as truth
     const rigorDistribution = { mild: 0, medium: 0, spicy: 0 };
@@ -286,40 +278,75 @@ export default function DocumentResults() {
       effectiveStandards.forEach(s => standardsSet.add(s.code));
     });
     
-    content += `Rigor Distribution: Mild (${rigorDistribution.mild}), Medium (${rigorDistribution.medium}), Spicy (${rigorDistribution.spicy})\n`;
-    content += `Standards Covered: ${standardsSet.size} unique standards\n`;
-    content += `\n${"=".repeat(60)}\n\n`;
+    const teacherOverrideCount = results.filter(q => q.teacherOverride).length;
     
-    content += `RUBRIC CRITERIA\n\n`;
-    content += `RIGOR LEVEL DEFINITIONS:\n`;
-    content += `• MILD (DOK 1-2): Basic recall, recognition, or simple application\n`;
-    content += `• MEDIUM (DOK 2-3): Multi-step problems, analysis, or interpretive tasks\n`;
-    content += `• SPICY (DOK 3-4): Synthesis, reasoning, or real-world application\n\n`;
+    let content = `# ${rubricTitle}\n\n`;
+    content += `**Generated:** ${generatedDate}  \n`;
+    content += `**Source:** Standards Sherpa Analysis with Teacher Overrides  \n`;
+    if (teacherOverrideCount > 0) {
+      content += `**Teacher Overrides Applied:** ${teacherOverrideCount} of ${results.length} questions  \n`;
+    }
+    content += `\n---\n\n`;
     
-    content += `PERFORMANCE LEVELS:\n`;
-    content += `• 4 - EXCEEDS STANDARD: Student demonstrates mastery beyond grade level expectations\n`;
-    content += `• 3 - MEETS STANDARD: Student demonstrates proficient understanding of the standard\n`;
-    content += `• 2 - APPROACHING STANDARD: Student demonstrates developing understanding\n`;
-    content += `• 1 - BELOW STANDARD: Student demonstrates beginning level understanding\n\n`;
+    content += `## Assessment Overview\n\n`;
+    content += `- **Total Questions:** ${results.length}\n`;
+    content += `- **Rigor Distribution:** Mild (${rigorDistribution.mild}), Medium (${rigorDistribution.medium}), Spicy (${rigorDistribution.spicy})\n`;
+    content += `- **Standards Covered:** ${standardsSet.size} unique Common Core standards\n\n`;
     
-    content += `${"=".repeat(60)}\n\n`;
-    content += `QUESTION-BY-QUESTION BREAKDOWN\n\n`;
+    content += `## Rubric Criteria\n\n`;
+    content += `### Cognitive Rigor Levels (Based on Depth of Knowledge)\n\n`;
+    content += `| Level | Description | DOK Range |\n`;
+    content += `|-------|-------------|----------|\n`;
+    content += `| **MILD** | Basic recall, recognition, or simple application | DOK 1-2 |\n`;
+    content += `| **MEDIUM** | Multi-step problems, analysis, or interpretive tasks | DOK 2-3 |\n`;
+    content += `| **SPICY** | Synthesis, reasoning, or real-world application | DOK 3-4 |\n\n`;
     
-    results.forEach(question => {
+    content += `### Performance Scale\n\n`;
+    content += `| Score | Performance Level | Description |\n`;
+    content += `|-------|-------------------|-------------|\n`;
+    content += `| **4** | **EXCEEDS STANDARD** | Student demonstrates mastery beyond grade level expectations |\n`;
+    content += `| **3** | **MEETS STANDARD** | Student demonstrates proficient understanding of the standard |\n`;
+    content += `| **2** | **APPROACHING STANDARD** | Student demonstrates developing understanding |\n`;
+    content += `| **1** | **BELOW STANDARD** | Student demonstrates beginning level understanding |\n\n`;
+    
+    content += `---\n\n`;
+    content += `## Question Analysis\n\n`;
+    
+    results.forEach((question, index) => {
       const effectiveStandards = question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [];
       const effectiveRigor = question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild';
-      const source = question.teacherOverride ? '(Teacher Override)' : '(Standards Sherpa)';
+      const source = question.teacherOverride ? '👨‍🏫 Teacher Override' : '🎯 Standards Sherpa';
       const justification = question.teacherOverride?.teacherJustification || question.aiResponses?.[0]?.rigorJustification || '';
       
-      content += `QUESTION ${question.questionNumber} ${source}\n`;
-      content += `Standards: ${effectiveStandards.map(s => s.code).join(', ')}\n`;
-      content += `Rigor: ${effectiveRigor.toUpperCase()}\n`;
-      if (justification) {
-        content += `Analysis: ${justification}\n`;
+      content += `### Question ${question.questionNumber} ${source}\n\n`;
+      
+      // Standards alignment table
+      if (effectiveStandards.length > 0) {
+        content += `**Standards Alignment:**\n\n`;
+        content += `| Standard | Description |\n`;
+        content += `|----------|-------------|\n`;
+        effectiveStandards.forEach(standard => {
+          content += `| **${standard.code}** | ${standard.description} |\n`;
+        });
+        content += `\n`;
       }
-      content += `\nQuestion Text: ${question.questionText}\n`;
-      content += `${"-".repeat(40)}\n\n`;
+      
+      content += `**Cognitive Rigor:** ${effectiveRigor.toUpperCase()}  \n`;
+      
+      if (justification) {
+        content += `**Analysis:** ${justification}  \n`;
+      }
+      
+      content += `\n**Question Text:**  \n`;
+      content += `> ${question.questionText}\n\n`;
+      
+      if (index < results.length - 1) {
+        content += `---\n\n`;
+      }
     });
+    
+    content += `\n---\n\n`;
+    content += `*This rubric was generated by Standards Sherpa and incorporates teacher professional judgment where overrides were applied. Standards alignment is based on Common Core State Standards.*`;
     
     return content;
   };
@@ -484,9 +511,9 @@ export default function DocumentResults() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => exportRubric('google-classroom')}>
+                  <DropdownMenuItem onClick={() => exportRubric('rubric-markdown')}>
                     <FileText className="w-4 h-4 mr-2" />
-                    Google Classroom Rubric
+                    Rubric (Markdown for Google Docs)
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => exportRubric('csv')}>
                     <Download className="w-4 h-4 mr-2" />
