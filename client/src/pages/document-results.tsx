@@ -35,6 +35,8 @@ import {
   ChevronDown
 } from "lucide-react";
 import { Link } from "wouter";
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 interface DocumentResult {
   document: {
@@ -156,7 +158,7 @@ export default function DocumentResults() {
   });
 
   // Export functions
-  const exportRubric = (format: 'rubric-markdown' | 'csv' | 'standards-summary') => {
+  const exportRubric = (format: 'rubric-markdown' | 'rubric-pdf' | 'csv' | 'standards-summary') => {
     if (!documentResult) return;
     
     const { document, results } = documentResult;
@@ -164,6 +166,9 @@ export default function DocumentResults() {
     switch (format) {
       case 'rubric-markdown':
         generateMarkdownRubric(document, results);
+        break;
+      case 'rubric-pdf':
+        generatePdfRubric(document, results);
         break;
       case 'csv':
         generateCSVExport(document, results);
@@ -378,6 +383,93 @@ export default function DocumentResults() {
     return content;
   };
 
+  const generatePdfRubric = (doc: DocumentResult['document'], results: DocumentResult['results']) => {
+    const pdf = new jsPDF();
+    const rubricTitle = doc.fileName.replace(/\.[^/.]+$/, '');
+    
+    // Add title
+    pdf.setFontSize(20);
+    pdf.text(rubricTitle, 20, 30);
+    
+    pdf.setFontSize(16);
+    pdf.text('Rubric', 20, 45);
+    
+    // Prepare table data
+    const tableData: string[][] = [];
+    
+    results.forEach((question) => {
+      const effectiveStandards = question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [];
+      const effectiveRigor = question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild';
+      const questionText = question.questionText.length > 40 
+        ? question.questionText.substring(0, 40) + '...' 
+        : question.questionText;
+      
+      // Get rigor emoji text
+      const rigorText = effectiveRigor === 'mild' ? 'MILD' : 
+                       effectiveRigor === 'medium' ? 'MEDIUM' : 'SPICY';
+      
+      const primaryStandard = effectiveStandards[0]?.code || 'No Standard';
+      const criteria = `Q${question.questionNumber}: ${questionText}\n\n${primaryStandard}\n\n${rigorText}`;
+      
+      // Different rubric criteria based on rigor level
+      let fullCredit, partialCredit, minimalCredit, noCredit;
+      
+      if (effectiveRigor === 'mild') {
+        fullCredit = 'Correctly solves equation with accurate solution. ✓';
+        partialCredit = 'N/A';
+        minimalCredit = 'Attempts solution but with errors or no attempt. ✗';
+        noCredit = 'Irrelevant work or entirely incorrect. ✗';
+      } else if (effectiveRigor === 'medium') {
+        fullCredit = 'Correctly solves equation with accurate solution. ✓';
+        partialCredit = 'Solves with minor errors in steps. ✓s';
+        minimalCredit = 'Attempts solution but with significant errors. ✗';
+        noCredit = 'No attempt or entirely incorrect. ✗';
+      } else { // spicy
+        fullCredit = 'Correctly applies advanced concepts and solves with accurate solution. ✓';
+        partialCredit = 'Solves with minor errors in steps. ✓s';
+        minimalCredit = 'Attempts solution but with significant errors. ✗';
+        noCredit = 'No attempt or entirely incorrect. ✗';
+      }
+      
+      tableData.push([criteria, '', fullCredit, partialCredit, minimalCredit, noCredit]);
+    });
+    
+    // Add table
+    (pdf as any).autoTable({
+      startY: 55,
+      head: [['Criteria', 'Points', 'Full Credit', 'Partial Credit', 'Minimal Credit', 'No Credit']],
+      body: tableData,
+      theme: 'grid',
+      styles: {
+        fontSize: 8,
+        cellPadding: 3,
+      },
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: 255,
+        fontStyle: 'bold'
+      },
+      columnStyles: {
+        0: { cellWidth: 50 }, // Criteria
+        1: { cellWidth: 15 }, // Points
+        2: { cellWidth: 30 }, // Full Credit
+        3: { cellWidth: 30 }, // Partial Credit
+        4: { cellWidth: 30 }, // Minimal Credit
+        5: { cellWidth: 30 }  // No Credit
+      },
+      margin: { top: 55, left: 10, right: 10 }
+    });
+    
+    // Save the PDF
+    pdf.save(`${rubricTitle}_rubric.pdf`);
+    
+    toast({
+      title: "PDF Rubric Generated",
+      description: "PDF rubric downloaded successfully",
+      variant: "default",
+    });
+  };
+
   const formatProcessingTime = (start?: string, end?: string) => {
     if (!start || !end) return "N/A";
     const diff = new Date(end).getTime() - new Date(start).getTime();
@@ -474,6 +566,10 @@ export default function DocumentResults() {
                   <DropdownMenuItem onClick={() => exportRubric('rubric-markdown')}>
                     <FileText className="w-4 h-4 mr-2" />
                     Rubric (Markdown for Google Docs)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => exportRubric('rubric-pdf')}>
+                    <FileText className="w-4 h-4 mr-2" />
+                    Rubric (PDF)
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => exportRubric('csv')}>
                     <Download className="w-4 h-4 mr-2" />
