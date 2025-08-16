@@ -849,7 +849,49 @@ Give special attention to identifying alignment with these specific standards.
     }> = [];
 
     try {
-      // First try new Grok format: #### Question X:
+      // First try bullet-point format: Problem X: standard (description), (rigor)
+      const bulletFormatMatches = content.match(/Problem\s+(\d+):\s*([A-Z-]+\.[A-Z-]+\.\w+)\s*\(([^)]+)\),?\s*\((\w+)\)/g);
+      
+      if (bulletFormatMatches && bulletFormatMatches.length > 0) {
+        console.log(`Found ${bulletFormatMatches.length} problems in bullet format`);
+        
+        for (const problemMatch of bulletFormatMatches) {
+          try {
+            const match = problemMatch.match(/Problem\s+(\d+):\s*([A-Z-]+\.[A-Z-]+\.\w+)\s*\(([^)]+)\),?\s*\((\w+)\)/);
+            if (!match) continue;
+            
+            const [, questionNumber, standardCode, standardDescription, rigorLevel] = match;
+            console.log(`Parsing problem ${questionNumber}: ${standardCode} (${rigorLevel})`);
+
+            questions.push({
+              questionNumber,
+              questionText: `Problem ${questionNumber}: ${standardDescription}`,
+              standards: [{
+                code: standardCode,
+                description: standardDescription,
+                jurisdiction: "Common Core",
+                gradeLevel: "9-12",
+                subject: "Mathematics"
+              }],
+              rigor: {
+                level: rigorLevel.toLowerCase() as 'mild' | 'medium' | 'spicy',
+                dokLevel: rigorLevel.toLowerCase() === 'mild' ? 'DOK 1' : rigorLevel.toLowerCase() === 'medium' ? 'DOK 2' : 'DOK 3',
+                justification: `${rigorLevel} rigor level based on problem complexity`,
+                confidence: 0.85
+              }
+            });
+          } catch (parseError) {
+            console.error(`Error parsing problem: ${problemMatch}`, parseError);
+          }
+        }
+        
+        if (questions.length > 0) {
+          console.log(`Successfully parsed ${questions.length} problems from bullet format`);
+          return questions;
+        }
+      }
+
+      // Fallback: try new Grok format: #### Question X:
       const newFormatMatches = content.match(/#### Question (\d+[A-Z]?):([\s\S]*?)(?=#### Question|### Deduplicated|$)/g);
       
       if (newFormatMatches) {
