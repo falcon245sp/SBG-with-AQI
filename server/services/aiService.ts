@@ -850,45 +850,43 @@ Give special attention to identifying alignment with these specific standards.
 
     try {
       // First try bullet-point format: Problem X: standard (description), (rigor)
-      const bulletFormatMatches = content.match(/Problem\s+(\d+):\s*([A-Z-]+\.[A-Z-]+\.\w+)\s*\(([^)]+)\),?\s*\((\w+)\)/g);
+      // Split content by lines and look for problem lines
+      const lines = content.split('\n');
+      console.log('Analyzing content lines for bullet format...');
       
-      if (bulletFormatMatches && bulletFormatMatches.length > 0) {
-        console.log(`Found ${bulletFormatMatches.length} problems in bullet format`);
+      for (const line of lines) {
+        const trimmedLine = line.trim();
         
-        for (const problemMatch of bulletFormatMatches) {
-          try {
-            const match = problemMatch.match(/Problem\s+(\d+):\s*([A-Z-]+\.[A-Z-]+\.\w+)\s*\(([^)]+)\),?\s*\((\w+)\)/);
-            if (!match) continue;
-            
-            const [, questionNumber, standardCode, standardDescription, rigorLevel] = match;
-            console.log(`Parsing problem ${questionNumber}: ${standardCode} (${rigorLevel})`);
-
-            questions.push({
-              questionNumber,
-              questionText: `Problem ${questionNumber}: ${standardDescription}`,
-              standards: [{
-                code: standardCode,
-                description: standardDescription,
-                jurisdiction: "Common Core",
-                gradeLevel: "9-12",
-                subject: "Mathematics"
-              }],
-              rigor: {
-                level: rigorLevel.toLowerCase() as 'mild' | 'medium' | 'spicy',
-                dokLevel: rigorLevel.toLowerCase() === 'mild' ? 'DOK 1' : rigorLevel.toLowerCase() === 'medium' ? 'DOK 2' : 'DOK 3',
-                justification: `${rigorLevel} rigor level based on problem complexity`,
-                confidence: 0.85
-              }
-            });
-          } catch (parseError) {
-            console.error(`Error parsing problem: ${problemMatch}`, parseError);
-          }
-        }
+        // Look for pattern: Problem X: F-IF.A.1 (description), (rigor)
+        const bulletMatch = trimmedLine.match(/^Problem\s+(\d+):\s*([A-Z-]+\.[A-Z-]+\.[A-Z0-9]+)\s*\(([^)]+)\),?\s*\((\w+)\)/i);
         
-        if (questions.length > 0) {
-          console.log(`Successfully parsed ${questions.length} problems from bullet format`);
-          return questions;
+        if (bulletMatch) {
+          const [, questionNumber, standardCode, standardDescription, rigorLevel] = bulletMatch;
+          console.log(`Found problem ${questionNumber}: ${standardCode} (${rigorLevel})`);
+          
+          questions.push({
+            questionNumber,
+            questionText: `Problem ${questionNumber}: ${standardDescription}`,
+            standards: [{
+              code: standardCode,
+              description: standardDescription,
+              jurisdiction: "Common Core",
+              gradeLevel: "9-12",
+              subject: "Mathematics"
+            }],
+            rigor: {
+              level: rigorLevel.toLowerCase() as 'mild' | 'medium' | 'spicy',
+              dokLevel: rigorLevel.toLowerCase() === 'mild' ? 'DOK 1' : rigorLevel.toLowerCase() === 'medium' ? 'DOK 2' : 'DOK 3',
+              justification: `${rigorLevel} rigor level based on problem complexity`,
+              confidence: 0.85
+            }
+          });
         }
+      }
+      
+      if (questions.length > 0) {
+        console.log(`Successfully parsed ${questions.length} problems from bullet format`);
+        return questions;
       }
 
       // Fallback: try new Grok format: #### Question X:

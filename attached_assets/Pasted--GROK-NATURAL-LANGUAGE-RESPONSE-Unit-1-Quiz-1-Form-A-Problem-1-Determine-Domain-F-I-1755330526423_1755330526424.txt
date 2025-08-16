@@ -1,0 +1,28 @@
+=== GROK NATURAL LANGUAGE RESPONSE ===
+### Unit 1 Quiz 1 - Form A
+
+- Problem 1: Determine Domain F-IF.A.1 (mild) - Basic recall of domain determination for a rational function.
+- Problem 2: Determine Function Symmetry F-BF.B.3 (medium) - Requires algebraic manipulation to determine if the function is even, odd, or neither.
+- Problem 3A: Identify Discontinuities F-IF.B.4 (medium) - Requires understanding and application of function continuity and types of discontinuities.
+- Problem 3B: Identify Discontinuities F-IF.B.4 (medium) - Similar to 3A but focuses on locating discontinuities.
+- Problem 3C: Identify Discontinuities F-IF.B.4 (medium) - Involves classifying types of discontinuities, requiring interpretive understanding.
+- Problem 4: Determine Function Continuity F-IF.B.4 (medium) - Requires solving for a value of k to make the function continuous at a point.
+- Problem 5: Determine Asymptotes F-IF.C.7 (medium) - Involves identifying vertical and horizontal asymptotes based on the function's form.
+- Problem 6A: Evaluate Piecewise Functions F-IF.A.2 (mild) - Simple evaluation of a piecewise function at a given point.
+- Problem 6B: Evaluate Piecewise Functions F-IF.A.2 (mild) - Similar to 6A, evaluating at another point.
+- Problem 7: Graph Functions F-IF.C.7 (medium) - Requires plotting a rational function, understanding its behavior.
+- Problem 8: Analyze Function Behavior F-IF.B.6 (medium) - Involves interpreting the graph to identify intervals of decrease.
+- Problem 9: Identify Discontinuities F-IF.B.4 (medium) - Similar to earlier problems on discontinuities but applied to a new function.
+- Problem 10: Evaluate Limits F-IF.B.4 (medium) - Requires understanding of limits as x approaches infinity.
+- Problem 11A: Find Extrema F-IF.B.4 (spicy) - Involves calculus concepts to find local extrema, requiring synthesis and reasoning.
+- Problem 11B: Analyze Function Behavior F-IF.B.6 (medium) - Determining boundedness of a function based on its graph and equation.
+- Problem 12: Analyze Function Behavior F-IF.B.6 (medium) - Involves comparing functions to determine which is bounded by a given value.
+
+### Deduplicated List of Referenced Standards
+
+- F-IF.A.1
+- F-IF.A.2
+- F-IF.B.4
+- F-IF.B.6
+- F-IF.C.7
+- F-BF.B.3
