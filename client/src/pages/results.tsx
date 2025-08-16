@@ -163,19 +163,15 @@ export default function ResultsPage() {
   const generateMarkdownRubricContent = (doc: any, results: any[]) => {
     const rubricTitle = doc.fileName.replace(/\.[^/.]+$/, '');
     
-    let content = `${rubricTitle} \n\nRubric\n\n`;
-    content += `Criteria\n\n`;
-    content += `Points\n\n`;
-    content += `Full Credit\n\n`;
-    content += `Partial Credit\n\n`;
-    content += `Minimal Credit\n\n`;
-    content += `No Credit\n\n`;
+    let content = `# ${rubricTitle}\n\n## Rubric\n\n`;
+    content += `| Criteria | Points | Full Credit | Partial Credit | Minimal Credit | No Credit |\n`;
+    content += `|----------|--------|-------------|----------------|----------------|----------|\n`;
     
     results.forEach((question, index) => {
       const effectiveStandards = question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [];
       const effectiveRigor = question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild';
-      const questionText = question.questionText.length > 50 
-        ? question.questionText.substring(0, 50) + '...' 
+      const questionText = question.questionText.length > 40 
+        ? question.questionText.substring(0, 40) + '...' 
         : question.questionText;
       
       // Get rigor emoji
@@ -185,27 +181,29 @@ export default function ResultsPage() {
       // Get primary standard
       const primaryStandard = effectiveStandards[0]?.code || 'No Standard';
       
-      content += `Q${question.questionNumber}: ${questionText}\n\n\n\n`;
-      content += `${primaryStandard}\n\n`;
-      content += `${rigorEmoji}\n\n`;
+      const criteria = `**Q${question.questionNumber}:** ${questionText}<br><br>${primaryStandard}<br><br>${rigorEmoji}`;
       
       // Different rubric criteria based on rigor level
+      let fullCredit, partialCredit, minimalCredit, noCredit;
+      
       if (effectiveRigor === 'mild') {
-        content += `Correctly solves equation with accurate solution. ✔️\n\n`;
-        content += `N/A\n\n`;
-        content += `Attempts solution but with errors or no attempt. 𝔁\n\n`;
-        content += `Irrelevant work or entirely incorrect. 𝔁\n\n`;
+        fullCredit = 'Correctly solves equation with accurate solution. ✔️';
+        partialCredit = 'N/A';
+        minimalCredit = 'Attempts solution but with errors or no attempt. 𝔁';
+        noCredit = 'Irrelevant work or entirely incorrect. 𝔁';
       } else if (effectiveRigor === 'medium') {
-        content += `Correctly solves equation with accurate solution. ✔️\n\n`;
-        content += `Solves with minor errors in steps. ✔️s\n\n`;
-        content += `Attempts solution but with significant errors. 𝔁\n\n`;
-        content += `No attempt or entirely incorrect. 𝔁\n\n`;
+        fullCredit = 'Correctly solves equation with accurate solution. ✔️';
+        partialCredit = 'Solves with minor errors in steps. ✔️s';
+        minimalCredit = 'Attempts solution but with significant errors. 𝔁';
+        noCredit = 'No attempt or entirely incorrect. 𝔁';
       } else { // spicy
-        content += `Correctly applies advanced concepts and solves with accurate solution. ✔️\n\n`;
-        content += `Solves with minor errors in steps. ✔️s\n\n`;
-        content += `Attempts solution but with significant errors. 𝔁\n\n`;
-        content += `No attempt or entirely incorrect. 𝔁\n\n`;
+        fullCredit = 'Correctly applies advanced concepts and solves with accurate solution. ✔️';
+        partialCredit = 'Solves with minor errors in steps. ✔️s';
+        minimalCredit = 'Attempts solution but with significant errors. 𝔁';
+        noCredit = 'No attempt or entirely incorrect. 𝔁';
       }
+      
+      content += `| ${criteria} |  | ${fullCredit} | ${partialCredit} | ${minimalCredit} | ${noCredit} |\n`;
     });
     
     return content;
