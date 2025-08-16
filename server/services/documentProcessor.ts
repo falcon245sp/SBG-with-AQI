@@ -289,36 +289,40 @@ export class DocumentProcessor {
   
   private async extractTextFromPDF(filePath: string): Promise<string> {
     return new Promise((resolve, reject) => {
-      const pdfExtract = new PDFExtract();
-      pdfExtract.extract(filePath, {}, (err, data) => {
-        if (err) {
-          reject(new Error(`PDF extraction failed: ${err.message}`));
-          return;
-        }
-        
-        try {
-          let text = '';
-          if (data && data.pages) {
-            for (const page of data.pages) {
-              if (page.content) {
-                for (const item of page.content) {
-                  if (item.str) {
-                    text += item.str + ' ';
+      try {
+        const pdfExtract = new (PDFExtract as any)();
+        pdfExtract.extract(filePath, {}, (err: any, data: any) => {
+          if (err) {
+            reject(new Error(`PDF extraction failed: ${err.message}`));
+            return;
+          }
+          
+          try {
+            let text = '';
+            if (data && data.pages) {
+              for (const page of data.pages) {
+                if (page.content) {
+                  for (const item of page.content) {
+                    if (item.str) {
+                      text += item.str + ' ';
+                    }
                   }
                 }
               }
             }
+            
+            if (text.trim().length === 0) {
+              reject(new Error('No text content found in PDF'));
+            } else {
+              resolve(text.trim());
+            }
+          } catch (error) {
+            reject(new Error(`Error processing PDF data: ${error instanceof Error ? error.message : 'Unknown error'}`));
           }
-          
-          if (text.trim().length === 0) {
-            reject(new Error('No text content found in PDF'));
-          } else {
-            resolve(text.trim());
-          }
-        } catch (error) {
-          reject(new Error(`Error processing PDF data: ${error instanceof Error ? error.message : 'Unknown error'}`));
-        }
-      });
+        });
+      } catch (error) {
+        reject(new Error(`Failed to initialize PDF extractor: ${error instanceof Error ? error.message : 'Unknown error'}`));
+      }
     });
   }
   
