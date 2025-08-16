@@ -36,14 +36,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-
-// Extend jsPDF type to include autoTable
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: any) => jsPDF;
-  }
-}
+import autoTable from 'jspdf-autotable';
 
 interface DocumentResult {
   document: {
@@ -442,7 +435,7 @@ export default function DocumentResults() {
     });
     
     // Add table
-    pdf.autoTable({
+    autoTable(pdf, {
       startY: 55,
       head: [['Criteria', 'Points', 'Full Credit', 'Partial Credit', 'Minimal Credit', 'No Credit']],
       body: tableData,

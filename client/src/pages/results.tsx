@@ -21,14 +21,7 @@ import {
   GraduationCap
 } from "lucide-react";
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-
-// Extend jsPDF type to include autoTable
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: any) => jsPDF;
-  }
-}
+import autoTable from 'jspdf-autotable';
 
 export default function ResultsPage() {
   const { toast } = useToast();
@@ -224,7 +217,7 @@ export default function ResultsPage() {
     });
     
     // Add table
-    pdf.autoTable({
+    autoTable(pdf, {
       startY: 55,
       head: [['Criteria', 'Points', 'Full Credit', 'Partial Credit', 'Minimal Credit', 'No Credit']],
       body: tableData,
