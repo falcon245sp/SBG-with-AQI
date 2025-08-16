@@ -46,7 +46,7 @@ export interface IStorage {
   
   // Results operations
   createQuestionResult(result: any): Promise<QuestionResult>;
-  getDocumentResults(documentId: string): Promise<Array<Question & { result?: QuestionResult; aiResponses: AiResponse[] }>>;
+  getDocumentResults(documentId: string): Promise<Array<Question & { result?: QuestionResult; aiResponses: AiResponse[]; teacherOverride?: TeacherOverride }>>;
   
   // API Key operations
   createApiKey(userId: string, apiKey: InsertApiKey): Promise<ApiKey>;
@@ -172,7 +172,7 @@ export class DatabaseStorage implements IStorage {
     return qr;
   }
 
-  async getDocumentResults(documentId: string): Promise<Array<Question & { result?: QuestionResult; aiResponses: AiResponse[] }>> {
+  async getDocumentResults(documentId: string): Promise<Array<Question & { result?: QuestionResult; aiResponses: AiResponse[]; teacherOverride?: TeacherOverride }>> {
     const questionsData = await db
       .select()
       .from(questions)
@@ -191,10 +191,19 @@ export class DatabaseStorage implements IStorage {
         .from(aiResponses)
         .where(eq(aiResponses.questionId, question.id));
 
+      // Get teacher override if exists
+      const [teacherOverride] = await db
+        .select()
+        .from(teacherOverrides)
+        .where(eq(teacherOverrides.questionId, question.id))
+        .orderBy(desc(teacherOverrides.updatedAt))
+        .limit(1);
+
       results.push({
         ...question,
         result,
         aiResponses: aiResponsesData,
+        teacherOverride,
       });
     }
 

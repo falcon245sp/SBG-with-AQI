@@ -73,6 +73,23 @@ interface DocumentResult {
         jurisdiction: string;
       }>;
     }>;
+    teacherOverride?: {
+      id: string;
+      overriddenStandards: Array<{
+        code: string;
+        description: string;
+        jurisdiction: string;
+        gradeLevel?: string;
+        subject?: string;
+      }>;
+      overriddenRigorLevel: 'mild' | 'medium' | 'spicy';
+      teacherJustification: string;
+      confidenceLevel: number;
+      hasDomainChange: boolean;
+      domainChangeDetails: any;
+      createdAt: string;
+      updatedAt: string;
+    };
   }>;
 }
 
@@ -271,7 +288,18 @@ export default function DocumentResults() {
                                 </div>
                               </td>
                               <td className="px-6 py-4">
-                                {question.result?.consensusStandards && question.result.consensusStandards.length > 0 ? (
+                                {question.teacherOverride ? (
+                                  <div className="space-y-2">
+                                    {question.teacherOverride.overriddenStandards.map((standard, stdIndex) => (
+                                      <div key={stdIndex} className="text-sm text-slate-900">
+                                        <Badge variant="outline" className="font-mono text-xs mr-2">
+                                          {standard.code}
+                                        </Badge>
+                                        {standard.description}
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : question.result?.consensusStandards && question.result.consensusStandards.length > 0 ? (
                                   <div className="space-y-2">
                                     {question.result.consensusStandards.map((standard, stdIndex) => (
                                       <div key={stdIndex} className="text-sm text-slate-900">
@@ -287,7 +315,22 @@ export default function DocumentResults() {
                                 )}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                {question.result ? (
+                                {question.teacherOverride ? (
+                                  <div className="flex items-center space-x-2">
+                                    <Tooltip>
+                                      <TooltipTrigger>
+                                        <RigorBadge level={question.teacherOverride.overriddenRigorLevel} />
+                                      </TooltipTrigger>
+                                      <TooltipContent className="max-w-sm min-w-48 max-h-64 overflow-y-auto p-4 bg-slate-800 text-white border-slate-700">
+                                        <p className="text-sm leading-6 whitespace-pre-wrap break-words">{question.teacherOverride.teacherJustification}</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                    <Badge variant="outline" className="text-xs text-green-600 border-green-300">TEACHER</Badge>
+                                    {question.teacherOverride.hasDomainChange && (
+                                      <Badge variant="outline" className="text-xs text-orange-600 border-orange-300">DOMAIN CHANGE</Badge>
+                                    )}
+                                  </div>
+                                ) : question.result ? (
                                   <div className="flex items-center space-x-2">
                                     {question.aiResponses && question.aiResponses.length > 0 && question.aiResponses[0].rigorJustification ? (
                                       <Tooltip>
@@ -316,12 +359,19 @@ export default function DocumentResults() {
                                         size="sm"
                                         onClick={() => {
                                           setEditingQuestionId(question.id);
-                                          setOverrideFormData({
+                                          // Use teacher override data if it exists, otherwise use AI data
+                                          const currentData = question.teacherOverride ? {
+                                            rigorLevel: question.teacherOverride.overriddenRigorLevel,
+                                            standards: question.teacherOverride.overriddenStandards?.map(s => s.code).join(', ') || '',
+                                            justification: question.teacherOverride.teacherJustification || '',
+                                            confidence: question.teacherOverride.confidenceLevel || 5
+                                          } : {
                                             rigorLevel: question.result?.consensusRigorLevel || 'mild',
                                             standards: question.result?.consensusStandards?.map(s => s.code).join(', ') || '',
                                             justification: question.aiResponses?.[0]?.rigorJustification || '',
                                             confidence: 5
-                                          });
+                                          };
+                                          setOverrideFormData(currentData);
                                         }}
                                       >
                                         <Edit3 className="w-4 h-4 mr-1" />
