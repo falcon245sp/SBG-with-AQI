@@ -126,6 +126,37 @@ export default function DocumentResults() {
 
   const { document, results } = documentResult;
 
+  // Sort results by question number (alphanumeric sorting)
+  const sortedResults = results.sort((a, b) => {
+    const parseQuestionNumber = (num: string | number) => {
+      const str = String(num);
+      const match = str.match(/^(\d+)([A-Za-z]*)$/);
+      if (match) {
+        return {
+          numeric: parseInt(match[1], 10),
+          alpha: match[2] || ''
+        };
+      }
+      // Fallback for pure numbers
+      const numericValue = parseInt(str, 10);
+      return {
+        numeric: isNaN(numericValue) ? 0 : numericValue,
+        alpha: ''
+      };
+    };
+
+    const aParsed = parseQuestionNumber(a.questionNumber);
+    const bParsed = parseQuestionNumber(b.questionNumber);
+
+    // First sort by numeric part
+    if (aParsed.numeric !== bParsed.numeric) {
+      return aParsed.numeric - bParsed.numeric;
+    }
+
+    // Then sort by alphabetic part
+    return aParsed.alpha.localeCompare(bParsed.alpha);
+  });
+
   return (
     <div className="flex h-screen bg-slate-50">
       <Sidebar />
@@ -195,7 +226,7 @@ export default function DocumentResults() {
               </Card>
 
               {/* Simple Three-Column Analysis */}
-              {results && results.length > 0 ? (
+              {sortedResults && sortedResults.length > 0 ? (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center">
@@ -223,7 +254,7 @@ export default function DocumentResults() {
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-slate-200">
-                          {results.map((question, index) => (
+                          {sortedResults.map((question, index) => (
                             <tr key={question.id} className="hover:bg-slate-50">
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm font-medium text-slate-900">
