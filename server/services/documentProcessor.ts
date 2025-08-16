@@ -1,5 +1,5 @@
 import { storage } from '../storage';
-import { aiService } from './aiService';
+import { aiService, PromptCustomization } from './aiService';
 import { rigorAnalyzer } from './rigorAnalyzer';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -7,7 +7,11 @@ import PDFExtract from 'pdf-extract';
 import mammoth from 'mammoth';
 
 export class DocumentProcessor {
-  async processDocument(documentId: string, callbackUrl?: string): Promise<void> {
+  async processDocument(
+    documentId: string, 
+    callbackUrl?: string, 
+    customization?: PromptCustomization
+  ): Promise<void> {
     try {
       console.log(`Starting processing for document: ${documentId}`);
       
@@ -20,11 +24,18 @@ export class DocumentProcessor {
       }
 
       // Send document directly to AI engines for OCR and analysis
-      const analysisResults = await aiService.analyzeDocument(
-        document.originalPath,
-        document.mimeType,
-        document.jurisdictions
-      );
+      const analysisResults = customization 
+        ? await aiService.analyzeDocumentWithCustomPrompt(
+            document.originalPath,
+            document.mimeType,
+            document.jurisdictions,
+            customization
+          )
+        : await aiService.analyzeDocument(
+            document.originalPath,
+            document.mimeType,
+            document.jurisdictions
+          );
       
       // Create question records from AI analysis
       const questionRecords = [];

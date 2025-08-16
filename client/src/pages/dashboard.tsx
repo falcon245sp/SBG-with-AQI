@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Sidebar } from "@/components/Sidebar";
 import { FileUploader } from "@/components/FileUploader";
@@ -17,7 +19,8 @@ import {
   Bell,
   ArrowRight,
   Upload,
-  CheckCircle
+  CheckCircle,
+  Settings
 } from "lucide-react";
 
 interface DocumentResult {
@@ -39,6 +42,8 @@ export default function Dashboard() {
   const { toast } = useToast();
   const [customerId, setCustomerId] = useState("");
   const [jurisdictions, setJurisdictions] = useState("");
+  const [useCustomPrompt, setUseCustomPrompt] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState("");
 
   // Fetch stats
   const { data: stats, isLoading: statsLoading } = useQuery<any>({
@@ -48,6 +53,12 @@ export default function Dashboard() {
   // Fetch recent documents
   const { data: documents, isLoading: documentsLoading } = useQuery<any[]>({
     queryKey: ["/api/documents"],
+  });
+
+  // Fetch prompt templates
+  const { data: promptTemplates } = useQuery<any[]>({
+    queryKey: ["/api/prompt-templates"],
+    enabled: useCustomPrompt,
   });
 
   const handleFileUpload = async (file: File) => {
@@ -65,8 +76,17 @@ export default function Dashboard() {
     formData.append('customerId', customerId);
     formData.append('jurisdictions', jurisdictions);
 
+    // Add custom prompt if selected
+    if (useCustomPrompt && selectedTemplate) {
+      const template = promptTemplates?.find(t => t.id === selectedTemplate);
+      if (template) {
+        formData.append('promptCustomization', JSON.stringify(template.customization));
+      }
+    }
+
     try {
-      const response = await fetch('/api/documents/upload', {
+      const endpoint = useCustomPrompt ? '/api/documents/upload-with-prompt' : '/api/documents/upload';
+      const response = await fetch(endpoint, {
         method: 'POST',
         body: formData,
         credentials: 'include',
@@ -80,7 +100,9 @@ export default function Dashboard() {
       
       toast({
         title: "Upload Successful",
-        description: "Document uploaded and added to processing queue.",
+        description: useCustomPrompt 
+          ? "Document uploaded with custom prompt configuration."
+          : "Document uploaded and added to processing queue.",
       });
 
       // Refresh documents list
@@ -245,6 +267,77 @@ export default function Dashboard() {
                         className="mt-1"
                       />
                     </div>
+                  </div>
+
+                  {/* Custom Prompt Configuration */}
+                  <div className="border-t pt-6 mt-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <Settings className="w-5 h-5 text-blue-600" />
+                        <div>
+                          <Label htmlFor="useCustomPrompt" className="text-base font-medium">Custom Analysis Configuration</Label>
+                          <p className="text-sm text-slate-500">Use a pre-configured prompt template for specialized analysis</p>
+                        </div>
+                      </div>
+                      <Switch
+                        id="useCustomPrompt"
+                        checked={useCustomPrompt}
+                        onCheckedChange={setUseCustomPrompt}
+                      />
+                    </div>
+                    
+                    {useCustomPrompt && (
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="templateSelect">Select Prompt Template</Label>
+                          <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="Choose a prompt template" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {promptTemplates?.map((template: any) => (
+                                <SelectItem key={template.id} value={template.id}>
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">{template.name}</span>
+                                    <span className="text-xs text-slate-500">{template.description}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        {selectedTemplate && (
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            {(() => {
+                              const template = promptTemplates?.find(t => t.id === selectedTemplate);
+                              return template ? (
+                                <div>
+                                  <h4 className="font-medium text-blue-900 mb-2">Template Preview:</h4>
+                                  <div className="grid grid-cols-2 gap-2 text-sm">
+                                    <div><span className="font-medium">Level:</span> {template.customization.educationLevel || 'Not set'}</div>
+                                    <div><span className="font-medium">Subject:</span> {template.customization.subject || 'Not set'}</div>
+                                    <div><span className="font-medium">Format:</span> {template.customization.outputFormat || 'Standard'}</div>
+                                    <div><span className="font-medium">Standards:</span> {template.customization.focusStandards?.length || 0} defined</div>
+                                  </div>
+                                </div>
+                              ) : null;
+                            })()} 
+                          </div>
+                        )}
+                        
+                        <div className="text-sm text-slate-600">
+                          <span className="font-medium">Need a different configuration?</span>{' '}
+                          <Button
+                            variant="link"
+                            className="h-auto p-0 text-blue-600"
+                            onClick={() => window.location.href = '/prompt-config'}
+                          >
+                            Create custom prompt templates
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

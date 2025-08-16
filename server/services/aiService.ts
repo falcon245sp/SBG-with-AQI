@@ -49,6 +49,20 @@ export interface AIAnalysisResult {
   processingTime: number;
 }
 
+export interface PromptCustomization {
+  focusStandards?: string[]; // Specific standards to emphasize
+  educationLevel?: 'elementary' | 'middle' | 'high' | 'college'; // Education level focus
+  subject?: 'mathematics' | 'science' | 'english' | 'social_studies' | 'general';
+  rigorCriteria?: {
+    mild?: string; // Custom criteria for mild rigor
+    medium?: string; // Custom criteria for medium rigor
+    spicy?: string; // Custom criteria for spicy rigor
+  };
+  additionalInstructions?: string; // Custom instructions to add
+  jurisdictionPriority?: string[]; // Prioritized list of jurisdictions
+  outputFormat?: 'detailed' | 'concise' | 'standardized'; // Output format preference
+}
+
 const ANALYSIS_PROMPT = `You are an expert in high school education and Standards-Based Grading (SBG) aligned to multiple jurisdiction standards. As a math teacher implementing SBG, I need you to analyze the provided unit documents (quizzes, tests, etc.) to:
 
 For each assessment (e.g., Quiz 1, Test Free Response), list every problem/question with:
@@ -88,6 +102,170 @@ Provide your analysis in JSON format:
 }`;
 
 export class AIService {
+  private generateCustomPrompt(customization?: PromptCustomization): string {
+    let basePrompt = "You are an expert in education and Standards-Based Grading (SBG) aligned to multiple jurisdiction standards.";
+    
+    // Customize based on education level
+    if (customization?.educationLevel) {
+      const levelDescriptions = {
+        elementary: "elementary school education focusing on foundational skills",
+        middle: "middle school education with developing analytical skills",
+        high: "high school education with advanced critical thinking",
+        college: "college-level education with sophisticated analysis"
+      };
+      basePrompt += ` You specialize in ${levelDescriptions[customization.educationLevel]}.`;
+    }
+    
+    // Add subject specialization
+    if (customization?.subject && customization.subject !== 'general') {
+      basePrompt += ` Your expertise is in ${customization.subject} education.`;
+    }
+    
+    basePrompt += ` I need you to analyze the provided educational documents to:\n\n`;
+    
+    // Focus standards section
+    if (customization?.focusStandards && customization.focusStandards.length > 0) {
+      basePrompt += `PRIORITY STANDARDS TO IDENTIFY:\n`;
+      customization.focusStandards.forEach(standard => {
+        basePrompt += `- ${standard}\n`;
+      });
+      basePrompt += `\n`;
+    }
+    
+    basePrompt += `For each assessment, analyze and identify:\n\n`;
+    basePrompt += `1. The primary educational standard(s) that align with each question/problem\n`;
+    basePrompt += `2. A rigor level assessment based on cognitive complexity\n\n`;
+    
+    // Custom rigor criteria
+    const rigorCriteria = customization?.rigorCriteria || {};
+    basePrompt += `RIGOR LEVEL DEFINITIONS:\n`;
+    basePrompt += `- mild: ${rigorCriteria.mild || 'Basic recall, recognition, or simple application (DOK 1-2)'}\n`;
+    basePrompt += `- medium: ${rigorCriteria.medium || 'Multi-step problems, analysis, or interpretive tasks (DOK 2-3)'}\n`;
+    basePrompt += `- spicy: ${rigorCriteria.spicy || 'Synthesis, evaluation, reasoning, or complex real-world application (DOK 3-4)'}\n\n`;
+    
+    // Jurisdiction priority
+    if (customization?.jurisdictionPriority && customization.jurisdictionPriority.length > 0) {
+      basePrompt += `JURISDICTION PRIORITY (in order of preference):\n`;
+      customization.jurisdictionPriority.forEach((jurisdiction, index) => {
+        basePrompt += `${index + 1}. ${jurisdiction}\n`;
+      });
+      basePrompt += `\n`;
+    }
+    
+    // Analysis requirements
+    basePrompt += `ANALYSIS REQUIREMENTS:\n`;
+    basePrompt += `- Map to specific, relevant educational standards\n`;
+    basePrompt += `- Provide clear justification for rigor level assignments\n`;
+    basePrompt += `- Focus on accuracy and consistency\n`;
+    basePrompt += `- Base analysis solely on the provided document content\n\n`;
+    
+    // Additional custom instructions
+    if (customization?.additionalInstructions) {
+      basePrompt += `ADDITIONAL INSTRUCTIONS:\n${customization.additionalInstructions}\n\n`;
+    }
+    
+    // Output format
+    const formatInstructions = {
+      detailed: "Provide comprehensive analysis with detailed explanations for each decision.",
+      concise: "Focus on essential information with brief, clear justifications.",
+      standardized: "Follow the standard format exactly with consistent terminology."
+    };
+    
+    const outputFormat = customization?.outputFormat || 'standardized';
+    basePrompt += `OUTPUT FORMAT: ${formatInstructions[outputFormat]}\n\n`;
+    
+    basePrompt += `Provide your analysis in JSON format:\n`;
+    basePrompt += `{\n`;
+    basePrompt += `  "standards": [\n`;
+    basePrompt += `    {\n`;
+    basePrompt += `      "code": "CCSS.MATH.5.NBT.A.1",\n`;
+    basePrompt += `      "description": "Recognize that in a multi-digit number...",\n`;
+    basePrompt += `      "jurisdiction": "Common Core",\n`;
+    basePrompt += `      "gradeLevel": "5",\n`;
+    basePrompt += `      "subject": "Mathematics"\n`;
+    basePrompt += `    }\n`;
+    basePrompt += `  ],\n`;
+    basePrompt += `  "rigor": {\n`;
+    basePrompt += `    "level": "medium",\n`;
+    basePrompt += `    "dokLevel": "DOK 2",\n`;
+    basePrompt += `    "justification": "This question requires students to apply concepts and make connections...",\n`;
+    basePrompt += `    "confidence": 0.85\n`;
+    basePrompt += `  }\n`;
+    basePrompt += `}`;
+    
+    return basePrompt;
+  }
+  
+  async analyzeDocumentWithCustomPrompt(
+    filePath: string, 
+    mimeType: string, 
+    jurisdictions: string[], 
+    customization?: PromptCustomization
+  ): Promise<{
+    questions: Array<{
+      text: string;
+      context: string;
+      aiResults: {
+        chatgpt: AIAnalysisResult;
+        grok: AIAnalysisResult;
+        claude: AIAnalysisResult;
+      };
+    }>;
+  }> {
+    try {
+      console.log('Analyzing document with custom prompt configuration');
+      
+      // Update document status to processing
+      const customPrompt = this.generateCustomPrompt(customization);
+      
+      const [chatgptResult, grokResult, claudeResult] = await Promise.all([
+        this.analyzeChatGPTWithPrompt(
+          `Analyze this educational document (${mimeType}) for standards alignment and rigor level.`,
+          `Document path: ${filePath}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
+          jurisdictions,
+          customPrompt
+        ).catch(() => this.getDefaultResult()),
+        this.analyzeGrokWithPrompt(
+          `Analyze this educational document (${mimeType}) for standards alignment and rigor level.`,
+          `Document path: ${filePath}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
+          jurisdictions,
+          customPrompt
+        ).catch(() => this.getDefaultResult()),
+        this.analyzeClaudeWithPrompt(
+          `Analyze this educational document (${mimeType}) for standards alignment and rigor level.`,
+          `Document path: ${filePath}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
+          jurisdictions,
+          customPrompt
+        ).catch(() => this.getDefaultResult())
+      ]);
+      
+      return {
+        questions: [{
+          text: "Educational content analysis from uploaded document",
+          context: `Document type: ${mimeType}, Jurisdictions: ${jurisdictions.join(', ')}, Custom Analysis: ${customization ? 'Yes' : 'No'}`,
+          aiResults: {
+            chatgpt: chatgptResult,
+            grok: grokResult,
+            claude: claudeResult
+          }
+        }]
+      };
+    } catch (error) {
+      console.error('Error analyzing document with custom prompt:', error);
+      return {
+        questions: [{
+          text: "Document analysis",
+          context: "Analysis failed",
+          aiResults: {
+            chatgpt: this.getDefaultResult(),
+            grok: this.getDefaultResult(),
+            claude: this.getDefaultResult()
+          }
+        }]
+      };
+    }
+  }
+
   async analyzeDocument(filePath: string, mimeType: string, jurisdictions: string[]): Promise<{
     questions: Array<{
       text: string;
@@ -169,6 +347,52 @@ export class AIService {
     };
   }
 
+  async analyzeChatGPTWithPrompt(
+    questionText: string, 
+    context: string, 
+    jurisdictions: string[], 
+    customPrompt?: string
+  ): Promise<AIAnalysisResult> {
+    const startTime = Date.now();
+    const prompt = customPrompt || ANALYSIS_PROMPT;
+    
+    try {
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o", // the newest OpenAI model is "gpt-4o"
+        messages: [
+          {
+            role: "system",
+            content: `${prompt}\n\nFocus on these jurisdictions: ${jurisdictions.join(', ')}`
+          },
+          {
+            role: "user",
+            content: `Question: ${questionText}\n\nContext: ${context}`
+          }
+        ],
+        response_format: { type: "json_object" },
+        max_tokens: 1000,
+      });
+
+      const processingTime = Date.now() - startTime;
+      const result = JSON.parse(response.choices[0].message.content || '{}');
+      
+      return {
+        standards: result.standards || [],
+        rigor: result.rigor || { level: 'mild', dokLevel: 'DOK 1', justification: 'Unable to assess', confidence: 0.1 },
+        rawResponse: response,
+        processingTime
+      };
+    } catch (error) {
+      console.error('ChatGPT analysis error:', error);
+      return {
+        standards: [],
+        rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'Error in analysis', confidence: 0.0 },
+        rawResponse: { error: error instanceof Error ? error.message : 'Unknown error' },
+        processingTime: Date.now() - startTime
+      };
+    }
+  }
+
   async analyzeChatGPT(questionText: string, context: string, jurisdictions: string[]): Promise<AIAnalysisResult> {
     const startTime = Date.now();
     
@@ -200,6 +424,52 @@ export class AIService {
       };
     } catch (error) {
       console.error('ChatGPT analysis error:', error);
+      return {
+        standards: [],
+        rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'Error in analysis', confidence: 0.0 },
+        rawResponse: { error: error instanceof Error ? error.message : 'Unknown error' },
+        processingTime: Date.now() - startTime
+      };
+    }
+  }
+
+  async analyzeGrokWithPrompt(
+    questionText: string, 
+    context: string, 
+    jurisdictions: string[], 
+    customPrompt?: string
+  ): Promise<AIAnalysisResult> {
+    const startTime = Date.now();
+    const prompt = customPrompt || ANALYSIS_PROMPT;
+    
+    try {
+      const response = await grok.chat.completions.create({
+        model: "grok-2-1212",
+        messages: [
+          {
+            role: "system",
+            content: `${prompt}\n\nFocus on these jurisdictions: ${jurisdictions.join(', ')}`
+          },
+          {
+            role: "user",
+            content: `Question: ${questionText}\n\nContext: ${context}`
+          }
+        ],
+        response_format: { type: "json_object" },
+        max_tokens: 1000,
+      });
+
+      const processingTime = Date.now() - startTime;
+      const result = JSON.parse(response.choices[0].message.content || '{}');
+      
+      return {
+        standards: result.standards || [],
+        rigor: result.rigor || { level: 'mild', dokLevel: 'DOK 1', justification: 'Unable to assess', confidence: 0.1 },
+        rawResponse: response,
+        processingTime
+      };
+    } catch (error) {
+      console.error('Grok analysis error:', error);
       return {
         standards: [],
         rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'Error in analysis', confidence: 0.0 },
@@ -249,6 +519,49 @@ export class AIService {
     }
   }
 
+  async analyzeClaudeWithPrompt(
+    questionText: string, 
+    context: string, 
+    jurisdictions: string[], 
+    customPrompt?: string
+  ): Promise<AIAnalysisResult> {
+    const startTime = Date.now();
+    const prompt = customPrompt || ANALYSIS_PROMPT;
+    
+    try {
+      const response = await anthropic.messages.create({
+        max_tokens: 1024,
+        messages: [
+          {
+            role: 'user',
+            content: `${prompt}\n\nFocus on these jurisdictions: ${jurisdictions.join(', ')}\n\nQuestion: ${questionText}\n\nContext: ${context}`
+          }
+        ],
+        // "claude-sonnet-4-20250514"
+        model: DEFAULT_MODEL_STR,
+      });
+
+      const processingTime = Date.now() - startTime;
+      const content = response.content[0];
+      const result = JSON.parse(content.type === 'text' ? content.text : '{}');
+      
+      return {
+        standards: result.standards || [],
+        rigor: result.rigor || { level: 'mild', dokLevel: 'DOK 1', justification: 'Unable to assess', confidence: 0.1 },
+        rawResponse: response,
+        processingTime
+      };
+    } catch (error) {
+      console.error('Claude analysis error:', error);
+      return {
+        standards: [],
+        rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'Error in analysis', confidence: 0.0 },
+        rawResponse: { error: error instanceof Error ? error.message : 'Unknown error' },
+        processingTime: Date.now() - startTime
+      };
+    }
+  }
+
   async analyzeClaude(questionText: string, context: string, jurisdictions: string[]): Promise<AIAnalysisResult> {
     const startTime = Date.now();
     
@@ -284,6 +597,28 @@ export class AIService {
         processingTime: Date.now() - startTime
       };
     }
+  }
+
+  async analyzeQuestionWithCustomPrompt(
+    questionText: string, 
+    context: string, 
+    jurisdictions: string[], 
+    customization?: PromptCustomization
+  ): Promise<{
+    chatgpt: AIAnalysisResult;
+    grok: AIAnalysisResult;
+    claude: AIAnalysisResult;
+  }> {
+    const customPrompt = customization ? this.generateCustomPrompt(customization) : undefined;
+    
+    // Run all three AI analyses in parallel with custom prompt
+    const [chatgpt, grok, claude] = await Promise.all([
+      this.analyzeChatGPTWithPrompt(questionText, context, jurisdictions, customPrompt),
+      this.analyzeGrokWithPrompt(questionText, context, jurisdictions, customPrompt),
+      this.analyzeClaudeWithPrompt(questionText, context, jurisdictions, customPrompt),
+    ]);
+
+    return { chatgpt, grok, claude };
   }
 
   async analyzeQuestion(questionText: string, context: string, jurisdictions: string[]): Promise<{

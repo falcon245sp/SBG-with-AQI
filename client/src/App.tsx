@@ -9,6 +9,7 @@ import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import UploadPage from "@/pages/upload";
 import ResultsPage from "@/pages/results";
+import PromptConfig from "@/pages/prompt-config";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -22,6 +23,7 @@ function Router() {
           <Route path="/" component={Dashboard} />
           <Route path="/upload" component={UploadPage} />
           <Route path="/results" component={ResultsPage} />
+          <Route path="/prompt-config" component={PromptConfig} />
         </>
       )}
       <Route component={NotFound} />

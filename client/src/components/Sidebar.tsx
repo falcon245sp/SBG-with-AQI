@@ -16,7 +16,7 @@ const navigation = [
   { name: 'Dashboard', href: '/', icon: BarChart3 },
   { name: 'Upload Documents', href: '/upload', icon: Upload },
   { name: 'Processing Results', href: '/results', icon: Search },
-  { name: 'AI Engines', href: '/ai-engines', icon: Brain },
+  { name: 'Prompt Config', href: '/prompt-config', icon: Brain },
   { name: 'API Management', href: '/api-keys', icon: Key },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];

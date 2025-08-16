@@ -6,6 +6,7 @@ import { documentProcessor } from "./services/documentProcessor";
 import { insertDocumentSchema } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
+import { PromptCustomization, aiService } from "./services/aiService";
 import path from "path";
 import fs from "fs";
 
@@ -45,6 +46,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
       lastName: 'User',
       profileImageUrl: null
     });
+  });
+
+  // Document upload with custom prompt endpoint
+  app.post('/api/documents/upload-with-prompt', upload.single('document'), async (req: any, res) => {
+    try {
+      const userId = 'test-user-123'; // Mock user ID
+      const file = req.file;
+      
+      if (!file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const { customerId, jurisdictions, promptCustomization } = req.body;
+      
+      // Parse prompt customization if provided
+      let customization: PromptCustomization | undefined;
+      if (promptCustomization) {
+        try {
+          customization = JSON.parse(promptCustomization);
+        } catch (error) {
+          return res.status(400).json({ message: "Invalid prompt customization JSON" });
+        }
+      }
+      
+      // Validate request data
+      const validationResult = insertDocumentSchema.safeParse({
+        customerId: parseInt(customerId),
+        fileName: file.originalname,
+        originalPath: file.path,
+        mimeType: file.mimetype,
+        fileSize: file.size,
+        jurisdictions: jurisdictions.split(',').map((j: string) => j.trim()).slice(0, 3),
+      });
+
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid request data",
+          errors: validationResult.error.errors 
+        });
+      }
+
+      // Create document record
+      const document = await storage.createDocument(userId, validationResult.data);
+      
+      // Add to processing queue
+      await storage.addToProcessingQueue(document.id);
+      
+      // Start processing asynchronously with custom prompt
+      documentProcessor.processDocument(document.id, undefined, customization).catch(console.error);
+
+      res.json({ 
+        message: "Document uploaded successfully with custom analysis configuration",
+        documentId: document.id,
+        customPromptUsed: !!customization
+      });
+    } catch (error) {
+      console.error("Error uploading document with custom prompt:", error);
+      res.status(500).json({ message: "Failed to upload document" });
+    }
   });
 
   // Document upload endpoint
@@ -147,6 +207,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Prompt customization endpoints
+  app.post('/api/prompt-templates', async (req: any, res) => {
+    try {
+      const userId = 'test-user-123'; // Mock user ID
+      const { name, description, customization } = req.body;
+      
+      if (!name || !customization) {
+        return res.status(400).json({ message: "Name and customization are required" });
+      }
+
+      // Validate customization structure
+      const validCustomization: PromptCustomization = {
+        focusStandards: customization.focusStandards || [],
+        educationLevel: customization.educationLevel,
+        subject: customization.subject,
+        rigorCriteria: customization.rigorCriteria,
+        additionalInstructions: customization.additionalInstructions,
+        jurisdictionPriority: customization.jurisdictionPriority || [],
+        outputFormat: customization.outputFormat || 'standardized'
+      };
+
+      // In a real implementation, you'd save this to the database
+      // For now, we'll just return success
+      const templateId = `template_${Date.now()}`;
+      
+      res.json({
+        id: templateId,
+        name,
+        description: description || '',
+        customization: validCustomization,
+        userId,
+        createdAt: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Error creating prompt template:", error);
+      res.status(500).json({ message: "Failed to create prompt template" });
+    }
+  });
+
+  app.get('/api/prompt-templates', async (req: any, res) => {
+    try {
+      const userId = 'test-user-123'; // Mock user ID
+      
+      // In a real implementation, you'd fetch from the database
+      // For now, return sample templates
+      const sampleTemplates = [
+        {
+          id: 'template_math_high',
+          name: 'High School Mathematics',
+          description: 'Specialized analysis for high school math standards',
+          customization: {
+            educationLevel: 'high',
+            subject: 'mathematics',
+            focusStandards: ['CCSS.MATH.HSA', 'CCSS.MATH.HSF', 'CCSS.MATH.HSG'],
+            outputFormat: 'detailed'
+          },
+          createdAt: '2024-01-01T00:00:00Z'
+        },
+        {
+          id: 'template_elementary_reading',
+          name: 'Elementary Reading Standards',
+          description: 'Focus on foundational reading skills',
+          customization: {
+            educationLevel: 'elementary',
+            subject: 'english',
+            focusStandards: ['CCSS.ELA-LITERACY.RF', 'CCSS.ELA-LITERACY.RL'],
+            rigorCriteria: {
+              mild: 'Letter recognition and basic phonics',
+              medium: 'Word analysis and simple comprehension',
+              spicy: 'Complex text analysis and inference'
+            }
+          },
+          createdAt: '2024-01-01T00:00:00Z'
+        }
+      ];
+      
+      res.json(sampleTemplates);
+    } catch (error) {
+      console.error("Error fetching prompt templates:", error);
+      res.status(500).json({ message: "Failed to fetch prompt templates" });
+    }
+  });
+
+  app.post('/api/test-prompt', async (req: any, res) => {
+    try {
+      const { questionText, context, jurisdictions, customization } = req.body;
+      
+      if (!questionText) {
+        return res.status(400).json({ message: "Question text is required" });
+      }
+
+      // Test the custom prompt with a sample analysis
+      const testResults = await aiService.analyzeQuestionWithCustomPrompt(
+        questionText,
+        context || 'Test analysis context',
+        jurisdictions || ['Common Core'],
+        customization
+      );
+
+      res.json({
+        message: "Prompt test completed",
+        results: testResults,
+        promptUsed: !!customization
+      });
+    } catch (error) {
+      console.error("Error testing prompt:", error);
+      res.status(500).json({ message: "Failed to test prompt" });
+    }
+  });
+
   // API Key management
   app.post('/api/api-keys', async (req: any, res) => {
     try {
@@ -240,8 +410,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const document = await storage.createDocument(validatedKey.userId, validationResult.data);
       await storage.addToProcessingQueue(document.id);
       
+      // Parse prompt customization if provided
+      let customization: PromptCustomization | undefined;
+      if (req.body.promptCustomization) {
+        try {
+          customization = JSON.parse(req.body.promptCustomization);
+        } catch (error) {
+          console.warn('Invalid prompt customization JSON:', error);
+        }
+      }
+      
       // Start processing
-      documentProcessor.processDocument(document.id, callbackUrl).catch(console.error);
+      documentProcessor.processDocument(document.id, callbackUrl, customization).catch(console.error);
 
       res.json({ 
         message: "Document submitted for processing",
