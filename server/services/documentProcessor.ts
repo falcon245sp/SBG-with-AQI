@@ -1,5 +1,5 @@
 import { storage } from '../storage';
-import { aiService, PromptCustomization } from './aiService';
+import { aiService } from './aiService';
 import { rigorAnalyzer } from './rigorAnalyzer';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -10,7 +10,7 @@ export class DocumentProcessor {
   async processDocument(
     documentId: string, 
     callbackUrl?: string, 
-    customization?: PromptCustomization
+    focusStandards?: string[]
   ): Promise<void> {
     try {
       console.log(`Starting processing for document: ${documentId}`);
@@ -24,12 +24,12 @@ export class DocumentProcessor {
       }
 
       // Send document directly to AI engines for OCR and analysis
-      const analysisResults = customization 
-        ? await aiService.analyzeDocumentWithCustomPrompt(
+      const analysisResults = focusStandards && focusStandards.length > 0
+        ? await aiService.analyzeDocumentWithStandards(
             document.originalPath,
             document.mimeType,
             document.jurisdictions,
-            customization
+            focusStandards
           )
         : await aiService.analyzeDocument(
             document.originalPath,

@@ -6,7 +6,7 @@ import { documentProcessor } from "./services/documentProcessor";
 import { insertDocumentSchema } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
-import { PromptCustomization, aiService } from "./services/aiService";
+import { aiService } from "./services/aiService";
 import path from "path";
 import fs from "fs";
 
@@ -48,8 +48,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Document upload with custom prompt endpoint
-  app.post('/api/documents/upload-with-prompt', upload.single('document'), async (req: any, res) => {
+  // Document upload with standards focus endpoint
+  app.post('/api/documents/upload-with-standards', upload.single('document'), async (req: any, res) => {
     try {
       const userId = 'test-user-123'; // Mock user ID
       const file = req.file;
@@ -58,15 +58,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      const { customerId, jurisdictions, promptCustomization } = req.body;
+      const { customerId, jurisdictions, focusStandards } = req.body;
       
-      // Parse prompt customization if provided
-      let customization: PromptCustomization | undefined;
-      if (promptCustomization) {
+      // Parse focus standards if provided
+      let standards: string[] = [];
+      if (focusStandards) {
         try {
-          customization = JSON.parse(promptCustomization);
+          standards = typeof focusStandards === 'string' 
+            ? focusStandards.split(',').map((s: string) => s.trim()).filter(Boolean)
+            : focusStandards;
         } catch (error) {
-          return res.status(400).json({ message: "Invalid prompt customization JSON" });
+          return res.status(400).json({ message: "Invalid focus standards format" });
         }
       }
       
@@ -93,16 +95,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add to processing queue
       await storage.addToProcessingQueue(document.id);
       
-      // Start processing asynchronously with custom prompt
-      documentProcessor.processDocument(document.id, undefined, customization).catch(console.error);
+      // Start processing asynchronously with focus standards
+      documentProcessor.processDocument(document.id, undefined, standards).catch(console.error);
 
       res.json({ 
-        message: "Document uploaded successfully with custom analysis configuration",
+        message: "Document uploaded successfully with focus standards",
         documentId: document.id,
-        customPromptUsed: !!customization
+        focusStandards: standards
       });
     } catch (error) {
-      console.error("Error uploading document with custom prompt:", error);
+      console.error("Error uploading document with focus standards:", error);
       res.status(500).json({ message: "Failed to upload document" });
     }
   });
@@ -217,8 +219,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Name and customization are required" });
       }
 
-      // Validate customization structure
-      const validCustomization: PromptCustomization = {
+      // Validate customization structure - keeping for backward compatibility
+      const validCustomization = {
         focusStandards: customization.focusStandards || [],
         educationLevel: customization.educationLevel,
         subject: customization.subject,
@@ -290,30 +292,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/test-prompt', async (req: any, res) => {
+  app.post('/api/test-standards', async (req: any, res) => {
     try {
-      const { questionText, context, jurisdictions, customization } = req.body;
+      const { questionText, context, jurisdictions, focusStandards } = req.body;
       
       if (!questionText) {
         return res.status(400).json({ message: "Question text is required" });
       }
 
-      // Test the custom prompt with a sample analysis
-      const testResults = await aiService.analyzeQuestionWithCustomPrompt(
+      // Parse focus standards
+      let standards: string[] = [];
+      if (focusStandards) {
+        standards = typeof focusStandards === 'string' 
+          ? focusStandards.split(',').map((s: string) => s.trim()).filter(Boolean)
+          : focusStandards;
+      }
+
+      // Test analysis with focus standards
+      const dynamicPrompt = aiService['generatePromptWithStandards'](standards);
+      const testResults = await aiService.analyzeQuestion(
         questionText,
         context || 'Test analysis context',
-        jurisdictions || ['Common Core'],
-        customization
+        jurisdictions || ['Common Core']
       );
 
       res.json({
-        message: "Prompt test completed",
+        message: "Standards test completed",
         results: testResults,
-        promptUsed: !!customization
+        focusStandards: standards,
+        promptPreview: dynamicPrompt.substring(0, 500) + '...'
       });
     } catch (error) {
-      console.error("Error testing prompt:", error);
-      res.status(500).json({ message: "Failed to test prompt" });
+      console.error("Error testing standards:", error);
+      res.status(500).json({ message: "Failed to test standards" });
     }
   });
 
@@ -410,18 +421,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const document = await storage.createDocument(validatedKey.userId, validationResult.data);
       await storage.addToProcessingQueue(document.id);
       
-      // Parse prompt customization if provided
-      let customization: PromptCustomization | undefined;
-      if (req.body.promptCustomization) {
+      // Parse focus standards if provided
+      let focusStandards: string[] = [];
+      if (req.body.focusStandards) {
         try {
-          customization = JSON.parse(req.body.promptCustomization);
+          focusStandards = typeof req.body.focusStandards === 'string' 
+            ? req.body.focusStandards.split(',').map((s: string) => s.trim()).filter(Boolean)
+            : req.body.focusStandards;
         } catch (error) {
-          console.warn('Invalid prompt customization JSON:', error);
+          console.warn('Invalid focus standards format:', error);
         }
       }
       
       // Start processing
-      documentProcessor.processDocument(document.id, callbackUrl, customization).catch(console.error);
+      documentProcessor.processDocument(document.id, callbackUrl, focusStandards).catch(console.error);
 
       res.json({ 
         message: "Document submitted for processing",

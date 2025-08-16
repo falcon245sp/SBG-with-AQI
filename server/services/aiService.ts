@@ -102,6 +102,90 @@ Provide your analysis in JSON format:
 }`;
 
 export class AIService {
+  private generatePromptWithStandards(focusStandards?: string[]): string {
+    let prompt = `You are an expert in education and Standards-Based Grading (SBG) aligned to multiple jurisdiction standards. I need you to analyze the provided educational documents to:
+
+For each assessment, analyze and identify:
+
+1. The primary educational standard(s) that align with each question/problem
+2. A rigor level assessment based on cognitive complexity
+
+`;
+    
+    // Dynamically insert focus standards if provided
+    if (focusStandards && focusStandards.length > 0) {
+      prompt += `PRIORITY STANDARDS TO IDENTIFY:
+`;
+      focusStandards.forEach(standard => {
+        prompt += `- ${standard.trim()}
+`;
+      });
+      prompt += `
+Give special attention to identifying alignment with these specific standards.
+
+`;
+    }
+    
+    prompt += `RIGOR LEVEL DEFINITIONS:
+`;
+    prompt += `- mild: Basic recall, recognition, or simple application (DOK 1-2)
+`;
+    prompt += `- medium: Multi-step problems, analysis, or interpretive tasks (DOK 2-3)
+`;
+    prompt += `- spicy: Synthesis, evaluation, reasoning, or complex real-world application (DOK 3-4)
+
+`;
+    
+    prompt += `ANALYSIS REQUIREMENTS:
+`;
+    prompt += `- Map to specific, relevant educational standards
+`;
+    prompt += `- Provide clear justification for rigor level assignments
+`;
+    prompt += `- Focus on accuracy and consistency
+`;
+    prompt += `- Base analysis solely on the provided document content
+
+`;
+    
+    prompt += `Provide your analysis in JSON format:
+`;
+    prompt += `{
+`;
+    prompt += `  "standards": [
+`;
+    prompt += `    {
+`;
+    prompt += `      "code": "CCSS.MATH.5.NBT.A.1",
+`;
+    prompt += `      "description": "Recognize that in a multi-digit number...",
+`;
+    prompt += `      "jurisdiction": "Common Core",
+`;
+    prompt += `      "gradeLevel": "5",
+`;
+    prompt += `      "subject": "Mathematics"
+`;
+    prompt += `    }
+`;
+    prompt += `  ],
+`;
+    prompt += `  "rigor": {
+`;
+    prompt += `    "level": "medium",
+`;
+    prompt += `    "dokLevel": "DOK 2",
+`;
+    prompt += `    "justification": "This question requires students to apply concepts and make connections...",
+`;
+    prompt += `    "confidence": 0.85
+`;
+    prompt += `  }
+`;
+    prompt += `}`;
+    
+    return prompt;
+  }
   private generateCustomPrompt(customization?: PromptCustomization): string {
     let basePrompt = "You are an expert in education and Standards-Based Grading (SBG) aligned to multiple jurisdiction standards.";
     
@@ -619,6 +703,75 @@ export class AIService {
     ]);
 
     return { chatgpt, grok, claude };
+  }
+
+  async analyzeDocumentWithStandards(
+    filePath: string, 
+    mimeType: string, 
+    jurisdictions: string[], 
+    focusStandards?: string[]
+  ): Promise<{
+    questions: Array<{
+      text: string;
+      context: string;
+      aiResults: {
+        chatgpt: AIAnalysisResult;
+        grok: AIAnalysisResult;
+        claude: AIAnalysisResult;
+      };
+    }>;
+  }> {
+    try {
+      console.log('Analyzing document with focus standards:', focusStandards);
+      
+      const dynamicPrompt = this.generatePromptWithStandards(focusStandards);
+      
+      const [chatgptResult, grokResult, claudeResult] = await Promise.all([
+        this.analyzeChatGPTWithPrompt(
+          `Analyze this educational document (${mimeType}) for standards alignment and rigor level.`,
+          `Document path: ${filePath}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
+          jurisdictions,
+          dynamicPrompt
+        ).catch(() => this.getDefaultResult()),
+        this.analyzeGrokWithPrompt(
+          `Analyze this educational document (${mimeType}) for standards alignment and rigor level.`,
+          `Document path: ${filePath}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
+          jurisdictions,
+          dynamicPrompt
+        ).catch(() => this.getDefaultResult()),
+        this.analyzeClaudeWithPrompt(
+          `Analyze this educational document (${mimeType}) for standards alignment and rigor level.`,
+          `Document path: ${filePath}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
+          jurisdictions,
+          dynamicPrompt
+        ).catch(() => this.getDefaultResult())
+      ]);
+      
+      return {
+        questions: [{
+          text: "Educational content analysis from uploaded document",
+          context: `Document type: ${mimeType}, Jurisdictions: ${jurisdictions.join(', ')}, Focus Standards: ${focusStandards?.join(', ') || 'None specified'}`,
+          aiResults: {
+            chatgpt: chatgptResult,
+            grok: grokResult,
+            claude: claudeResult
+          }
+        }]
+      };
+    } catch (error) {
+      console.error('Error analyzing document with standards:', error);
+      return {
+        questions: [{
+          text: "Document analysis",
+          context: "Analysis failed",
+          aiResults: {
+            chatgpt: this.getDefaultResult(),
+            grok: this.getDefaultResult(),
+            claude: this.getDefaultResult()
+          }
+        }]
+      };
+    }
   }
 
   async analyzeQuestion(questionText: string, context: string, jurisdictions: string[]): Promise<{
