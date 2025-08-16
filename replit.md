@@ -1,10 +1,27 @@
 # Document Processing Service
 
-## Current Version: 0.5.0
+## Current Version: 0.6.0
 
 ## Overview
 
 The Document Processing Service is a full-stack web application that provides AI-powered educational document analysis. The system automatically analyzes educational documents (PDFs, Word docs, Google Docs) to identify standards alignment and determine cognitive rigor levels using multiple AI engines (ChatGPT, Grok, and Claude). The application features a RESTful API backend with Express.js and a modern React frontend with TypeScript, providing educational institutions and EdTech companies with automated document processing capabilities.
+
+## Version History
+
+### Version 0.6.0 (August 16, 2025)
+- **Multi-File Upload Support**: Added ability to upload and process multiple documents simultaneously
+  - Frontend toggle for single vs multi-file mode (up to 10 files)
+  - Enhanced FileUploader component with bulk operations
+  - Individual job tracking for each uploaded file
+  - Comprehensive error handling for partial upload failures
+- **Enhanced API Response Format**: Improved web service responses for batch processing
+  - Multi-status responses (207) for partial successes
+  - Detailed job information for each uploaded file
+  - Error tracking per file with specific failure reasons
+- **S3 Integration Refinements**: Optimized customer-specific storage patterns
+  - Improved file organization in S3 buckets
+  - Enhanced upload workflow for multiple files
+  - Better error handling for S3 operations
 
 ## Version History
 
