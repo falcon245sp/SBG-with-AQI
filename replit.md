@@ -15,6 +15,12 @@ The Document Processing Service is a full-stack web application that provides AI
   - Flexible sizing with max-height and vertical scrolling
   - Better text formatting with preserved line breaks
 - **UI Improvements**: Enhanced user experience for viewing AI analysis reasoning
+- **Architecture Refactor**: Separated application into frontend UX and standalone web service
+  - Created standalone web service with core AI processing functionality
+  - Designed new API contract for AWS deployment (API Gateway + SQS + Lambda)
+  - Updated frontend to use web service client with job-based processing
+  - Added focus standards support to upload workflow
+  - Implemented job tracking and status display for submitted documents
 
 ## User Preferences
 

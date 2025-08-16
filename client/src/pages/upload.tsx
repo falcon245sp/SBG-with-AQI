@@ -6,14 +6,22 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Sidebar } from "@/components/Sidebar";
 import { FileUploader } from "@/components/FileUploader";
-import { Upload, FileText, CheckCircle, AlertCircle } from "lucide-react";
+import { webServiceClient } from "@/lib/webServiceClient";
+import { Upload, FileText, CheckCircle, AlertCircle, Clock } from "lucide-react";
 
 export default function UploadPage() {
   const { toast } = useToast();
   const [customerId, setCustomerId] = useState("");
   const [jurisdictions, setJurisdictions] = useState("");
+  const [focusStandards, setFocusStandards] = useState("");
   const [callbackUrl, setCallbackUrl] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [submittedJobs, setSubmittedJobs] = useState<Array<{
+    jobId: string;
+    fileName: string;
+    status: string;
+    estimatedCompletion: string;
+  }>>([]);
 
   const handleFileUpload = async (file: File) => {
     if (!customerId || !jurisdictions) {
@@ -26,40 +34,45 @@ export default function UploadPage() {
     }
 
     setIsUploading(true);
-    const formData = new FormData();
-    formData.append('document', file);
-    formData.append('customerId', customerId);
-    formData.append('jurisdictions', jurisdictions);
-    if (callbackUrl) {
-      formData.append('callbackUrl', callbackUrl);
-    }
 
     try {
-      const response = await fetch('/api/documents/upload', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
+      // Parse jurisdictions and focus standards
+      const jurisdictionList = jurisdictions.split(',').map(j => j.trim()).filter(Boolean);
+      const focusStandardsList = focusStandards ? 
+        focusStandards.split(',').map(s => s.trim()).filter(Boolean) : 
+        undefined;
+
+      // Submit to web service
+      const result = await webServiceClient.submitDocument({
+        customerId,
+        file,
+        jurisdictions: jurisdictionList,
+        focusStandards: focusStandardsList,
+        callbackUrl: callbackUrl || undefined
       });
-
-      if (!response.ok) {
-        throw new Error('Upload failed');
-      }
-
-      const result = await response.json();
+      
+      // Add to submitted jobs list
+      setSubmittedJobs(prev => [{
+        jobId: result.jobId,
+        fileName: file.name,
+        status: result.status,
+        estimatedCompletion: result.estimatedCompletionTime
+      }, ...prev]);
       
       toast({
-        title: "Upload Successful",
-        description: `Document "${file.name}" uploaded and added to processing queue.`,
+        title: "Document Submitted",
+        description: `Document "${file.name}" submitted for processing. Job ID: ${result.jobId}`,
       });
 
       // Clear form
       setCustomerId("");
       setJurisdictions("");
+      setFocusStandards("");
       setCallbackUrl("");
     } catch (error) {
       toast({
-        title: "Upload Failed",
-        description: "There was an error uploading your document.",
+        title: "Submission Failed",
+        description: "There was an error submitting your document for processing.",
         variant: "destructive",
       });
     } finally {
@@ -113,7 +126,7 @@ export default function UploadPage() {
                       <Label htmlFor="customerId">Customer ID *</Label>
                       <Input
                         id="customerId"
-                        type="number"
+                        type="text"
                         placeholder="Enter customer ID"
                         value={customerId}
                         onChange={(e) => setCustomerId(e.target.value)}
@@ -128,7 +141,7 @@ export default function UploadPage() {
                       <Label htmlFor="jurisdictions">Educational Jurisdictions *</Label>
                       <Input
                         id="jurisdictions"
-                        placeholder="e.g., California, Common Core, Texas"
+                        placeholder="e.g., Common Core, NGSS, Texas TEKS"
                         value={jurisdictions}
                         onChange={(e) => setJurisdictions(e.target.value)}
                         className="mt-1"
@@ -138,24 +151,68 @@ export default function UploadPage() {
                         Comma-separated list (maximum 3 jurisdictions)
                       </p>
                     </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="callbackUrl">Callback URL (Optional)</Label>
-                    <Input
-                      id="callbackUrl"
-                      type="url"
-                      placeholder="https://your-domain.com/webhook/callback"
-                      value={callbackUrl}
-                      onChange={(e) => setCallbackUrl(e.target.value)}
-                      className="mt-1"
-                    />
-                    <p className="text-xs text-slate-500 mt-1">
-                      URL to receive processing completion notifications
-                    </p>
+                    <div>
+                      <Label htmlFor="focusStandards">Focus Standards (Optional)</Label>
+                      <Input
+                        id="focusStandards"
+                        placeholder="e.g., CCSS.MATH.HSA, NGSS.HS.PS1"
+                        value={focusStandards}
+                        onChange={(e) => setFocusStandards(e.target.value)}
+                        className="mt-1"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">
+                        Specific standards to focus analysis on (comma-separated)
+                      </p>
+                    </div>
+                    <div>
+                      <Label htmlFor="callbackUrl">Callback URL (Optional)</Label>
+                      <Input
+                        id="callbackUrl"
+                        type="url"
+                        placeholder="https://your-domain.com/webhook/callback"
+                        value={callbackUrl}
+                        onChange={(e) => setCallbackUrl(e.target.value)}
+                        className="mt-1"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">
+                        URL to receive processing completion notifications
+                      </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Submitted Jobs */}
+              {submittedJobs.length > 0 && (
+                <Card className="mb-8">
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Clock className="w-5 h-5 mr-2 text-blue-600" />
+                      Recently Submitted Jobs
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {submittedJobs.slice(0, 5).map((job) => (
+                        <div key={job.jobId} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                          <div className="flex-1">
+                            <p className="font-medium text-sm">{job.fileName}</p>
+                            <p className="text-xs text-slate-500">Job ID: {job.jobId}</p>
+                          </div>
+                          <div className="text-right">
+                            <div className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                              {job.status}
+                            </div>
+                            <p className="text-xs text-slate-500 mt-1">
+                              Est: {new Date(job.estimatedCompletion).toLocaleTimeString()}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Information Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -196,11 +253,11 @@ export default function UploadPage() {
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2 text-sm text-slate-600">
-                      <li>• Documents are analyzed by 3 AI engines</li>
+                      <li>• Documents processed via cloud-based AI service</li>
                       <li>• Average processing time: 2-4 minutes</li>
-                      <li>• Results include standards identification</li>
-                      <li>• DOK-based rigor level assessment</li>
-                      <li>• Consensus voting for accuracy</li>
+                      <li>• Job-based processing with status tracking</li>
+                      <li>• Standards identification and rigor assessment</li>
+                      <li>• Results available via API or UI polling</li>
                     </ul>
                   </CardContent>
                 </Card>
