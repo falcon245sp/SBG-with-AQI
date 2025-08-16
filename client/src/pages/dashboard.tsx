@@ -30,6 +30,13 @@ import {
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
+// Extend jsPDF type to include autoTable
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+  }
+}
+
 interface DocumentResult {
   id: string;
   fileName: string;
@@ -277,7 +284,7 @@ export default function Dashboard() {
     });
     
     // Add table
-    (pdf as any).autoTable({
+    pdf.autoTable({
       startY: 55,
       head: [['Criteria', 'Points', 'Full Credit', 'Partial Credit', 'Minimal Credit', 'No Credit']],
       body: tableData,

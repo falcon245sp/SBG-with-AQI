@@ -23,6 +23,13 @@ import {
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
+// Extend jsPDF type to include autoTable
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+  }
+}
+
 export default function ResultsPage() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
@@ -217,7 +224,7 @@ export default function ResultsPage() {
     });
     
     // Add table
-    (pdf as any).autoTable({
+    pdf.autoTable({
       startY: 55,
       head: [['Criteria', 'Points', 'Full Credit', 'Partial Credit', 'Minimal Credit', 'No Credit']],
       body: tableData,
