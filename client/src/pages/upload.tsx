@@ -12,7 +12,7 @@ import { Upload, FileText, CheckCircle, AlertCircle, Clock } from "lucide-react"
 export default function UploadPage() {
   const { toast } = useToast();
   // Fixed values for testing - in production these come from API
-  const customerId = "test-customer-123";
+  const customerId = "123";
   const jurisdictions = "Common Core";
   const [focusStandards, setFocusStandards] = useState("");
   const [callbackUrl, setCallbackUrl] = useState("");
@@ -162,7 +162,7 @@ export default function UploadPage() {
                       <span className="text-sm font-medium text-blue-800">Testing Configuration</span>
                     </div>
                     <div className="text-sm text-blue-700">
-                      <p>Customer: test-customer-123</p>
+                      <p>Customer: 123</p>
                       <p>Jurisdiction: Common Core</p>
                     </div>
                   </div>

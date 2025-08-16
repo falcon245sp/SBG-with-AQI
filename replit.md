@@ -11,7 +11,7 @@ The Document Processing Service is a full-stack web application that provides AI
 ### Version 0.7.0-dev (August 16, 2025) - Teacher Override Branch
 - **Development Setup**: Created feature branch for teacher override functionality
   - Simplified UI for testing by removing customer ID and jurisdiction input fields
-  - Fixed testing values: customer ID "test-customer-123", jurisdiction "Common Core"
+  - Fixed testing values: customer ID "123", jurisdiction "Common Core"
   - Added visual indicators showing current testing configuration
   - Streamlined upload workflow for development and testing
 
