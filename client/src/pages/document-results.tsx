@@ -99,6 +99,7 @@ export default function DocumentResults() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
+  const [openDialogs, setOpenDialogs] = useState<{ [key: string]: boolean }>({});
   const [overrideFormData, setOverrideFormData] = useState<{
     rigorLevel: 'mild' | 'medium' | 'spicy';
     standards: string;
@@ -352,13 +353,19 @@ export default function DocumentResults() {
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 {question.result && (
-                                  <Dialog>
+                                  <Dialog 
+                                    open={openDialogs[question.id] || false}
+                                    onOpenChange={(open) => {
+                                      setOpenDialogs(prev => ({ ...prev, [question.id]: open }));
+                                    }}
+                                  >
                                     <DialogTrigger asChild>
                                       <Button 
                                         variant="outline" 
                                         size="sm"
                                         onClick={() => {
                                           setEditingQuestionId(question.id);
+                                          setOpenDialogs(prev => ({ ...prev, [question.id]: true }));
                                           // Use teacher override data if it exists, otherwise use AI data
                                           const currentData = question.teacherOverride ? {
                                             rigorLevel: question.teacherOverride.overriddenRigorLevel,
@@ -389,6 +396,8 @@ export default function DocumentResults() {
                                         onSuccess={() => {
                                           toast({ title: "Override saved successfully" });
                                           queryClient.invalidateQueries({ queryKey: [`/api/documents/${documentId}/results`] });
+                                          // Close the dialog
+                                          setOpenDialogs(prev => ({ ...prev, [question.id]: false }));
                                         }}
                                       />
                                     </DialogContent>
