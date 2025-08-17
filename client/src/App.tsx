@@ -31,21 +31,23 @@ function Router() {
     );
   }
 
-  if (!isAuthenticated) {
-    return <GoogleAuth />;
-  }
-
-  // Always show auth routes, even if not classroom connected
+  // Always show callback route regardless of auth state to handle OAuth returns
   return (
     <Switch>
       <Route path="/auth/callback" component={AuthCallback} />
-      <Route path="/auth/classroom-setup" component={ClassroomSetup} />
-      <Route path="/" component={Dashboard} />
-      <Route path="/upload" component={UploadPage} />
-      <Route path="/results" component={ResultsPage} />
-      <Route path="/results/:id" component={DocumentResults} />
-      <Route path="/prompt-config" component={PromptConfig} />
-      <Route component={NotFound} />
+      {!isAuthenticated ? (
+        <Route component={GoogleAuth} />
+      ) : (
+        <>
+          <Route path="/auth/classroom-setup" component={ClassroomSetup} />
+          <Route path="/" component={Dashboard} />
+          <Route path="/upload" component={UploadPage} />
+          <Route path="/results" component={ResultsPage} />
+          <Route path="/results/:id" component={DocumentResults} />
+          <Route path="/prompt-config" component={PromptConfig} />
+          <Route component={NotFound} />
+        </>
+      )}
     </Switch>
   );
 }
