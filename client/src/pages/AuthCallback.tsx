@@ -19,11 +19,30 @@ export default function AuthCallback() {
       setLocation('/auth/classroom-setup');
     } else {
       console.log('AuthCallback - no googleId, checking existing auth state');
-      // Check if user is already authenticated
+      // Check if user is already authenticated with token refresh
       const existingGoogleId = localStorage.getItem('googleId');
       if (existingGoogleId) {
-        console.log('AuthCallback - found existing googleId, redirecting to classroom setup');
-        setLocation('/auth/classroom-setup');
+        console.log('AuthCallback - found existing googleId, checking auth status with server');
+        
+        fetch(`/api/auth/status?googleId=${existingGoogleId}`)
+          .then(response => response.json())
+          .then(data => {
+            console.log('AuthCallback - auth status check result:', data);
+            
+            if (data.authenticated) {
+              console.log('AuthCallback - user authenticated, redirecting to classroom setup');
+              setLocation('/auth/classroom-setup');
+            } else {
+              console.log('AuthCallback - not authenticated, redirecting to login');
+              localStorage.removeItem('googleId');
+              setLocation('/');
+            }
+          })
+          .catch(error => {
+            console.error('AuthCallback - auth status check failed:', error);
+            localStorage.removeItem('googleId');
+            setLocation('/');
+          });
       } else {
         console.log('AuthCallback - no auth state, redirecting to login');
         setLocation('/');

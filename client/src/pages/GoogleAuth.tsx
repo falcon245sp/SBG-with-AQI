@@ -10,15 +10,42 @@ export default function GoogleAuth() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Don't clear auth data - let the callback handle it properly
+  // Check authentication status with token refresh
   useEffect(() => {
     console.log('GoogleAuth - checking existing auth state');
     const existingGoogleId = localStorage.getItem('googleId');
     if (existingGoogleId) {
-      console.log('GoogleAuth - user already authenticated, redirecting to classroom setup');
-      setLocation('/auth/classroom-setup');
+      console.log('GoogleAuth - found existing googleId, checking auth status with server');
+      
+      // Check authentication status and refresh tokens if needed
+      fetch(`/api/auth/status?googleId=${existingGoogleId}`)
+        .then(response => response.json())
+        .then(data => {
+          console.log('GoogleAuth - auth status check result:', data);
+          
+          if (data.authenticated) {
+            console.log('GoogleAuth - user authenticated (token refreshed:', data.tokenRefreshed, '), redirecting to classroom setup');
+            setLocation('/auth/classroom-setup');
+          } else if (data.requiresReauth) {
+            console.log('GoogleAuth - re-authentication required, clearing localStorage');
+            localStorage.removeItem('googleId');
+            toast({
+              title: "Session Expired",
+              description: "Please sign in again to continue.",
+              variant: "default",
+            });
+          } else {
+            console.log('GoogleAuth - not authenticated, staying on login page');
+            localStorage.removeItem('googleId');
+          }
+        })
+        .catch(error => {
+          console.error('GoogleAuth - auth status check failed:', error);
+          // On error, clear localStorage and stay on login page
+          localStorage.removeItem('googleId');
+        });
     }
-  }, [setLocation]);
+  }, [setLocation, toast]);
 
   const handleGoogleLogin = async () => {
     try {

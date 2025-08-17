@@ -9,6 +9,7 @@ import {
   getUserClassrooms,
   getCurrentUser 
 } from "./routes/googleAuth";
+import { checkAuthStatus } from "./routes/auth";
 import { documentProcessor, queueProcessor } from "./services/documentProcessor";
 import { insertDocumentSchema, insertTeacherOverrideSchema } from "@shared/schema";
 import { z } from "zod";
@@ -49,6 +50,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Google OAuth routes
   app.get('/api/auth/google', initiateGoogleAuth);
   app.get('/api/auth/google/callback', handleGoogleCallback);
+  app.get('/api/auth/status', checkAuthStatus);
   app.post('/api/auth/sync-classroom', syncClassroomData);
   app.get('/api/classrooms', getUserClassrooms);
 
