@@ -56,11 +56,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', getCurrentUser);
   
-  // Debug auth status endpoint
-  app.get('/api/auth/status', (req, res) => {
-    console.log('[DEBUG] Auth status endpoint hit with query:', req.query);
-    res.json({ debug: true, query: req.query, timestamp: new Date().toISOString() });
-  });
+
 
   // Document upload with standards focus endpoint
   app.post('/api/documents/upload-with-standards', upload.single('document'), async (req: any, res) => {

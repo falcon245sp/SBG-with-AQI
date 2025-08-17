@@ -263,18 +263,63 @@ export const getUserClassrooms = async (req: Request, res: Response) => {
 
 // Get current user info
 export const getCurrentUser = async (req: Request, res: Response) => {
+  console.log('[Auth] Getting current user');
+  
   try {
     const { googleId } = req.query;
     
     if (!googleId || typeof googleId !== 'string') {
+      console.log('[Auth] No googleId provided');
       return res.status(401).json({ error: 'User authentication required' });
     }
 
+    console.log('[Auth] Looking up user with googleId:', googleId);
     const user = await storage.getUserByGoogleId(googleId);
     
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      console.log('[Auth] User not found in database');
+      return res.status(401).json({ error: 'User authentication required' });
     }
+
+    // Check if token is expired and refresh if needed
+    if (user.googleTokenExpiry && googleAuthService.isTokenExpired(user.googleTokenExpiry)) {
+      console.log('[Auth] Access token expired, attempting refresh...');
+      
+      if (user.googleRefreshToken) {
+        try {
+          const refreshedTokens = await googleAuthService.refreshAccessToken(user.googleRefreshToken);
+          
+          console.log('[Auth] Token refresh successful');
+          
+          // Update user with new tokens
+          await storage.updateUserTokens(
+            user.id,
+            refreshedTokens.access_token!,
+            refreshedTokens.refresh_token || user.googleRefreshToken,
+            refreshedTokens.expiry_date ? new Date(refreshedTokens.expiry_date) : undefined
+          );
+          
+          console.log('[Auth] User tokens updated successfully');
+        } catch (error) {
+          console.error('[Auth] ERROR - Token refresh failed:', {
+            error_type: 'GOOGLE_API_ERROR',
+            error: error
+          });
+          
+          // If refresh fails, user needs to re-authenticate
+          return res.status(401).json({ error: 'Authentication expired, please sign in again' });
+        }
+      } else {
+        console.log('[Auth] No refresh token available, re-authentication required');
+        return res.status(401).json({ error: 'Authentication expired, please sign in again' });
+      }
+    }
+
+    console.log('[Auth] User authenticated successfully:', {
+      userId: user.id,
+      email: user.email,
+      classroomConnected: user.classroomConnected
+    });
 
     // Don't send sensitive token data to client
     const safeUser = {
@@ -287,8 +332,13 @@ export const getCurrentUser = async (req: Request, res: Response) => {
     };
 
     res.json(safeUser);
-  } catch (error) {
-    console.error('Error fetching user:', error);
-    res.status(500).json({ error: 'Failed to fetch user' });
+  } catch (error: any) {
+    console.error('[Auth] ERROR - Get current user failed:', {
+      error_type: 'APPLICATION_ERROR',
+      error_message: error.message,
+      error_stack: error.stack
+    });
+    
+    res.status(500).json({ error: 'Failed to get current user' });
   }
 };
