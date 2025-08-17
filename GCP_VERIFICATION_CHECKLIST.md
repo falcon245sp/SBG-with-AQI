@@ -12,13 +12,20 @@ Since the application correctly generates the OAuth URL with the proper redirect
 - **Verify Type**: Must show "Web application" (NOT "Desktop application")
 - If it says "Desktop application", that's the problem
 
-### 2. Exact Redirect URI Check
-- Click **Edit** on the OAuth client
-- In **"Authorized redirect URIs"** section, verify:
-  ```
-  https://docu-proc-serv-jfielder1.replit.app/api/auth/google/callback
-  ```
-- **No trailing slash, exact case match required**
+### 2. Required OAuth Client Configuration
+Click **Edit** on the OAuth client and configure **BOTH**:
+
+**A. Authorized JavaScript origins:**
+```
+https://docu-proc-serv-jfielder1.replit.app
+```
+(No trailing slash, no path)
+
+**B. Authorized redirect URIs:**
+```
+https://docu-proc-serv-jfielder1.replit.app/api/auth/google/callback
+```
+(Full path to callback endpoint)
 
 ### 3. OAuth Consent Screen
 - Go to [OAuth Consent Screen](https://console.cloud.google.com/apis/credentials/consent)
