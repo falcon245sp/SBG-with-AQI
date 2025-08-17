@@ -184,10 +184,11 @@ export default function GoogleOAuthLanding() {
                 </ul>
               </div>
               
-              <div className="bg-yellow-100 dark:bg-yellow-800 p-3 rounded">
-                <p><strong>Next Step:</strong> Update Google OAuth application redirect URI:</p>
+              <div className="bg-green-100 dark:bg-green-800 p-3 rounded">
+                <p><strong>✅ Ready:</strong> Google Cloud Platform settings are current!</p>
                 <p className="text-sm mt-2">
-                  <code className="bg-white dark:bg-gray-700 px-1 rounded text-xs">
+                  OAuth should now work with the configured redirect URI:
+                  <code className="bg-white dark:bg-gray-700 px-1 rounded text-xs ml-1">
                     https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev/api/auth/google/callback
                   </code>
                 </p>
