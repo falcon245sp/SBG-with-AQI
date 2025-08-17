@@ -167,20 +167,27 @@ export default function GoogleOAuthLanding() {
           </Card>
         </div>
 
-        <Alert className="max-w-4xl mx-auto mb-8 border-blue-200 bg-blue-50 dark:bg-blue-900/20">
-          <AlertCircle className="h-4 w-4 text-blue-600" />
-          <AlertTitle className="text-blue-800 dark:text-blue-100">OAuth Configuration Complete</AlertTitle>
-          <AlertDescription className="text-blue-700 dark:text-blue-200">
-            <div className="space-y-2">
-              <p>✅ <strong>Redirect URI:</strong> Added to authorized redirect URIs</p>
-              <p>✅ <strong>JavaScript Origin:</strong> Added to authorized JavaScript origins</p>
-              <p>🔄 <strong>Status:</strong> Waiting for Google Cloud propagation (5-15 minutes)</p>
-              <p className="text-sm italic">
-                Configuration: <code className="bg-blue-100 dark:bg-blue-800 px-1 rounded text-xs">https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev</code>
-              </p>
-              <p className="text-sm">
-                <strong>Next:</strong> Try the OAuth flow once propagation completes. The "refused to connect" error should be resolved.
-              </p>
+        <Alert className="max-w-4xl mx-auto mb-8 border-red-200 bg-red-50 dark:bg-red-900/20">
+          <AlertCircle className="h-4 w-4 text-red-600" />
+          <AlertTitle className="text-red-800 dark:text-red-100">Redirect URI Mismatch Found</AlertTitle>
+          <AlertDescription className="text-red-700 dark:text-red-200">
+            <div className="space-y-4">
+              <p><strong>Issue Identified:</strong> The redirect URI in your Google OAuth application doesn't match the current domain.</p>
+              
+              <div className="bg-yellow-100 dark:bg-yellow-800 p-3 rounded">
+                <p><strong>Current Domain:</strong> <code className="bg-white dark:bg-gray-700 px-1 rounded text-xs">be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev</code></p>
+                <p><strong>OAuth Redirect URI:</strong> <code className="bg-white dark:bg-gray-700 px-1 rounded text-xs">docu-proc-serv-jfielder1.replit.app</code></p>
+              </div>
+              
+              <div className="bg-blue-100 dark:bg-blue-800 p-3 rounded">
+                <p><strong>Fix Required:</strong></p>
+                <ol className="list-decimal list-inside space-y-1 text-sm">
+                  <li>Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" className="underline">Google Cloud Console → Credentials</a></li>
+                  <li>Edit your OAuth 2.0 Client ID</li>
+                  <li>Update the redirect URI to: <code className="bg-green-100 dark:bg-green-800 px-1 rounded">https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev/api/auth/google/callback</code></li>
+                  <li>Save the changes</li>
+                </ol>
+              </div>
             </div>
           </AlertDescription>
         </Alert>

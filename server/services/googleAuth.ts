@@ -8,10 +8,19 @@ const GOOGLE_CLIENT_SECRET = process.env.SHERPA_GOOGLE_CLIENT_SECRET;
 
 // Use current domain for redirect URI to match where the request originates
 const getCurrentRedirectUri = () => {
+  // Always use the current domain from REPLIT_DOMAINS for development
   const currentDomain = process.env.REPLIT_DOMAINS?.split(',')[0];
   if (currentDomain) {
+    console.log('[GoogleAuth] Using current domain for redirect URI:', currentDomain);
     return `https://${currentDomain}/api/auth/google/callback`;
   }
+  
+  // Fallback to environment variable if no current domain
+  if (process.env.SHERPA_GOOGLE_REDIRECT_URI) {
+    console.log('[GoogleAuth] Falling back to SHERPA_GOOGLE_REDIRECT_URI:', process.env.SHERPA_GOOGLE_REDIRECT_URI);
+    return process.env.SHERPA_GOOGLE_REDIRECT_URI;
+  }
+  
   return 'http://localhost:5000/api/auth/google/callback';
 };
 
