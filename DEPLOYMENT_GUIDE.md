@@ -63,10 +63,22 @@ Configure the OAuth consent screen with:
 
 ## Environment Summary
 
-| Environment | Domain Pattern | OAuth App | Secret Sync | JavaScript Origins |
-|-------------|----------------|-----------|-------------|-------------------|
-| **Development** | `*.janeway.replit.dev` | Development OAuth | Synced | `https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev` |
-| **Production** | `*.replit.app` | Production OAuth | Unsynced | `https://[your-app-name].replit.app` |
+| Environment | Domain Pattern | OAuth App | Secret Sync | Environment Variables |
+|-------------|----------------|-----------|-------------|---------------------|
+| **Development** | `*.janeway.replit.dev` | Development OAuth | **SYNCED** | `SHERPA_GOOGLE_CLIENT_ID`, `SHERPA_GOOGLE_CLIENT_SECRET`, `SHERPA_GOOGLE_REDIRECT_URI` |
+| **Production** | `*.replit.app` | Production OAuth | **UNSYNCED** | `SHERPA_GOOGLE_CLIENT_ID`, `SHERPA_GOOGLE_CLIENT_SECRET`, `SHERPA_GOOGLE_REDIRECT_URI` |
+
+### Required OAuth Configuration
+
+**Development Environment:**
+- **Client ID**: Use development Google OAuth application
+- **JavaScript Origin**: `https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev`
+- **Redirect URI**: `https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev/api/auth/google/callback`
+
+**Production Environment:**  
+- **Client ID**: Use production Google OAuth application  
+- **JavaScript Origin**: `https://docu-proc-serv-jfielder1.replit.app`
+- **Redirect URI**: `https://docu-proc-serv-jfielder1.replit.app/api/auth/google/callback`
 
 ## Verification
 

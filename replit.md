@@ -88,9 +88,15 @@ Preferred communication style: Simple, everyday language.
   - Must create separate Google OAuth application for production with .replit.app domain redirect URI
   - Unsync SHERPA_GOOGLE_CLIENT_ID, SHERPA_GOOGLE_CLIENT_SECRET, SHERPA_GOOGLE_REDIRECT_URI in production deployment
 - **OAuth Configuration Status**: 
-  - Redirect URI: ✅ Added (https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev/api/auth/google/callback)
-  - JavaScript Origin: ✅ Added (https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev)
-  - Status: Awaiting Google Cloud propagation
+  - **Development OAuth Application**:
+    - Client ID: 1064115232790-0rbc41hch5df1vtctncbfm1aft5241a0.apps.googleusercontent.com
+    - JavaScript Origin: ✅ https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev
+    - Redirect URI: ❌ NEEDS UPDATE to https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev/api/auth/google/callback
+    - Environment Variables: SHERPA_GOOGLE_CLIENT_ID, SHERPA_GOOGLE_CLIENT_SECRET, SHERPA_GOOGLE_REDIRECT_URI (SYNCED)
+  - **Production OAuth Application**: 
+    - Domain: docu-proc-serv-jfielder1.replit.app
+    - Environment Variables: SHERPA_GOOGLE_CLIENT_ID, SHERPA_GOOGLE_CLIENT_SECRET, SHERPA_GOOGLE_REDIRECT_URI (UNSYNCED)
+    - Status: Requires separate OAuth application creation and unsync of secrets in production
 
 ### UI Libraries
 - **Radix UI**: Headless component primitives
