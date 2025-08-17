@@ -30,11 +30,10 @@ export default function GoogleOAuthLanding() {
 
   const handleGoogleSignIn = () => {
     setIsLoading(true);
-    console.log('Starting direct Google OAuth redirect...');
+    console.log('Redirecting to Google OAuth via current domain...');
     
-    // Direct redirect to the authorized domain's OAuth endpoint
-    // This bypasses the domain mismatch issue entirely
-    window.location.href = 'https://docu-proc-serv-jfielder1.replit.app/api/auth/google';
+    // Use current domain's OAuth endpoint
+    window.location.href = '/api/auth/google';
   };
 
   return (
@@ -119,11 +118,12 @@ export default function GoogleOAuthLanding() {
           </Card>
         </div>
 
-        <Alert className="max-w-2xl mx-auto mb-8">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Production-Ready Authentication</AlertTitle>
-          <AlertDescription>
-            Standards Sherpa uses Google OAuth with renamed environment variables to avoid platform conflicts, ensuring reliable authentication in any deployment environment.
+        <Alert className="max-w-2xl mx-auto mb-8 border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20">
+          <AlertCircle className="h-4 w-4 text-yellow-600" />
+          <AlertTitle className="text-yellow-800 dark:text-yellow-100">OAuth Configuration Required</AlertTitle>
+          <AlertDescription className="text-yellow-700 dark:text-yellow-200">
+            The current domain <code className="bg-yellow-100 dark:bg-yellow-800 px-1 rounded">be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev</code> needs to be added to the Google OAuth application's authorized redirect URIs.<br/><br/>
+            Required redirect URI: <code className="bg-green-100 dark:bg-green-800 px-1 rounded">https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev/api/auth/google/callback</code>
           </AlertDescription>
         </Alert>
 
@@ -137,8 +137,9 @@ export default function GoogleOAuthLanding() {
           <CardContent className="space-y-4">
             <Button 
               onClick={handleGoogleSignIn}
-              disabled={isLoading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg flex items-center justify-center space-x-2"
+              disabled={true}
+              className="w-full bg-gray-400 text-white py-3 rounded-lg flex items-center justify-center space-x-2 cursor-not-allowed"
+              title="OAuth configuration required - see alert above"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>

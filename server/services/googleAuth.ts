@@ -6,10 +6,16 @@ import { OAuth2Client } from 'google-auth-library';
 const GOOGLE_CLIENT_ID = process.env.SHERPA_GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.SHERPA_GOOGLE_CLIENT_SECRET;
 
-// Use the redirect URI that's authorized in Google OAuth app config
-// Google OAuth requires pre-authorized redirect URIs for security
-const GOOGLE_REDIRECT_URI = process.env.SHERPA_GOOGLE_REDIRECT_URI || 
-  'https://docu-proc-serv-jfielder1.replit.app/api/auth/google/callback';
+// Use current domain for redirect URI to match where the request originates
+const getCurrentRedirectUri = () => {
+  const currentDomain = process.env.REPLIT_DOMAINS?.split(',')[0];
+  if (currentDomain) {
+    return `https://${currentDomain}/api/auth/google/callback`;
+  }
+  return 'http://localhost:5000/api/auth/google/callback';
+};
+
+const GOOGLE_REDIRECT_URI = getCurrentRedirectUri();
 
 console.log('[GoogleAuth] Using renamed environment variables to avoid Replit conflicts:');
 console.log('[GoogleAuth] SHERPA_GOOGLE_CLIENT_ID:', GOOGLE_CLIENT_ID ? 'Present' : 'Missing');

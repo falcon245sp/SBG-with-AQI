@@ -90,12 +90,9 @@ export async function handleGoogleCallback(req: Request, res: Response) {
     
     console.log('[OAuth] User authenticated successfully:', user.email);
     
-    // Always redirect back to the current frontend domain with success parameters
-    const currentDomain = process.env.REPLIT_DOMAINS?.split(',')[0];
-    const frontendUrl = `https://${currentDomain}/?auth=success&user=${encodeURIComponent(user.email || '')}`;
-    
-    console.log('[OAuth] Redirecting to frontend with auth success:', frontendUrl);
-    res.redirect(frontendUrl);
+    // Redirect to dashboard on successful authentication
+    console.log('[OAuth] Authentication successful, redirecting to dashboard');
+    res.redirect('/dashboard');
   } catch (error) {
     console.error('[OAuth] Error in Google callback:', error);
     res.redirect('/auth/error?error=auth_failed&description=Authentication process failed');
