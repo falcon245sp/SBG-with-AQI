@@ -1,12 +1,25 @@
 # Document Processing Service
 
-## Current Version: 0.6.0
+## Current Version: 0.7.1
 
 ## Overview
 
 The Document Processing Service is a full-stack web application that provides AI-powered educational document analysis. The system automatically analyzes educational documents (PDFs, Word docs, Google Docs) to identify standards alignment and determine cognitive rigor levels using multiple AI engines (ChatGPT, Grok, and Claude). The application features a RESTful API backend with Express.js and a modern React frontend with TypeScript, providing educational institutions and EdTech companies with automated document processing capabilities.
 
 ## Version History
+
+### Version 0.7.1 (August 17, 2025) - Student Cover Sheet Enhancement ✓ COMPLETE
+- **Student Facing Test Cover Sheet**: ✓ Complete redesign of export functionality
+  - Renamed "Standards Summary" to "Student Facing Test Cover Sheet" across all export interfaces
+  - New PDF format with portrait orientation and four-column layout (Question, Standard, Topic, Rigor Level)
+  - Generic topic descriptions based on standard codes to prevent answer revelation
+  - Clean, student-friendly format for test preview without enabling cheating
+  - Maintains all teacher override functionality while presenting appropriate student view
+- **Export System Cleanup**: ✓ Comprehensive refactoring of export functions
+  - Updated all dropdown menus and export handlers across dashboard and document results pages
+  - Removed deprecated "Standards Summary" functions and cleaned unused code
+  - Consistent naming convention throughout the application
+  - Improved PDF generation with proper educational formatting
 
 ### Version 0.7.0 (August 16, 2025) - Teacher Override & Standards Sherpa Persona ✓ COMPLETE
 - **Teacher Override System**: ✓ Complete implementation of crowd-sourced corrections
