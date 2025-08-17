@@ -3,7 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import NotFound from "@/pages/not-found";
 import GoogleAuth from "@/pages/GoogleAuth";
 import AuthCallback from "@/pages/AuthCallback";
@@ -16,9 +16,26 @@ import PromptConfig from "@/pages/prompt-config";
 
 function Router() {
   // Simple authentication check - if googleId exists in localStorage, user is authenticated
-  const googleId = localStorage.getItem('googleId');
+  const [googleId, setGoogleId] = useState<string | null>(() => localStorage.getItem('googleId'));
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Listen for storage changes to update authentication state
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setGoogleId(localStorage.getItem('googleId'));
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    // Also check for direct localStorage changes
+    const interval = setInterval(handleStorageChange, 100);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
+  
   const isAuthenticated = !!googleId;
-  const isLoading = false;
 
   if (isLoading) {
     return (
