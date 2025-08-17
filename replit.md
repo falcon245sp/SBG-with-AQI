@@ -24,6 +24,10 @@ The Document Processing Service is a full-stack web application that provides AI
       - Even manually constructed URLs get rewritten from production to development domain
       - This affects ALL OAuth providers, not just Google
     - **SUPPORTABILITY CRISIS**: Cannot rely on environment variables for critical authentication configuration
+  - **PRODUCTION DEPLOYMENT CONCERN**: Replit OAuth patterns don't translate to production deployments outside Replit
+    - Google search confirms: "Issues can arise when transitioning from working development setup on Replit to production deployment"
+    - Need authentication solution that works reliably across deployment environments
+    - **SOLUTION**: Implement traditional username/password authentication with secure session management
   - **IMPLEMENTED**: Comprehensive error tracking with 6 unique line identifiers for precise debugging
     - `[LINE 179]` - General callback error  
     - `[LINE 341]` - No googleId in session (getCurrentUser)

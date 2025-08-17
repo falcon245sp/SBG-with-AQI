@@ -9,8 +9,29 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Session management now handled by Replit Auth in routes.ts
-// Removed duplicate session setup to avoid conflicts
+// Setup session management for traditional authentication
+const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
+const pgStore = connectPg(session);
+const sessionStore = new pgStore({
+  conString: process.env.DATABASE_URL,
+  createTableIfMissing: true,
+  ttl: sessionTtl,
+  tableName: "sessions",
+});
+
+app.set("trust proxy", 1);
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'fallback-secret-key-for-dev',
+  store: sessionStore,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: sessionTtl,
+  },
+  name: 'sherpa.sid',
+}));
 
 app.use((req, res, next) => {
   const start = Date.now();

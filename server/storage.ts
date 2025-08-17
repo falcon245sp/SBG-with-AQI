@@ -33,9 +33,11 @@ import { db } from "./db";
 import { eq, desc, and, inArray, sql } from "drizzle-orm";
 
 export interface IStorage {
-  // User operations (Google OAuth)
+  // User operations (supports both OAuth and username/password)
   getUser(id: string): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
   getUserByGoogleId(googleId: string): Promise<User | undefined>;
+  createUser(user: UpsertUser): Promise<User>;
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserTokens(userId: string, accessToken: string, refreshToken?: string, expiry?: Date): Promise<void>;
   
@@ -101,14 +103,27 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  // User operations (Google OAuth)
+  // User operations (supports both OAuth and username/password)
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
 
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
   async getUserByGoogleId(googleId: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.googleId, googleId));
+    return user;
+  }
+
+  async createUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .returning();
     return user;
   }
 

@@ -1,6 +1,7 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import bcrypt from "bcryptjs";
 import { 
   initiateGoogleAuth, 
   initiateClassroomAuth,
@@ -43,22 +44,120 @@ const upload = multer({
   }
 });
 
+// Password hashing utilities
+async function hashPassword(password: string): Promise<string> {
+  const saltRounds = 12;
+  return bcrypt.hash(password, saltRounds);
+}
+
+async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  return bcrypt.compare(password, hash);
+}
+
+// Session-based authentication middleware
+const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
+  const session = (req as any).session;
+  
+  if (!session || !session.userId) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+  
+  next();
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup Replit Authentication - reliable platform-native auth
-  const { setupAuth, isAuthenticated } = await import("./replitAuth");
-  await setupAuth(app);
-
-  // Replit Auth routes (automatically configured by setupAuth)
-  // /api/login - Replit login
-  // /api/logout - Replit logout  
-  // /api/callback - OAuth callback (handled by Replit Auth)
-
-  // DISABLED Google OAuth routes due to platform URL rewriting issues
-  // app.get('/api/auth/google', initiateGoogleAuth);
-  // app.get('/api/auth/google/classroom', initiateClassroomAuth);
-  // app.get('/api/auth/google/callback', handleGoogleCallback);
-  // app.post('/api/auth/sync-classroom', syncClassroomData);
-  // app.get('/api/classrooms', getUserClassrooms);
+  // Traditional username/password authentication for production portability
+  // Avoids OAuth redirect issues that don't work across deployment environments
+  
+  // Authentication routes
+  app.post('/api/auth/register', async (req, res) => {
+    const { username, password, email } = req.body;
+    
+    if (!username || !password || !email) {
+      return res.status(400).json({ error: 'Username, password, and email are required' });
+    }
+    
+    try {
+      // Check if user already exists
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(409).json({ error: 'Username already exists' });
+      }
+      
+      // Create new user with hashed password
+      const hashedPassword = await hashPassword(password);
+      const user = await storage.createUser({
+        username,
+        email,
+        passwordHash: hashedPassword,
+        firstName: null,
+        lastName: null,
+        profileImageUrl: null
+      });
+      
+      // Set session
+      (req as any).session.userId = user.id;
+      (req as any).session.username = user.username;
+      
+      res.json({ 
+        success: true, 
+        user: { 
+          id: user.id, 
+          username: user.username, 
+          email: user.email 
+        } 
+      });
+    } catch (error) {
+      console.error('Registration error:', error);
+      res.status(500).json({ error: 'Registration failed' });
+    }
+  });
+  
+  app.post('/api/auth/login', async (req, res) => {
+    const { username, password } = req.body;
+    
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password are required' });
+    }
+    
+    try {
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+      
+      const isValidPassword = await verifyPassword(password, user.passwordHash);
+      if (!isValidPassword) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+      
+      // Set session
+      (req as any).session.userId = user.id;
+      (req as any).session.username = user.username;
+      
+      res.json({ 
+        success: true, 
+        user: { 
+          id: user.id, 
+          username: user.username, 
+          email: user.email 
+        } 
+      });
+    } catch (error) {
+      console.error('Login error:', error);
+      res.status(500).json({ error: 'Login failed' });
+    }
+  });
+  
+  app.post('/api/auth/logout', (req, res) => {
+    req.session?.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ error: 'Logout failed' });
+      }
+      res.clearCookie('connect.sid');
+      res.json({ success: true });
+    });
+  });
   
   // Test route for debugging OAuth callback issues
   app.get('/api/auth/test-callback', (req, res) => {
@@ -72,15 +171,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Auth routes using Replit Auth
+  // Get current user route
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const user = await storage.getUser(userId);
-      res.json(user);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      // Return user without password hash
+      const { passwordHash, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
     } catch (error) {
       console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
+      res.status(500).json({ error: "Failed to fetch user" });
     }
   });
   
