@@ -1,15 +1,31 @@
 # OAuth Redirect URI Debug Information
 
-## Current Configuration
+## CRITICAL: EXACT VERIFICATION NEEDED
+
+### Current Configuration
 - **Application Domain**: `docu-proc-serv-jfielder1.replit.app`
 - **Required Redirect URI**: `https://docu-proc-serv-jfielder1.replit.app/api/auth/google/callback`
 - **OAuth Client ID**: `1064115232790-0rbc41hch5df1vtctncbfm1aft5241a0.apps.googleusercontent.com`
 
-## Error Details
+### Latest Error Details
 ```
 Error 400: redirect_uri_mismatch
 Request details: redirect_uri=https://docu-proc-serv-jfielder1.replit.app/api/auth/google/callback
+client_id=1064115232790-0rbc41hch5df1vtctncbfm1aft5241a0.apps.googleusercontent.com
 ```
+
+### VERIFICATION REQUIRED
+1. Go to https://console.cloud.google.com/apis/credentials
+2. Find OAuth 2.0 Client ID: `1064115232790-0rbc41hch5df1vtctncbfm1aft5241a0.apps.googleusercontent.com`
+3. Click EDIT (pencil icon)
+4. Screenshot the "Authorized redirect URIs" section
+5. Verify EXACTLY this URI exists: `https://docu-proc-serv-jfielder1.replit.app/api/auth/google/callback`
+
+### POSSIBLE ISSUES
+- Multiple OAuth clients with same name but different IDs
+- URI not saved properly in GCP (common browser issue)
+- Cached OAuth credentials in GCP
+- Project/application mismatch
 
 ## Google Cloud Console Steps
 1. Go to [Google Cloud Console](https://console.cloud.google.com)
