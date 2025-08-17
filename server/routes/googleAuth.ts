@@ -49,10 +49,8 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
       classroomConnected: false, // Will be set to true after classroom auth
     });
 
-    // Store user session (simple approach - in production use proper session management)
-    (req as any).session = { userId: user.id };
-
-    res.redirect('/auth/classroom-setup');
+    // Redirect with Google ID as URL parameter for client-side storage
+    res.redirect(`/auth/callback?googleId=${user.googleId}`);
   } catch (error) {
     console.error('Error in Google callback:', error);
     res.status(500).json({ error: 'Authentication failed' });
@@ -62,14 +60,22 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
 // Sync Google Classroom data
 export const syncClassroomData = async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).session?.userId;
+    // For development, we'll use the Google ID from the token
+    // In production, implement proper session management
+    const { googleId } = req.body;
     
-    if (!userId) {
-      return res.status(401).json({ error: 'User not authenticated' });
+    if (!googleId) {
+      return res.status(401).json({ error: 'User authentication required' });
     }
 
-    const user = await storage.getUser(userId);
+    const user = await storage.getUserByGoogleId(googleId);
     
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const userId = user.id;
+
     if (!user || !user.googleAccessToken) {
       return res.status(401).json({ error: 'Google authentication required' });
     }
@@ -137,11 +143,19 @@ export const syncClassroomData = async (req: Request, res: Response) => {
 // Get user's classrooms and students
 export const getUserClassrooms = async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).session?.userId;
+    const { googleId } = req.query;
     
-    if (!userId) {
-      return res.status(401).json({ error: 'User not authenticated' });
+    if (!googleId || typeof googleId !== 'string') {
+      return res.status(401).json({ error: 'User authentication required' });
     }
+
+    const user = await storage.getUserByGoogleId(googleId);
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const userId = user.id;
 
     const classrooms = await storage.getTeacherClassrooms(userId);
     
@@ -166,13 +180,13 @@ export const getUserClassrooms = async (req: Request, res: Response) => {
 // Get current user info
 export const getCurrentUser = async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).session?.userId;
+    const { googleId } = req.query;
     
-    if (!userId) {
-      return res.status(401).json({ error: 'User not authenticated' });
+    if (!googleId || typeof googleId !== 'string') {
+      return res.status(401).json({ error: 'User authentication required' });
     }
 
-    const user = await storage.getUser(userId);
+    const user = await storage.getUserByGoogleId(googleId);
     
     if (!user) {
       return res.status(404).json({ error: 'User not found' });

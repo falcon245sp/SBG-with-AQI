@@ -8,20 +8,26 @@ The Document Processing Service is a full-stack web application that provides AI
 
 ## Version History
 
-### Version 0.8 (August 17, 2025) - Standards-Based Gradebook & Automated Rubric Grading 🚧 IN DEVELOPMENT
-- **Standards-Based Gradebook**: Revolutionary gradebook tracking mastery by standard/rigor pairs
-  - Student performance tracking with mastery propagation across all units where standards appear
-  - Backwards-compatible rigor hierarchy (SPICY mastery → automatic MEDIUM + MILD mastery)
-  - 80% threshold rule: Must achieve 80% correct on standard/rigor pairs within single assessment
-  - Consecutive demonstration rule: Must demonstrate mastery on two separate, consecutive occasions
-  - Real-time mastery updates across all contexts where standards appear
-- **Automated Rubric Grading System**: Computer vision-powered grading automation
-  - QR code generation on rubrics containing encrypted test UUID + student UUID + standard mappings
-  - Teacher marks achievement levels with diagonal sharpie strokes on printed rubrics
-  - Bulk scanning of completed rubrics with automatic data extraction
-  - Computer vision processing to read marks and update gradebook automatically
-  - Audit trail preservation: All scanned rubrics stored for dispute resolution
-  - Eliminates manual data entry while preserving teacher professional judgment
+### Version 0.8 (August 17, 2025) - Google OAuth & Classroom Integration 🚧 IN DEVELOPMENT
+- **Google OAuth Authentication**: Complete Google authentication workflow
+  - Google OAuth 2.0 integration with proper scope management
+  - Secure token storage and automatic refresh handling
+  - User profile management with Google account linking
+- **Google Classroom Integration**: Automated roster and class management
+  - Google Classroom API integration for course data
+  - Automatic student roster synchronization
+  - Real-time classroom and student data updates
+  - Support for multiple classes per teacher
+- **Database Schema Expansion**: Enhanced data models for educational workflows
+  - Extended users table with Google OAuth fields and token management
+  - New classrooms table with Google Classroom course data
+  - New students table with Google profile integration
+  - Proper foreign key relationships and data integrity
+- **Authentication Flow**: Seamless user onboarding experience
+  - Multi-step authentication with Google OAuth
+  - Classroom connection and data synchronization
+  - Progress tracking through setup stages
+  - Automatic redirection based on authentication state
 
 ### Version 0.7 (August 17, 2025) - Teacher Override System & Student Cover Sheet ✓ COMPLETE
 - **Student Facing Test Cover Sheet**: ✓ Complete redesign of export functionality
