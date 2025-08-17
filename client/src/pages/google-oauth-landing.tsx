@@ -11,9 +11,16 @@ export default function GoogleOAuthLanding() {
     setIsLoading(true);
     try {
       console.log('Starting Google OAuth flow...');
+      console.log('Frontend trying to fetch from:', window.location.origin + '/api/auth/google');
       
       // Get OAuth URL from backend (renamed env vars workaround)
-      const response = await fetch('/api/auth/google');
+      const response = await fetch('/api/auth/google', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Include cookies/session data
+      });
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);

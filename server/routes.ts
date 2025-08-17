@@ -194,7 +194,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Google OAuth routes with renamed environment variables (workaround for Replit conflicts)
-  app.get('/api/auth/google', initiateGoogleAuth);
+  app.get('/api/auth/google', (req, res, next) => {
+    console.log('[DEBUG] /api/auth/google route hit');
+    next();
+  }, initiateGoogleAuth);
   app.get('/api/auth/google/classroom', initiateClassroomAuth);
   app.get('/api/auth/google/callback', handleGoogleCallback);
   app.post('/api/auth/sync-classroom', syncClassroomData);
