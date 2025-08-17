@@ -31,6 +31,7 @@ The Document Processing Service is a full-stack web application that provides AI
   - Progress tracking through setup stages
   - Automatic redirection based on authentication state
   - **FIXED**: Token refresh logic integrated into `/api/auth/user` endpoint for seamless re-authentication
+  - **ENHANCED**: Forced re-authentication every 5 days for security compliance, even with valid sessions
 
 ### Version 0.7 (August 17, 2025) - Teacher Override System & Student Cover Sheet ✓ COMPLETE
 - **Student Facing Test Cover Sheet**: ✓ Complete redesign of export functionality

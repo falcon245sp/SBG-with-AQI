@@ -115,9 +115,10 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
       email: user.email
     });
     
-    // Store googleId in session instead of URL parameter
+    // Store googleId and timestamp in session instead of URL parameter
     (req as any).session.googleId = user.googleId;
-    console.log('[OAuth] GoogleId stored in session:', user.googleId);
+    (req as any).session.lastAuthTime = Date.now();
+    console.log('[OAuth] GoogleId and auth timestamp stored in session:', user.googleId);
     
     const redirectUrl = `/auth/classroom-setup`;
     console.log('[OAuth] Authentication complete, redirecting to:', redirectUrl);
@@ -141,15 +142,23 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
 // Sync Google Classroom data
 export const syncClassroomData = async (req: Request, res: Response) => {
   try {
-    // For development, we'll use the Google ID from the token
-    // In production, implement proper session management
-    const { googleId } = req.body;
+    // Check session for googleId and auth timestamp
+    const sessionGoogleId = (req as any).session?.googleId;
+    const lastAuthTime = (req as any).session?.lastAuthTime;
     
-    if (!googleId) {
+    if (!sessionGoogleId) {
       return res.status(401).json({ error: 'User authentication required' });
     }
 
-    const user = await storage.getUserByGoogleId(googleId);
+    // Force re-auth every 5 days
+    const fiveDays = 5 * 24 * 60 * 60 * 1000;
+    if (!lastAuthTime || (Date.now() - lastAuthTime) > fiveDays) {
+      (req as any).session.googleId = null;
+      (req as any).session.lastAuthTime = null;
+      return res.status(401).json({ error: 'Authentication expired, please sign in again' });
+    }
+
+    const user = await storage.getUserByGoogleId(sessionGoogleId);
     
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -230,13 +239,23 @@ export const syncClassroomData = async (req: Request, res: Response) => {
 // Get user's classrooms and students
 export const getUserClassrooms = async (req: Request, res: Response) => {
   try {
-    const { googleId } = req.query;
+    // Check session for googleId and auth timestamp
+    const sessionGoogleId = (req as any).session?.googleId;
+    const lastAuthTime = (req as any).session?.lastAuthTime;
     
-    if (!googleId || typeof googleId !== 'string') {
+    if (!sessionGoogleId) {
       return res.status(401).json({ error: 'User authentication required' });
     }
 
-    const user = await storage.getUserByGoogleId(googleId);
+    // Force re-auth every 5 days
+    const fiveDays = 5 * 24 * 60 * 60 * 1000;
+    if (!lastAuthTime || (Date.now() - lastAuthTime) > fiveDays) {
+      (req as any).session.googleId = null;
+      (req as any).session.lastAuthTime = null;
+      return res.status(401).json({ error: 'Authentication expired, please sign in again' });
+    }
+
+    const user = await storage.getUserByGoogleId(sessionGoogleId);
     
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -271,9 +290,19 @@ export const getCurrentUser = async (req: Request, res: Response) => {
   try {
     // Check session first for googleId
     const sessionGoogleId = (req as any).session?.googleId;
+    const lastAuthTime = (req as any).session?.lastAuthTime;
     
     if (!sessionGoogleId) {
       console.log('[Auth] No googleId in session, user not authenticated');
+      return res.status(401).json({ error: 'Authentication failed' });
+    }
+
+    // Force re-auth every 5 days (5 * 24 * 60 * 60 * 1000 = 432000000 ms)
+    const fiveDays = 5 * 24 * 60 * 60 * 1000;
+    if (!lastAuthTime || (Date.now() - lastAuthTime) > fiveDays) {
+      console.log('[Auth] Session older than 5 days, forcing re-authentication');
+      (req as any).session.googleId = null;
+      (req as any).session.lastAuthTime = null;
       return res.status(401).json({ error: 'Authentication failed' });
     }
 
@@ -284,6 +313,7 @@ export const getCurrentUser = async (req: Request, res: Response) => {
       console.log('[Auth] User not found in database');
       // Clear invalid session
       (req as any).session.googleId = null;
+      (req as any).session.lastAuthTime = null;
       return res.status(401).json({ error: 'Authentication failed' });
     }
 
@@ -314,12 +344,14 @@ export const getCurrentUser = async (req: Request, res: Response) => {
           
           // Clear invalid session and require re-authentication
           (req as any).session.googleId = null;
+          (req as any).session.lastAuthTime = null;
           return res.status(401).json({ error: 'Authentication failed' });
         }
       } else {
         console.log('[Auth] No refresh token available, re-authentication required');
         // Clear invalid session
         (req as any).session.googleId = null;
+        (req as any).session.lastAuthTime = null;
         return res.status(401).json({ error: 'Authentication failed' });
       }
     }
