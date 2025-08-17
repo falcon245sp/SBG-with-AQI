@@ -7,6 +7,8 @@ const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 // Use environment variable if set, otherwise fall back to current domain
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || `https://${process.env.REPLIT_DOMAINS}/api/auth/google/callback`;
 console.log('Using redirect URI:', REDIRECT_URI);
+console.log('GOOGLE_REDIRECT_URI env var:', process.env.GOOGLE_REDIRECT_URI);
+console.log('REPLIT_DOMAINS env var:', process.env.REPLIT_DOMAINS);
 
 // OAuth scopes needed
 const SCOPES = [
