@@ -94,8 +94,6 @@ export default function GoogleAuth() {
               </div>
             </div>
 
-
-
             {/* Google Sign In Button */}
             <Button
               onClick={handleGoogleLogin}

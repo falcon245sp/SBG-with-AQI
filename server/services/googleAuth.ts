@@ -4,13 +4,9 @@ import { OAuth2Client } from 'google-auth-library';
 // Google OAuth configuration
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-// Always use the production domain from environment variable
+// Use environment variable if set, otherwise use Replit domain
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || `https://${process.env.REPLIT_DOMAINS}/api/auth/google/callback`;
-console.log('OAuth Debug Info:');
-console.log('- Using redirect URI:', REDIRECT_URI);
-console.log('- GOOGLE_REDIRECT_URI env var:', process.env.GOOGLE_REDIRECT_URI);
-console.log('- REPLIT_DOMAINS env var:', process.env.REPLIT_DOMAINS);
-console.log('- Expected GCP URI: https://docu-proc-serv-jfielder1.replit.app/api/auth/google/callback');
+console.log('Using redirect URI:', REDIRECT_URI);
 
 // OAuth scopes needed
 const SCOPES = [
@@ -28,41 +24,21 @@ export class GoogleAuthService {
       throw new Error('Google OAuth credentials not configured');
     }
 
-    // Force the production redirect URI - MUST use environment variable
-    const PRODUCTION_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
-    
-    if (!PRODUCTION_REDIRECT_URI) {
-      throw new Error('GOOGLE_REDIRECT_URI environment variable is required');
-    }
-    
     this.oauth2Client = new google.auth.OAuth2(
       GOOGLE_CLIENT_ID,
       GOOGLE_CLIENT_SECRET,
-      PRODUCTION_REDIRECT_URI
+      REDIRECT_URI
     );
-    
-    console.log('OAuth2Client initialized with redirect URI:', PRODUCTION_REDIRECT_URI || REDIRECT_URI);
   }
 
   // Generate authorization URL
   getAuthUrl(state?: string): string {
-    console.log('=== OAuth URL Generation Debug ===');
-    console.log('OAuth2Client redirect URI:', this.oauth2Client.redirectUri);
-    console.log('REDIRECT_URI constant:', REDIRECT_URI);
-    console.log('Environment GOOGLE_REDIRECT_URI:', process.env.GOOGLE_REDIRECT_URI);
-    
-    const authUrl = this.oauth2Client.generateAuthUrl({
+    return this.oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: SCOPES,
-      prompt: 'consent',
-      state: state,
-      include_granted_scopes: true
+      prompt: 'consent', // Force consent screen to get refresh token
+      state: state // Optional state parameter for CSRF protection
     });
-    
-    console.log('Final generated auth URL:', authUrl);
-    console.log('Extracted redirect_uri from URL:', authUrl.match(/redirect_uri=([^&]*)/)?.[1]);
-    
-    return authUrl;
   }
 
   // Exchange authorization code for tokens
