@@ -10,8 +10,8 @@ export async function initiateGoogleAuth(req: Request, res: Response) {
   try {
     console.log('[OAuth] Initiating basic Google authentication');
     const authUrl = googleAuth.getAuthUrl();
-    console.log('[OAuth] Redirecting to:', authUrl);
-    res.redirect(authUrl);
+    console.log('[OAuth] Generated auth URL:', authUrl);
+    res.json({ authUrl });
   } catch (error) {
     console.error('[OAuth] Error initiating Google auth:', error);
     res.status(500).json({ error: 'Failed to initiate Google authentication' });

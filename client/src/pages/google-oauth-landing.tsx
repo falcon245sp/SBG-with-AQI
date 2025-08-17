@@ -10,11 +10,20 @@ export default function GoogleOAuthLanding() {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
+      console.log('Starting Google OAuth flow...');
+      
       // Get OAuth URL from backend (renamed env vars workaround)
       const response = await fetch('/api/auth/google');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const data = await response.json();
+      console.log('Received OAuth response:', data);
       
       if (data.authUrl) {
+        console.log('Redirecting to Google OAuth:', data.authUrl);
         // Redirect to Google OAuth
         window.location.href = data.authUrl;
       } else {
