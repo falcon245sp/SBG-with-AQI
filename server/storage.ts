@@ -1,5 +1,7 @@
 import {
   users,
+  classrooms,
+  students,
   documents,
   questions,
   aiResponses,
@@ -9,6 +11,8 @@ import {
   teacherOverrides,
   type User,
   type UpsertUser,
+  type Classroom,
+  type Student,
   type Document,
   type Question,
   type AiResponse,
@@ -16,6 +20,9 @@ import {
   type ApiKey,
   type ProcessingQueue,
   type TeacherOverride,
+  type InsertUser,
+  type InsertClassroom,
+  type InsertStudent,
   type InsertDocument,
   type InsertQuestion,
   type InsertAiResponse,
@@ -26,9 +33,22 @@ import { db } from "./db";
 import { eq, desc, and, inArray, sql } from "drizzle-orm";
 
 export interface IStorage {
-  // User operations (required for Replit Auth)
+  // User operations (Google OAuth)
   getUser(id: string): Promise<User | undefined>;
+  getUserByGoogleId(googleId: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  updateUserTokens(userId: string, accessToken: string, refreshToken?: string, expiry?: Date): Promise<void>;
+  
+  // Classroom operations
+  createClassroom(classroom: InsertClassroom): Promise<Classroom>;
+  getTeacherClassrooms(teacherId: string): Promise<Classroom[]>;
+  getClassroomByGoogleId(googleClassId: string): Promise<Classroom | undefined>;
+  syncClassrooms(teacherId: string, classroomData: any[]): Promise<Classroom[]>;
+  
+  // Student operations  
+  createStudent(student: InsertStudent): Promise<Student>;
+  getClassroomStudents(classroomId: string): Promise<Student[]>;
+  syncStudents(classroomId: string, studentData: any[]): Promise<Student[]>;
   
   // Document operations
   createDocument(userId: string, document: InsertDocument): Promise<Document>;
@@ -81,25 +101,186 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  // User operations (required for Replit Auth)
+  // User operations (Google OAuth)
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
 
+  async getUserByGoogleId(googleId: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.googleId, googleId));
+    return user;
+  }
+
   async upsertUser(userData: UpsertUser): Promise<User> {
+    // If googleId provided, try to find existing user by googleId
+    if (userData.googleId) {
+      const existingUser = await this.getUserByGoogleId(userData.googleId);
+      if (existingUser) {
+        // Update existing user
+        const [user] = await db
+          .update(users)
+          .set({
+            ...userData,
+            updatedAt: new Date(),
+          })
+          .where(eq(users.googleId, userData.googleId))
+          .returning();
+        return user;
+      }
+    }
+
+    // Create new user
     const [user] = await db
       .insert(users)
       .values(userData)
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
-          ...userData,
-          updatedAt: new Date(),
-        },
-      })
       .returning();
     return user;
+  }
+
+  async updateUserTokens(userId: string, accessToken: string, refreshToken?: string, expiry?: Date): Promise<void> {
+    await db
+      .update(users)
+      .set({
+        googleAccessToken: accessToken,
+        googleRefreshToken: refreshToken,
+        googleTokenExpiry: expiry,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+  }
+
+  // Classroom operations
+  async createClassroom(classroomData: InsertClassroom): Promise<Classroom> {
+    const [classroom] = await db
+      .insert(classrooms)
+      .values(classroomData)
+      .returning();
+    return classroom;
+  }
+
+  async getTeacherClassrooms(teacherId: string): Promise<Classroom[]> {
+    return await db
+      .select()
+      .from(classrooms)
+      .where(eq(classrooms.teacherId, teacherId))
+      .orderBy(classrooms.name);
+  }
+
+  async getClassroomByGoogleId(googleClassId: string): Promise<Classroom | undefined> {
+    const [classroom] = await db
+      .select()
+      .from(classrooms)
+      .where(eq(classrooms.googleClassId, googleClassId));
+    return classroom;
+  }
+
+  async syncClassrooms(teacherId: string, classroomData: any[]): Promise<Classroom[]> {
+    const syncedClassrooms: Classroom[] = [];
+    
+    for (const classData of classroomData) {
+      // Check if classroom already exists
+      let classroom = await this.getClassroomByGoogleId(classData.id);
+      
+      if (classroom) {
+        // Update existing classroom
+        const [updated] = await db
+          .update(classrooms)
+          .set({
+            name: classData.name,
+            section: classData.section,
+            description: classData.description,
+            room: classData.room,
+            courseState: classData.courseState,
+            updateTime: classData.updateTime ? new Date(classData.updateTime) : undefined,
+            updatedAt: new Date(),
+          })
+          .where(eq(classrooms.googleClassId, classData.id))
+          .returning();
+        syncedClassrooms.push(updated);
+      } else {
+        // Create new classroom
+        const newClassroom = await this.createClassroom({
+          googleClassId: classData.id,
+          teacherId,
+          name: classData.name,
+          section: classData.section,
+          description: classData.description,
+          room: classData.room,
+          courseState: classData.courseState,
+          creationTime: classData.creationTime ? new Date(classData.creationTime) : undefined,
+          updateTime: classData.updateTime ? new Date(classData.updateTime) : undefined,
+        });
+        syncedClassrooms.push(newClassroom);
+      }
+    }
+    
+    return syncedClassrooms;
+  }
+
+  // Student operations
+  async createStudent(studentData: InsertStudent): Promise<Student> {
+    const [student] = await db
+      .insert(students)
+      .values(studentData)
+      .returning();
+    return student;
+  }
+
+  async getClassroomStudents(classroomId: string): Promise<Student[]> {
+    return await db
+      .select()
+      .from(students)
+      .where(eq(students.classroomId, classroomId))
+      .orderBy(students.lastName, students.firstName);
+  }
+
+  async syncStudents(classroomId: string, studentData: any[]): Promise<Student[]> {
+    const syncedStudents: Student[] = [];
+    
+    for (const studentInfo of studentData) {
+      const profile = studentInfo.profile;
+      
+      // Check if student already exists in this classroom
+      const [existingStudent] = await db
+        .select()
+        .from(students)
+        .where(
+          and(
+            eq(students.classroomId, classroomId),
+            profile.id ? eq(students.googleUserId, profile.id) : eq(students.email, profile.emailAddress)
+          )
+        );
+      
+      if (existingStudent) {
+        // Update existing student
+        const [updated] = await db
+          .update(students)
+          .set({
+            firstName: profile.name.givenName,
+            lastName: profile.name.familyName,
+            email: profile.emailAddress,
+            photoUrl: profile.photoUrl,
+            updatedAt: new Date(),
+          })
+          .where(eq(students.id, existingStudent.id))
+          .returning();
+        syncedStudents.push(updated);
+      } else {
+        // Create new student
+        const newStudent = await this.createStudent({
+          googleUserId: profile.id,
+          classroomId,
+          firstName: profile.name.givenName,
+          lastName: profile.name.familyName,
+          email: profile.emailAddress,
+          photoUrl: profile.photoUrl,
+        });
+        syncedStudents.push(newStudent);
+      }
+    }
+    
+    return syncedStudents;
   }
 
   // Document operations

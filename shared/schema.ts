@@ -25,13 +25,47 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// User storage table for Replit Auth
+// User storage table for Google OAuth
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  googleId: varchar("google_id").unique(), // Google user ID
   email: varchar("email").unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
+  googleAccessToken: text("google_access_token"), // For API calls
+  googleRefreshToken: text("google_refresh_token"), // For token refresh
+  googleTokenExpiry: timestamp("google_token_expiry"), // Token expiration
+  classroomConnected: boolean("classroom_connected").default(false), // Classroom authorization status
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Google Classroom classes
+export const classrooms = pgTable("classrooms", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  googleClassId: varchar("google_class_id").notNull(), // Google Classroom ID
+  teacherId: varchar("teacher_id").notNull().references(() => users.id),
+  name: text("name").notNull(),
+  section: text("section"),
+  description: text("description"),
+  room: text("room"),
+  courseState: varchar("course_state"), // ACTIVE, ARCHIVED, etc.
+  creationTime: timestamp("creation_time"),
+  updateTime: timestamp("update_time"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Students in classrooms
+export const students = pgTable("students", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  googleUserId: varchar("google_user_id"), // Google user ID if available
+  classroomId: varchar("classroom_id").notNull().references(() => classrooms.id),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  email: varchar("email"),
+  photoUrl: text("photo_url"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -148,11 +182,36 @@ export const processingQueue = pgTable("processing_queue", {
 
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
-  id: true,
+  googleId: true,
   email: true,
   firstName: true,
   lastName: true,
   profileImageUrl: true,
+  googleAccessToken: true,
+  googleRefreshToken: true,
+  googleTokenExpiry: true,
+  classroomConnected: true,
+});
+
+export const insertClassroomSchema = createInsertSchema(classrooms).pick({
+  googleClassId: true,
+  teacherId: true,
+  name: true,
+  section: true,
+  description: true,
+  room: true,
+  courseState: true,
+  creationTime: true,
+  updateTime: true,
+});
+
+export const insertStudentSchema = createInsertSchema(students).pick({
+  googleUserId: true,
+  classroomId: true,
+  firstName: true,
+  lastName: true,
+  email: true,
+  photoUrl: true,
 });
 
 export const insertDocumentSchema = createInsertSchema(documents).pick({
@@ -198,6 +257,8 @@ export const insertTeacherOverrideSchema = createInsertSchema(teacherOverrides).
 // Types
 export type UpsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+export type Classroom = typeof classrooms.$inferSelect;
+export type Student = typeof students.$inferSelect;
 export type Document = typeof documents.$inferSelect;
 export type Question = typeof questions.$inferSelect;
 export type AiResponse = typeof aiResponses.$inferSelect;
@@ -206,6 +267,9 @@ export type ApiKey = typeof apiKeys.$inferSelect;
 export type ProcessingQueue = typeof processingQueue.$inferSelect;
 export type TeacherOverride = typeof teacherOverrides.$inferSelect;
 
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type InsertClassroom = z.infer<typeof insertClassroomSchema>;
+export type InsertStudent = z.infer<typeof insertStudentSchema>;
 export type InsertDocument = z.infer<typeof insertDocumentSchema>;
 export type InsertQuestion = z.infer<typeof insertQuestionSchema>;
 export type InsertAiResponse = z.infer<typeof insertAiResponseSchema>;

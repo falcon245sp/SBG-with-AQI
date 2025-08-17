@@ -2,6 +2,13 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { 
+  initiateGoogleAuth, 
+  handleGoogleCallback, 
+  syncClassroomData,
+  getUserClassrooms,
+  getCurrentUser 
+} from "./routes/googleAuth";
 import { documentProcessor, queueProcessor } from "./services/documentProcessor";
 import { insertDocumentSchema, insertTeacherOverrideSchema } from "@shared/schema";
 import { z } from "zod";
@@ -39,17 +46,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
+  // Google OAuth routes
+  app.get('/api/auth/google', initiateGoogleAuth);
+  app.get('/api/auth/google/callback', handleGoogleCallback);
+  app.post('/api/auth/sync-classroom', syncClassroomData);
+  app.get('/api/classrooms', getUserClassrooms);
+
   // Auth routes
-  app.get('/api/auth/user', async (req: any, res) => {
-    // Mock user for testing
-    res.json({
-      id: 'test-user-123',
-      email: 'test@example.com',
-      firstName: 'Test',
-      lastName: 'User',
-      profileImageUrl: null
-    });
-  });
+  app.get('/api/auth/user', getCurrentUser);
 
   // Document upload with standards focus endpoint
   app.post('/api/documents/upload-with-standards', upload.single('document'), async (req: any, res) => {
