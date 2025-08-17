@@ -15,27 +15,51 @@ export const initiateGoogleAuth = async (req: Request, res: Response) => {
 
 // Handle Google OAuth callback
 export const handleGoogleCallback = async (req: Request, res: Response) => {
+  console.log('Google callback initiated with query params:', req.query);
+  
   try {
-    const { code } = req.query;
+    const { code, error, error_description } = req.query;
+    
+    // Check for OAuth errors from Google
+    if (error) {
+      console.error('Google OAuth error:', error, error_description);
+      return res.redirect(`/auth/error?error=${encodeURIComponent(error as string)}&description=${encodeURIComponent(error_description as string || 'Authentication failed')}`);
+    }
     
     if (!code || typeof code !== 'string') {
-      return res.status(400).json({ error: 'Authorization code required' });
+      console.error('No authorization code provided');
+      return res.redirect('/auth/error?error=no_code&description=Authorization code not provided');
     }
 
+    console.log('Exchanging authorization code for tokens...');
     // Exchange code for tokens
     const tokens = await googleAuthService.getTokens(code);
+    console.log('Received tokens:', { 
+      has_access_token: !!tokens.access_token,
+      has_refresh_token: !!tokens.refresh_token,
+      expires_at: tokens.expiry_date 
+    });
     
     if (!tokens.access_token) {
-      return res.status(400).json({ error: 'Failed to obtain access token' });
+      console.error('Failed to obtain access token');
+      return res.redirect('/auth/error?error=no_access_token&description=Failed to obtain access token');
     }
 
+    console.log('Getting user info from Google...');
     // Get user info from Google
     const userInfo = await googleAuthService.getUserInfo(tokens.access_token);
+    console.log('Retrieved user info:', { 
+      id: userInfo.id, 
+      email: userInfo.email,
+      name: `${userInfo.given_name} ${userInfo.family_name}` 
+    });
     
     if (!userInfo.id || !userInfo.email) {
-      return res.status(400).json({ error: 'Failed to obtain user information' });
+      console.error('Failed to obtain user information');
+      return res.redirect('/auth/error?error=no_user_info&description=Failed to obtain user information');
     }
 
+    console.log('Upserting user to database...');
     // Create or update user in database
     const user = await storage.upsertUser({
       googleId: userInfo.id,
@@ -49,12 +73,14 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
       classroomConnected: false, // Will be set to true after classroom auth
     });
 
+    console.log('User upserted successfully:', { id: user.id, googleId: user.googleId });
+    
     // Redirect with Google ID as URL parameter for client-side storage
     console.log('Redirecting to callback with googleId:', user.googleId);
     res.redirect(`/auth/callback?googleId=${user.googleId}`);
   } catch (error) {
     console.error('Error in Google callback:', error);
-    res.status(500).json({ error: 'Authentication failed' });
+    res.redirect(`/auth/error?error=server_error&description=${encodeURIComponent(error instanceof Error ? error.message : 'Authentication failed')}`);
   }
 };
 

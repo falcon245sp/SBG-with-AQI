@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import NotFound from "@/pages/not-found";
 import GoogleAuth from "@/pages/GoogleAuth";
 import AuthCallback from "@/pages/AuthCallback";
+import AuthError from "@/pages/AuthError";
 import ClassroomSetup from "@/pages/ClassroomSetup";
 import Dashboard from "@/pages/dashboard";
 import UploadPage from "@/pages/upload";
@@ -48,10 +49,11 @@ function Router() {
     );
   }
 
-  // Always show callback route regardless of auth state to handle OAuth returns
+  // Always show callback and error routes regardless of auth state to handle OAuth returns
   return (
     <Switch>
       <Route path="/auth/callback" component={AuthCallback} />
+      <Route path="/auth/error" component={AuthError} />
       {!isAuthenticated ? (
         <Route component={GoogleAuth} />
       ) : (
