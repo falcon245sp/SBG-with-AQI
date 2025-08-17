@@ -94,27 +94,7 @@ export default function GoogleAuth() {
               </div>
             </div>
 
-            {/* Existing User Access */}
-            <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
-              <div className="text-center">
-                <p className="text-sm text-green-700 dark:text-green-300 mb-3">
-                  <strong>Development Access:</strong> Existing authenticated user detected
-                </p>
-                <Button
-                  onClick={() => {
-                    localStorage.setItem('googleId', '107439734063109552129');
-                    setLocation('/auth/classroom-setup');
-                  }}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white mb-2"
-                  size="lg"
-                >
-                  Access Platform (8 Classrooms, 187 Students)
-                </Button>
-                <p className="text-xs text-green-600 dark:text-green-400">
-                  jfielder@srvusd.net - All classroom data synced
-                </p>
-              </div>
-            </div>
+
 
             {/* Google Sign In Button */}
             <Button
