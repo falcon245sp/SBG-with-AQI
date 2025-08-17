@@ -5,8 +5,9 @@ import { OAuth2Client } from 'google-auth-library';
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 // Always use production domain for OAuth redirect
-const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'https://docu-proc-serv-jfielder1.replit.app/api/auth/google/callback';
+const REDIRECT_URI = 'https://docu-proc-serv-jfielder1.replit.app/api/auth/google/callback';
 console.log('Using redirect URI:', REDIRECT_URI);
+console.log('Note: Hardcoded to production domain to fix OAuth callback routing');
 
 // OAuth scopes for basic user authentication
 const BASIC_SCOPES = [
@@ -22,27 +23,31 @@ const CLASSROOM_SCOPES = [
 
 export class GoogleAuthService {
   private oauth2Client: OAuth2Client;
+  private readonly PRODUCTION_REDIRECT_URI = 'https://docu-proc-serv-jfielder1.replit.app/api/auth/google/callback';
 
   constructor() {
     if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
       throw new Error('Google OAuth credentials not configured');
     }
 
+    console.log('[GoogleAuth] Creating OAuth client with redirect URI:', this.PRODUCTION_REDIRECT_URI);
     this.oauth2Client = new google.auth.OAuth2(
       GOOGLE_CLIENT_ID,
       GOOGLE_CLIENT_SECRET,
-      REDIRECT_URI
+      this.PRODUCTION_REDIRECT_URI
     );
   }
 
   // Generate authorization URL for basic auth (profile + email only)
   getAuthUrl(state?: string): string {
     console.log('[GoogleAuth] Generating BASIC authorization URL with scopes:', BASIC_SCOPES);
+    console.log('[GoogleAuth] Using redirect URI:', this.PRODUCTION_REDIRECT_URI);
     const authUrl = this.oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: BASIC_SCOPES,
       prompt: 'consent', // Force consent screen to get refresh token
-      state: state // Optional state parameter for CSRF protection
+      state: state, // Optional state parameter for CSRF protection
+      redirect_uri: this.PRODUCTION_REDIRECT_URI // Explicitly set redirect URI
     });
     console.log('[GoogleAuth] Generated basic authorization URL:', authUrl);
     return authUrl;

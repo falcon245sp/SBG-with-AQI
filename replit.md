@@ -14,7 +14,11 @@ The Document Processing Service is a full-stack web application that provides AI
   - Secure token storage and automatic refresh handling
   - User profile management with Google account linking
   - **FIXED**: Token expiration handling - automatic refresh for returning users
-  - **DEBUGGING**: OAuth callback reaches server but fails during token exchange process
+  - **CRITICAL ISSUE IDENTIFIED**: OAuth callback redirect URI mismatch causing authentication failures
+    - Google OAuth is redirecting to wrong domain: `be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev`
+    - Should redirect to production domain: `docu-proc-serv-jfielder1.replit.app` 
+    - Root cause: Environment variable `GOOGLE_REDIRECT_URI` contains incorrect development domain
+    - **SOLUTION REQUIRED**: Update Google OAuth Console redirect URI to match current Replit domain
   - **IMPLEMENTED**: Comprehensive error tracking with 6 unique line identifiers for precise debugging
     - `[LINE 179]` - General callback error  
     - `[LINE 341]` - No googleId in session (getCurrentUser)
