@@ -47,14 +47,14 @@ export class GoogleAuthService {
   // Generate authorization URL for basic auth (profile + email only)
   getAuthUrl(state?: string): string {
     console.log('[GoogleAuth] Generating BASIC authorization URL with scopes:', BASIC_SCOPES);
-    console.log('[GoogleAuth] BYPASSING Google auth library and building URL manually');
     
     // Use Google Auth library with renamed environment variables
     const authUrl = this.oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: BASIC_SCOPES,
-      prompt: 'consent',
-      state: state || ''
+      prompt: 'select_account', // Allow user to select account
+      state: state || '',
+      include_granted_scopes: true // Include previously granted scopes
     });
     
     console.log('[GoogleAuth] Generated OAuth URL with renamed env vars:', authUrl);
