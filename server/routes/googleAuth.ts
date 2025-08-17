@@ -1,439 +1,150 @@
-import { Request, Response } from 'express';
-import { googleAuthService } from '../services/googleAuth';
-import { storage } from '../storage';
+import type { Request, Response } from "express";
+import { GoogleAuthService } from "../services/googleAuth";
+import { storage } from "../storage";
 
-// Start Google OAuth flow (BASIC auth - profile + email only)
-export const initiateGoogleAuth = async (req: Request, res: Response) => {
-  console.log('[OAuth] Client requesting BASIC Google OAuth initiation from IP:', req.ip);
-  try {
-    const authUrl = googleAuthService.getAuthUrl();
-    console.log('[OAuth] Successfully generated BASIC auth URL, responding to client');
-    res.json({ authUrl });
-  } catch (error: any) {
-    console.error('[OAuth] ERROR - Failed to initiate Google auth:', {
-      error_type: 'APPLICATION_ERROR',
-      error_message: error.message,
-      error_stack: error.stack
-    });
-    res.status(500).json({ error: 'Failed to initiate authentication' });
-  }
-};
+// Initialize Google Auth service with renamed environment variables
+const googleAuth = new GoogleAuthService();
 
-// Start Google Classroom OAuth flow (CLASSROOM auth - additional scopes)
-export const initiateClassroomAuth = async (req: Request, res: Response) => {
-  console.log('[OAuth] Client requesting CLASSROOM Google OAuth initiation from IP:', req.ip);
-  
-  // Check if user is already authenticated with basic Google auth
-  const sessionGoogleId = (req as any).session?.googleId;
-  if (!sessionGoogleId) {
-    return res.status(401).json({ error: 'User must be logged in first before connecting classroom' });
-  }
-  
+// Initiate basic Google authentication (profile + email only)
+export async function initiateGoogleAuth(req: Request, res: Response) {
   try {
-    const authUrl = googleAuthService.getClassroomAuthUrl('classroom_auth');
-    console.log('[OAuth] Successfully generated CLASSROOM auth URL, responding to client');
-    res.json({ authUrl });
-  } catch (error: any) {
-    console.error('[OAuth] ERROR - Failed to initiate classroom auth:', {
-      error_type: 'APPLICATION_ERROR',
-      error_message: error.message,
-      error_stack: error.stack
-    });
-    res.status(500).json({ error: 'Failed to initiate classroom authentication' });
+    console.log('[OAuth] Initiating basic Google authentication');
+    const authUrl = googleAuth.getAuthUrl();
+    console.log('[OAuth] Redirecting to:', authUrl);
+    res.redirect(authUrl);
+  } catch (error) {
+    console.error('[OAuth] Error initiating Google auth:', error);
+    res.status(500).json({ error: 'Failed to initiate Google authentication' });
   }
-};
+}
 
-// Handle Google OAuth callback
-export const handleGoogleCallback = async (req: Request, res: Response) => {
-  console.log('[OAuth] =================================');
-  console.log('[OAuth] Google OAuth callback initiated');
-  console.log('[OAuth] Request IP:', req.ip);
-  console.log('[OAuth] Request headers:', {
-    'user-agent': req.headers['user-agent'],
-    'referer': req.headers.referer,
-    'x-forwarded-for': req.headers['x-forwarded-for']
-  });
-  console.log('[OAuth] Query parameters:', req.query);
-  
+// Initiate Google authentication with Classroom scopes
+export async function initiateClassroomAuth(req: Request, res: Response) {
   try {
-    const { code, error, error_description, state, test } = req.query;
+    console.log('[OAuth] Initiating Google authentication with Classroom scopes');
+    const authUrl = googleAuth.getClassroomAuthUrl();
+    console.log('[OAuth] Redirecting to:', authUrl);
+    res.redirect(authUrl);
+  } catch (error) {
+    console.error('[OAuth] Error initiating Classroom auth:', error);
+    res.status(500).json({ error: 'Failed to initiate Google Classroom authentication' });
+  }
+}
+
+// Handle Google OAuth callback with renamed environment variables
+export async function handleGoogleCallback(req: Request, res: Response) {
+  try {
+    const { code, error: oauthError, state } = req.query;
     
-    // Test endpoint accessibility
-    if (test) {
-      console.log('[OAuth] TEST - Callback endpoint reached successfully');
-      return res.json({ 
-        message: 'Callback endpoint accessible', 
-        timestamp: new Date().toISOString(),
-        sessionId: req.sessionID 
-      });
+    console.log('[OAuth] Callback received with code:', !!code);
+    console.log('[OAuth] OAuth error:', oauthError);
+    console.log('[OAuth] State:', state);
+    
+    if (oauthError) {
+      console.error('[OAuth] OAuth error in callback:', oauthError);
+      return res.redirect('/?error=oauth_error');
     }
-    
-    // Check for OAuth errors from Google
-    if (error) {
-      console.error('[OAuth] ERROR - Google OAuth returned error:', {
-        error_type: 'GOOGLE_OAUTH_ERROR',
-        error_code: error,
-        error_description: error_description,
-        state: state
-      });
-      return res.redirect(`/auth/error?error=${encodeURIComponent(error as string)}&description=${encodeURIComponent(error_description as string || 'Google OAuth error')}`);
-    }
-    
+
     if (!code || typeof code !== 'string') {
-      console.error('[OAuth] ERROR - No authorization code provided:', {
-        error_type: 'APPLICATION_ERROR',
-        code_present: !!code,
-        code_type: typeof code,
-        query_params: req.query
-      });
-      return res.redirect('/auth/error?error=no_code&description=Authorization code not provided');
+      console.error('[OAuth] No authorization code received');
+      return res.redirect('/?error=no_code');
     }
 
-    console.log('[OAuth] Authorization code received, proceeding with token exchange...');
-    
-    try {
-      // Exchange code for tokens
-      const tokens = await googleAuthService.getTokens(code);
-      
-      if (!tokens.access_token) {
-        console.error('[OAuth] ERROR - No access token in response:', {
-          error_type: 'APPLICATION_ERROR',
-          tokens_received: Object.keys(tokens)
-        });
-        return res.redirect('/auth/error?error=no_access_token&description=Failed to obtain access token');
-      }
+    // Exchange code for tokens using renamed environment variables
+    const tokens = await googleAuth.exchangeCodeForTokens(code);
+    console.log('[OAuth] Tokens received, access token present:', !!tokens.access_token);
 
-      console.log('[OAuth] Token exchange successful, fetching user information...');
-      
-      // Get user info from Google
-      const userInfo = await googleAuthService.getUserInfo(tokens.access_token);
-    
-      if (!userInfo.id || !userInfo.email) {
-        console.error('[OAuth] ERROR - Incomplete user information:', {
-          error_type: 'APPLICATION_ERROR',
-          has_id: !!userInfo.id,
-          has_email: !!userInfo.email,
-          userinfo_keys: Object.keys(userInfo)
-        });
-        return res.redirect('/auth/error?error=no_user_info&description=Failed to obtain complete user information');
-      }
+    // Get user profile from Google
+    const userProfile = await googleAuth.getUserProfile(tokens.access_token!);
+    console.log('[OAuth] User profile retrieved:', userProfile.email);
 
-      console.log('[OAuth] User information retrieved, saving to database...');
-      
-      // Create or update user in database
-      const userData = {
-        googleId: userInfo.id,
-        email: userInfo.email,
-        firstName: userInfo.given_name || '',
-        lastName: userInfo.family_name || '',
-        profileImageUrl: userInfo.picture,
-        googleAccessToken: tokens.access_token,
-        googleRefreshToken: tokens.refresh_token,
-        googleTokenExpiry: tokens.expiry_date ? new Date(tokens.expiry_date) : undefined,
-        classroomConnected: (state === 'classroom_auth'), // True if this is classroom auth flow
-      };
-      
-      console.log('[OAuth] Attempting to upsert user with data:', {
-        googleId: userData.googleId,
-        email: userData.email,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        has_access_token: !!userData.googleAccessToken,
-        has_refresh_token: !!userData.googleRefreshToken
-      });
-
-      const user = await storage.upsertUser(userData);
-
-      console.log('[OAuth] User upserted successfully:', {
-        database_id: user.id,
-        google_id: user.googleId,
-        email: user.email
-      });
-      
-      // Store googleId and timestamp in session instead of URL parameter
-      console.log('[OAuth] Session before storing data:', (req as any).session);
-      (req as any).session.googleId = user.googleId;
-      (req as any).session.lastAuthTime = Date.now();
-      console.log('[OAuth] GoogleId and auth timestamp stored in session:', user.googleId);
-      console.log('[OAuth] Session after storing data:', (req as any).session);
-    
-      // Different redirect based on auth flow type
-      const isClassroomAuth = state === 'classroom_auth';
-      const redirectUrl = isClassroomAuth ? `/dashboard` : `/auth/classroom-setup`;
-      console.log('[OAuth] Authentication complete, redirecting to:', redirectUrl);
-      console.log('[OAuth] Auth flow type:', isClassroomAuth ? 'CLASSROOM_AUTH' : 'BASIC_AUTH');
-      console.log('[OAuth] =================================');
-      
-      res.redirect(redirectUrl);
-    } catch (tokenError: any) {
-      console.error('[OAuth] ERROR - Token exchange failed:', {
-        error_type: 'GOOGLE_API_ERROR',
-        error_name: tokenError.name,
-        error_message: tokenError.message,
-        error_code: tokenError.code,
-        error_status: tokenError.status,
-        error_response: tokenError.response?.data,
-        full_error: JSON.stringify(tokenError, null, 2)
-      });
-      return res.redirect('/auth/error?error=token_exchange_failed&description=Failed to exchange authorization code for tokens');
-    }
-  } catch (error: any) {
-    console.error('[OAuth] ERROR - Unhandled exception in callback:', {
-      error_type: 'APPLICATION_ERROR',
-      error_name: error.name,
-      error_message: error.message,
-      error_stack: error.stack
+    // Create or update user in database
+    const user = await storage.upsertGoogleUser({
+      googleId: userProfile.id,
+      email: userProfile.email,
+      firstName: userProfile.given_name,
+      lastName: userProfile.family_name,
+      profileImageUrl: userProfile.picture,
+      googleAccessToken: tokens.access_token,
+      googleRefreshToken: tokens.refresh_token,
+      googleTokenExpiry: tokens.expiry_date ? new Date(tokens.expiry_date) : undefined,
     });
-    console.log('[OAuth] =================================');
+
+    // Set session
+    (req as any).session.userId = user.id;
+    (req as any).session.userEmail = user.email;
     
-    const errorMessage = error instanceof Error ? error.message : 'Authentication failed [LINE 179]';
-    res.redirect(`/auth/error?error=server_error&description=${encodeURIComponent(errorMessage)}`);
+    console.log('[OAuth] User authenticated successfully:', user.email);
+    
+    // Redirect to dashboard
+    res.redirect('/dashboard');
+  } catch (error) {
+    console.error('[OAuth] Error in Google callback:', error);
+    res.redirect('/?error=auth_failed');
   }
-};
+}
 
-// Sync Google Classroom data
-export const syncClassroomData = async (req: Request, res: Response) => {
+// Sync classroom data for authenticated user
+export async function syncClassroomData(req: Request, res: Response) {
   try {
-    // Check session for googleId and auth timestamp
-    const sessionGoogleId = (req as any).session?.googleId;
-    const lastAuthTime = (req as any).session?.lastAuthTime;
+    const userId = (req as any).session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const user = await storage.getUser(userId);
+    if (!user?.googleAccessToken) {
+      return res.status(400).json({ error: 'Google access token not found' });
+    }
+
+    // Sync classrooms from Google Classroom API
+    const classrooms = await googleAuth.syncUserClassrooms(userId, user.googleAccessToken);
     
-    if (!sessionGoogleId) {
-      return res.status(401).json({ error: 'User authentication required' });
-    }
-
-    // Force re-auth every 5 days
-    const fiveDays = 5 * 24 * 60 * 60 * 1000;
-    if (!lastAuthTime || (Date.now() - lastAuthTime) > fiveDays) {
-      (req as any).session.googleId = null;
-      (req as any).session.lastAuthTime = null;
-      return res.status(401).json({ error: 'Authentication expired, please sign in again' });
-    }
-
-    const user = await storage.getUserByGoogleId(sessionGoogleId);
-    
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    const userId = user.id;
-
-    if (!user || !user.googleAccessToken) {
-      return res.status(401).json({ error: 'Google authentication required' });
-    }
-
-    // Check if token is expired and refresh if needed
-    let accessToken = user.googleAccessToken;
-    if (user.googleTokenExpiry && googleAuthService.isTokenExpired(user.googleTokenExpiry)) {
-      if (user.googleRefreshToken) {
-        const refreshedTokens = await googleAuthService.refreshAccessToken(user.googleRefreshToken);
-        accessToken = refreshedTokens.access_token!;
-        
-        // Update user with new tokens
-        await storage.updateUserTokens(
-          userId,
-          accessToken,
-          refreshedTokens.refresh_token || undefined,
-          refreshedTokens.expiry_date ? new Date(refreshedTokens.expiry_date) : undefined
-        );
-      } else {
-        return res.status(401).json({ error: 'Token expired and no refresh token available' });
-      }
-    }
-
-    // Fetch classrooms from Google Classroom
-    const classroomData = await googleAuthService.getClassrooms(accessToken, user.googleRefreshToken || undefined);
-    
-    // Sync classrooms to database
-    const syncedClassrooms = await storage.syncClassrooms(userId, classroomData);
-    
-    // Sync students for each classroom
-    const classroomsWithStudents = [];
-    for (const classroom of syncedClassrooms) {
-      console.log(`Syncing students for classroom: ${classroom.name} (${classroom.googleClassId})`);
-      
-      const studentData = await googleAuthService.getStudents(
-        classroom.googleClassId,
-        accessToken,
-        user.googleRefreshToken || undefined
-      );
-      
-      console.log(`Found ${studentData.length} students from Google API for ${classroom.name}`);
-      
-      const syncedStudents = await storage.syncStudents(classroom.id, studentData);
-      
-      console.log(`Synced ${syncedStudents.length} students to database for ${classroom.name}`);
-      
-      classroomsWithStudents.push({
-        ...classroom,
-        students: syncedStudents
-      });
-    }
-
-    // Mark user as classroom connected
-    await storage.updateUserTokens(userId, accessToken, user.googleRefreshToken || undefined, user.googleTokenExpiry || undefined);
-    await storage.upsertUser({
-      ...user,
-      classroomConnected: true
-    });
-
     res.json({
       success: true,
-      classrooms: classroomsWithStudents
+      message: `Synced ${classrooms.length} classrooms`,
+      classrooms
     });
-
   } catch (error) {
-    console.error('Error syncing classroom data:', error);
+    console.error('[OAuth] Error syncing classroom data:', error);
     res.status(500).json({ error: 'Failed to sync classroom data' });
   }
-};
+}
 
-// Get user's classrooms and students
-export const getUserClassrooms = async (req: Request, res: Response) => {
+// Get user's classrooms
+export async function getUserClassrooms(req: Request, res: Response) {
   try {
-    // Check session for googleId and auth timestamp
-    const sessionGoogleId = (req as any).session?.googleId;
-    const lastAuthTime = (req as any).session?.lastAuthTime;
-    
-    if (!sessionGoogleId) {
-      return res.status(401).json({ error: 'User authentication required' });
+    const userId = (req as any).session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
     }
 
-    // Force re-auth every 5 days
-    const fiveDays = 5 * 24 * 60 * 60 * 1000;
-    if (!lastAuthTime || (Date.now() - lastAuthTime) > fiveDays) {
-      (req as any).session.googleId = null;
-      (req as any).session.lastAuthTime = null;
-      return res.status(401).json({ error: 'Authentication expired, please sign in again' });
+    const classrooms = await storage.getTeacherClassrooms(userId);
+    res.json(classrooms);
+  } catch (error) {
+    console.error('[OAuth] Error fetching user classrooms:', error);
+    res.status(500).json({ error: 'Failed to fetch classrooms' });
+  }
+}
+
+// Get current authenticated user
+export async function getCurrentUser(req: Request, res: Response) {
+  try {
+    const userId = (req as any).session?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
     }
 
-    const user = await storage.getUserByGoogleId(sessionGoogleId);
-    
+    const user = await storage.getUser(userId);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const userId = user.id;
-
-    const classrooms = await storage.getTeacherClassrooms(userId);
-    
-    // Get students for each classroom
-    const classroomsWithStudents = await Promise.all(
-      classrooms.map(async (classroom) => {
-        const students = await storage.getClassroomStudents(classroom.id);
-        return {
-          ...classroom,
-          students
-        };
-      })
-    );
-
-    res.json(classroomsWithStudents);
-  } catch (error) {
-    console.error('Error fetching classrooms:', error);
-    res.status(500).json({ error: 'Failed to fetch classrooms' });
-  }
-};
-
-// Get current user info
-export const getCurrentUser = async (req: Request, res: Response) => {
-  console.log('[Auth] Getting current user');
-  console.log('[Auth] Full session data:', (req as any).session);
-  
-  try {
-    // Check session first for googleId
-    const sessionGoogleId = (req as any).session?.googleId;
-    const lastAuthTime = (req as any).session?.lastAuthTime;
-    console.log('[Auth] Session googleId:', sessionGoogleId, 'lastAuthTime:', lastAuthTime);
-    
-    if (!sessionGoogleId) {
-      console.log('[Auth] No googleId in session, user not authenticated');
-      return res.status(401).json({ error: 'Authentication failed [LINE 341]' });
-    }
-
-    // Force re-auth every 5 days (5 * 24 * 60 * 60 * 1000 = 432000000 ms)
-    const fiveDays = 5 * 24 * 60 * 60 * 1000;
-    if (!lastAuthTime || (Date.now() - lastAuthTime) > fiveDays) {
-      console.log('[Auth] Session older than 5 days, forcing re-authentication');
-      (req as any).session.googleId = null;
-      (req as any).session.lastAuthTime = null;
-      return res.status(401).json({ error: 'Authentication failed [LINE 350]' });
-    }
-
-    console.log('[Auth] Looking up user with googleId from session:', sessionGoogleId);
-    const user = await storage.getUserByGoogleId(sessionGoogleId);
-    
-    if (!user) {
-      console.log('[Auth] User not found in database');
-      // Clear invalid session
-      (req as any).session.googleId = null;
-      (req as any).session.lastAuthTime = null;
-      return res.status(401).json({ error: 'Authentication failed [LINE 361]' });
-    }
-
-    // Check if token is expired and refresh if needed
-    if (user.googleTokenExpiry && googleAuthService.isTokenExpired(user.googleTokenExpiry)) {
-      console.log('[Auth] Access token expired, attempting refresh...');
-      
-      if (user.googleRefreshToken) {
-        try {
-          const refreshedTokens = await googleAuthService.refreshAccessToken(user.googleRefreshToken);
-          
-          console.log('[Auth] Token refresh successful');
-          
-          // Update user with new tokens
-          await storage.updateUserTokens(
-            user.id,
-            refreshedTokens.access_token!,
-            refreshedTokens.refresh_token || user.googleRefreshToken,
-            refreshedTokens.expiry_date ? new Date(refreshedTokens.expiry_date) : undefined
-          );
-          
-          console.log('[Auth] User tokens updated successfully');
-        } catch (error) {
-          console.error('[Auth] ERROR - Token refresh failed:', {
-            error_type: 'GOOGLE_API_ERROR',
-            error: error
-          });
-          
-          // Clear invalid session and require re-authentication
-          (req as any).session.googleId = null;
-          (req as any).session.lastAuthTime = null;
-          return res.status(401).json({ error: 'Authentication failed [LINE 392]' });
-        }
-      } else {
-        console.log('[Auth] No refresh token available, re-authentication required');
-        // Clear invalid session
-        (req as any).session.googleId = null;
-        (req as any).session.lastAuthTime = null;
-        return res.status(401).json({ error: 'Authentication failed [LINE 399]' });
-      }
-    }
-
-    console.log('[Auth] User authenticated successfully:', {
-      userId: user.id,
-      email: user.email,
-      classroomConnected: user.classroomConnected
-    });
-
-    // Don't send sensitive token data to client
-    const safeUser = {
-      id: user.id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      profileImageUrl: user.profileImageUrl,
-      classroomConnected: user.classroomConnected
-    };
-
+    // Return user without sensitive information
+    const { passwordHash, googleAccessToken, googleRefreshToken, ...safeUser } = user;
     res.json(safeUser);
-  } catch (error: any) {
-    console.error('[Auth] ERROR - Get current user failed:', {
-      error_type: 'APPLICATION_ERROR',
-      error_message: error.message,
-      error_stack: error.stack
-    });
-    
-    res.status(500).json({ error: 'Failed to get current user' });
+  } catch (error) {
+    console.error('[OAuth] Error fetching current user:', error);
+    res.status(500).json({ error: 'Failed to fetch user' });
   }
-};
+}

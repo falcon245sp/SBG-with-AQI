@@ -5,8 +5,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
+import GoogleOAuthLanding from "@/pages/google-oauth-landing";
 import Landing from "@/pages/landing";
-import Dashboard from "@/pages/Dashboard";
+import Dashboard from "@/pages/dashboard";
 import UploadPage from "@/pages/upload";
 import ResultsPage from "@/pages/results";
 import DocumentResults from "@/pages/document-results";
@@ -29,7 +30,11 @@ function Router() {
   return (
     <Switch>
       {isLoading || !isAuthenticated ? (
-        <Route path="/" component={Landing} />
+        <>
+          <Route path="/" component={GoogleOAuthLanding} />
+          <Route path="/landing" component={Landing} />
+          <Route component={NotFound} />
+        </>
       ) : (
         <>
           <Route path="/" component={Dashboard} />

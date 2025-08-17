@@ -1,16 +1,16 @@
 import { google } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
 
-// Google OAuth configuration
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+// Google OAuth configuration with renamed environment variables to avoid Replit conflicts
+// Using SHERPA_ prefix as suggested in Google research to avoid variable overwrites
+const GOOGLE_CLIENT_ID = process.env.SHERPA_GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET = process.env.SHERPA_GOOGLE_CLIENT_SECRET;
+const GOOGLE_REDIRECT_URI = process.env.SHERPA_GOOGLE_REDIRECT_URI;
 
-// FORCE production domain to fix env var override issue
-const FORCED_PRODUCTION_REDIRECT_URI = 'https://docu-proc-serv-jfielder1.replit.app/api/auth/google/callback';
-
-console.log('[GoogleAuth] Environment variable GOOGLE_REDIRECT_URI:', process.env.GOOGLE_REDIRECT_URI);
-console.log('[GoogleAuth] FORCED production redirect URI:', FORCED_PRODUCTION_REDIRECT_URI);
-console.log('[GoogleAuth] Development domain detected:', process.env.REPLIT_DEV_DOMAIN);
+console.log('[GoogleAuth] Using renamed environment variables to avoid Replit conflicts:');
+console.log('[GoogleAuth] SHERPA_GOOGLE_CLIENT_ID:', GOOGLE_CLIENT_ID ? 'Present' : 'Missing');
+console.log('[GoogleAuth] SHERPA_GOOGLE_CLIENT_SECRET:', GOOGLE_CLIENT_SECRET ? 'Present' : 'Missing');
+console.log('[GoogleAuth] SHERPA_GOOGLE_REDIRECT_URI:', GOOGLE_REDIRECT_URI);
 
 // OAuth scopes for basic user authentication
 const BASIC_SCOPES = [
@@ -32,13 +32,13 @@ export class GoogleAuthService {
       throw new Error('Google OAuth credentials not configured');
     }
 
-    console.log('[GoogleAuth] Creating NEW OAuth client with forced production URI:', FORCED_PRODUCTION_REDIRECT_URI);
+    console.log('[GoogleAuth] Creating OAuth client with renamed env vars URI:', GOOGLE_REDIRECT_URI);
     
-    // Create fresh OAuth client with forced production URL
+    // Create OAuth client using renamed environment variables
     this.oauth2Client = new google.auth.OAuth2(
       GOOGLE_CLIENT_ID,
       GOOGLE_CLIENT_SECRET,
-      FORCED_PRODUCTION_REDIRECT_URI
+      GOOGLE_REDIRECT_URI
     );
     
     console.log('[GoogleAuth] OAuth client created successfully');
@@ -49,50 +49,37 @@ export class GoogleAuthService {
     console.log('[GoogleAuth] Generating BASIC authorization URL with scopes:', BASIC_SCOPES);
     console.log('[GoogleAuth] BYPASSING Google auth library and building URL manually');
     
-    // BYPASS the Google auth library entirely and build URL manually
-    // This will prove if the issue is in the library or our configuration
-    const params = new URLSearchParams({
-      client_id: GOOGLE_CLIENT_ID!,
-      redirect_uri: FORCED_PRODUCTION_REDIRECT_URI,
-      response_type: 'code',
-      scope: BASIC_SCOPES.join(' '),
+    // Use Google Auth library with renamed environment variables
+    const authUrl = this.oauth2Client.generateAuthUrl({
       access_type: 'offline',
+      scope: BASIC_SCOPES,
       prompt: 'consent',
       state: state || ''
     });
     
-    const manualAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
-    console.log('[GoogleAuth] MANUALLY constructed OAuth URL:', manualAuthUrl);
-    console.log('[GoogleAuth] Manual URL redirect_uri parameter:', FORCED_PRODUCTION_REDIRECT_URI);
+    console.log('[GoogleAuth] Generated OAuth URL with renamed env vars:', authUrl);
+    console.log('[GoogleAuth] Redirect URI from renamed env var:', GOOGLE_REDIRECT_URI);
     
-    return manualAuthUrl;
+    return authUrl;
   }
 
   // Generate authorization URL for classroom connection (all scopes)
   getClassroomAuthUrl(state?: string): string {
     console.log('[GoogleAuth] Generating CLASSROOM authorization URL with scopes:', [...BASIC_SCOPES, ...CLASSROOM_SCOPES]);
-    console.log('[GoogleAuth] FORCE using redirect URI:', FORCED_PRODUCTION_REDIRECT_URI);
+    console.log('[GoogleAuth] Using renamed env var redirect URI:', GOOGLE_REDIRECT_URI);
     
-    // Create a COMPLETELY fresh OAuth client to avoid any caching issues
-    const freshOAuth2Client = new google.auth.OAuth2(
-      GOOGLE_CLIENT_ID,
-      GOOGLE_CLIENT_SECRET,
-      FORCED_PRODUCTION_REDIRECT_URI
-    );
-    
-    const authUrl = freshOAuth2Client.generateAuthUrl({
+    const authUrl = this.oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: [...BASIC_SCOPES, ...CLASSROOM_SCOPES],
       prompt: 'consent', // Force consent screen to get refresh token
-      state: state || 'classroom_auth', // Mark this as classroom auth flow
-      redirect_uri: FORCED_PRODUCTION_REDIRECT_URI // Double force the redirect URI
+      state: state || 'classroom_auth' // Mark this as classroom auth flow
     });
     console.log('[GoogleAuth] Generated classroom authorization URL:', authUrl);
     return authUrl;
   }
 
   // Exchange authorization code for tokens
-  async getTokens(code: string) {
+  async exchangeCodeForTokens(code: string) {
     console.log('[GoogleAuth] Exchanging authorization code for tokens, code length:', code.length);
     try {
       const response = await this.oauth2Client.getToken(code);
@@ -122,8 +109,8 @@ export class GoogleAuthService {
     }
   }
 
-  // Get user info from Google
-  async getUserInfo(accessToken: string) {
+  // Get user profile from Google
+  async getUserProfile(accessToken: string) {
     console.log('[GoogleAuth] Fetching user info from Google API with access token length:', accessToken.length);
     try {
       const oauth2 = google.oauth2({ version: 'v2', auth: this.oauth2Client });

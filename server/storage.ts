@@ -228,6 +228,49 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, userId));
   }
 
+  async upsertGoogleUser(userData: {
+    googleId: string;
+    email: string;
+    firstName?: string;
+    lastName?: string;
+    profileImageUrl?: string;
+    googleAccessToken?: string;
+    googleRefreshToken?: string;
+    googleTokenExpiry?: Date;
+  }): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values({
+        googleId: userData.googleId,
+        email: userData.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        profileImageUrl: userData.profileImageUrl,
+        googleAccessToken: userData.googleAccessToken,
+        googleRefreshToken: userData.googleRefreshToken,
+        googleTokenExpiry: userData.googleTokenExpiry,
+        classroomConnected: !!userData.googleAccessToken,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: users.googleId,
+        set: {
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          profileImageUrl: userData.profileImageUrl,
+          googleAccessToken: userData.googleAccessToken,
+          googleRefreshToken: userData.googleRefreshToken,
+          googleTokenExpiry: userData.googleTokenExpiry,
+          classroomConnected: !!userData.googleAccessToken,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+
   // Classroom operations
   async createClassroom(classroomData: InsertClassroom): Promise<Classroom> {
     const [classroom] = await db
