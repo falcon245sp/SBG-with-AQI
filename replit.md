@@ -72,12 +72,21 @@ Preferred communication style: Simple, everyday language.
 - **Neon Database**: Serverless PostgreSQL
 - **Google Cloud Storage**: Configured for file storage (not actively used)
 
+### Production Deployment Requirements
+- **Separate Google OAuth App**: Production requires dedicated OAuth application with .replit.app domain
+- **Unsynced Secrets**: SHERPA_* environment variables must be unsynced in production deployment
+- **API Enablement**: Google APIs (Classroom, People, OAuth) must be enabled for production OAuth app
+
 ### Authentication & Google Integration
 - **Google OAuth**: Primary authentication using renamed environment variables (SHERPA_*) to avoid Replit platform conflicts
-- **OAuth Workaround**: Successfully implemented Google OAuth with renamed env vars to prevent redirect URI overwrites
+- **OAuth Implementation**: Successfully implemented Google OAuth with renamed env vars to prevent redirect URI overwrites
 - **Google Classroom Integration**: Full OAuth-based integration with proper token management and refresh capabilities
 - **Fallback Authentication**: Traditional username/password available as secondary option
-- **Domain Configuration**: Current Replit domain (be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev) requires adding to Google OAuth app's authorized redirect URIs list in Google Cloud Console
+- **Production Secret Management**: 
+  - Development uses current domain: be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev
+  - Production requires "unsyncing" Google secrets in Replit Secrets Manager to use different OAuth application
+  - Must create separate Google OAuth application for production with .replit.app domain redirect URI
+  - Unsync SHERPA_GOOGLE_CLIENT_ID, SHERPA_GOOGLE_CLIENT_SECRET, SHERPA_GOOGLE_REDIRECT_URI in production deployment
 
 ### UI Libraries
 - **Radix UI**: Headless component primitives
