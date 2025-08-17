@@ -17,27 +17,52 @@ export const initiateGoogleAuth = async (req: Request, res: Response) => {
 
 // Handle Google OAuth callback
 export const handleGoogleCallback = async (req: Request, res: Response) => {
+  console.log('=== Google OAuth Callback Started ===');
+  console.log('Query params:', req.query);
+  
   try {
-    const { code } = req.query;
+    const { code, error: oauthError } = req.query;
+    
+    // Check for OAuth errors first
+    if (oauthError) {
+      console.error('OAuth error received:', oauthError);
+      return res.redirect(`/auth/callback?error=${encodeURIComponent(oauthError as string)}`);
+    }
     
     if (!code || typeof code !== 'string') {
-      return res.status(400).json({ error: 'Authorization code required' });
+      console.error('No authorization code received');
+      return res.redirect('/auth/callback?error=no_code');
     }
 
+    console.log('Exchanging code for tokens...');
     // Exchange code for tokens
     const tokens = await googleAuthService.getTokens(code);
+    console.log('Tokens received:', { 
+      hasAccessToken: !!tokens.access_token,
+      hasRefreshToken: !!tokens.refresh_token,
+      expiryDate: tokens.expiry_date
+    });
     
     if (!tokens.access_token) {
-      return res.status(400).json({ error: 'Failed to obtain access token' });
+      console.error('Failed to obtain access token');
+      return res.redirect('/auth/callback?error=no_access_token');
     }
 
+    console.log('Getting user info from Google...');
     // Get user info from Google
     const userInfo = await googleAuthService.getUserInfo(tokens.access_token);
+    console.log('User info received:', {
+      id: userInfo.id,
+      email: userInfo.email,
+      name: `${userInfo.given_name} ${userInfo.family_name}`
+    });
     
     if (!userInfo.id || !userInfo.email) {
-      return res.status(400).json({ error: 'Failed to obtain user information' });
+      console.error('Failed to obtain user information');
+      return res.redirect('/auth/callback?error=no_user_info');
     }
 
+    console.log('Creating/updating user in database...');
     // Create or update user in database
     const user = await storage.upsertUser({
       googleId: userInfo.id,
@@ -50,13 +75,15 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
       googleTokenExpiry: tokens.expiry_date ? new Date(tokens.expiry_date) : undefined,
       classroomConnected: false, // Will be set to true after classroom auth
     });
+    console.log('User created/updated successfully:', user.googleId);
 
     // Redirect with Google ID as URL parameter for client-side storage
     console.log('Redirecting to callback with googleId:', user.googleId);
     res.redirect(`/auth/callback?googleId=${user.googleId}`);
   } catch (error) {
     console.error('Error in Google callback:', error);
-    res.status(500).json({ error: 'Authentication failed' });
+    // Redirect to callback page with error instead of returning JSON
+    res.redirect(`/auth/callback?error=${encodeURIComponent('authentication_failed')}`);
   }
 };
 
