@@ -20,6 +20,20 @@ const sessionStore = new pgStore({
 });
 
 app.set("trust proxy", 1);
+
+// Add security headers to prevent connection issues
+app.use((req, res, next) => {
+  // Remove restrictive headers that might block OAuth redirects
+  res.removeHeader('X-Frame-Options');
+  res.removeHeader('Content-Security-Policy');
+  
+  // Set permissive headers for OAuth flow
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'no-referrer-when-downgrade');
+  
+  next();
+});
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'fallback-secret-key-for-dev',
   store: sessionStore,
@@ -29,6 +43,7 @@ app.use(session({
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     maxAge: sessionTtl,
+    sameSite: 'lax', // Allow cross-site requests for OAuth
   },
   name: 'sherpa.sid',
 }));

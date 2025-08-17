@@ -32,8 +32,15 @@ export default function GoogleOAuthLanding() {
     setIsLoading(true);
     console.log('Redirecting to Google OAuth via current domain...');
     
-    // Use current domain's OAuth endpoint
-    window.location.href = '/api/auth/google';
+    try {
+      // Force a full page navigation to avoid any SPA routing issues
+      window.location.assign('/api/auth/google');
+    } catch (error) {
+      console.error('OAuth redirect error:', error);
+      // Fallback method
+      window.open('/api/auth/google', '_top');
+      setIsLoading(false);
+    }
   };
 
   return (
