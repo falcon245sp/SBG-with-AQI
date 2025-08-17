@@ -5,48 +5,11 @@ export default function AuthCallback() {
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    // Extract Google ID from URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const googleId = urlParams.get('googleId');
-
-    console.log('AuthCallback - googleId from URL:', googleId);
-
-    if (googleId) {
-      // Store Google ID in localStorage for subsequent API calls
-      localStorage.setItem('googleId', googleId);
-      console.log('AuthCallback - stored googleId, redirecting to classroom setup');
-      // Redirect to classroom setup
-      setLocation('/auth/classroom-setup');
-    } else {
-      console.log('AuthCallback - no googleId, checking existing auth state');
-      // Check if user is already authenticated with token refresh
-      const existingGoogleId = localStorage.getItem('googleId');
-      if (existingGoogleId) {
-        console.log('AuthCallback - found existing googleId, testing with API call');
-        
-        // Test authentication by making a simple API call
-        fetch(`/api/auth/user?googleId=${existingGoogleId}`)
-          .then(response => {
-            console.log('AuthCallback - API test response status:', response.status);
-            if (response.status === 200) {
-              console.log('AuthCallback - user authenticated, redirecting to classroom setup');
-              setLocation('/auth/classroom-setup');
-            } else {
-              console.log('AuthCallback - not authenticated, redirecting to login');
-              localStorage.removeItem('googleId');
-              setLocation('/');
-            }
-          })
-          .catch(error => {
-            console.error('AuthCallback - API test failed:', error);
-            localStorage.removeItem('googleId');
-            setLocation('/');
-          });
-      } else {
-        console.log('AuthCallback - no auth state, redirecting to login');
-        setLocation('/');
-      }
-    }
+    console.log('AuthCallback - OAuth callback completed, backend should have stored session');
+    
+    // The backend OAuth callback sets the session, just redirect to classroom setup
+    // No need to handle URL parameters or localStorage anymore
+    setLocation('/auth/classroom-setup');
   }, [setLocation]);
 
   return (

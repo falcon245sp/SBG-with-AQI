@@ -115,8 +115,11 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
       email: user.email
     });
     
-    // Redirect with Google ID as URL parameter for client-side storage
-    const redirectUrl = `/auth/callback?googleId=${user.googleId}`;
+    // Store googleId in session instead of URL parameter
+    (req as any).session.googleId = user.googleId;
+    console.log('[OAuth] GoogleId stored in session:', user.googleId);
+    
+    const redirectUrl = `/auth/classroom-setup`;
     console.log('[OAuth] Authentication complete, redirecting to:', redirectUrl);
     console.log('[OAuth] =================================');
     
@@ -266,19 +269,22 @@ export const getCurrentUser = async (req: Request, res: Response) => {
   console.log('[Auth] Getting current user');
   
   try {
-    const { googleId } = req.query;
+    // Check session first for googleId
+    const sessionGoogleId = (req as any).session?.googleId;
     
-    if (!googleId || typeof googleId !== 'string') {
-      console.log('[Auth] No googleId provided');
-      return res.status(401).json({ error: 'User authentication required' });
+    if (!sessionGoogleId) {
+      console.log('[Auth] No googleId in session, user not authenticated');
+      return res.status(401).json({ error: 'Authentication failed' });
     }
 
-    console.log('[Auth] Looking up user with googleId:', googleId);
-    const user = await storage.getUserByGoogleId(googleId);
+    console.log('[Auth] Looking up user with googleId from session:', sessionGoogleId);
+    const user = await storage.getUserByGoogleId(sessionGoogleId);
     
     if (!user) {
       console.log('[Auth] User not found in database');
-      return res.status(401).json({ error: 'User authentication required' });
+      // Clear invalid session
+      (req as any).session.googleId = null;
+      return res.status(401).json({ error: 'Authentication failed' });
     }
 
     // Check if token is expired and refresh if needed
@@ -306,12 +312,15 @@ export const getCurrentUser = async (req: Request, res: Response) => {
             error: error
           });
           
-          // If refresh fails, user needs to re-authenticate
-          return res.status(401).json({ error: 'Authentication expired, please sign in again' });
+          // Clear invalid session and require re-authentication
+          (req as any).session.googleId = null;
+          return res.status(401).json({ error: 'Authentication failed' });
         }
       } else {
         console.log('[Auth] No refresh token available, re-authentication required');
-        return res.status(401).json({ error: 'Authentication expired, please sign in again' });
+        // Clear invalid session
+        (req as any).session.googleId = null;
+        return res.status(401).json({ error: 'Authentication failed' });
       }
     }
 

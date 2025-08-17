@@ -1,10 +1,36 @@
 import express, { type Request, Response, NextFunction } from "express";
+import session from "express-session";
+import { Pool } from "@neondatabase/serverless";
+import connectPg from "connect-pg-simple";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Setup session management
+const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
+const pgStore = connectPg(session);
+const sessionStore = new pgStore({
+  conString: process.env.DATABASE_URL,
+  createTableIfMissing: true,
+  ttl: sessionTtl,
+  tableName: "sessions",
+});
+
+app.set("trust proxy", 1);
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-secret-key-here',
+  store: sessionStore,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: sessionTtl,
+  },
+}));
 
 app.use((req, res, next) => {
   const start = Date.now();
