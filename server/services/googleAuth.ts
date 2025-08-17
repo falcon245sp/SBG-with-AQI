@@ -51,12 +51,12 @@ export class GoogleAuthService {
     console.log('REDIRECT_URI constant:', REDIRECT_URI);
     console.log('Environment GOOGLE_REDIRECT_URI:', process.env.GOOGLE_REDIRECT_URI);
     
+    // Try with minimal configuration to isolate issue
     const authUrl = this.oauth2Client.generateAuthUrl({
       access_type: 'offline',
-      scope: SCOPES,
+      scope: ['openid', 'email', 'profile'], // Minimal scopes for testing
       prompt: 'consent',
-      state: state,
-      include_granted_scopes: true
+      state: state
     });
     
     console.log('Final generated auth URL:', authUrl);
