@@ -4,10 +4,13 @@ import { OAuth2Client } from 'google-auth-library';
 // Google OAuth configuration
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-// Always use production domain for OAuth redirect
-const REDIRECT_URI = 'https://docu-proc-serv-jfielder1.replit.app/api/auth/google/callback';
-console.log('Using redirect URI:', REDIRECT_URI);
-console.log('Note: Hardcoded to production domain to fix OAuth callback routing');
+
+// FORCE production domain to fix env var override issue
+const FORCED_PRODUCTION_REDIRECT_URI = 'https://docu-proc-serv-jfielder1.replit.app/api/auth/google/callback';
+
+console.log('[GoogleAuth] Environment variable GOOGLE_REDIRECT_URI:', process.env.GOOGLE_REDIRECT_URI);
+console.log('[GoogleAuth] FORCED production redirect URI:', FORCED_PRODUCTION_REDIRECT_URI);
+console.log('[GoogleAuth] Development domain detected:', process.env.REPLIT_DEV_DOMAIN);
 
 // OAuth scopes for basic user authentication
 const BASIC_SCOPES = [
@@ -23,44 +26,66 @@ const CLASSROOM_SCOPES = [
 
 export class GoogleAuthService {
   private oauth2Client: OAuth2Client;
-  private readonly PRODUCTION_REDIRECT_URI = 'https://docu-proc-serv-jfielder1.replit.app/api/auth/google/callback';
 
   constructor() {
     if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
       throw new Error('Google OAuth credentials not configured');
     }
 
-    console.log('[GoogleAuth] Creating OAuth client with redirect URI:', this.PRODUCTION_REDIRECT_URI);
+    console.log('[GoogleAuth] Creating NEW OAuth client with forced production URI:', FORCED_PRODUCTION_REDIRECT_URI);
+    
+    // Create fresh OAuth client with forced production URL
     this.oauth2Client = new google.auth.OAuth2(
       GOOGLE_CLIENT_ID,
       GOOGLE_CLIENT_SECRET,
-      this.PRODUCTION_REDIRECT_URI
+      FORCED_PRODUCTION_REDIRECT_URI
     );
+    
+    console.log('[GoogleAuth] OAuth client created successfully');
   }
 
   // Generate authorization URL for basic auth (profile + email only)
   getAuthUrl(state?: string): string {
     console.log('[GoogleAuth] Generating BASIC authorization URL with scopes:', BASIC_SCOPES);
-    console.log('[GoogleAuth] Using redirect URI:', this.PRODUCTION_REDIRECT_URI);
-    const authUrl = this.oauth2Client.generateAuthUrl({
+    console.log('[GoogleAuth] BYPASSING Google auth library and building URL manually');
+    
+    // BYPASS the Google auth library entirely and build URL manually
+    // This will prove if the issue is in the library or our configuration
+    const params = new URLSearchParams({
+      client_id: GOOGLE_CLIENT_ID!,
+      redirect_uri: FORCED_PRODUCTION_REDIRECT_URI,
+      response_type: 'code',
+      scope: BASIC_SCOPES.join(' '),
       access_type: 'offline',
-      scope: BASIC_SCOPES,
-      prompt: 'consent', // Force consent screen to get refresh token
-      state: state, // Optional state parameter for CSRF protection
-      redirect_uri: this.PRODUCTION_REDIRECT_URI // Explicitly set redirect URI
+      prompt: 'consent',
+      state: state || ''
     });
-    console.log('[GoogleAuth] Generated basic authorization URL:', authUrl);
-    return authUrl;
+    
+    const manualAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+    console.log('[GoogleAuth] MANUALLY constructed OAuth URL:', manualAuthUrl);
+    console.log('[GoogleAuth] Manual URL redirect_uri parameter:', FORCED_PRODUCTION_REDIRECT_URI);
+    
+    return manualAuthUrl;
   }
 
   // Generate authorization URL for classroom connection (all scopes)
   getClassroomAuthUrl(state?: string): string {
     console.log('[GoogleAuth] Generating CLASSROOM authorization URL with scopes:', [...BASIC_SCOPES, ...CLASSROOM_SCOPES]);
-    const authUrl = this.oauth2Client.generateAuthUrl({
+    console.log('[GoogleAuth] FORCE using redirect URI:', FORCED_PRODUCTION_REDIRECT_URI);
+    
+    // Create a COMPLETELY fresh OAuth client to avoid any caching issues
+    const freshOAuth2Client = new google.auth.OAuth2(
+      GOOGLE_CLIENT_ID,
+      GOOGLE_CLIENT_SECRET,
+      FORCED_PRODUCTION_REDIRECT_URI
+    );
+    
+    const authUrl = freshOAuth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: [...BASIC_SCOPES, ...CLASSROOM_SCOPES],
       prompt: 'consent', // Force consent screen to get refresh token
-      state: state || 'classroom_auth' // Mark this as classroom auth flow
+      state: state || 'classroom_auth', // Mark this as classroom auth flow
+      redirect_uri: FORCED_PRODUCTION_REDIRECT_URI // Double force the redirect URI
     });
     console.log('[GoogleAuth] Generated classroom authorization URL:', authUrl);
     return authUrl;
