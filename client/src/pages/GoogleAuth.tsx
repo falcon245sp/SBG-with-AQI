@@ -18,7 +18,7 @@ export default function GoogleAuth() {
       console.log('GoogleAuth - found existing googleId, testing with API call');
       
       // Test authentication by making a simple API call
-      fetch('/api/auth/user')
+      fetch(`/api/auth/user?googleId=${existingGoogleId}`)
         .then(response => {
           console.log('GoogleAuth - API test response status:', response.status);
           if (response.status === 200) {

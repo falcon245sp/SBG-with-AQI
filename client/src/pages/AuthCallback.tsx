@@ -22,14 +22,13 @@ export default function AuthCallback() {
       // Check if user is already authenticated with token refresh
       const existingGoogleId = localStorage.getItem('googleId');
       if (existingGoogleId) {
-        console.log('AuthCallback - found existing googleId, checking auth status with server');
+        console.log('AuthCallback - found existing googleId, testing with API call');
         
-        fetch(`/api/auth/status?googleId=${existingGoogleId}`)
-          .then(response => response.json())
-          .then(data => {
-            console.log('AuthCallback - auth status check result:', data);
-            
-            if (data.authenticated) {
+        // Test authentication by making a simple API call
+        fetch(`/api/auth/user?googleId=${existingGoogleId}`)
+          .then(response => {
+            console.log('AuthCallback - API test response status:', response.status);
+            if (response.status === 200) {
               console.log('AuthCallback - user authenticated, redirecting to classroom setup');
               setLocation('/auth/classroom-setup');
             } else {
@@ -39,7 +38,7 @@ export default function AuthCallback() {
             }
           })
           .catch(error => {
-            console.error('AuthCallback - auth status check failed:', error);
+            console.error('AuthCallback - API test failed:', error);
             localStorage.removeItem('googleId');
             setLocation('/');
           });
