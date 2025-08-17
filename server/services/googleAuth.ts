@@ -28,13 +28,17 @@ export class GoogleAuthService {
       throw new Error('Google OAuth credentials not configured');
     }
 
-    // Force the production redirect URI
+    // Force the production redirect URI - MUST use environment variable
     const PRODUCTION_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
+    
+    if (!PRODUCTION_REDIRECT_URI) {
+      throw new Error('GOOGLE_REDIRECT_URI environment variable is required');
+    }
     
     this.oauth2Client = new google.auth.OAuth2(
       GOOGLE_CLIENT_ID,
       GOOGLE_CLIENT_SECRET,
-      PRODUCTION_REDIRECT_URI || REDIRECT_URI
+      PRODUCTION_REDIRECT_URI
     );
     
     console.log('OAuth2Client initialized with redirect URI:', PRODUCTION_REDIRECT_URI || REDIRECT_URI);
@@ -42,14 +46,23 @@ export class GoogleAuthService {
 
   // Generate authorization URL
   getAuthUrl(state?: string): string {
-    console.log('Generating OAuth URL with redirect URI:', this.oauth2Client.redirectUri || REDIRECT_URI);
-    return this.oauth2Client.generateAuthUrl({
+    console.log('=== OAuth URL Generation Debug ===');
+    console.log('OAuth2Client redirect URI:', this.oauth2Client.redirectUri);
+    console.log('REDIRECT_URI constant:', REDIRECT_URI);
+    console.log('Environment GOOGLE_REDIRECT_URI:', process.env.GOOGLE_REDIRECT_URI);
+    
+    const authUrl = this.oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: SCOPES,
-      prompt: 'consent', // Force consent screen to get refresh token
-      state: state, // Optional state parameter for CSRF protection
-      include_granted_scopes: true // Include previously granted scopes
+      prompt: 'consent',
+      state: state,
+      include_granted_scopes: true
     });
+    
+    console.log('Final generated auth URL:', authUrl);
+    console.log('Extracted redirect_uri from URL:', authUrl.match(/redirect_uri=([^&]*)/)?.[1]);
+    
+    return authUrl;
   }
 
   // Exchange authorization code for tokens

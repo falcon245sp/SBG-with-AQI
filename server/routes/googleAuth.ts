@@ -7,7 +7,15 @@ const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || `https://${process.env.R
 // Start Google OAuth flow
 export const initiateGoogleAuth = async (req: Request, res: Response) => {
   try {
+    console.log('=== OAuth Initiation Debug ===');
+    console.log('Request headers:', req.headers);
+    console.log('Request origin:', req.get('origin'));
+    console.log('Request host:', req.get('host'));
+    console.log('Full URL:', `${req.protocol}://${req.get('host')}${req.originalUrl}`);
+    
     const authUrl = googleAuthService.getAuthUrl();
+    console.log('Generated auth URL:', authUrl);
+    
     res.json({ authUrl });
   } catch (error) {
     console.error('Error initiating Google auth:', error);
