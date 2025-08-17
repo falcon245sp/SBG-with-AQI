@@ -180,8 +180,8 @@ export default function Dashboard() {
     const rubricTitle = doc.fileName.replace(/\.[^/.]+$/, '');
     
     let content = `# ${rubricTitle}\n\n## Rubric\n\n`;
-    content += `| Criteria | Full Credit | Partial Credit | Minimal Credit | No Credit |\n`;
-    content += `|----------|-------------|----------------|----------------|----------|\n`;
+    content += `| Criteria | Demonstrates Understanding | Understanding with Minor Mistakes | Demonstrates Lack of Understanding | No Attempt |\n`;
+    content += `|----------|---------------------------|----------------------------------|-----------------------------------|----------|\n`;
     
     // Sort questions numerically by question number
     const sortedResults = [...results].sort((a, b) => a.questionNumber - b.questionNumber);
@@ -263,20 +263,20 @@ export default function Dashboard() {
       let fullCredit, partialCredit, minimalCredit, noCredit;
       
       if (effectiveRigor === 'mild') {
-        fullCredit = 'Correctly solves equation with accurate solution. [FULL MASTERY]';
-        partialCredit = 'N/A';
-        minimalCredit = 'Attempts solution but with errors or no attempt. [NOT DEMONSTRATED]';
-        noCredit = 'Irrelevant work or entirely incorrect. [NOT DEMONSTRATED]';
+        fullCredit = 'Correctly solves equation with accurate solution.';
+        partialCredit = 'Solves correctly with minor computational errors.';
+        minimalCredit = 'Shows some understanding but with significant errors or gaps.';
+        noCredit = 'No work shown or completely incorrect approach.';
       } else if (effectiveRigor === 'medium') {
-        fullCredit = 'Correctly solves equation with accurate solution. [FULL MASTERY]';
-        partialCredit = 'Solves with minor errors in steps. [PARTIAL MASTERY]';
-        minimalCredit = 'Attempts solution but with significant errors. [NOT DEMONSTRATED]';
-        noCredit = 'No attempt or entirely incorrect. [NOT DEMONSTRATED]';
+        fullCredit = 'Correctly applies concepts and solves with accurate solution.';
+        partialCredit = 'Applies concepts correctly with minor errors in execution.';
+        minimalCredit = 'Shows partial understanding but lacks complete conceptual grasp.';
+        noCredit = 'No work shown or completely incorrect approach.';
       } else { // spicy
-        fullCredit = 'Correctly applies advanced concepts and solves with accurate solution. [FULL MASTERY]';
-        partialCredit = 'Solves with minor errors in steps. [PARTIAL MASTERY]';
-        minimalCredit = 'Attempts solution but with significant errors. [NOT DEMONSTRATED]';
-        noCredit = 'No attempt or entirely incorrect. [NOT DEMONSTRATED]';
+        fullCredit = 'Correctly applies advanced concepts with sophisticated reasoning.';
+        partialCredit = 'Demonstrates strong understanding with minor errors in complex steps.';
+        minimalCredit = 'Shows some conceptual understanding but lacks depth or accuracy.';
+        noCredit = 'No work shown or completely incorrect approach.';
       }
       
       tableData.push([criteria, fullCredit, partialCredit, minimalCredit, noCredit]);
@@ -285,7 +285,7 @@ export default function Dashboard() {
     // Add table
     autoTable(pdf, {
       startY: 55,
-      head: [['Criteria', 'Full Credit', 'Partial Credit', 'Minimal Credit', 'No Credit']],
+      head: [['Criteria', 'Demonstrates Understanding', 'Understanding with Minor Mistakes', 'Demonstrates Lack of Understanding', 'No Attempt']],
       body: tableData,
       theme: 'grid',
       styles: {
