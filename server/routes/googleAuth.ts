@@ -50,6 +50,7 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
     });
 
     // Redirect with Google ID as URL parameter for client-side storage
+    console.log('Redirecting to callback with googleId:', user.googleId);
     res.redirect(`/auth/callback?googleId=${user.googleId}`);
   } catch (error) {
     console.error('Error in Google callback:', error);

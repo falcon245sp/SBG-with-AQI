@@ -3,7 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useGoogleAuth } from "@/hooks/useGoogleAuth";
+import { useState } from "react";
 import NotFound from "@/pages/not-found";
 import GoogleAuth from "@/pages/GoogleAuth";
 import AuthCallback from "@/pages/AuthCallback";
@@ -15,7 +15,10 @@ import DocumentResults from "@/pages/document-results";
 import PromptConfig from "@/pages/prompt-config";
 
 function Router() {
-  const { isAuthenticated, isLoading, isClassroomConnected } = useGoogleAuth();
+  // Simple authentication check - if googleId exists in localStorage, user is authenticated
+  const googleId = localStorage.getItem('googleId');
+  const isAuthenticated = !!googleId;
+  const isLoading = false;
 
   if (isLoading) {
     return (
@@ -36,22 +39,13 @@ function Router() {
   return (
     <Switch>
       <Route path="/auth/callback" component={AuthCallback} />
-      {!isClassroomConnected ? (
-        <>
-          <Route path="/auth/classroom-setup" component={ClassroomSetup} />
-          <Route component={ClassroomSetup} />
-        </>
-      ) : (
-        <>
-          <Route path="/" component={Dashboard} />
-          <Route path="/upload" component={UploadPage} />
-          <Route path="/results" component={ResultsPage} />
-          <Route path="/results/:id" component={DocumentResults} />
-          <Route path="/prompt-config" component={PromptConfig} />
-          <Route path="/auth/classroom-setup" component={ClassroomSetup} />
-          <Route component={NotFound} />
-        </>
-      )}
+      <Route path="/auth/classroom-setup" component={ClassroomSetup} />
+      <Route path="/" component={Dashboard} />
+      <Route path="/upload" component={UploadPage} />
+      <Route path="/results" component={ResultsPage} />
+      <Route path="/results/:id" component={DocumentResults} />
+      <Route path="/prompt-config" component={PromptConfig} />
+      <Route component={NotFound} />
     </Switch>
   );
 }
