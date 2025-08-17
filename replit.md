@@ -1,12 +1,27 @@
 # Document Processing Service
 
-## Current Version: 0.7
+## Current Version: 0.8 (Development Fork)
 
 ## Overview
 
 The Document Processing Service is a full-stack web application that provides AI-powered educational document analysis. The system automatically analyzes educational documents (PDFs, Word docs, Google Docs) to identify standards alignment and determine cognitive rigor levels using multiple AI engines (ChatGPT, Grok, and Claude). The application features a RESTful API backend with Express.js and a modern React frontend with TypeScript, providing educational institutions and EdTech companies with automated document processing capabilities.
 
 ## Version History
+
+### Version 0.8 (August 17, 2025) - Standards-Based Gradebook & Automated Rubric Grading 🚧 IN DEVELOPMENT
+- **Standards-Based Gradebook**: Revolutionary gradebook tracking mastery by standard/rigor pairs
+  - Student performance tracking with mastery propagation across all units where standards appear
+  - Backwards-compatible rigor hierarchy (SPICY mastery → automatic MEDIUM + MILD mastery)
+  - 80% threshold rule: Must achieve 80% correct on standard/rigor pairs within single assessment
+  - Consecutive demonstration rule: Must demonstrate mastery on two separate, consecutive occasions
+  - Real-time mastery updates across all contexts where standards appear
+- **Automated Rubric Grading System**: Computer vision-powered grading automation
+  - QR code generation on rubrics containing encrypted test UUID + student UUID + standard mappings
+  - Teacher marks achievement levels with diagonal sharpie strokes on printed rubrics
+  - Bulk scanning of completed rubrics with automatic data extraction
+  - Computer vision processing to read marks and update gradebook automatically
+  - Audit trail preservation: All scanned rubrics stored for dispute resolution
+  - Eliminates manual data entry while preserving teacher professional judgment
 
 ### Version 0.7 (August 17, 2025) - Teacher Override System & Student Cover Sheet ✓ COMPLETE
 - **Student Facing Test Cover Sheet**: ✓ Complete redesign of export functionality
