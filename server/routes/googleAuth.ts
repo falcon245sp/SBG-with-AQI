@@ -176,7 +176,7 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
     });
     console.log('[OAuth] =================================');
     
-    const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
+    const errorMessage = error instanceof Error ? error.message : 'Authentication failed [LINE 179]';
     res.redirect(`/auth/error?error=server_error&description=${encodeURIComponent(errorMessage)}`);
   }
 };
@@ -338,7 +338,7 @@ export const getCurrentUser = async (req: Request, res: Response) => {
     
     if (!sessionGoogleId) {
       console.log('[Auth] No googleId in session, user not authenticated');
-      return res.status(401).json({ error: 'Authentication failed' });
+      return res.status(401).json({ error: 'Authentication failed [LINE 341]' });
     }
 
     // Force re-auth every 5 days (5 * 24 * 60 * 60 * 1000 = 432000000 ms)
@@ -347,7 +347,7 @@ export const getCurrentUser = async (req: Request, res: Response) => {
       console.log('[Auth] Session older than 5 days, forcing re-authentication');
       (req as any).session.googleId = null;
       (req as any).session.lastAuthTime = null;
-      return res.status(401).json({ error: 'Authentication failed' });
+      return res.status(401).json({ error: 'Authentication failed [LINE 350]' });
     }
 
     console.log('[Auth] Looking up user with googleId from session:', sessionGoogleId);
@@ -358,7 +358,7 @@ export const getCurrentUser = async (req: Request, res: Response) => {
       // Clear invalid session
       (req as any).session.googleId = null;
       (req as any).session.lastAuthTime = null;
-      return res.status(401).json({ error: 'Authentication failed' });
+      return res.status(401).json({ error: 'Authentication failed [LINE 361]' });
     }
 
     // Check if token is expired and refresh if needed
@@ -389,14 +389,14 @@ export const getCurrentUser = async (req: Request, res: Response) => {
           // Clear invalid session and require re-authentication
           (req as any).session.googleId = null;
           (req as any).session.lastAuthTime = null;
-          return res.status(401).json({ error: 'Authentication failed' });
+          return res.status(401).json({ error: 'Authentication failed [LINE 392]' });
         }
       } else {
         console.log('[Auth] No refresh token available, re-authentication required');
         // Clear invalid session
         (req as any).session.googleId = null;
         (req as any).session.lastAuthTime = null;
-        return res.status(401).json({ error: 'Authentication failed' });
+        return res.status(401).json({ error: 'Authentication failed [LINE 399]' });
       }
     }
 
