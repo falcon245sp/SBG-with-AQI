@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { googleAuthService } from '../services/googleAuth';
 import { storage } from '../storage';
 
+const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || `https://${process.env.REPLIT_DOMAINS}/api/auth/google/callback`;
+
 // Start Google OAuth flow
 export const initiateGoogleAuth = async (req: Request, res: Response) => {
   try {
