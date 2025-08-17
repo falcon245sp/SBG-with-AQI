@@ -8,8 +8,10 @@ import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
+// Use production domain instead of development domain
+const PRODUCTION_DOMAIN = "docu-proc-serv-jfielder1.replit.app";
 if (!process.env.REPLIT_DOMAINS) {
-  throw new Error("Environment variable REPLIT_DOMAINS not provided");
+  console.log("REPLIT_DOMAINS not set, using production domain:", PRODUCTION_DOMAIN);
 }
 
 const getOidcConfig = memoize(
@@ -88,8 +90,9 @@ export async function setupAuth(app: Express) {
     verified(null, user);
   };
 
-  for (const domain of process.env
-    .REPLIT_DOMAINS!.split(",")) {
+  // Use production domain for OAuth strategies
+  const domains = process.env.REPLIT_DOMAINS ? process.env.REPLIT_DOMAINS.split(",") : [PRODUCTION_DOMAIN];
+  for (const domain of domains) {
     const strategy = new Strategy(
       {
         name: `replitauth:${domain}`,

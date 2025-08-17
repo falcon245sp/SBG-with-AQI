@@ -4,8 +4,8 @@ import { OAuth2Client } from 'google-auth-library';
 // Google OAuth configuration
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-// Use environment variable if set, otherwise use Replit domain
-const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || `https://${process.env.REPLIT_DOMAINS}/api/auth/google/callback`;
+// Always use production domain for OAuth redirect
+const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'https://docu-proc-serv-jfielder1.replit.app/api/auth/google/callback';
 console.log('Using redirect URI:', REDIRECT_URI);
 
 // OAuth scopes needed
