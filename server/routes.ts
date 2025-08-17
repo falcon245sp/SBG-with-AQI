@@ -50,12 +50,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Google OAuth routes
   app.get('/api/auth/google', initiateGoogleAuth);
   app.get('/api/auth/google/callback', handleGoogleCallback);
-  app.get('/api/auth/status', checkAuthStatus);
   app.post('/api/auth/sync-classroom', syncClassroomData);
   app.get('/api/classrooms', getUserClassrooms);
 
   // Auth routes
   app.get('/api/auth/user', getCurrentUser);
+  
+  // Debug auth status endpoint
+  app.get('/api/auth/status', (req, res) => {
+    console.log('[DEBUG] Auth status endpoint hit with query:', req.query);
+    res.json({ debug: true, query: req.query, timestamp: new Date().toISOString() });
+  });
 
   // Document upload with standards focus endpoint
   app.post('/api/documents/upload-with-standards', upload.single('document'), async (req: any, res) => {

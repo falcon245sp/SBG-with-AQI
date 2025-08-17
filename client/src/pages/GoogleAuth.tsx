@@ -10,37 +10,38 @@ export default function GoogleAuth() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Check authentication status with token refresh
+  // Check if user is already authenticated
   useEffect(() => {
     console.log('GoogleAuth - checking existing auth state');
     const existingGoogleId = localStorage.getItem('googleId');
     if (existingGoogleId) {
-      console.log('GoogleAuth - found existing googleId, checking auth status with server');
+      console.log('GoogleAuth - found existing googleId, testing with API call');
       
-      // Check authentication status and refresh tokens if needed
-      fetch(`/api/auth/status?googleId=${existingGoogleId}`)
-        .then(response => response.json())
-        .then(data => {
-          console.log('GoogleAuth - auth status check result:', data);
-          
-          if (data.authenticated) {
-            console.log('GoogleAuth - user authenticated (token refreshed:', data.tokenRefreshed, '), redirecting to classroom setup');
+      // Test authentication by making a simple API call
+      fetch('/api/auth/user')
+        .then(response => {
+          console.log('GoogleAuth - API test response status:', response.status);
+          if (response.status === 200) {
+            // User is still authenticated, redirect to classroom setup
+            console.log('GoogleAuth - user is authenticated, redirecting to classroom setup');
             setLocation('/auth/classroom-setup');
-          } else if (data.requiresReauth) {
-            console.log('GoogleAuth - re-authentication required, clearing localStorage');
+          } else if (response.status === 401) {
+            // User needs to re-authenticate
+            console.log('GoogleAuth - authentication expired, clearing localStorage');
             localStorage.removeItem('googleId');
             toast({
               title: "Session Expired",
-              description: "Please sign in again to continue.",
+              description: "Your session has expired. Please sign in again.",
               variant: "default",
             });
           } else {
-            console.log('GoogleAuth - not authenticated, staying on login page');
+            // Other error, clear localStorage
+            console.log('GoogleAuth - unexpected response, clearing localStorage');
             localStorage.removeItem('googleId');
           }
         })
         .catch(error => {
-          console.error('GoogleAuth - auth status check failed:', error);
+          console.error('GoogleAuth - API test failed:', error);
           // On error, clear localStorage and stay on login page
           localStorage.removeItem('googleId');
         });
