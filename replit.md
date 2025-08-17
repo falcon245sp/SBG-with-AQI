@@ -13,7 +13,8 @@ The Document Processing Service is a full-stack web application that provides AI
   - Google OAuth 2.0 integration with proper scope management
   - Secure token storage and automatic refresh handling
   - User profile management with Google account linking
-  - Fixed redirect URI mismatch issues during development
+  - **CRITICAL FIX**: Resolved redirect URI mismatch by adding "Authorized JavaScript origins" to GCP OAuth client
+  - Fixed OAuth2Client configuration to use production redirect URI consistently
 - **Google Classroom Integration**: ✅ Automated roster and class management
   - Google Classroom API integration for course data
   - **CRITICAL FIX**: Implemented proper pagination for student roster retrieval
