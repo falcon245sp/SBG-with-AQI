@@ -87,6 +87,10 @@ Preferred communication style: Simple, everyday language.
   - Production requires "unsyncing" Google secrets in Replit Secrets Manager to use different OAuth application
   - Must create separate Google OAuth application for production with .replit.app domain redirect URI
   - Unsync SHERPA_GOOGLE_CLIENT_ID, SHERPA_GOOGLE_CLIENT_SECRET, SHERPA_GOOGLE_REDIRECT_URI in production deployment
+- **OAuth Configuration Status**: 
+  - Redirect URI: ✅ Added (https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev/api/auth/google/callback)
+  - JavaScript Origin: ✅ Added (https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev)
+  - Status: Awaiting Google Cloud propagation
 
 ### UI Libraries
 - **Radix UI**: Headless component primitives
