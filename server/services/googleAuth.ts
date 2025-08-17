@@ -28,20 +28,27 @@ export class GoogleAuthService {
       throw new Error('Google OAuth credentials not configured');
     }
 
+    // Force the production redirect URI
+    const PRODUCTION_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
+    
     this.oauth2Client = new google.auth.OAuth2(
       GOOGLE_CLIENT_ID,
       GOOGLE_CLIENT_SECRET,
-      REDIRECT_URI
+      PRODUCTION_REDIRECT_URI || REDIRECT_URI
     );
+    
+    console.log('OAuth2Client initialized with redirect URI:', PRODUCTION_REDIRECT_URI || REDIRECT_URI);
   }
 
   // Generate authorization URL
   getAuthUrl(state?: string): string {
+    console.log('Generating OAuth URL with redirect URI:', this.oauth2Client.redirectUri || REDIRECT_URI);
     return this.oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: SCOPES,
       prompt: 'consent', // Force consent screen to get refresh token
-      state: state // Optional state parameter for CSRF protection
+      state: state, // Optional state parameter for CSRF protection
+      include_granted_scopes: true // Include previously granted scopes
     });
   }
 
