@@ -28,40 +28,13 @@ export default function GoogleOAuthLanding() {
     }
   }, []);
 
-  const handleGoogleSignIn = async () => {
+  const handleGoogleSignIn = () => {
     setIsLoading(true);
-    try {
-      console.log('Starting Google OAuth flow...');
-      console.log('Frontend trying to fetch from:', window.location.origin + '/api/auth/google');
-      
-      // Get OAuth URL from backend (renamed env vars workaround)
-      const response = await fetch('/api/auth/google', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Include cookies/session data
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      console.log('Received OAuth response:', data);
-      
-      if (data.authUrl) {
-        console.log('Redirecting to Google OAuth:', data.authUrl);
-        // Redirect to Google OAuth
-        window.location.href = data.authUrl;
-      } else {
-        console.error('No auth URL received from backend');
-        setIsLoading(false);
-      }
-    } catch (error) {
-      console.error('Failed to initiate Google OAuth:', error);
-      setIsLoading(false);
-    }
+    console.log('Starting direct Google OAuth redirect...');
+    
+    // Direct redirect to the authorized domain's OAuth endpoint
+    // This bypasses the domain mismatch issue entirely
+    window.location.href = 'https://docu-proc-serv-jfielder1.replit.app/api/auth/google';
   };
 
   return (

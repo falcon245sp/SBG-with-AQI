@@ -9,9 +9,23 @@ const googleAuth = new GoogleAuthService();
 export async function initiateGoogleAuth(req: Request, res: Response) {
   try {
     console.log('[OAuth] Initiating basic Google authentication');
+    
+    // Check if this is a direct browser request or API call
+    const acceptHeader = req.get('Accept');
+    const isDirectBrowserRequest = !acceptHeader || !acceptHeader.includes('application/json');
+    
     const authUrl = googleAuth.getAuthUrl();
     console.log('[OAuth] Generated auth URL:', authUrl);
-    res.json({ authUrl });
+    
+    if (isDirectBrowserRequest) {
+      // Direct browser request - redirect to Google OAuth
+      console.log('[OAuth] Direct browser request, redirecting to Google');
+      res.redirect(authUrl);
+    } else {
+      // API request - return JSON
+      console.log('[OAuth] API request, returning JSON response');
+      res.json({ authUrl });
+    }
   } catch (error) {
     console.error('[OAuth] Error initiating Google auth:', error);
     res.status(500).json({ error: 'Failed to initiate Google authentication' });
