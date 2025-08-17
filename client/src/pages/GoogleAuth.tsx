@@ -10,6 +10,15 @@ export default function GoogleAuth() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
+  // Check if user is already authenticated on component mount
+  useEffect(() => {
+    const existingGoogleId = localStorage.getItem('googleId');
+    if (existingGoogleId) {
+      console.log('User already authenticated, redirecting to classroom setup');
+      setLocation('/auth/classroom-setup');
+    }
+  }, [setLocation]);
+
   const handleGoogleLogin = async () => {
     try {
       setIsLoading(true);
