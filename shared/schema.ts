@@ -35,9 +35,10 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
-  googleAccessToken: text("google_access_token"), // For API calls
+  googleAccessToken: text("google_access_token"), // For Classroom API calls
   googleRefreshToken: text("google_refresh_token"), // For token refresh
   googleTokenExpiry: timestamp("google_token_expiry"), // Token expiration
+  googleCredentials: text("google_credentials"), // JSON string of service account credentials
   classroomConnected: boolean("classroom_connected").default(false), // Classroom authorization status
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

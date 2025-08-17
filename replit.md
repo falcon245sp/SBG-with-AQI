@@ -72,9 +72,10 @@ Preferred communication style: Simple, everyday language.
 - **Neon Database**: Serverless PostgreSQL
 - **Google Cloud Storage**: Configured for file storage (not actively used)
 
-### Authentication
-- **Replit Auth**: OAuth-based authentication system
-- **OpenID Connect**: Standards-based authentication protocol
+### Authentication & Google Integration
+- **User Authentication**: Traditional username/password with bcryptjs hashing and PostgreSQL sessions
+- **Google Classroom Integration**: Service-to-service API calls using stored credentials (API keys or service accounts)
+- **Hybrid Approach**: Separates user auth from Google API access to avoid OAuth redirect issues
 
 ### UI Libraries
 - **Radix UI**: Headless component primitives

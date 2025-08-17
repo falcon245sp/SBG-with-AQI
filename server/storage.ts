@@ -40,6 +40,7 @@ export interface IStorage {
   createUser(user: UpsertUser): Promise<User>;
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserTokens(userId: string, accessToken: string, refreshToken?: string, expiry?: Date): Promise<void>;
+  updateUserGoogleCredentials(userId: string, credentials: any): Promise<void>;
   
   // Classroom operations
   createClassroom(classroom: InsertClassroom): Promise<Classroom>;
@@ -202,6 +203,28 @@ export class DatabaseStorage implements IStorage {
         googleTokenExpiry: expiry,
         updatedAt: new Date(),
       })
+      .where(eq(users.id, userId));
+  }
+
+  async updateUserGoogleCredentials(userId: string, credentials: any): Promise<void> {
+    const updateData: any = {
+      googleCredentials: JSON.stringify(credentials),
+      classroomConnected: true,
+      updatedAt: new Date(),
+    };
+
+    // If credentials include access token, store it
+    if (credentials.access_token) {
+      updateData.googleAccessToken = credentials.access_token;
+    }
+    
+    if (credentials.refresh_token) {
+      updateData.googleRefreshToken = credentials.refresh_token;
+    }
+
+    await db
+      .update(users)
+      .set(updateData)
       .where(eq(users.id, userId));
   }
 
