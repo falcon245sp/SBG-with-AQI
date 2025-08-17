@@ -31,11 +31,19 @@ export default function ClassroomSetup() {
   const handleSyncClassrooms = async () => {
     try {
       setIsLoading(true);
+      
+      // Get googleId from localStorage
+      const googleId = localStorage.getItem('googleId');
+      if (!googleId) {
+        throw new Error('User not authenticated');
+      }
+      
       const response = await fetch('/api/auth/sync-classroom', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ googleId }),
       });
 
       if (!response.ok) {
