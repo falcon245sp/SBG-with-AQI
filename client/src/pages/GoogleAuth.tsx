@@ -10,10 +10,14 @@ export default function GoogleAuth() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Clear any existing auth data to prevent loops
+  // Check if already authenticated to prevent unnecessary auth attempts
   useEffect(() => {
-    localStorage.removeItem('googleId');
-  }, []);
+    const existingGoogleId = localStorage.getItem('googleId');
+    if (existingGoogleId) {
+      console.log('GoogleAuth - user already authenticated, redirecting to classroom setup');
+      setLocation('/auth/classroom-setup');
+    }
+  }, [setLocation]);
 
   const handleGoogleLogin = async () => {
     try {

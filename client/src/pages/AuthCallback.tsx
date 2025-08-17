@@ -9,14 +9,25 @@ export default function AuthCallback() {
     const urlParams = new URLSearchParams(window.location.search);
     const googleId = urlParams.get('googleId');
 
+    console.log('AuthCallback - googleId from URL:', googleId);
+
     if (googleId) {
       // Store Google ID in localStorage for subsequent API calls
       localStorage.setItem('googleId', googleId);
+      console.log('AuthCallback - stored googleId, redirecting to classroom setup');
       // Redirect to classroom setup
       setLocation('/auth/classroom-setup');
     } else {
-      // If no Google ID, redirect to login
-      setLocation('/');
+      console.log('AuthCallback - no googleId, checking existing auth state');
+      // Check if user is already authenticated
+      const existingGoogleId = localStorage.getItem('googleId');
+      if (existingGoogleId) {
+        console.log('AuthCallback - found existing googleId, redirecting to classroom setup');
+        setLocation('/auth/classroom-setup');
+      } else {
+        console.log('AuthCallback - no auth state, redirecting to login');
+        setLocation('/');
+      }
     }
   }, [setLocation]);
 
