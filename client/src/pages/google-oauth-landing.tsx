@@ -167,26 +167,46 @@ export default function GoogleOAuthLanding() {
           </Card>
         </div>
 
-        <Alert className="max-w-4xl mx-auto mb-8 border-red-200 bg-red-50 dark:bg-red-900/20">
-          <AlertCircle className="h-4 w-4 text-red-600" />
-          <AlertTitle className="text-red-800 dark:text-red-100">Redirect URI Mismatch Found</AlertTitle>
-          <AlertDescription className="text-red-700 dark:text-red-200">
+        <Alert className="max-w-4xl mx-auto mb-8 border-orange-200 bg-orange-50 dark:bg-orange-900/20">
+          <AlertCircle className="h-4 w-4 text-orange-600" />
+          <AlertTitle className="text-orange-800 dark:text-orange-100">Persistent Google OAuth Connection Issue</AlertTitle>
+          <AlertDescription className="text-orange-700 dark:text-orange-200">
             <div className="space-y-4">
-              <p><strong>Issue Identified:</strong> The redirect URI in your Google OAuth application doesn't match the current domain.</p>
+              <p><strong>Status:</strong> Despite correct redirect URI generation, Google continues to refuse the connection.</p>
               
               <div className="bg-yellow-100 dark:bg-yellow-800 p-3 rounded">
-                <p><strong>Current Domain:</strong> <code className="bg-white dark:bg-gray-700 px-1 rounded text-xs">be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev</code></p>
-                <p><strong>OAuth Redirect URI:</strong> <code className="bg-white dark:bg-gray-700 px-1 rounded text-xs">docu-proc-serv-jfielder1.replit.app</code></p>
+                <p><strong>Current Configuration:</strong></p>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li>Generated redirect URI: <code className="bg-white dark:bg-gray-700 px-1 rounded text-xs">https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev/api/auth/google/callback</code></li>
+                  <li>JavaScript origin configured</li>
+                  <li>SHERPA_ environment variables working</li>
+                  <li>OAuth URL generation successful</li>
+                </ul>
               </div>
               
               <div className="bg-blue-100 dark:bg-blue-800 p-3 rounded">
-                <p><strong>Fix Required:</strong></p>
+                <p><strong>Alternative Solutions:</strong></p>
                 <ol className="list-decimal list-inside space-y-1 text-sm">
-                  <li>Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" className="underline">Google Cloud Console → Credentials</a></li>
-                  <li>Edit your OAuth 2.0 Client ID</li>
-                  <li>Update the redirect URI to: <code className="bg-green-100 dark:bg-green-800 px-1 rounded">https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev/api/auth/google/callback</code></li>
-                  <li>Save the changes</li>
+                  <li><strong>Use Traditional Login</strong> - Username/password authentication is available</li>
+                  <li><strong>Replit Auth Integration</strong> - Consider using Replit's built-in authentication</li>
+                  <li><strong>Manual OAuth Update</strong> - Ensure the Google Cloud Console redirect URI exactly matches the current domain</li>
                 </ol>
+              </div>
+              
+              <div className="mt-4">
+                <Button 
+                  onClick={() => window.location.href = '/auth/login'} 
+                  variant="outline" 
+                  className="mr-2"
+                >
+                  Use Traditional Login
+                </Button>
+                <Button 
+                  onClick={() => window.location.href = '/api/login'} 
+                  variant="outline"
+                >
+                  Try Replit Auth
+                </Button>
               </div>
             </div>
           </AlertDescription>
