@@ -3,9 +3,30 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CheckCircle, AlertCircle, BookOpen, Shield, Users, BarChart3 } from "lucide-react";
+import { useLocation } from "wouter";
 
 export default function GoogleOAuthLanding() {
   const [isLoading, setIsLoading] = useState(false);
+  const [authStatus, setAuthStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [location] = useLocation();
+
+  // Check for auth success from URL params
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const authParam = urlParams.get('auth');
+    const userParam = urlParams.get('user');
+    
+    if (authParam === 'success' && userParam) {
+      console.log('OAuth authentication successful for user:', userParam);
+      setAuthStatus('success');
+      // Clean up URL
+      window.history.replaceState({}, document.title, '/');
+      // Redirect to dashboard after showing success message
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 2000);
+    }
+  }, []);
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
@@ -55,6 +76,17 @@ export default function GoogleOAuthLanding() {
             Your AI-powered guide for educational standards and assessment
           </p>
         </div>
+
+        {/* Authentication Success Alert */}
+        {authStatus === 'success' && (
+          <Alert className="mb-8 max-w-2xl mx-auto border-green-200 bg-green-50 dark:bg-green-900/20">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <AlertTitle className="text-green-800 dark:text-green-100">Authentication Successful!</AlertTitle>
+            <AlertDescription className="text-green-700 dark:text-green-200">
+              You have been successfully logged in. Redirecting to your dashboard...
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto mb-12">
           <Card>

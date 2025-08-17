@@ -5,12 +5,17 @@ import { OAuth2Client } from 'google-auth-library';
 // Using SHERPA_ prefix as suggested in Google research to avoid variable overwrites
 const GOOGLE_CLIENT_ID = process.env.SHERPA_GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.SHERPA_GOOGLE_CLIENT_SECRET;
-const GOOGLE_REDIRECT_URI = process.env.SHERPA_GOOGLE_REDIRECT_URI;
+
+// Use the redirect URI that's authorized in Google OAuth app config
+// Google OAuth requires pre-authorized redirect URIs for security
+const GOOGLE_REDIRECT_URI = process.env.SHERPA_GOOGLE_REDIRECT_URI || 
+  'https://docu-proc-serv-jfielder1.replit.app/api/auth/google/callback';
 
 console.log('[GoogleAuth] Using renamed environment variables to avoid Replit conflicts:');
 console.log('[GoogleAuth] SHERPA_GOOGLE_CLIENT_ID:', GOOGLE_CLIENT_ID ? 'Present' : 'Missing');
 console.log('[GoogleAuth] SHERPA_GOOGLE_CLIENT_SECRET:', GOOGLE_CLIENT_SECRET ? 'Present' : 'Missing');
-console.log('[GoogleAuth] SHERPA_GOOGLE_REDIRECT_URI:', GOOGLE_REDIRECT_URI);
+console.log('[GoogleAuth] REPLIT_DOMAINS:', process.env.REPLIT_DOMAINS);
+console.log('[GoogleAuth] Authorized redirect URI:', GOOGLE_REDIRECT_URI);
 
 // OAuth scopes for basic user authentication
 const BASIC_SCOPES = [

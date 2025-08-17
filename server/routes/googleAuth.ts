@@ -76,8 +76,18 @@ export async function handleGoogleCallback(req: Request, res: Response) {
     
     console.log('[OAuth] User authenticated successfully:', user.email);
     
-    // Redirect to dashboard
-    res.redirect('/dashboard');
+    // Check if this is the authorized domain or a different domain
+    const currentHost = req.get('host');
+    const authorizedHost = 'docu-proc-serv-jfielder1.replit.app';
+    
+    if (currentHost !== authorizedHost) {
+      // Cross-domain callback - redirect to the frontend with success message
+      console.log('[OAuth] Cross-domain callback, redirecting to frontend with auth success');
+      res.redirect('/?auth=success&user=' + encodeURIComponent(user.email || ''));
+    } else {
+      // Same domain - redirect to dashboard
+      res.redirect('/dashboard');
+    }
   } catch (error) {
     console.error('[OAuth] Error in Google callback:', error);
     res.redirect('/auth/error?error=auth_failed&description=Authentication process failed');
