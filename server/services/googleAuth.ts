@@ -4,7 +4,8 @@ import { OAuth2Client } from 'google-auth-library';
 // Google OAuth configuration
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || `https://${process.env.REPLIT_DOMAINS}/api/auth/google/callback`;
+// Force use of current Replit domain until environment variable propagates
+const REDIRECT_URI = `https://${process.env.REPLIT_DOMAINS}/api/auth/google/callback`;
 
 // OAuth scopes needed
 const SCOPES = [
