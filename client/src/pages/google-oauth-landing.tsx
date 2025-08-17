@@ -268,6 +268,17 @@ export default function GoogleOAuthLanding() {
               <span>{isLoading ? "Signing in..." : "Sign in with Google (JavaScript)"}</span>
             </Button>
 
+            <Button 
+              onClick={() => {
+                const url = `https://accounts.google.com/o/oauth2/v2/auth?access_type=offline&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email&prompt=select_account&state=&include_granted_scopes=true&response_type=code&client_id=1064115232790-0rbc41hch5df1vtctncbfm1aft5241a0.apps.googleusercontent.com&redirect_uri=https%3A%2F%2Fbe365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev%2Fapi%2Fauth%2Fgoogle%2Fcallback`;
+                window.open(url, '_blank', 'width=500,height=600');
+              }}
+              variant="outline" 
+              className="w-full mb-4"
+            >
+              Open Google OAuth in New Window
+            </Button>
+
             <div className="text-center">
               <p className="text-sm text-gray-500">
                 Secure authentication powered by Google OAuth
