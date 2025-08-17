@@ -91,7 +91,7 @@ export const syncClassroomData = async (req: Request, res: Response) => {
         await storage.updateUserTokens(
           userId,
           accessToken,
-          refreshedTokens.refresh_token,
+          refreshedTokens.refresh_token || undefined,
           refreshedTokens.expiry_date ? new Date(refreshedTokens.expiry_date) : undefined
         );
       } else {
