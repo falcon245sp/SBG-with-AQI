@@ -77,7 +77,7 @@ Preferred communication style: Simple, everyday language.
 - **OAuth Workaround**: Successfully implemented Google OAuth with renamed env vars to prevent redirect URI overwrites
 - **Google Classroom Integration**: Full OAuth-based integration with proper token management and refresh capabilities
 - **Fallback Authentication**: Traditional username/password available as secondary option
-- **Domain Configuration Issue**: Current Replit domain (be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev) needs to be added to Google OAuth app's authorized redirect URIs for OAuth to function properly
+- **Domain Configuration**: Current Replit domain (be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev) requires adding to Google OAuth app's authorized redirect URIs list in Google Cloud Console
 
 ### UI Libraries
 - **Radix UI**: Headless component primitives
