@@ -44,8 +44,8 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  await setupAuth(app);
+  // Note: Session middleware is now setup in index.ts
+  // Auth middleware removed to prevent conflicts
 
   // Google OAuth routes
   app.get('/api/auth/google', initiateGoogleAuth);

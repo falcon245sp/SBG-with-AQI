@@ -57,74 +57,84 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
 
     console.log('[OAuth] Authorization code received, proceeding with token exchange...');
     
-    // Exchange code for tokens
-    const tokens = await googleAuthService.getTokens(code);
+    try {
+      // Exchange code for tokens
+      const tokens = await googleAuthService.getTokens(code);
+      
+      if (!tokens.access_token) {
+        console.error('[OAuth] ERROR - No access token in response:', {
+          error_type: 'APPLICATION_ERROR',
+          tokens_received: Object.keys(tokens)
+        });
+        return res.redirect('/auth/error?error=no_access_token&description=Failed to obtain access token');
+      }
+
+      console.log('[OAuth] Token exchange successful, fetching user information...');
+      
+      // Get user info from Google
+      const userInfo = await googleAuthService.getUserInfo(tokens.access_token);
     
-    if (!tokens.access_token) {
-      console.error('[OAuth] ERROR - No access token in response:', {
-        error_type: 'APPLICATION_ERROR',
-        tokens_received: Object.keys(tokens)
+      if (!userInfo.id || !userInfo.email) {
+        console.error('[OAuth] ERROR - Incomplete user information:', {
+          error_type: 'APPLICATION_ERROR',
+          has_id: !!userInfo.id,
+          has_email: !!userInfo.email,
+          userinfo_keys: Object.keys(userInfo)
+        });
+        return res.redirect('/auth/error?error=no_user_info&description=Failed to obtain complete user information');
+      }
+
+      console.log('[OAuth] User information retrieved, saving to database...');
+      
+      // Create or update user in database
+      const userData = {
+        googleId: userInfo.id,
+        email: userInfo.email,
+        firstName: userInfo.given_name || '',
+        lastName: userInfo.family_name || '',
+        profileImageUrl: userInfo.picture,
+        googleAccessToken: tokens.access_token,
+        googleRefreshToken: tokens.refresh_token,
+        googleTokenExpiry: tokens.expiry_date ? new Date(tokens.expiry_date) : undefined,
+        classroomConnected: false, // Will be set to true after classroom auth
+      };
+      
+      console.log('[OAuth] Attempting to upsert user with data:', {
+        googleId: userData.googleId,
+        email: userData.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        has_access_token: !!userData.googleAccessToken,
+        has_refresh_token: !!userData.googleRefreshToken
       });
-      return res.redirect('/auth/error?error=no_access_token&description=Failed to obtain access token');
-    }
 
-    console.log('[OAuth] Token exchange successful, fetching user information...');
-    
-    // Get user info from Google
-    const userInfo = await googleAuthService.getUserInfo(tokens.access_token);
-    
-    if (!userInfo.id || !userInfo.email) {
-      console.error('[OAuth] ERROR - Incomplete user information:', {
-        error_type: 'APPLICATION_ERROR',
-        has_id: !!userInfo.id,
-        has_email: !!userInfo.email,
-        userinfo_keys: Object.keys(userInfo)
+      const user = await storage.upsertUser(userData);
+
+      console.log('[OAuth] User upserted successfully:', {
+        database_id: user.id,
+        google_id: user.googleId,
+        email: user.email
       });
-      return res.redirect('/auth/error?error=no_user_info&description=Failed to obtain complete user information');
+      
+      // Store googleId and timestamp in session instead of URL parameter
+      console.log('[OAuth] Session before storing data:', (req as any).session);
+      (req as any).session.googleId = user.googleId;
+      (req as any).session.lastAuthTime = Date.now();
+      console.log('[OAuth] GoogleId and auth timestamp stored in session:', user.googleId);
+      console.log('[OAuth] Session after storing data:', (req as any).session);
+    
+      const redirectUrl = `/auth/classroom-setup`;
+      console.log('[OAuth] Authentication complete, redirecting to:', redirectUrl);
+      console.log('[OAuth] =================================');
+      
+      res.redirect(redirectUrl);
+    } catch (tokenError) {
+      console.error('[OAuth] ERROR - Token exchange failed:', {
+        error_type: 'GOOGLE_API_ERROR',
+        error: tokenError
+      });
+      return res.redirect('/auth/error?error=token_exchange_failed&description=Failed to exchange authorization code for tokens');
     }
-
-    console.log('[OAuth] User information retrieved, saving to database...');
-    
-    // Create or update user in database
-    const userData = {
-      googleId: userInfo.id,
-      email: userInfo.email,
-      firstName: userInfo.given_name || '',
-      lastName: userInfo.family_name || '',
-      profileImageUrl: userInfo.picture,
-      googleAccessToken: tokens.access_token,
-      googleRefreshToken: tokens.refresh_token,
-      googleTokenExpiry: tokens.expiry_date ? new Date(tokens.expiry_date) : undefined,
-      classroomConnected: false, // Will be set to true after classroom auth
-    };
-    
-    console.log('[OAuth] Attempting to upsert user with data:', {
-      googleId: userData.googleId,
-      email: userData.email,
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      has_access_token: !!userData.googleAccessToken,
-      has_refresh_token: !!userData.googleRefreshToken
-    });
-
-    const user = await storage.upsertUser(userData);
-
-    console.log('[OAuth] User upserted successfully:', {
-      database_id: user.id,
-      google_id: user.googleId,
-      email: user.email
-    });
-    
-    // Store googleId and timestamp in session instead of URL parameter
-    (req as any).session.googleId = user.googleId;
-    (req as any).session.lastAuthTime = Date.now();
-    console.log('[OAuth] GoogleId and auth timestamp stored in session:', user.googleId);
-    
-    const redirectUrl = `/auth/classroom-setup`;
-    console.log('[OAuth] Authentication complete, redirecting to:', redirectUrl);
-    console.log('[OAuth] =================================');
-    
-    res.redirect(redirectUrl);
   } catch (error: any) {
     console.error('[OAuth] ERROR - Unhandled exception in callback:', {
       error_type: 'APPLICATION_ERROR',
@@ -286,11 +296,13 @@ export const getUserClassrooms = async (req: Request, res: Response) => {
 // Get current user info
 export const getCurrentUser = async (req: Request, res: Response) => {
   console.log('[Auth] Getting current user');
+  console.log('[Auth] Full session data:', (req as any).session);
   
   try {
     // Check session first for googleId
     const sessionGoogleId = (req as any).session?.googleId;
     const lastAuthTime = (req as any).session?.lastAuthTime;
+    console.log('[Auth] Session googleId:', sessionGoogleId, 'lastAuthTime:', lastAuthTime);
     
     if (!sessionGoogleId) {
       console.log('[Auth] No googleId in session, user not authenticated');

@@ -24,12 +24,13 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key-here',
   store: sessionStore,
   resave: false,
-  saveUninitialized: false,
+  saveUninitialized: true, // Changed to true for debugging
   cookie: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: false, // Set to false for development, should be true in production
     maxAge: sessionTtl,
   },
+  name: 'sherpa.sid', // Custom session name for debugging
 }));
 
 app.use((req, res, next) => {
