@@ -70,7 +70,7 @@ export default function Dashboard() {
   });
 
   // Export functionality
-  const handleExport = async (documentId: string, format: 'rubric-markdown' | 'rubric-pdf' | 'csv' | 'standards-summary') => {
+  const handleExport = async (documentId: string, format: 'rubric-markdown' | 'rubric-pdf' | 'csv' | 'student-cover-sheet') => {
     try {
       // Fetch document results first
       const response = await fetch(`/api/documents/${documentId}/results`);
@@ -91,8 +91,8 @@ export default function Dashboard() {
         case 'csv':
           generateCSVExport(document, results);
           break;
-        case 'standards-summary':
-          generateStandardsSummary(document, results);
+        case 'student-cover-sheet':
+          generateStudentCoverSheet(document, results);
           break;
       }
     } catch (error: any) {
@@ -153,13 +153,89 @@ export default function Dashboard() {
     });
   };
 
-  const generateStandardsSummary = (doc: any, results: any[]) => {
-    const summaryContent = generateStandardsSummaryContent(doc, results);
-    downloadFile(summaryContent, `${doc.fileName.replace(/\.[^/.]+$/, '')}_standards_summary.txt`, 'text/plain');
+  const generateStudentCoverSheet = (doc: any, results: any[]) => {
+    const pdf = new jsPDF('portrait', 'mm', 'a4');
+    
+    // Header
+    pdf.setFontSize(16);
+    pdf.text(`Test Cover Sheet: ${doc.fileName.replace(/\.[^/.]+$/, '')}`, 20, 20);
+    
+    pdf.setFontSize(12);
+    pdf.text('What to expect on this assessment:', 20, 35);
+    
+    // Prepare table data
+    const tableData: string[][] = [];
+    
+    // Sort questions numerically
+    const sortedResults = [...results].sort((a, b) => a.questionNumber - b.questionNumber);
+    
+    sortedResults.forEach((question) => {
+      const effectiveStandards = question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [];
+      const effectiveRigor = question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild';
+      
+      const primaryStandard = effectiveStandards[0]?.code || 'No Standard';
+      const rigorText = effectiveRigor === 'mild' ? 'MILD (*)' : 
+                       effectiveRigor === 'medium' ? 'MEDIUM (**)' : 'SPICY (***)';
+      
+      // Generate generic topic description based on standard
+      let topicDescription = 'Mathematical concepts and problem solving';
+      if (primaryStandard.includes('A-REI')) {
+        topicDescription = 'Solving equations and inequalities';
+      } else if (primaryStandard.includes('A-APR')) {
+        topicDescription = 'Arithmetic with polynomials and rational expressions';
+      } else if (primaryStandard.includes('A-SSE')) {
+        topicDescription = 'Seeing structure in expressions';
+      } else if (primaryStandard.includes('F-')) {
+        topicDescription = 'Functions and function notation';
+      } else if (primaryStandard.includes('G-')) {
+        topicDescription = 'Geometric relationships and proofs';
+      } else if (primaryStandard.includes('S-')) {
+        topicDescription = 'Statistics and probability';
+      }
+      
+      tableData.push([
+        question.questionNumber.toString(),
+        primaryStandard,
+        topicDescription,
+        rigorText
+      ]);
+    });
+    
+    // Add table
+    autoTable(pdf, {
+      startY: 45,
+      head: [['Question', 'Standard', 'Topic', 'Rigor Level']],
+      body: tableData,
+      theme: 'grid',
+      styles: {
+        fontSize: 10,
+        cellPadding: 3,
+      },
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: 255,
+        fontStyle: 'bold'
+      },
+      columnStyles: {
+        0: { cellWidth: 25 },  // Question
+        1: { cellWidth: 40 },  // Standard
+        2: { cellWidth: 90 },  // Topic
+        3: { cellWidth: 35 }   // Rigor Level
+      },
+      margin: { top: 45, left: 20, right: 20 }
+    });
+    
+    // Footer note
+    const finalY = (pdf as any).lastAutoTable.finalY + 20;
+    pdf.setFontSize(9);
+    pdf.text('Rigor Levels: * = Basic recall/computation, ** = Application/analysis, *** = Strategic thinking/reasoning', 20, finalY);
+    
+    // Save
+    pdf.save(`${doc.fileName.replace(/\.[^/.]+$/, '')}_cover_sheet.pdf`);
     
     toast({
-      title: "Standards Summary Generated",
-      description: "Standards summary downloaded successfully",
+      title: "Cover Sheet Generated",
+      description: "Student-facing test cover sheet created successfully",
       variant: "default",
     });
   };
@@ -317,71 +393,7 @@ export default function Dashboard() {
     });
   };
 
-  const generateStandardsSummaryContent = (doc: any, results: any[]) => {
-    const summaryTitle = `Standards Coverage Summary: ${doc.fileName}`;
-    const generatedDate = new Date().toLocaleDateString();
-    
-    let content = `${summaryTitle}\n`;
-    content += `Generated: ${generatedDate}\n`;
-    content += `Source: Standards Sherpa with Teacher Overrides\n`;
-    content += `\n${"=".repeat(60)}\n\n`;
-    
-    const standardsMap = new Map<string, {
-      code: string;
-      description: string;
-      questions: number[];
-      rigorLevels: string[];
-      teacherModified: boolean[];
-    }>();
-    
-    results.forEach(question => {
-      const effectiveStandards = question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [];
-      const effectiveRigor = question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild';
-      const isTeacherModified = !!question.teacherOverride;
-      
-      effectiveStandards.forEach((standard: any) => {
-        if (!standardsMap.has(standard.code)) {
-          standardsMap.set(standard.code, {
-            code: standard.code,
-            description: standard.description,
-            questions: [],
-            rigorLevels: [],
-            teacherModified: []
-          });
-        }
-        const entry = standardsMap.get(standard.code)!;
-        entry.questions.push(question.questionNumber);
-        entry.rigorLevels.push(effectiveRigor);
-        entry.teacherModified.push(isTeacherModified);
-      });
-    });
-    
-    content += `STANDARDS COVERAGE SUMMARY\n`;
-    content += `Total Questions: ${results.length}\n`;
-    content += `Standards Addressed: ${standardsMap.size}\n`;
-    
-    const teacherOverrides = results.filter(q => q.teacherOverride).length;
-    if (teacherOverrides > 0) {
-      content += `Teacher Overrides Applied: ${teacherOverrides} questions\n`;
-    }
-    
-    content += `\n${"=".repeat(60)}\n\n`;
-    
-    Array.from(standardsMap.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .forEach(([code, data]) => {
-        const modifiedCount = data.teacherModified.filter(m => m).length;
-        const modifiedIndicator = modifiedCount > 0 ? ` (${modifiedCount} teacher-modified)` : '';
-        
-        content += `${data.code}${modifiedIndicator}\n`;
-        content += `Description: ${data.description}\n`;
-        content += `Questions: ${data.questions.join(', ')}\n`;
-        content += `Rigor Distribution: ${data.rigorLevels.join(', ')}\n`;
-        content += `${"-".repeat(40)}\n\n`;
-      });
-    
-    return content;
-  };
+
 
   const handleFileUpload = async (files: File[]) => {
     if (files.length === 0) {
@@ -722,9 +734,9 @@ export default function Dashboard() {
                                           <Download className="w-4 h-4 mr-2" />
                                           CSV Data
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleExport(doc.id, 'standards-summary')}>
+                                        <DropdownMenuItem onClick={() => handleExport(doc.id, 'student-cover-sheet')}>
                                           <GraduationCap className="w-4 h-4 mr-2" />
-                                          Standards Summary
+                                          Student Facing Test Cover Sheet
                                         </DropdownMenuItem>
                                       </DropdownMenuContent>
                                     </DropdownMenu>
