@@ -109,13 +109,19 @@ export const syncClassroomData = async (req: Request, res: Response) => {
     // Sync students for each classroom
     const classroomsWithStudents = [];
     for (const classroom of syncedClassrooms) {
+      console.log(`Syncing students for classroom: ${classroom.name} (${classroom.googleClassId})`);
+      
       const studentData = await googleAuthService.getStudents(
         classroom.googleClassId,
         accessToken,
         user.googleRefreshToken || undefined
       );
       
+      console.log(`Found ${studentData.length} students from Google API for ${classroom.name}`);
+      
       const syncedStudents = await storage.syncStudents(classroom.id, studentData);
+      
+      console.log(`Synced ${syncedStudents.length} students to database for ${classroom.name}`);
       
       classroomsWithStudents.push({
         ...classroom,
