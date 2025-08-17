@@ -9,7 +9,7 @@ import GoogleAuth from "@/pages/GoogleAuth";
 import AuthCallback from "@/pages/AuthCallback";
 import AuthError from "@/pages/AuthError";
 import ClassroomSetup from "@/pages/ClassroomSetup";
-import Dashboard from "@/pages/dashboard";
+import Dashboard from "@/pages/Dashboard";
 import UploadPage from "@/pages/upload";
 import ResultsPage from "@/pages/results";
 import DocumentResults from "@/pages/document-results";
@@ -59,6 +59,7 @@ function Router() {
       ) : (
         <>
           <Route path="/auth/classroom-setup" component={ClassroomSetup} />
+          <Route path="/dashboard" component={Dashboard} />
           <Route path="/" component={Dashboard} />
           <Route path="/upload" component={UploadPage} />
           <Route path="/results" component={ResultsPage} />

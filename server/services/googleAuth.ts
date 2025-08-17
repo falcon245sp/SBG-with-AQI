@@ -8,10 +8,14 @@ const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'https://docu-proc-serv-jfielder1.replit.app/api/auth/google/callback';
 console.log('Using redirect URI:', REDIRECT_URI);
 
-// OAuth scopes needed
-const SCOPES = [
+// OAuth scopes for basic user authentication
+const BASIC_SCOPES = [
   'https://www.googleapis.com/auth/userinfo.profile',
-  'https://www.googleapis.com/auth/userinfo.email',
+  'https://www.googleapis.com/auth/userinfo.email'
+];
+
+// Additional scopes for classroom access
+const CLASSROOM_SCOPES = [
   'https://www.googleapis.com/auth/classroom.courses.readonly',
   'https://www.googleapis.com/auth/classroom.rosters.readonly'
 ];
@@ -31,16 +35,29 @@ export class GoogleAuthService {
     );
   }
 
-  // Generate authorization URL
+  // Generate authorization URL for basic auth (profile + email only)
   getAuthUrl(state?: string): string {
-    console.log('[GoogleAuth] Generating authorization URL with scopes:', SCOPES);
+    console.log('[GoogleAuth] Generating BASIC authorization URL with scopes:', BASIC_SCOPES);
     const authUrl = this.oauth2Client.generateAuthUrl({
       access_type: 'offline',
-      scope: SCOPES,
+      scope: BASIC_SCOPES,
       prompt: 'consent', // Force consent screen to get refresh token
       state: state // Optional state parameter for CSRF protection
     });
-    console.log('[GoogleAuth] Generated authorization URL:', authUrl);
+    console.log('[GoogleAuth] Generated basic authorization URL:', authUrl);
+    return authUrl;
+  }
+
+  // Generate authorization URL for classroom connection (all scopes)
+  getClassroomAuthUrl(state?: string): string {
+    console.log('[GoogleAuth] Generating CLASSROOM authorization URL with scopes:', [...BASIC_SCOPES, ...CLASSROOM_SCOPES]);
+    const authUrl = this.oauth2Client.generateAuthUrl({
+      access_type: 'offline',
+      scope: [...BASIC_SCOPES, ...CLASSROOM_SCOPES],
+      prompt: 'consent', // Force consent screen to get refresh token
+      state: state || 'classroom_auth' // Mark this as classroom auth flow
+    });
+    console.log('[GoogleAuth] Generated classroom authorization URL:', authUrl);
     return authUrl;
   }
 

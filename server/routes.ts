@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { 
   initiateGoogleAuth, 
+  initiateClassroomAuth,
   handleGoogleCallback, 
   syncClassroomData,
   getUserClassrooms,
@@ -49,6 +50,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Google OAuth routes
   app.get('/api/auth/google', initiateGoogleAuth);
+  app.get('/api/auth/google/classroom', initiateClassroomAuth);
   app.get('/api/auth/google/callback', handleGoogleCallback);
   app.post('/api/auth/sync-classroom', syncClassroomData);
   app.get('/api/classrooms', getUserClassrooms);

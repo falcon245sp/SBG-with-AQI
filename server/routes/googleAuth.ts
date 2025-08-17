@@ -2,12 +2,12 @@ import { Request, Response } from 'express';
 import { googleAuthService } from '../services/googleAuth';
 import { storage } from '../storage';
 
-// Start Google OAuth flow
+// Start Google OAuth flow (BASIC auth - profile + email only)
 export const initiateGoogleAuth = async (req: Request, res: Response) => {
-  console.log('[OAuth] Client requesting Google OAuth initiation from IP:', req.ip);
+  console.log('[OAuth] Client requesting BASIC Google OAuth initiation from IP:', req.ip);
   try {
     const authUrl = googleAuthService.getAuthUrl();
-    console.log('[OAuth] Successfully generated auth URL, responding to client');
+    console.log('[OAuth] Successfully generated BASIC auth URL, responding to client');
     res.json({ authUrl });
   } catch (error: any) {
     console.error('[OAuth] ERROR - Failed to initiate Google auth:', {
@@ -16,6 +16,30 @@ export const initiateGoogleAuth = async (req: Request, res: Response) => {
       error_stack: error.stack
     });
     res.status(500).json({ error: 'Failed to initiate authentication' });
+  }
+};
+
+// Start Google Classroom OAuth flow (CLASSROOM auth - additional scopes)
+export const initiateClassroomAuth = async (req: Request, res: Response) => {
+  console.log('[OAuth] Client requesting CLASSROOM Google OAuth initiation from IP:', req.ip);
+  
+  // Check if user is already authenticated with basic Google auth
+  const sessionGoogleId = (req as any).session?.googleId;
+  if (!sessionGoogleId) {
+    return res.status(401).json({ error: 'User must be logged in first before connecting classroom' });
+  }
+  
+  try {
+    const authUrl = googleAuthService.getClassroomAuthUrl('classroom_auth');
+    console.log('[OAuth] Successfully generated CLASSROOM auth URL, responding to client');
+    res.json({ authUrl });
+  } catch (error: any) {
+    console.error('[OAuth] ERROR - Failed to initiate classroom auth:', {
+      error_type: 'APPLICATION_ERROR',
+      error_message: error.message,
+      error_stack: error.stack
+    });
+    res.status(500).json({ error: 'Failed to initiate classroom authentication' });
   }
 };
 
@@ -96,7 +120,7 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
         googleAccessToken: tokens.access_token,
         googleRefreshToken: tokens.refresh_token,
         googleTokenExpiry: tokens.expiry_date ? new Date(tokens.expiry_date) : undefined,
-        classroomConnected: false, // Will be set to true after classroom auth
+        classroomConnected: (state === 'classroom_auth'), // True if this is classroom auth flow
       };
       
       console.log('[OAuth] Attempting to upsert user with data:', {
@@ -123,8 +147,11 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
       console.log('[OAuth] GoogleId and auth timestamp stored in session:', user.googleId);
       console.log('[OAuth] Session after storing data:', (req as any).session);
     
-      const redirectUrl = `/auth/classroom-setup`;
+      // Different redirect based on auth flow type
+      const isClassroomAuth = state === 'classroom_auth';
+      const redirectUrl = isClassroomAuth ? `/dashboard` : `/auth/classroom-setup`;
       console.log('[OAuth] Authentication complete, redirecting to:', redirectUrl);
+      console.log('[OAuth] Auth flow type:', isClassroomAuth ? 'CLASSROOM_AUTH' : 'BASIC_AUTH');
       console.log('[OAuth] =================================');
       
       res.redirect(redirectUrl);
