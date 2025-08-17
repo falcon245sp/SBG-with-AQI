@@ -91,7 +91,6 @@ export const aiEngineEnum = pgEnum('ai_engine', [
 export const documents = pgTable("documents", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
-  customerId: integer("customer_id").notNull(),
   fileName: text("file_name").notNull(),
   originalPath: text("original_path").notNull(),
   mimeType: text("mime_type").notNull(),
@@ -217,7 +216,6 @@ export const insertStudentSchema = createInsertSchema(students).pick({
 });
 
 export const insertDocumentSchema = createInsertSchema(documents).pick({
-  customerId: true,
   fileName: true,
   originalPath: true,
   mimeType: true,

@@ -203,16 +203,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/classrooms', getUserClassrooms);
 
   // Document upload with standards focus endpoint
-  app.post('/api/documents/upload-with-standards', upload.single('document'), async (req: any, res) => {
+  app.post('/api/documents/upload-with-standards', isAuthenticated, upload.single('document'), async (req: any, res) => {
     try {
-      const userId = 'test-user-123'; // Mock user ID
+      const userId = (req as any).session.userId; // Get authenticated user ID
       const file = req.file;
       
       if (!file) {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      const { customerId, jurisdictions, focusStandards } = req.body;
+      const { jurisdictions, focusStandards } = req.body;
       
       // Parse focus standards if provided
       let standards: string[] = [];
@@ -228,7 +228,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Validate request data
       const validationResult = insertDocumentSchema.safeParse({
-        customerId: parseInt(customerId),
         fileName: file.originalname,
         originalPath: file.path,
         mimeType: file.mimetype,
@@ -263,9 +262,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Document upload endpoint
-  app.post('/api/documents/upload', upload.any(), async (req: any, res) => {
+  app.post('/api/documents/upload', isAuthenticated, upload.any(), async (req: any, res) => {
     try {
-      const userId = 'test-user-123'; // Mock user ID
+      const userId = (req as any).session.userId; // Get authenticated user ID
       const files = (req.files as Express.Multer.File[]) || [];
       
       console.log(`=== UPLOAD DEBUG ===`);
@@ -278,7 +277,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No files uploaded" });
       }
 
-      const { customerId, jurisdictions, focusStandards, callbackUrl } = req.body;
+      const { jurisdictions, focusStandards, callbackUrl } = req.body;
       
       // Parse jurisdictions
       const parsedJurisdictions = jurisdictions.split(',').map((j: string) => j.trim()).slice(0, 3);
@@ -291,7 +290,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           // Validate request data for each file
           const validationResult = insertDocumentSchema.safeParse({
-            customerId: parseInt(customerId),
             fileName: file.originalname,
             originalPath: file.path,
             mimeType: file.mimetype,
@@ -379,9 +377,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user documents
-  app.get('/api/documents', async (req: any, res) => {
+  app.get('/api/documents', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = 'test-user-123'; // Mock user ID
+      const userId = (req as any).session.userId;
       const documents = await storage.getUserDocuments(userId);
       res.json(documents);
     } catch (error) {
@@ -391,9 +389,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get document details with results
-  app.get('/api/documents/:id/results', async (req: any, res) => {
+  app.get('/api/documents/:id/results', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = 'test-user-123'; // Mock user ID
+      const userId = (req as any).session.userId;
       const { id } = req.params;
       
       const document = await storage.getDocument(id);
@@ -431,9 +429,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get processing stats
-  app.get('/api/stats', async (req: any, res) => {
+  app.get('/api/stats', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = 'test-user-123'; // Mock user ID
+      const userId = (req as any).session.userId;
       const stats = await storage.getProcessingStats(userId);
       const rigorDistribution = await storage.getRigorDistribution(userId);
       
@@ -448,9 +446,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Prompt customization endpoints
-  app.post('/api/prompt-templates', async (req: any, res) => {
+  app.post('/api/prompt-templates', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = 'test-user-123'; // Mock user ID
+      const userId = (req as any).session.userId;
       const { name, description, customization } = req.body;
       
       if (!name || !customization) {
@@ -638,10 +636,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      const { customerId, jurisdictions, callbackUrl } = req.body;
+      const { jurisdictions, callbackUrl } = req.body;
       
       const validationResult = insertDocumentSchema.safeParse({
-        customerId: parseInt(customerId),
         fileName: file.originalname,
         originalPath: file.path,
         mimeType: file.mimetype,
