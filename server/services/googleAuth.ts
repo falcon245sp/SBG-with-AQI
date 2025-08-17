@@ -82,15 +82,15 @@ export class GoogleAuthService {
   async exchangeCodeForTokens(code: string) {
     console.log('[GoogleAuth] Exchanging authorization code for tokens, code length:', code.length);
     try {
-      const response = await this.oauth2Client.getToken(code);
+      const { tokens } = await this.oauth2Client.getToken(code);
       console.log('[GoogleAuth] Google token exchange successful:', {
-        has_access_token: !!response.tokens.access_token,
-        has_refresh_token: !!response.tokens.refresh_token,
-        token_type: response.tokens.token_type,
-        expires_in: response.tokens.expiry_date,
-        scope: response.tokens.scope
+        has_access_token: !!tokens.access_token,
+        has_refresh_token: !!tokens.refresh_token,
+        token_type: tokens.token_type,
+        expires_in: tokens.expiry_date,
+        scope: tokens.scope
       });
-      return response.tokens;
+      return tokens;
     } catch (error: any) {
       console.error('[GoogleAuth] ERROR - Google token exchange failed:', {
         error_type: 'GOOGLE_API_ERROR',
@@ -98,11 +98,6 @@ export class GoogleAuthService {
         error_message: error.message,
         error_status: error.status,
         error_response_data: error.response?.data,
-        error_config: error.config ? {
-          url: error.config.url,
-          method: error.config.method,
-          headers: error.config.headers
-        } : 'No config',
         full_error: JSON.stringify(error, Object.getOwnPropertyNames(error), 2)
       });
       throw error;

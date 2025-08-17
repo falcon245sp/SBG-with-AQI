@@ -254,7 +254,7 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date(),
       })
       .onConflictDoUpdate({
-        target: users.googleId,
+        target: [users.googleId],
         set: {
           email: userData.email,
           firstName: userData.firstName,

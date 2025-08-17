@@ -8,6 +8,7 @@ import NotFound from "@/pages/not-found";
 import GoogleOAuthLanding from "@/pages/google-oauth-landing";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
+import AuthError from "@/pages/auth-error";
 import UploadPage from "@/pages/upload";
 import ResultsPage from "@/pages/results";
 import DocumentResults from "@/pages/document-results";
@@ -33,6 +34,7 @@ function Router() {
         <>
           <Route path="/" component={GoogleOAuthLanding} />
           <Route path="/landing" component={Landing} />
+          <Route path="/auth/error" component={AuthError} />
           <Route component={NotFound} />
         </>
       ) : (

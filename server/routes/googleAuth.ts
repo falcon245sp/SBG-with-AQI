@@ -42,12 +42,12 @@ export async function handleGoogleCallback(req: Request, res: Response) {
     
     if (oauthError) {
       console.error('[OAuth] OAuth error in callback:', oauthError);
-      return res.redirect('/?error=oauth_error');
+      return res.redirect(`/auth/error?error=${oauthError}&description=Google OAuth error`);
     }
 
     if (!code || typeof code !== 'string') {
       console.error('[OAuth] No authorization code received');
-      return res.redirect('/?error=no_code');
+      return res.redirect('/auth/error?error=no_code&description=No authorization code received');
     }
 
     // Exchange code for tokens using renamed environment variables
@@ -60,13 +60,13 @@ export async function handleGoogleCallback(req: Request, res: Response) {
 
     // Create or update user in database
     const user = await storage.upsertGoogleUser({
-      googleId: userProfile.id,
-      email: userProfile.email,
-      firstName: userProfile.given_name,
-      lastName: userProfile.family_name,
-      profileImageUrl: userProfile.picture,
-      googleAccessToken: tokens.access_token,
-      googleRefreshToken: tokens.refresh_token,
+      googleId: userProfile.id!,
+      email: userProfile.email!,
+      firstName: userProfile.given_name || undefined,
+      lastName: userProfile.family_name || undefined,
+      profileImageUrl: userProfile.picture || undefined,
+      googleAccessToken: tokens.access_token || undefined,
+      googleRefreshToken: tokens.refresh_token || undefined,
       googleTokenExpiry: tokens.expiry_date ? new Date(tokens.expiry_date) : undefined,
     });
 
@@ -80,7 +80,7 @@ export async function handleGoogleCallback(req: Request, res: Response) {
     res.redirect('/dashboard');
   } catch (error) {
     console.error('[OAuth] Error in Google callback:', error);
-    res.redirect('/?error=auth_failed');
+    res.redirect('/auth/error?error=auth_failed&description=Authentication process failed');
   }
 }
 
@@ -97,8 +97,8 @@ export async function syncClassroomData(req: Request, res: Response) {
       return res.status(400).json({ error: 'Google access token not found' });
     }
 
-    // Sync classrooms from Google Classroom API
-    const classrooms = await googleAuth.syncUserClassrooms(userId, user.googleAccessToken);
+    // Sync classrooms from Google Classroom API using getClassrooms method
+    const classrooms = await googleAuth.getClassrooms(user.googleAccessToken, user.googleRefreshToken || undefined);
     
     res.json({
       success: true,

@@ -73,9 +73,10 @@ Preferred communication style: Simple, everyday language.
 - **Google Cloud Storage**: Configured for file storage (not actively used)
 
 ### Authentication & Google Integration
-- **User Authentication**: Traditional username/password with bcryptjs hashing and PostgreSQL sessions
-- **Google Classroom Integration**: Service-to-service API calls using stored credentials (API keys or service accounts)
-- **Hybrid Approach**: Separates user auth from Google API access to avoid OAuth redirect issues
+- **Google OAuth**: Primary authentication using renamed environment variables (SHERPA_*) to avoid Replit platform conflicts
+- **OAuth Workaround**: Successfully implemented Google OAuth with renamed env vars to prevent redirect URI overwrites
+- **Google Classroom Integration**: Full OAuth-based integration with proper token management and refresh capabilities
+- **Fallback Authentication**: Traditional username/password available as secondary option
 
 ### UI Libraries
 - **Radix UI**: Headless component primitives
