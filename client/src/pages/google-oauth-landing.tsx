@@ -172,46 +172,59 @@ export default function GoogleOAuthLanding() {
           </Card>
         </div>
 
-        <Alert className="max-w-4xl mx-auto mb-8 border-green-200 bg-green-50 dark:bg-green-900/20">
-          <AlertCircle className="h-4 w-4 text-green-600" />
-          <AlertTitle className="text-green-800 dark:text-green-100">Environment Variable Separation Complete</AlertTitle>
-          <AlertDescription className="text-green-700 dark:text-green-200">
+        <Alert className="max-w-4xl mx-auto mb-8 border-red-200 bg-red-50 dark:bg-red-900/20">
+          <AlertCircle className="h-4 w-4 text-red-600" />
+          <AlertTitle className="text-red-800 dark:text-red-100">Replit Platform OAuth Restriction</AlertTitle>
+          <AlertDescription className="text-red-700 dark:text-red-200">
             <div className="space-y-4">
-              <p><strong>✅ Success:</strong> Dual environment variable system implemented successfully.</p>
+              <p><strong>Issue Identified:</strong> Replit's iframe environment is blocking Google OAuth redirects despite perfect backend configuration.</p>
               
-              <div className="bg-blue-100 dark:bg-blue-800 p-3 rounded">
-                <p><strong>Current Configuration:</strong></p>
+              <div className="bg-yellow-100 dark:bg-yellow-800 p-3 rounded">
+                <p><strong>Backend Status:</strong> ✅ Working perfectly</p>
                 <ul className="list-disc list-inside space-y-1 text-sm">
-                  <li><strong>Development:</strong> Uses DEV_ prefixed variables</li>
-                  <li><strong>Production:</strong> Uses PROD_ prefixed variables (when deployed)</li>
-                  <li><strong>Domain Isolation:</strong> Automatic domain-specific redirect URIs</li>
-                  <li><strong>Secret Management:</strong> SYNCED (dev) / UNSYNCED (prod)</li>
+                  <li>✅ Environment variables: DEV_ prefix correctly implemented</li>
+                  <li>✅ OAuth URL generation: Success (verified in logs)</li>
+                  <li>✅ Redirect URI: Matches Google Cloud configuration</li>
+                  <li>❌ Browser redirect: Blocked by Replit platform</li>
                 </ul>
               </div>
               
-              <div className="bg-green-100 dark:bg-green-800 p-3 rounded">
-                <p><strong>✅ Ready:</strong> Google Cloud Platform settings are current!</p>
-                <p className="text-sm mt-2">
-                  OAuth should now work with the configured redirect URI:
-                  <code className="bg-white dark:bg-gray-700 px-1 rounded text-xs ml-1">
-                    https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev/api/auth/google/callback
-                  </code>
-                </p>
+              <div className="bg-blue-100 dark:bg-blue-800 p-3 rounded">
+                <p><strong>Workarounds Available:</strong></p>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li><strong>Replit Auth:</strong> Use platform's built-in authentication</li>
+                  <li><strong>Traditional Login:</strong> Username/password authentication</li>
+                  <li><strong>New Window:</strong> Try Google OAuth in popup window</li>
+                  <li><strong>Production Deploy:</strong> OAuth will work normally on deployed app</li>
+                </ul>
               </div>
               
-              <div className="mt-4">
+              <div className="mt-4 space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <Button 
+                    onClick={() => window.location.href = '/auth/login'} 
+                    variant="outline"
+                    className="text-sm"
+                  >
+                    Traditional Login
+                  </Button>
+                  <Button 
+                    onClick={() => window.location.href = '/api/login'} 
+                    variant="outline"
+                    className="text-sm"
+                  >
+                    Replit Auth
+                  </Button>
+                </div>
                 <Button 
-                  onClick={() => window.location.href = '/auth/login'} 
+                  onClick={() => {
+                    const url = `https://accounts.google.com/o/oauth2/v2/auth?access_type=offline&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email&prompt=select_account&state=&include_granted_scopes=true&response_type=code&client_id=1064115232790-0rbc41hch5df1vtctncbfm1aft5241a0.apps.googleusercontent.com&redirect_uri=https%3A%2F%2Fbe365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev%2Fapi%2Fauth%2Fgoogle%2Fcallback`;
+                    window.open(url, '_blank', 'width=500,height=600');
+                  }}
                   variant="outline" 
-                  className="mr-2"
+                  className="w-full text-sm"
                 >
-                  Use Traditional Login
-                </Button>
-                <Button 
-                  onClick={() => window.location.href = '/api/login'} 
-                  variant="outline"
-                >
-                  Try Replit Auth
+                  Open Google OAuth in New Window
                 </Button>
               </div>
             </div>

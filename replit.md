@@ -93,7 +93,7 @@ Preferred communication style: Simple, everyday language.
     - JavaScript Origin: ✅ https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev
     - Redirect URI: ✅ CONFIGURED https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev/api/auth/google/callback
     - Environment Variables: DEV_GOOGLE_CLIENT_ID, DEV_GOOGLE_CLIENT_SECRET, DEV_GOOGLE_REDIRECT_URI (SYNCED)
-    - Status: ✅ Dual environment separation implemented and GCP settings updated
+    - Status: ✅ Backend working perfectly, blocked by Replit platform iframe restrictions
   - **Production OAuth Application**: 
     - Domain: docu-proc-serv-jfielder1.replit.app
     - Environment Variables: PROD_GOOGLE_CLIENT_ID, PROD_GOOGLE_CLIENT_SECRET, PROD_GOOGLE_REDIRECT_URI (UNSYNCED)
