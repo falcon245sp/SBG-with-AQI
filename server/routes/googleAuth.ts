@@ -128,10 +128,15 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
       console.log('[OAuth] =================================');
       
       res.redirect(redirectUrl);
-    } catch (tokenError) {
+    } catch (tokenError: any) {
       console.error('[OAuth] ERROR - Token exchange failed:', {
         error_type: 'GOOGLE_API_ERROR',
-        error: tokenError
+        error_name: tokenError.name,
+        error_message: tokenError.message,
+        error_code: tokenError.code,
+        error_status: tokenError.status,
+        error_response: tokenError.response?.data,
+        full_error: JSON.stringify(tokenError, null, 2)
       });
       return res.redirect('/auth/error?error=token_exchange_failed&description=Failed to exchange authorization code for tokens');
     }

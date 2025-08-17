@@ -62,7 +62,14 @@ export class GoogleAuthService {
         error_type: 'GOOGLE_API_ERROR',
         error_code: error.code,
         error_message: error.message,
-        error_details: error.response?.data || error.details || 'No additional details'
+        error_status: error.status,
+        error_response_data: error.response?.data,
+        error_config: error.config ? {
+          url: error.config.url,
+          method: error.config.method,
+          headers: error.config.headers
+        } : 'No config',
+        full_error: JSON.stringify(error, Object.getOwnPropertyNames(error), 2)
       });
       throw error;
     }
