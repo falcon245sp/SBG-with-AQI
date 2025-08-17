@@ -56,7 +56,17 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
   console.log('[OAuth] Query parameters:', req.query);
   
   try {
-    const { code, error, error_description, state } = req.query;
+    const { code, error, error_description, state, test } = req.query;
+    
+    // Test endpoint accessibility
+    if (test) {
+      console.log('[OAuth] TEST - Callback endpoint reached successfully');
+      return res.json({ 
+        message: 'Callback endpoint accessible', 
+        timestamp: new Date().toISOString(),
+        sessionId: req.sessionID 
+      });
+    }
     
     // Check for OAuth errors from Google
     if (error) {
