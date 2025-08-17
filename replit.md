@@ -1,6 +1,6 @@
 # Document Processing Service
 
-## Current Version: 0.7.1
+## Current Version: 0.7
 
 ## Overview
 
@@ -8,7 +8,7 @@ The Document Processing Service is a full-stack web application that provides AI
 
 ## Version History
 
-### Version 0.7.1 (August 17, 2025) - Student Cover Sheet Enhancement ✓ COMPLETE
+### Version 0.7 (August 17, 2025) - Teacher Override System & Student Cover Sheet ✓ COMPLETE
 - **Student Facing Test Cover Sheet**: ✓ Complete redesign of export functionality
   - Renamed "Standards Summary" to "Student Facing Test Cover Sheet" across all export interfaces
   - New PDF format with portrait orientation and four-column layout (Question, Standard, Topic, Rigor Level)
@@ -20,8 +20,6 @@ The Document Processing Service is a full-stack web application that provides AI
   - Removed deprecated "Standards Summary" functions and cleaned unused code
   - Consistent naming convention throughout the application
   - Improved PDF generation with proper educational formatting
-
-### Version 0.7.0 (August 16, 2025) - Teacher Override & Standards Sherpa Persona ✓ COMPLETE
 - **Teacher Override System**: ✓ Complete implementation of crowd-sourced corrections
   - Database schema with teacherOverrides table for storing teacher feedback
   - API endpoints for saving/retrieving teacher corrections with upsert logic
