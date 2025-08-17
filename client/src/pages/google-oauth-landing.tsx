@@ -7,10 +7,24 @@ import { CheckCircle, AlertCircle, BookOpen, Shield, Users, BarChart3 } from "lu
 export default function GoogleOAuthLanding() {
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = async () => {
     setIsLoading(true);
-    // Redirect to Google OAuth with renamed environment variables
-    window.location.href = '/api/auth/google';
+    try {
+      // Get OAuth URL from backend (renamed env vars workaround)
+      const response = await fetch('/api/auth/google');
+      const data = await response.json();
+      
+      if (data.authUrl) {
+        // Redirect to Google OAuth
+        window.location.href = data.authUrl;
+      } else {
+        console.error('No auth URL received from backend');
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error('Failed to initiate Google OAuth:', error);
+      setIsLoading(false);
+    }
   };
 
   return (
