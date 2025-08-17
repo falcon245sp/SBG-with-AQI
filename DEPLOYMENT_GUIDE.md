@@ -16,11 +16,15 @@ Replit automatically syncs Workspace secrets to production deployments. However,
 2. Click **"+ CREATE CREDENTIALS"** → **"OAuth client ID"**
 3. Choose **"Web application"**
 4. Name it: `Standards Sherpa - Production`
-5. Add authorized redirect URI:
+5. Add authorized JavaScript origins:
+   ```
+   https://[your-app-name].replit.app
+   ```
+6. Add authorized redirect URI:
    ```
    https://[your-app-name].replit.app/api/auth/google/callback
    ```
-6. Save and note the new Client ID and Client Secret
+7. Save and note the new Client ID and Client Secret
 
 ### 2. Configure Production Secrets in Replit
 
@@ -59,10 +63,10 @@ Configure the OAuth consent screen with:
 
 ## Environment Summary
 
-| Environment | Domain Pattern | OAuth App | Secret Sync |
-|-------------|----------------|-----------|-------------|
-| **Development** | `*.janeway.replit.dev` | Development OAuth | Synced |
-| **Production** | `*.replit.app` | Production OAuth | Unsynced |
+| Environment | Domain Pattern | OAuth App | Secret Sync | JavaScript Origins |
+|-------------|----------------|-----------|-------------|-------------------|
+| **Development** | `*.janeway.replit.dev` | Development OAuth | Synced | `https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev` |
+| **Production** | `*.replit.app` | Production OAuth | Unsynced | `https://[your-app-name].replit.app` |
 
 ## Verification
 

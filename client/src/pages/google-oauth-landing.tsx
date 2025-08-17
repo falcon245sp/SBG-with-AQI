@@ -125,23 +125,25 @@ export default function GoogleOAuthLanding() {
           </Card>
         </div>
 
-        <Alert className="max-w-4xl mx-auto mb-8 border-blue-200 bg-blue-50 dark:bg-blue-900/20">
-          <AlertCircle className="h-4 w-4 text-blue-600" />
-          <AlertTitle className="text-blue-800 dark:text-blue-100">OAuth Configuration Verified</AlertTitle>
-          <AlertDescription className="text-blue-700 dark:text-blue-200">
-            <div className="space-y-2">
-              <p>✅ <strong>Google OAuth Application:</strong> Correctly configured and accepting requests</p>
-              <p>✅ <strong>Redirect URI:</strong> Successfully added to authorized redirect URIs</p>
-              <p>✅ <strong>Server Response:</strong> Generating valid OAuth URLs with 302 redirects</p>
-              <p><strong>Browser Issue:</strong> The "refused to connect" error appears to be browser-specific, not a configuration problem.</p>
-              <p className="text-sm">
-                <strong>Direct OAuth URL Test:</strong> 
-                <a href="https://accounts.google.com/o/oauth2/v2/auth?access_type=offline&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email&prompt=select_account&state=&include_granted_scopes=true&response_type=code&client_id=1064115232790-0rbc41hch5df1vtctncbfm1aft5241a0.apps.googleusercontent.com&redirect_uri=https%3A%2F%2Fbe365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev%2Fapi%2Fauth%2Fgoogle%2Fcallback" 
-                   target="_blank" 
-                   className="underline text-blue-600 hover:text-blue-800">
-                  Test OAuth Flow Directly
-                </a>
-              </p>
+        <Alert className="max-w-4xl mx-auto mb-8 border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20">
+          <AlertCircle className="h-4 w-4 text-yellow-600" />
+          <AlertTitle className="text-yellow-800 dark:text-yellow-100">Add JavaScript Origin to Google OAuth</AlertTitle>
+          <AlertDescription className="text-yellow-700 dark:text-yellow-200">
+            <div className="space-y-4">
+              <p><strong>Missing Configuration:</strong> JavaScript origin not authorized for development domain</p>
+              
+              <div className="bg-blue-100 dark:bg-blue-800 p-3 rounded">
+                <p><strong>Steps to fix:</strong></p>
+                <ol className="list-decimal list-inside space-y-1 text-sm">
+                  <li>Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" className="underline text-blue-600 hover:text-blue-800">Google Cloud Console → Credentials</a></li>
+                  <li>Click your OAuth 2.0 Client ID: <code className="bg-yellow-100 dark:bg-yellow-800 px-1 rounded text-xs">1064115232790-0rbc41hch5df1vtctncbfm1aft5241a0.apps.googleusercontent.com</code></li>
+                  <li>In the <strong>"Authorized JavaScript origins"</strong> section, click <strong>"+ ADD URI"</strong></li>
+                  <li>Add: <code className="bg-green-100 dark:bg-green-800 px-1 rounded">https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev</code></li>
+                  <li>Click <strong>"SAVE"</strong></li>
+                </ol>
+              </div>
+              
+              <p className="text-sm italic">This allows the browser to make OAuth requests from the current development domain.</p>
             </div>
           </AlertDescription>
         </Alert>
