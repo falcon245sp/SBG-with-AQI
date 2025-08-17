@@ -54,6 +54,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/auth/google/callback', handleGoogleCallback);
   app.post('/api/auth/sync-classroom', syncClassroomData);
   app.get('/api/classrooms', getUserClassrooms);
+  
+  // Test route for debugging OAuth callback issues
+  app.get('/api/auth/test-callback', (req, res) => {
+    console.log('[TEST] Test callback hit with query:', req.query);
+    console.log('[TEST] Session data:', (req as any).session);
+    res.json({ 
+      message: 'Test callback successful', 
+      query: req.query, 
+      sessionId: req.sessionID,
+      hasSession: !!(req as any).session 
+    });
+  });
 
   // Auth routes
   app.get('/api/auth/user', getCurrentUser);
