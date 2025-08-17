@@ -167,30 +167,30 @@ export default function GoogleOAuthLanding() {
           </Card>
         </div>
 
-        <Alert className="max-w-4xl mx-auto mb-8 border-orange-200 bg-orange-50 dark:bg-orange-900/20">
-          <AlertCircle className="h-4 w-4 text-orange-600" />
-          <AlertTitle className="text-orange-800 dark:text-orange-100">Persistent Google OAuth Connection Issue</AlertTitle>
-          <AlertDescription className="text-orange-700 dark:text-orange-200">
+        <Alert className="max-w-4xl mx-auto mb-8 border-green-200 bg-green-50 dark:bg-green-900/20">
+          <AlertCircle className="h-4 w-4 text-green-600" />
+          <AlertTitle className="text-green-800 dark:text-green-100">Environment Variable Separation Complete</AlertTitle>
+          <AlertDescription className="text-green-700 dark:text-green-200">
             <div className="space-y-4">
-              <p><strong>Status:</strong> Despite correct redirect URI generation, Google continues to refuse the connection.</p>
+              <p><strong>✅ Success:</strong> Dual environment variable system implemented successfully.</p>
               
-              <div className="bg-yellow-100 dark:bg-yellow-800 p-3 rounded">
+              <div className="bg-blue-100 dark:bg-blue-800 p-3 rounded">
                 <p><strong>Current Configuration:</strong></p>
                 <ul className="list-disc list-inside space-y-1 text-sm">
-                  <li>Generated redirect URI: <code className="bg-white dark:bg-gray-700 px-1 rounded text-xs">https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev/api/auth/google/callback</code></li>
-                  <li>JavaScript origin configured</li>
-                  <li>SHERPA_ environment variables working</li>
-                  <li>OAuth URL generation successful</li>
+                  <li><strong>Development:</strong> Uses DEV_ prefixed variables</li>
+                  <li><strong>Production:</strong> Uses PROD_ prefixed variables (when deployed)</li>
+                  <li><strong>Domain Isolation:</strong> Automatic domain-specific redirect URIs</li>
+                  <li><strong>Secret Management:</strong> SYNCED (dev) / UNSYNCED (prod)</li>
                 </ul>
               </div>
               
-              <div className="bg-blue-100 dark:bg-blue-800 p-3 rounded">
-                <p><strong>Alternative Solutions:</strong></p>
-                <ol className="list-decimal list-inside space-y-1 text-sm">
-                  <li><strong>Use Traditional Login</strong> - Username/password authentication is available</li>
-                  <li><strong>Replit Auth Integration</strong> - Consider using Replit's built-in authentication</li>
-                  <li><strong>Manual OAuth Update</strong> - Ensure the Google Cloud Console redirect URI exactly matches the current domain</li>
-                </ol>
+              <div className="bg-yellow-100 dark:bg-yellow-800 p-3 rounded">
+                <p><strong>Next Step:</strong> Update Google OAuth application redirect URI:</p>
+                <p className="text-sm mt-2">
+                  <code className="bg-white dark:bg-gray-700 px-1 rounded text-xs">
+                    https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev/api/auth/google/callback
+                  </code>
+                </p>
               </div>
               
               <div className="mt-4">

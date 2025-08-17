@@ -2,35 +2,28 @@ import { google } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
 
 // Google OAuth configuration with renamed environment variables to avoid Replit conflicts
-// Using SHERPA_ prefix as suggested in Google research to avoid variable overwrites
-const GOOGLE_CLIENT_ID = process.env.SHERPA_GOOGLE_CLIENT_ID;
-const GOOGLE_CLIENT_SECRET = process.env.SHERPA_GOOGLE_CLIENT_SECRET;
+// Environment-specific Google OAuth configuration
+const isProduction = process.env.NODE_ENV === 'production';
 
-// Use current domain for redirect URI to match where the request originates
-const getCurrentRedirectUri = () => {
-  // Always use the current domain from REPLIT_DOMAINS for development
-  const currentDomain = process.env.REPLIT_DOMAINS?.split(',')[0];
-  if (currentDomain) {
-    console.log('[GoogleAuth] Using current domain for redirect URI:', currentDomain);
-    return `https://${currentDomain}/api/auth/google/callback`;
-  }
-  
-  // Fallback to environment variable if no current domain
-  if (process.env.SHERPA_GOOGLE_REDIRECT_URI) {
-    console.log('[GoogleAuth] Falling back to SHERPA_GOOGLE_REDIRECT_URI:', process.env.SHERPA_GOOGLE_REDIRECT_URI);
-    return process.env.SHERPA_GOOGLE_REDIRECT_URI;
-  }
-  
-  return 'http://localhost:5000/api/auth/google/callback';
-};
+// Use DEV_ prefixed variables in development, PROD_ prefixed in production
+const GOOGLE_CLIENT_ID = isProduction 
+  ? process.env.PROD_GOOGLE_CLIENT_ID 
+  : process.env.DEV_GOOGLE_CLIENT_ID;
 
-const GOOGLE_REDIRECT_URI = getCurrentRedirectUri();
+const GOOGLE_CLIENT_SECRET = isProduction 
+  ? process.env.PROD_GOOGLE_CLIENT_SECRET 
+  : process.env.DEV_GOOGLE_CLIENT_SECRET;
 
-console.log('[GoogleAuth] Using renamed environment variables to avoid Replit conflicts:');
-console.log('[GoogleAuth] SHERPA_GOOGLE_CLIENT_ID:', GOOGLE_CLIENT_ID ? 'Present' : 'Missing');
-console.log('[GoogleAuth] SHERPA_GOOGLE_CLIENT_SECRET:', GOOGLE_CLIENT_SECRET ? 'Present' : 'Missing');
+const GOOGLE_REDIRECT_URI = isProduction 
+  ? process.env.PROD_GOOGLE_REDIRECT_URI 
+  : process.env.DEV_GOOGLE_REDIRECT_URI;
+
+console.log(`[GoogleAuth] Environment: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}`);
+console.log(`[GoogleAuth] Using ${isProduction ? 'PROD_' : 'DEV_'} prefixed environment variables:`);
+console.log(`[GoogleAuth] ${isProduction ? 'PROD_' : 'DEV_'}GOOGLE_CLIENT_ID:`, GOOGLE_CLIENT_ID ? 'Present' : 'Missing');
+console.log(`[GoogleAuth] ${isProduction ? 'PROD_' : 'DEV_'}GOOGLE_CLIENT_SECRET:`, GOOGLE_CLIENT_SECRET ? 'Present' : 'Missing');
+console.log(`[GoogleAuth] ${isProduction ? 'PROD_' : 'DEV_'}GOOGLE_REDIRECT_URI:`, GOOGLE_REDIRECT_URI);
 console.log('[GoogleAuth] REPLIT_DOMAINS:', process.env.REPLIT_DOMAINS);
-console.log('[GoogleAuth] Authorized redirect URI:', GOOGLE_REDIRECT_URI);
 
 // OAuth scopes for basic user authentication
 const BASIC_SCOPES = [
@@ -52,7 +45,7 @@ export class GoogleAuthService {
       throw new Error('Google OAuth credentials not configured');
     }
 
-    console.log('[GoogleAuth] Creating OAuth client with renamed env vars URI:', GOOGLE_REDIRECT_URI);
+    console.log(`[GoogleAuth] Creating OAuth client with ${isProduction ? 'PROD_' : 'DEV_'} environment variables:`);
     
     // Create OAuth client using renamed environment variables
     this.oauth2Client = new google.auth.OAuth2(

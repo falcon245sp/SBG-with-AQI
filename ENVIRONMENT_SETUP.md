@@ -6,18 +6,18 @@
 - **Domain**: `be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev`
 - **Google OAuth Client ID**: `1064115232790-0rbc41hch5df1vtctncbfm1aft5241a0.apps.googleusercontent.com`
 - **Environment Variables**: 
-  - `SHERPA_GOOGLE_CLIENT_ID` = [development-client-id]
-  - `SHERPA_GOOGLE_CLIENT_SECRET` = [development-client-secret]  
-  - `SHERPA_GOOGLE_REDIRECT_URI` = [NOT USED - auto-generated from REPLIT_DOMAINS]
+  - `DEV_GOOGLE_CLIENT_ID` = 1064115232790-0rbc41hch5df1vtctncbfm1aft5241a0.apps.googleusercontent.com
+  - `DEV_GOOGLE_CLIENT_SECRET` = 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
+  - `DEV_GOOGLE_REDIRECT_URI` = https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev/api/auth/google/callback
 - **Secret Sync**: **SYNCED** (shared between dev environments)
 
 ### Production Environment
 - **Domain**: `docu-proc-serv-jfielder1.replit.app`
 - **Google OAuth Client ID**: [SEPARATE PRODUCTION OAUTH APP REQUIRED]
 - **Environment Variables**:
-  - `SHERPA_GOOGLE_CLIENT_ID` = [production-client-id]
-  - `SHERPA_GOOGLE_CLIENT_SECRET` = [production-client-secret]
-  - `SHERPA_GOOGLE_REDIRECT_URI` = [NOT USED - auto-generated from domain]
+  - `PROD_GOOGLE_CLIENT_ID` = [production-oauth-client-id]
+  - `PROD_GOOGLE_CLIENT_SECRET` = [production-oauth-client-secret]
+  - `PROD_GOOGLE_REDIRECT_URI` = https://docu-proc-serv-jfielder1.replit.app/api/auth/google/callback
 - **Secret Sync**: **UNSYNCED** (isolated from development)
 
 ## Current Issue Resolution

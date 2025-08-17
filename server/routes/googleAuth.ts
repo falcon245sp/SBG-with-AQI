@@ -18,10 +18,14 @@ export async function initiateGoogleAuth(req: Request, res: Response) {
     console.log('- User-Agent:', req.headers['user-agent']);
     console.log('- Accept:', req.headers.accept);
     
+    const isProduction = process.env.NODE_ENV === 'production';
+    const envPrefix = isProduction ? 'PROD_' : 'DEV_';
+
     console.log('\n[DEBUG] Environment Variables:');
-    console.log('- SHERPA_GOOGLE_CLIENT_ID exists:', !!process.env.SHERPA_GOOGLE_CLIENT_ID);
-    console.log('- SHERPA_GOOGLE_CLIENT_SECRET exists:', !!process.env.SHERPA_GOOGLE_CLIENT_SECRET);
-    console.log('- SHERPA_GOOGLE_REDIRECT_URI:', process.env.SHERPA_GOOGLE_REDIRECT_URI);
+    console.log(`- Environment: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}`);
+    console.log(`- ${envPrefix}GOOGLE_CLIENT_ID exists:`, !!process.env[`${envPrefix}GOOGLE_CLIENT_ID`]);
+    console.log(`- ${envPrefix}GOOGLE_CLIENT_SECRET exists:`, !!process.env[`${envPrefix}GOOGLE_CLIENT_SECRET`]);
+    console.log(`- ${envPrefix}GOOGLE_REDIRECT_URI:`, process.env[`${envPrefix}GOOGLE_REDIRECT_URI`]);
     console.log('- REPLIT_DOMAINS:', process.env.REPLIT_DOMAINS);
     console.log('- NODE_ENV:', process.env.NODE_ENV);
     
