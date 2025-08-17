@@ -8,26 +8,72 @@ const googleAuth = new GoogleAuthService();
 // Initiate basic Google authentication (profile + email only)
 export async function initiateGoogleAuth(req: Request, res: Response) {
   try {
-    console.log('[OAuth] Initiating basic Google authentication');
+    console.log('\n=== ENHANCED OAUTH DEBUG ===');
+    console.log('[DEBUG] Request Details:');
+    console.log('- Method:', req.method);
+    console.log('- URL:', req.url);
+    console.log('- Host:', req.headers.host);
+    console.log('- Origin:', req.headers.origin);
+    console.log('- Referer:', req.headers.referer);
+    console.log('- User-Agent:', req.headers['user-agent']);
+    console.log('- Accept:', req.headers.accept);
+    
+    console.log('\n[DEBUG] Environment Variables:');
+    console.log('- SHERPA_GOOGLE_CLIENT_ID exists:', !!process.env.SHERPA_GOOGLE_CLIENT_ID);
+    console.log('- SHERPA_GOOGLE_CLIENT_SECRET exists:', !!process.env.SHERPA_GOOGLE_CLIENT_SECRET);
+    console.log('- SHERPA_GOOGLE_REDIRECT_URI:', process.env.SHERPA_GOOGLE_REDIRECT_URI);
+    console.log('- REPLIT_DOMAINS:', process.env.REPLIT_DOMAINS);
+    console.log('- NODE_ENV:', process.env.NODE_ENV);
+    
+    console.log('\n[OAuth] Initiating basic Google authentication');
     
     // Check if this is a direct browser request or API call
     const acceptHeader = req.get('Accept');
     const isDirectBrowserRequest = !acceptHeader || !acceptHeader.includes('application/json');
     
     const authUrl = googleAuth.getAuthUrl();
-    console.log('[OAuth] Generated auth URL:', authUrl);
+    console.log('\n[DEBUG] Generated OAuth URL Analysis:');
+    console.log('- Full URL:', authUrl);
+    
+    // Parse URL components for detailed analysis
+    try {
+      const url = new URL(authUrl);
+      console.log('- Protocol:', url.protocol);
+      console.log('- Host:', url.host);
+      console.log('- Pathname:', url.pathname);
+      console.log('- Client ID:', url.searchParams.get('client_id'));
+      console.log('- Redirect URI:', decodeURIComponent(url.searchParams.get('redirect_uri') || ''));
+      console.log('- Response Type:', url.searchParams.get('response_type'));
+      console.log('- Scope:', decodeURIComponent(url.searchParams.get('scope') || ''));
+      console.log('- Access Type:', url.searchParams.get('access_type'));
+      console.log('- Prompt:', url.searchParams.get('prompt'));
+    } catch (urlError) {
+      console.error('- URL parsing error:', urlError);
+    }
+    
+    console.log('\n[DEBUG] Request Type Analysis:');
+    console.log('- Accept Header:', acceptHeader);
+    console.log('- Is Direct Browser Request:', isDirectBrowserRequest);
     
     if (isDirectBrowserRequest) {
       // Direct browser request - redirect to Google OAuth
-      console.log('[OAuth] Direct browser request, redirecting to Google');
+      console.log('\n[OAuth] Direct browser request detected');
+      console.log('[OAuth] Setting redirect response to:', authUrl);
+      console.log('[OAuth] Response headers will include Location:', authUrl);
       res.redirect(authUrl);
+      console.log('[OAuth] Redirect response sent');
     } else {
       // API request - return JSON
-      console.log('[OAuth] API request, returning JSON response');
+      console.log('\n[OAuth] API request detected');
+      console.log('[OAuth] Returning JSON response with authUrl');
       res.json({ authUrl });
     }
+    console.log('=== END OAUTH DEBUG ===\n');
   } catch (error) {
-    console.error('[OAuth] Error initiating Google auth:', error);
+    console.error('\n[ERROR] OAuth Initialization Failed:');
+    console.error('- Error Message:', (error as Error).message);
+    console.error('- Error Stack:', (error as Error).stack);
+    console.error('- Error Type:', (error as Error).constructor.name);
     res.status(500).json({ error: 'Failed to initiate Google authentication' });
   }
 }

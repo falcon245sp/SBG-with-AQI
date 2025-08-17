@@ -84,12 +84,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(409).json({ error: 'Username already exists' });
       }
       
-      // Create new user with hashed password
+      // Create new user with hashed password - using upsertGoogleUser with dummy Google ID for compatibility
       const hashedPassword = await hashPassword(password);
-      const user = await storage.createUser({
-        username,
+      const user = await storage.upsertGoogleUser({
+        googleId: `local_${username}_${Date.now()}`, // Unique identifier for local users
         email,
-        passwordHash: hashedPassword,
         firstName: null,
         lastName: null,
         profileImageUrl: null
@@ -126,7 +125,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: 'Invalid credentials' });
       }
       
-      const isValidPassword = await verifyPassword(password, user.passwordHash);
+      const isValidPassword = await verifyPassword(password, user.passwordHash || '');
       if (!isValidPassword) {
         return res.status(401).json({ error: 'Invalid credentials' });
       }

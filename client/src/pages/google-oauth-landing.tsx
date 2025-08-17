@@ -28,19 +28,61 @@ export default function GoogleOAuthLanding() {
     }
   }, []);
 
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = async () => {
     setIsLoading(true);
-    console.log('Redirecting to Google OAuth via current domain...');
+    
+    console.log('\n=== CLIENT-SIDE OAUTH DEBUG ===');
+    console.log('Current URL:', window.location.href);
+    console.log('Current host:', window.location.host);
+    console.log('Current protocol:', window.location.protocol);
+    console.log('User Agent:', navigator.userAgent);
+    console.log('Cookies enabled:', navigator.cookieEnabled);
     
     try {
-      // Force a full page navigation to avoid any SPA routing issues
+      console.log('\nTesting OAuth endpoint availability...');
+      const testResponse = await fetch('/api/auth/google', {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      
+      console.log('OAuth endpoint status:', testResponse.status);
+      console.log('OAuth endpoint headers:', Object.fromEntries(testResponse.headers.entries()));
+      
+      if (testResponse.ok) {
+        const data = await testResponse.json();
+        console.log('OAuth endpoint returned authUrl:', data.authUrl);
+        
+        // Parse the Google URL to verify it's correct
+        try {
+          const googleUrl = new URL(data.authUrl);
+          console.log('\nGoogle OAuth URL Analysis:');
+          console.log('- Host:', googleUrl.host);
+          console.log('- Client ID:', googleUrl.searchParams.get('client_id'));
+          console.log('- Redirect URI:', decodeURIComponent(googleUrl.searchParams.get('redirect_uri') || ''));
+          console.log('- Scope:', decodeURIComponent(googleUrl.searchParams.get('scope') || ''));
+          
+          console.log('\nAttempting redirect to Google OAuth...');
+          // Try different redirect methods to diagnose browser refusal
+          console.log('Method 1: window.location.href');
+          window.location.href = data.authUrl;
+          
+        } catch (urlError) {
+          console.error('Error parsing Google OAuth URL:', urlError);
+        }
+        
+      } else {
+        console.error('OAuth endpoint failed:', testResponse.status, testResponse.statusText);
+      }
+      
+    } catch (fetchError) {
+      console.error('OAuth endpoint fetch error:', fetchError);
+      console.log('Falling back to direct navigation...');
       window.location.assign('/api/auth/google');
-    } catch (error) {
-      console.error('OAuth redirect error:', error);
-      // Fallback method
-      window.open('/api/auth/google', '_top');
-      setIsLoading(false);
     }
+    
+    console.log('=== END CLIENT OAUTH DEBUG ===\n');
   };
 
   return (
