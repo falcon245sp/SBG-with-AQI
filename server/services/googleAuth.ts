@@ -88,11 +88,26 @@ export class GoogleAuthService {
     const classroom = google.classroom({ version: 'v1', auth: this.oauth2Client });
     
     try {
-      const response = await classroom.courses.students.list({
-        courseId: courseId
-      });
+      // Use pagination to ensure we get ALL students
+      let allStudents: any[] = [];
+      let pageToken: string | undefined;
       
-      return response.data.students || [];
+      do {
+        const response = await classroom.courses.students.list({
+          courseId: courseId,
+          pageSize: 100, // Maximum page size
+          pageToken: pageToken
+        });
+        
+        const students = response.data.students || [];
+        allStudents = allStudents.concat(students);
+        pageToken = response.data.nextPageToken || undefined;
+        
+        console.log(`Retrieved ${students.length} students (page token: ${pageToken ? 'more pages' : 'last page'}) for course ${courseId}`);
+      } while (pageToken);
+      
+      console.log(`Total students retrieved for course ${courseId}: ${allStudents.length}`);
+      return allStudents;
     } catch (error) {
       console.error('Error fetching students:', error);
       throw error;
