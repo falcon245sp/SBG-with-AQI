@@ -13,6 +13,7 @@ The Document Processing Service is a full-stack web application that provides AI
   - Google OAuth 2.0 integration with proper scope management
   - Secure token storage and automatic refresh handling
   - User profile management with Google account linking
+  - **FIXED**: Token expiration handling - automatic refresh for returning users
 - **Google Classroom Integration**: Automated roster and class management
   - Google Classroom API integration for course data
   - Automatic student roster synchronization with pagination support
@@ -29,6 +30,7 @@ The Document Processing Service is a full-stack web application that provides AI
   - Classroom connection and data synchronization
   - Progress tracking through setup stages
   - Automatic redirection based on authentication state
+  - **FIXED**: Token refresh logic integrated into `/api/auth/user` endpoint for seamless re-authentication
 
 ### Version 0.7 (August 17, 2025) - Teacher Override System & Student Cover Sheet ✓ COMPLETE
 - **Student Facing Test Cover Sheet**: ✓ Complete redesign of export functionality
