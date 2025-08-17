@@ -100,7 +100,7 @@ export const syncClassroomData = async (req: Request, res: Response) => {
     }
 
     // Fetch classrooms from Google Classroom
-    const classroomData = await googleAuthService.getClassrooms(accessToken, user.googleRefreshToken);
+    const classroomData = await googleAuthService.getClassrooms(accessToken, user.googleRefreshToken || undefined);
     
     // Sync classrooms to database
     const syncedClassrooms = await storage.syncClassrooms(userId, classroomData);
@@ -111,7 +111,7 @@ export const syncClassroomData = async (req: Request, res: Response) => {
       const studentData = await googleAuthService.getStudents(
         classroom.googleClassId,
         accessToken,
-        user.googleRefreshToken
+        user.googleRefreshToken || undefined
       );
       
       const syncedStudents = await storage.syncStudents(classroom.id, studentData);
@@ -123,7 +123,7 @@ export const syncClassroomData = async (req: Request, res: Response) => {
     }
 
     // Mark user as classroom connected
-    await storage.updateUserTokens(userId, accessToken, user.googleRefreshToken, user.googleTokenExpiry);
+    await storage.updateUserTokens(userId, accessToken, user.googleRefreshToken || undefined, user.googleTokenExpiry || undefined);
     await storage.upsertUser({
       ...user,
       classroomConnected: true
