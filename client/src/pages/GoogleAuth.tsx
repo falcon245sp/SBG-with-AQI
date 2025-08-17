@@ -17,8 +17,18 @@ export default function GoogleAuth() {
       const data = await response.json();
       
       if (data.authUrl) {
-        // Redirect to Google OAuth
-        window.location.href = data.authUrl;
+        console.log('Redirecting to Google OAuth:', data.authUrl);
+        // Try opening in a new tab first to test if it works
+        const newWindow = window.open(data.authUrl, '_blank');
+        if (newWindow) {
+          // If popup works, redirect in same window
+          setTimeout(() => {
+            window.location.href = data.authUrl;
+          }, 100);
+        } else {
+          // Direct redirect if popup blocked
+          window.location.href = data.authUrl;
+        }
       } else {
         throw new Error('Failed to get authorization URL');
       }
