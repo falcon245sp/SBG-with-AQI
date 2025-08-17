@@ -113,29 +113,69 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
-    // If googleId provided, try to find existing user by googleId
-    if (userData.googleId) {
-      const existingUser = await this.getUserByGoogleId(userData.googleId);
-      if (existingUser) {
-        // Update existing user
-        const [user] = await db
-          .update(users)
-          .set({
-            ...userData,
-            updatedAt: new Date(),
-          })
-          .where(eq(users.googleId, userData.googleId))
-          .returning();
-        return user;
+    console.log('[Database] Upserting user with googleId:', userData.googleId);
+    
+    try {
+      // If googleId provided, try to find existing user by googleId
+      if (userData.googleId) {
+        console.log('[Database] Checking for existing user with googleId:', userData.googleId);
+        const existingUser = await this.getUserByGoogleId(userData.googleId);
+        
+        if (existingUser) {
+          console.log('[Database] Existing user found, updating:', {
+            database_id: existingUser.id,
+            current_email: existingUser.email,
+            new_email: userData.email
+          });
+          
+          // Update existing user
+          const [user] = await db
+            .update(users)
+            .set({
+              ...userData,
+              updatedAt: new Date(),
+            })
+            .where(eq(users.googleId, userData.googleId))
+            .returning();
+            
+          console.log('[Database] User updated successfully:', {
+            database_id: user.id,
+            google_id: user.googleId,
+            email: user.email
+          });
+          
+          return user;
+        }
       }
-    }
 
-    // Create new user
-    const [user] = await db
-      .insert(users)
-      .values(userData)
-      .returning();
-    return user;
+      console.log('[Database] No existing user found, creating new user');
+      
+      // Create new user
+      const [user] = await db
+        .insert(users)
+        .values(userData)
+        .returning();
+        
+      console.log('[Database] New user created successfully:', {
+        database_id: user.id,
+        google_id: user.googleId,
+        email: user.email
+      });
+      
+      return user;
+    } catch (error: any) {
+      console.error('[Database] ERROR - User upsert failed:', {
+        error_type: 'DATABASE_ERROR',
+        error_name: error.name,
+        error_message: error.message,
+        error_code: error.code,
+        user_data: {
+          googleId: userData.googleId,
+          email: userData.email
+        }
+      });
+      throw error;
+    }
   }
 
   async updateUserTokens(userId: string, accessToken: string, refreshToken?: string, expiry?: Date): Promise<void> {

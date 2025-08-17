@@ -4,64 +4,89 @@ import { storage } from '../storage';
 
 // Start Google OAuth flow
 export const initiateGoogleAuth = async (req: Request, res: Response) => {
+  console.log('[OAuth] Client requesting Google OAuth initiation from IP:', req.ip);
   try {
     const authUrl = googleAuthService.getAuthUrl();
+    console.log('[OAuth] Successfully generated auth URL, responding to client');
     res.json({ authUrl });
-  } catch (error) {
-    console.error('Error initiating Google auth:', error);
+  } catch (error: any) {
+    console.error('[OAuth] ERROR - Failed to initiate Google auth:', {
+      error_type: 'APPLICATION_ERROR',
+      error_message: error.message,
+      error_stack: error.stack
+    });
     res.status(500).json({ error: 'Failed to initiate authentication' });
   }
 };
 
 // Handle Google OAuth callback
 export const handleGoogleCallback = async (req: Request, res: Response) => {
-  console.log('Google callback initiated with query params:', req.query);
+  console.log('[OAuth] =================================');
+  console.log('[OAuth] Google OAuth callback initiated');
+  console.log('[OAuth] Request IP:', req.ip);
+  console.log('[OAuth] Request headers:', {
+    'user-agent': req.headers['user-agent'],
+    'referer': req.headers.referer,
+    'x-forwarded-for': req.headers['x-forwarded-for']
+  });
+  console.log('[OAuth] Query parameters:', req.query);
   
   try {
-    const { code, error, error_description } = req.query;
+    const { code, error, error_description, state } = req.query;
     
     // Check for OAuth errors from Google
     if (error) {
-      console.error('Google OAuth error:', error, error_description);
-      return res.redirect(`/auth/error?error=${encodeURIComponent(error as string)}&description=${encodeURIComponent(error_description as string || 'Authentication failed')}`);
+      console.error('[OAuth] ERROR - Google OAuth returned error:', {
+        error_type: 'GOOGLE_OAUTH_ERROR',
+        error_code: error,
+        error_description: error_description,
+        state: state
+      });
+      return res.redirect(`/auth/error?error=${encodeURIComponent(error as string)}&description=${encodeURIComponent(error_description as string || 'Google OAuth error')}`);
     }
     
     if (!code || typeof code !== 'string') {
-      console.error('No authorization code provided');
+      console.error('[OAuth] ERROR - No authorization code provided:', {
+        error_type: 'APPLICATION_ERROR',
+        code_present: !!code,
+        code_type: typeof code,
+        query_params: req.query
+      });
       return res.redirect('/auth/error?error=no_code&description=Authorization code not provided');
     }
 
-    console.log('Exchanging authorization code for tokens...');
+    console.log('[OAuth] Authorization code received, proceeding with token exchange...');
+    
     // Exchange code for tokens
     const tokens = await googleAuthService.getTokens(code);
-    console.log('Received tokens:', { 
-      has_access_token: !!tokens.access_token,
-      has_refresh_token: !!tokens.refresh_token,
-      expires_at: tokens.expiry_date 
-    });
     
     if (!tokens.access_token) {
-      console.error('Failed to obtain access token');
+      console.error('[OAuth] ERROR - No access token in response:', {
+        error_type: 'APPLICATION_ERROR',
+        tokens_received: Object.keys(tokens)
+      });
       return res.redirect('/auth/error?error=no_access_token&description=Failed to obtain access token');
     }
 
-    console.log('Getting user info from Google...');
+    console.log('[OAuth] Token exchange successful, fetching user information...');
+    
     // Get user info from Google
     const userInfo = await googleAuthService.getUserInfo(tokens.access_token);
-    console.log('Retrieved user info:', { 
-      id: userInfo.id, 
-      email: userInfo.email,
-      name: `${userInfo.given_name} ${userInfo.family_name}` 
-    });
     
     if (!userInfo.id || !userInfo.email) {
-      console.error('Failed to obtain user information');
-      return res.redirect('/auth/error?error=no_user_info&description=Failed to obtain user information');
+      console.error('[OAuth] ERROR - Incomplete user information:', {
+        error_type: 'APPLICATION_ERROR',
+        has_id: !!userInfo.id,
+        has_email: !!userInfo.email,
+        userinfo_keys: Object.keys(userInfo)
+      });
+      return res.redirect('/auth/error?error=no_user_info&description=Failed to obtain complete user information');
     }
 
-    console.log('Upserting user to database...');
+    console.log('[OAuth] User information retrieved, saving to database...');
+    
     // Create or update user in database
-    const user = await storage.upsertUser({
+    const userData = {
       googleId: userInfo.id,
       email: userInfo.email,
       firstName: userInfo.given_name || '',
@@ -71,16 +96,42 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
       googleRefreshToken: tokens.refresh_token,
       googleTokenExpiry: tokens.expiry_date ? new Date(tokens.expiry_date) : undefined,
       classroomConnected: false, // Will be set to true after classroom auth
+    };
+    
+    console.log('[OAuth] Attempting to upsert user with data:', {
+      googleId: userData.googleId,
+      email: userData.email,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      has_access_token: !!userData.googleAccessToken,
+      has_refresh_token: !!userData.googleRefreshToken
     });
 
-    console.log('User upserted successfully:', { id: user.id, googleId: user.googleId });
+    const user = await storage.upsertUser(userData);
+
+    console.log('[OAuth] User upserted successfully:', {
+      database_id: user.id,
+      google_id: user.googleId,
+      email: user.email
+    });
     
     // Redirect with Google ID as URL parameter for client-side storage
-    console.log('Redirecting to callback with googleId:', user.googleId);
-    res.redirect(`/auth/callback?googleId=${user.googleId}`);
-  } catch (error) {
-    console.error('Error in Google callback:', error);
-    res.redirect(`/auth/error?error=server_error&description=${encodeURIComponent(error instanceof Error ? error.message : 'Authentication failed')}`);
+    const redirectUrl = `/auth/callback?googleId=${user.googleId}`;
+    console.log('[OAuth] Authentication complete, redirecting to:', redirectUrl);
+    console.log('[OAuth] =================================');
+    
+    res.redirect(redirectUrl);
+  } catch (error: any) {
+    console.error('[OAuth] ERROR - Unhandled exception in callback:', {
+      error_type: 'APPLICATION_ERROR',
+      error_name: error.name,
+      error_message: error.message,
+      error_stack: error.stack
+    });
+    console.log('[OAuth] =================================');
+    
+    const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
+    res.redirect(`/auth/error?error=server_error&description=${encodeURIComponent(errorMessage)}`);
   }
 };
 

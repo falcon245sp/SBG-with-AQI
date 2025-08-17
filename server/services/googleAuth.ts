@@ -33,27 +33,66 @@ export class GoogleAuthService {
 
   // Generate authorization URL
   getAuthUrl(state?: string): string {
-    return this.oauth2Client.generateAuthUrl({
+    console.log('[GoogleAuth] Generating authorization URL with scopes:', SCOPES);
+    const authUrl = this.oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: SCOPES,
       prompt: 'consent', // Force consent screen to get refresh token
       state: state // Optional state parameter for CSRF protection
     });
+    console.log('[GoogleAuth] Generated authorization URL:', authUrl);
+    return authUrl;
   }
 
   // Exchange authorization code for tokens
   async getTokens(code: string) {
-    const { tokens } = await this.oauth2Client.getToken(code);
-    return tokens;
+    console.log('[GoogleAuth] Exchanging authorization code for tokens, code length:', code.length);
+    try {
+      const response = await this.oauth2Client.getToken(code);
+      console.log('[GoogleAuth] Google token exchange successful:', {
+        has_access_token: !!response.tokens.access_token,
+        has_refresh_token: !!response.tokens.refresh_token,
+        token_type: response.tokens.token_type,
+        expires_in: response.tokens.expiry_date,
+        scope: response.tokens.scope
+      });
+      return response.tokens;
+    } catch (error: any) {
+      console.error('[GoogleAuth] ERROR - Google token exchange failed:', {
+        error_type: 'GOOGLE_API_ERROR',
+        error_code: error.code,
+        error_message: error.message,
+        error_details: error.response?.data || error.details || 'No additional details'
+      });
+      throw error;
+    }
   }
 
   // Get user info from Google
   async getUserInfo(accessToken: string) {
-    const oauth2 = google.oauth2({ version: 'v2', auth: this.oauth2Client });
-    this.oauth2Client.setCredentials({ access_token: accessToken });
-    
-    const { data } = await oauth2.userinfo.get();
-    return data;
+    console.log('[GoogleAuth] Fetching user info from Google API with access token length:', accessToken.length);
+    try {
+      const oauth2 = google.oauth2({ version: 'v2', auth: this.oauth2Client });
+      this.oauth2Client.setCredentials({ access_token: accessToken });
+      
+      const response = await oauth2.userinfo.get();
+      console.log('[GoogleAuth] Google userinfo API successful:', {
+        user_id: response.data.id,
+        email: response.data.email,
+        name: `${response.data.given_name} ${response.data.family_name}`,
+        verified_email: response.data.verified_email,
+        has_picture: !!response.data.picture
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('[GoogleAuth] ERROR - Google userinfo API failed:', {
+        error_type: 'GOOGLE_API_ERROR',
+        error_code: error.code,
+        error_message: error.message,
+        error_details: error.response?.data || error.details || 'No additional details'
+      });
+      throw error;
+    }
   }
 
   // Get Google Classroom courses
