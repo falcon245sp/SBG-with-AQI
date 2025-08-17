@@ -28,7 +28,6 @@ export const sessions = pgTable(
 // User storage table - supports both OAuth and username/password auth
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: varchar("username").unique(), // For username/password auth
   email: varchar("email").unique(),
   passwordHash: varchar("password_hash"), // For username/password auth
   googleId: varchar("google_id").unique(), // Google user ID
