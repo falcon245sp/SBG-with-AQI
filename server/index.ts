@@ -9,29 +9,8 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Setup session management
-const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
-const pgStore = connectPg(session);
-const sessionStore = new pgStore({
-  conString: process.env.DATABASE_URL,
-  createTableIfMissing: true,
-  ttl: sessionTtl,
-  tableName: "sessions",
-});
-
-app.set("trust proxy", 1);
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'your-secret-key-here',
-  store: sessionStore,
-  resave: false,
-  saveUninitialized: true, // Changed to true for debugging
-  cookie: {
-    httpOnly: true,
-    secure: false, // Set to false for development, should be true in production
-    maxAge: sessionTtl,
-  },
-  name: 'sherpa.sid', // Custom session name for debugging
-}));
+// Session management now handled by Replit Auth in routes.ts
+// Removed duplicate session setup to avoid conflicts
 
 app.use((req, res, next) => {
   const start = Date.now();

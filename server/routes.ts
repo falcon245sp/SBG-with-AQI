@@ -44,15 +44,21 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Note: Session middleware is now setup in index.ts
-  // Auth middleware removed to prevent conflicts
+  // Setup Replit Authentication - reliable platform-native auth
+  const { setupAuth, isAuthenticated } = await import("./replitAuth");
+  await setupAuth(app);
 
-  // Google OAuth routes
-  app.get('/api/auth/google', initiateGoogleAuth);
-  app.get('/api/auth/google/classroom', initiateClassroomAuth);
-  app.get('/api/auth/google/callback', handleGoogleCallback);
-  app.post('/api/auth/sync-classroom', syncClassroomData);
-  app.get('/api/classrooms', getUserClassrooms);
+  // Replit Auth routes (automatically configured by setupAuth)
+  // /api/login - Replit login
+  // /api/logout - Replit logout  
+  // /api/callback - OAuth callback (handled by Replit Auth)
+
+  // DISABLED Google OAuth routes due to platform URL rewriting issues
+  // app.get('/api/auth/google', initiateGoogleAuth);
+  // app.get('/api/auth/google/classroom', initiateClassroomAuth);
+  // app.get('/api/auth/google/callback', handleGoogleCallback);
+  // app.post('/api/auth/sync-classroom', syncClassroomData);
+  // app.get('/api/classrooms', getUserClassrooms);
   
   // Test route for debugging OAuth callback issues
   app.get('/api/auth/test-callback', (req, res) => {
@@ -66,8 +72,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Auth routes
-  app.get('/api/auth/user', getCurrentUser);
+  // Auth routes using Replit Auth
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
   
 
 

@@ -3,12 +3,9 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
-import GoogleAuth from "@/pages/GoogleAuth";
-import AuthCallback from "@/pages/AuthCallback";
-import AuthError from "@/pages/AuthError";
-import ClassroomSetup from "@/pages/ClassroomSetup";
+import Landing from "@/pages/landing";
 import Dashboard from "@/pages/Dashboard";
 import UploadPage from "@/pages/upload";
 import ResultsPage from "@/pages/results";
@@ -16,27 +13,7 @@ import DocumentResults from "@/pages/document-results";
 import PromptConfig from "@/pages/prompt-config";
 
 function Router() {
-  // Simple authentication check - if googleId exists in localStorage, user is authenticated
-  const [googleId, setGoogleId] = useState<string | null>(() => localStorage.getItem('googleId'));
-  const [isLoading, setIsLoading] = useState(false);
-  
-  // Listen for storage changes to update authentication state
-  useEffect(() => {
-    const handleStorageChange = () => {
-      setGoogleId(localStorage.getItem('googleId'));
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    // Also check for direct localStorage changes
-    const interval = setInterval(handleStorageChange, 100);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
-    };
-  }, []);
-  
-  const isAuthenticated = !!googleId;
+  const { user, isLoading, isAuthenticated } = useAuth();
 
   if (isLoading) {
     return (
@@ -49,18 +26,14 @@ function Router() {
     );
   }
 
-  // Always show callback and error routes regardless of auth state to handle OAuth returns
   return (
     <Switch>
-      <Route path="/auth/callback" component={AuthCallback} />
-      <Route path="/auth/error" component={AuthError} />
-      {!isAuthenticated ? (
-        <Route component={GoogleAuth} />
+      {isLoading || !isAuthenticated ? (
+        <Route path="/" component={Landing} />
       ) : (
         <>
-          <Route path="/auth/classroom-setup" component={ClassroomSetup} />
-          <Route path="/dashboard" component={Dashboard} />
           <Route path="/" component={Dashboard} />
+          <Route path="/dashboard" component={Dashboard} />
           <Route path="/upload" component={UploadPage} />
           <Route path="/results" component={ResultsPage} />
           <Route path="/results/:id" component={DocumentResults} />
