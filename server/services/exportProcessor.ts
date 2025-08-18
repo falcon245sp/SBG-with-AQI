@@ -9,7 +9,7 @@
 
 import { storage } from '../storage';
 import { DatabaseWriteService } from './databaseWriteService';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import fs from 'fs';
 import path from 'path';
 import type { ExportType } from '../utils/documentTagging';
@@ -75,11 +75,12 @@ export class ExportProcessor {
       }
 
       // Create generated document record
+      const fullFilePath = path.join(process.cwd(), 'uploads', exportFilePath);
       const documentData = {
-        fileName: path.basename(exportFilePath),
+        fileName: exportFilePath, // Use the filename as returned by generator
         originalPath: exportFilePath,
         filePath: exportFilePath,
-        fileSize: fs.statSync(path.join(process.cwd(), 'uploads', exportFilePath)).size,
+        fileSize: fs.statSync(fullFilePath).size,
         mimeType: exportMimeType,
         parentDocumentId: document.id
       };

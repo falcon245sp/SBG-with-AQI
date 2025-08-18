@@ -786,9 +786,24 @@ export class DatabaseStorage implements IStorage {
 
   async getQuestionResultsByDocumentId(documentId: string): Promise<any[]> {
     return await db
-      .select()
+      .select({
+        id: questionResults.id,
+        questionId: questionResults.questionId,
+        consensusStandards: questionResults.consensusStandards,
+        consensusRigorLevel: questionResults.consensusRigorLevel,
+        standardsVotes: questionResults.standardsVotes,
+        rigorVotes: questionResults.rigorVotes,
+        confidenceScore: questionResults.confidenceScore,
+        aiAgreementLevel: questionResults.aiAgreementLevel,
+        processingNotes: questionResults.processingNotes,
+        createdAt: questionResults.createdAt,
+        questionNumber: questions.questionNumber,
+        questionText: questions.questionText
+      })
       .from(questionResults)
-      .where(eq(questionResults.documentId, documentId));
+      .innerJoin(questions, eq(questionResults.questionId, questions.id))
+      .where(eq(questions.documentId, documentId))
+      .orderBy(questions.questionNumber);
   }
 
   // Question operations
