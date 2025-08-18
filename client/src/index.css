@@ -52,6 +52,15 @@
   --spacing: 0.25rem;
 }
 
+/* Custom classes for teacher override UX */
+.bg-green-25 {
+  background-color: hsl(145 60% 97%);
+}
+
+.dark .bg-green-25 {
+  background-color: hsl(145 40% 8%);
+}
+
 .dark {
   /* Dark scholarly theme - warm library at night */
   --background: hsl(210 15% 8%); /* Deep navy like evening library */

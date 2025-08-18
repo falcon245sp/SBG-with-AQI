@@ -82,6 +82,8 @@ interface DocumentResult {
     }>;
     teacherOverride?: {
       id: string;
+      questionId: string;
+      customerUuid: string;
       overriddenStandards: Array<{
         code: string;
         description: string;
@@ -90,10 +92,11 @@ interface DocumentResult {
         subject?: string;
       }>;
       overriddenRigorLevel: 'mild' | 'medium' | 'spicy';
-      teacherJustification: string;
-      confidenceLevel: number;
-      hasDomainChange: boolean;
-      domainChangeDetails: any;
+      confidenceScore: number;
+      notes?: string;
+      editReason?: string;
+      isActive: boolean;
+      isRevertedToAi: boolean;
       createdAt: string;
       updatedAt: string;
     };
@@ -211,8 +214,8 @@ export default function DocumentResults() {
       const effectiveStandards = question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [];
       const effectiveRigor = question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild';
       const source = question.teacherOverride ? 'Teacher Override' : 'Standards Sherpa';
-      const confidence = question.teacherOverride?.confidenceLevel || question.result?.confidenceScore || 'N/A';
-      const justification = question.teacherOverride?.teacherJustification || question.aiResponses?.[0]?.rigorJustification || '';
+      const confidence = question.teacherOverride?.confidenceScore || question.result?.confidenceScore || 'N/A';
+      const justification = question.teacherOverride?.notes || question.teacherOverride?.editReason || question.aiResponses?.[0]?.rigorJustification || '';
       
       const standardsCodes = effectiveStandards.map(s => s.code).join('; ');
       const dokLevel = effectiveRigor === 'mild' ? 'DOK 1-2' : effectiveRigor === 'medium' ? 'DOK 2-3' : 'DOK 3-4';
@@ -672,10 +675,16 @@ export default function DocumentResults() {
                         </thead>
                         <tbody className="bg-white divide-y divide-slate-200">
                           {sortedResults.map((question, index) => (
-                            <tr key={question.id} className="hover:bg-slate-50">
+                            <tr key={question.id} className={`hover:bg-slate-50 ${question.teacherOverride ? 'bg-green-25 border-l-4 border-l-green-500 dark:border-l-green-400' : ''}`}>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-slate-900">
+                                <div className="text-sm font-medium text-slate-900 flex items-center">
                                   Question {question.questionNumber}
+                                  {question.teacherOverride && (
+                                    <Badge variant="outline" className="ml-2 text-xs text-green-600 border-green-300">
+                                      <Edit3 className="w-3 h-3 mr-1" />
+                                      EDITED
+                                    </Badge>
+                                  )}
                                 </div>
                               </td>
                               <td className="px-6 py-4">
@@ -713,13 +722,15 @@ export default function DocumentResults() {
                                         <RigorBadge level={question.teacherOverride.overriddenRigorLevel} />
                                       </TooltipTrigger>
                                       <TooltipContent className="max-w-sm min-w-48 max-h-64 overflow-y-auto p-4 bg-slate-800 text-white border-slate-700">
-                                        <p className="text-sm leading-6 whitespace-pre-wrap break-words">{question.teacherOverride.teacherJustification}</p>
+                                        <p className="text-sm leading-6 whitespace-pre-wrap break-words">
+                                          {question.teacherOverride.notes || question.teacherOverride.editReason || 'Teacher override - no justification provided'}
+                                        </p>
                                       </TooltipContent>
                                     </Tooltip>
-                                    <Badge variant="outline" className="text-xs text-green-600 border-green-300">TEACHER</Badge>
-                                    {question.teacherOverride.hasDomainChange && (
-                                      <Badge variant="outline" className="text-xs text-orange-600 border-orange-300">DOMAIN CHANGE</Badge>
-                                    )}
+                                    <Badge variant="outline" className="text-xs text-green-600 border-green-300 bg-green-50">
+                                      <Edit3 className="w-3 h-3 mr-1" />
+                                      TEACHER OVERRIDE
+                                    </Badge>
                                   </div>
                                 ) : question.result ? (
                                   <div className="flex items-center space-x-2">
