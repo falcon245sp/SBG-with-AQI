@@ -34,6 +34,9 @@ function Router() {
 
   return (
     <Switch>
+      {/* Public routes accessible without authentication */}
+      <Route path="/testing-dashboard" component={TestingDashboard} />
+      
       {isLoading || !isAuthenticated ? (
         <>
           <Route path="/" component={GoogleOAuthLanding} />
@@ -52,7 +55,6 @@ function Router() {
           <Route path="/prompt-config" component={PromptConfig} />
           <Route path="/file-cabinet" component={FileCabinet} />
           <Route path="/documents/:documentId/inspect" component={DocumentInspector} />
-          <Route path="/testing-dashboard" component={TestingDashboard} />
           <Route component={NotFound} />
         </>
       )}

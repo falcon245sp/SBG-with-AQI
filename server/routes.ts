@@ -597,9 +597,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get processing queue status
+  // Get processing queue status (requires authentication)
   app.get('/api/queue', async (req: any, res) => {
     try {
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+      
       const queueItems = await storage.getQueueStatus();
       const processorStatus = queueProcessor.getStatus();
       
