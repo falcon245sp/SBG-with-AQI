@@ -425,9 +425,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/documents/:documentId/accept', async (req: any, res) => {
     try {
       const { documentId } = req.params;
+      console.log(`[Accept] Processing accept request for document: ${documentId}`);
+      
       const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
       
-      if (!customerUuid) return;
+      if (!customerUuid) {
+        console.error(`[Accept] No customer UUID found for document: ${documentId}`);
+        return res.status(401).json({ 
+          error: 'Authentication required',
+          message: 'Unable to identify customer for this request'
+        });
+      }
+
+      console.log(`[Accept] Customer UUID: ${customerUuid}, updating status for document: ${documentId}`);
 
       // Update document status to reviewed_and_accepted
       await DatabaseWriteService.updateDocumentTeacherReviewStatus(
@@ -436,8 +446,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'reviewed_and_accepted'
       );
 
+      console.log(`[Accept] Status updated, queueing exports for document: ${documentId}`);
+
       // Trigger document generation (cover sheets, rubrics)
       await DatabaseWriteService.queueDocumentExports(documentId, customerUuid);
+
+      console.log(`[Accept] Exports queued successfully for document: ${documentId}`);
 
       res.json({ 
         success: true, 
@@ -446,7 +460,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
     } catch (error) {
-      console.error('Failed to accept and proceed:', error);
+      console.error(`[Accept] Failed to accept and proceed for document ${req.params?.documentId}:`, error);
       res.status(500).json({ 
         error: 'Failed to accept and proceed',
         message: error instanceof Error ? error.message : 'Unknown error'
