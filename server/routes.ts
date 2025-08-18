@@ -996,6 +996,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register File Cabinet router
   const { fileCabinetRouter } = await import('./routes/fileCabinet');
+  console.log('[Routes] Registering File Cabinet router');
   app.use(fileCabinetRouter);
 
   // Register Document Traversal router

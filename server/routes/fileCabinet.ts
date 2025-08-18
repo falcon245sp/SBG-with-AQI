@@ -210,21 +210,41 @@ fileCabinetRouter.patch('/api/file-cabinet/documents/:id/tags', async (req: any,
   }
 });
 
+// Add a broader debug middleware to see what's happening
+fileCabinetRouter.use((req: any, res, next) => {
+  console.log(`[FileCabinet DEBUG] Request: ${req.method} ${req.path}`);
+  if (req.path.includes('generate-exports')) {
+    console.log(`[FileCabinet DEBUG] Generate exports request found!`);
+    console.log(`[FileCabinet DEBUG] Params:`, req.params);
+    console.log(`[FileCabinet DEBUG] Body:`, req.body);
+  }
+  next();
+});
+
 // Queue export generation (automatic background generation)
 fileCabinetRouter.post('/api/file-cabinet/documents/:id/generate-exports', async (req: any, res) => {
+  console.log(`[FileCabinet] Export generation request received for document ${req.params.id}`);
+  console.log(`[FileCabinet] Request body:`, req.body);
+  
   try {
     const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
     const { id } = req.params;
     const { exportTypes } = req.body; // Array of export types to generate
     
+    console.log(`[FileCabinet] Customer UUID: ${customerUuid}, Export types: ${exportTypes}`);
+    
     // Validate document ownership
     const document = await storage.getDocument(id);
+    console.log(`[FileCabinet] Found document:`, document ? { id: document.id, assetType: document.assetType, customerUuid: document.customerUuid } : 'null');
+    
     if (!document || document.customerUuid !== customerUuid) {
+      console.log(`[FileCabinet] Document validation failed: document exists = ${!!document}, customer match = ${document?.customerUuid === customerUuid}`);
       return res.status(404).json({ message: 'Document not found' });
     }
     
     // Only allow export generation for uploaded documents
     if (document.assetType !== 'uploaded') {
+      console.log(`[FileCabinet] Invalid asset type: ${document.assetType}, expected: uploaded`);
       return res.status(400).json({ message: 'Can only generate exports for uploaded documents' });
     }
     

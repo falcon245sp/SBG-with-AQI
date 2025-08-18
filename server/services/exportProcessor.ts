@@ -75,13 +75,21 @@ export class ExportProcessor {
       }
 
       // Create generated document record
+      const documentData = {
+        fileName: path.basename(exportFilePath),
+        originalPath: exportFilePath,
+        filePath: exportFilePath,
+        fileSize: fs.statSync(path.join(process.cwd(), 'uploads', exportFilePath)).size,
+        mimeType: exportMimeType,
+        parentDocumentId: document.id
+      };
+      
       const generatedDoc = await DatabaseWriteService.createGeneratedDocument(
         document.customerUuid,
         document.id,
         exportItem.exportType as ExportType,
-        path.basename(exportFilePath),
-        exportFilePath,
-        exportMimeType
+        documentData,
+        []
       );
 
       console.log(`[ExportProcessor] Generated document created: ${generatedDoc.id}`);
@@ -163,7 +171,7 @@ export class ExportProcessor {
     const fileName = `rubric_${document.id}_${timestamp}.pdf`;
     const filePath = path.join(process.cwd(), 'uploads', fileName);
     
-    fs.writeFileSync(filePath, pdf.output('arraybuffer'));
+    fs.writeFileSync(filePath, Buffer.from(pdf.output('arraybuffer')));
     
     console.log(`[ExportProcessor] Rubric PDF saved: ${fileName}`);
     return fileName; // Return relative path for database storage
@@ -227,7 +235,7 @@ export class ExportProcessor {
     const fileName = `cover_sheet_${document.id}_${timestamp}.pdf`;
     const filePath = path.join(process.cwd(), 'uploads', fileName);
     
-    fs.writeFileSync(filePath, pdf.output('arraybuffer'));
+    fs.writeFileSync(filePath, Buffer.from(pdf.output('arraybuffer')));
     
     console.log(`[ExportProcessor] Cover sheet PDF saved: ${fileName}`);
     return fileName; // Return relative path for database storage
