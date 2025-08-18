@@ -599,17 +599,7 @@ export default function Dashboard() {
                     multiple={true}
                   />
 
-                  {/* Testing Configuration - Fixed Values */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span className="text-sm font-medium text-blue-800">Testing Configuration</span>
-                    </div>
-                    <div className="text-sm text-blue-700">
-                      <p>Customer: 123</p>
-                      <p>Jurisdiction: Common Core</p>
-                    </div>
-                  </div>
+
 
                   {/* Focus Standards Configuration */}
                   <div className="border-t pt-6 mt-6">
