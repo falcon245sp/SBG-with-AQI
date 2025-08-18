@@ -902,7 +902,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(teacherOverrides.createdAt));
   }
 
-  async revertToAI(questionId: string, userId: string): Promise<void> {
+  async revertToAI(questionId: string, customerUuid: string): Promise<void> {
     // Deactivate current active override and mark as reverted to Sherpa
     const result = await db
       .update(teacherOverrides)

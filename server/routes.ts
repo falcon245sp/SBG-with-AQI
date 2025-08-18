@@ -670,6 +670,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!userId) {
         return res.status(401).json({ message: "Authentication required" });
       }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
       const questionId = req.params.questionId;
       
       const validationResult = insertTeacherOverrideSchema.safeParse({
@@ -684,8 +690,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Check if override already exists for this user/question
-      const existingOverride = await storage.getQuestionOverride(questionId, userId);
+      // Check if override already exists for this customer/question
+      const existingOverride = await storage.getQuestionOverride(questionId, user.customerUuid);
       
       if (existingOverride) {
         // Update existing override
@@ -693,7 +699,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({ message: "Override updated successfully", overrideId: existingOverride.id });
       } else {
         // Create new override
-        const override = await storage.createTeacherOverride(userId, validationResult.data);
+        const override = await storage.createTeacherOverride(user.customerUuid, validationResult.data);
         res.json({ message: "Override created successfully", overrideId: override.id });
       }
     } catch (error) {
@@ -721,10 +727,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!userId) {
         return res.status(401).json({ message: "Authentication required" });
       }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
       const questionId = req.params.questionId;
       
       console.log(`Processing revert request for question ${questionId}`);
-      await storage.revertToAI(questionId, userId);
+      await storage.revertToAI(questionId, user.customerUuid);
       console.log(`Successfully reverted question ${questionId} to Sherpa analysis`);
       res.json({ message: "Successfully reverted to Sherpa analysis" });
     } catch (error) {
@@ -743,9 +755,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!userId) {
         return res.status(401).json({ message: "Authentication required" });
       }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
       const questionId = req.params.questionId;
       
-      const override = await storage.getQuestionOverride(questionId, userId);
+      const override = await storage.getQuestionOverride(questionId, user.customerUuid);
       
       if (override) {
         res.json(override);
