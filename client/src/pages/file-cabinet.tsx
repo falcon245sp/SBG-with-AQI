@@ -303,22 +303,25 @@ export default function FileCabinet() {
                 />
               </div>
 
-              <div>
-                <label className="text-sm font-medium mb-2 block">Filter by Type</label>
-                <Select value={exportTypeFilter} onValueChange={setExportTypeFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All types" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All types</SelectItem>
-                    {fileCabinetData?.availableExportTypes.map(type => (
-                      <SelectItem key={type} value={type}>
-                        {FILE_CABINET_EXPORT_TYPES[type as keyof typeof FILE_CABINET_EXPORT_TYPES]?.label || type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Only show export type filter for document drawers, not graded submissions */}
+              {currentDrawer !== 'graded' && (
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Filter by Type</label>
+                  <Select value={exportTypeFilter} onValueChange={setExportTypeFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All types" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All types</SelectItem>
+                      {fileCabinetData?.availableExportTypes?.map(type => (
+                        <SelectItem key={type} value={type}>
+                          {FILE_CABINET_EXPORT_TYPES[type as keyof typeof FILE_CABINET_EXPORT_TYPES]?.label || type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
