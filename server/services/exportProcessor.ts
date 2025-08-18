@@ -167,9 +167,11 @@ export class ExportProcessor {
     pdf.setFontSize(14);
     pdf.text('Total Score: _____ / _____ points', 20, yPosition + 20);
     
-    // Save PDF
-    const timestamp = Date.now();
-    const fileName = `rubric_${document.id}_${timestamp}.pdf`;
+    // Save PDF with user-friendly filename
+    const baseFileName = document.fileName.replace(/\.[^/.]+$/, ""); // Remove file extension
+    const cleanFileName = baseFileName.replace(/[^a-zA-Z0-9\s-_]/g, '').replace(/\s+/g, '-'); // Clean filename
+    const timestamp = new Date().toISOString().slice(0, 10); // Use YYYY-MM-DD format
+    const fileName = `${cleanFileName}_rubric_${timestamp}.pdf`;
     const filePath = path.join(process.cwd(), 'uploads', fileName);
     
     fs.writeFileSync(filePath, Buffer.from(pdf.output('arraybuffer')));
@@ -231,9 +233,11 @@ export class ExportProcessor {
       }
     }
     
-    // Save PDF
-    const timestamp = Date.now();
-    const fileName = `cover_sheet_${document.id}_${timestamp}.pdf`;
+    // Save PDF with user-friendly filename
+    const baseFileName = document.fileName.replace(/\.[^/.]+$/, ""); // Remove file extension
+    const cleanFileName = baseFileName.replace(/[^a-zA-Z0-9\s-_]/g, '').replace(/\s+/g, '-'); // Clean filename
+    const timestamp = new Date().toISOString().slice(0, 10); // Use YYYY-MM-DD format
+    const fileName = `${cleanFileName}_cover-sheet_${timestamp}.pdf`;
     const filePath = path.join(process.cwd(), 'uploads', fileName);
     
     fs.writeFileSync(filePath, Buffer.from(pdf.output('arraybuffer')));

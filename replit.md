@@ -22,6 +22,13 @@ This version implements comprehensive document overwrite functionality to preven
 - Integrated into document processing workflow before export generation
 - Comprehensive logging for troubleshooting cleanup operations
 
+**User-Friendly Filename Generation:**
+- **Enhanced Readability**: Generated document filenames now use descriptive, clean names based on the original document
+- **Format**: `[Original-Document-Name]_[type]_[YYYY-MM-DD].pdf` (e.g., "Copy-of-71-74-Quiz-V3_rubric_2025-08-18.pdf")
+- **UUID Removal**: Eliminated long UUID strings that caused UI wrapping and formatting issues
+- **Date Format**: Uses human-readable YYYY-MM-DD date format instead of timestamps
+- **Clean Characters**: Removes special characters and replaces spaces with hyphens for file system compatibility
+
 ## Version 0.7.3 - Rubric Collation System
 **Release Date:** August 18, 2025
 
