@@ -45,6 +45,7 @@ interface DocumentResult {
     fileSize: number;
     mimeType: string;
     status: 'pending' | 'processing' | 'completed' | 'failed';
+    teacherReviewStatus: 'not_reviewed' | 'reviewed_and_accepted' | 'reviewed_and_overridden';
     jurisdictions: string[];
     createdAt: string;
     processingStarted?: string;

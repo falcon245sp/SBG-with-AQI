@@ -593,7 +593,7 @@ export default function FileCabinet() {
                           <div className="flex gap-1 flex-wrap">
                             {/* Review Results Action - only show for uploaded documents with completed analysis */}
                             {doc.assetType === 'uploaded' && doc.status === 'completed' && (
-                              <Link href={`/documents/${doc.id}/results`}>
+                              <Link href={`/results/${doc.id}`}>
                                 <Button
                                   size="sm"
                                   variant={doc.teacherReviewStatus === 'not_reviewed' ? 'default' : 'outline'}
