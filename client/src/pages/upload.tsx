@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { Sidebar } from "@/components/Sidebar";
 import { FileUploader } from "@/components/FileUploader";
 import { webServiceClient } from "@/lib/webServiceClient";
@@ -11,9 +12,10 @@ import { Upload, FileText, CheckCircle, AlertCircle, Clock } from "lucide-react"
 
 export default function UploadPage() {
   const { toast } = useToast();
-  // Fixed values for testing - in production these come from API
-  const customerId = "123";
-  const jurisdictions = "Common Core";
+  // Use authenticated user data
+  const { user } = useAuth();
+  const customerId = user?.customerUuid || "";
+  const jurisdictions = "Common Core"; // Default jurisdiction
   const [focusStandards, setFocusStandards] = useState("");
   const [callbackUrl, setCallbackUrl] = useState("");
   const [isUploading, setIsUploading] = useState(false);
