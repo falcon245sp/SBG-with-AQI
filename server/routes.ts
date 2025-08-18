@@ -54,141 +54,22 @@ async function verifyPassword(password: string, hash: string): Promise<boolean> 
   return bcrypt.compare(password, hash);
 }
 
-// Session-based authentication middleware
-const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
-  const session = (req as any).session;
-  
-  if (!session || !session.userId) {
-    return res.status(401).json({ error: 'Authentication required' });
-  }
-  
-  next();
-};
+// Import the proper Replit Auth middleware
+import { isAuthenticated, setupAuth } from './replitAuth';
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Traditional username/password authentication for production portability
-  // Avoids OAuth redirect issues that don't work across deployment environments
-  
-  // Authentication routes
-  app.post('/api/auth/register', async (req, res) => {
-    const { username, password, email } = req.body;
-    
-    if (!username || !password || !email) {
-      return res.status(400).json({ error: 'Username, password, and email are required' });
-    }
-    
-    try {
-      // Check if user already exists
-      const existingUser = await storage.getUserByUsername(username);
-      if (existingUser) {
-        return res.status(409).json({ error: 'Username already exists' });
-      }
-      
-      // Create new user with hashed password - using upsertGoogleUser with dummy Google ID for compatibility
-      const hashedPassword = await hashPassword(password);
-      const user = await storage.upsertGoogleUser({
-        googleId: `local_${username}_${Date.now()}`, // Unique identifier for local users
-        email,
-        firstName: null,
-        lastName: null,
-        profileImageUrl: null
-      });
-      
-      // Set session
-      (req as any).session.userId = user.id;
-      (req as any).session.username = user.username;
-      
-      res.json({ 
-        success: true, 
-        user: { 
-          id: user.id, 
-          username: user.username, 
-          email: user.email 
-        } 
-      });
-    } catch (error) {
-      console.error('Registration error:', error);
-      res.status(500).json({ error: 'Registration failed' });
-    }
-  });
-  
-  app.post('/api/auth/login', async (req, res) => {
-    const { username, password } = req.body;
-    
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Username and password are required' });
-    }
-    
-    try {
-      const user = await storage.getUserByUsername(username);
-      if (!user) {
-        return res.status(401).json({ error: 'Invalid credentials' });
-      }
-      
-      const isValidPassword = await verifyPassword(password, user.passwordHash || '');
-      if (!isValidPassword) {
-        return res.status(401).json({ error: 'Invalid credentials' });
-      }
-      
-      // Set session
-      (req as any).session.userId = user.id;
-      (req as any).session.username = user.username;
-      
-      res.json({ 
-        success: true, 
-        user: { 
-          id: user.id, 
-          username: user.username, 
-          email: user.email 
-        } 
-      });
-    } catch (error) {
-      console.error('Login error:', error);
-      res.status(500).json({ error: 'Login failed' });
-    }
-  });
-  
-  app.post('/api/auth/logout', (req, res) => {
-    req.session?.destroy((err) => {
-      if (err) {
-        return res.status(500).json({ error: 'Logout failed' });
-      }
-      res.clearCookie('connect.sid');
-      res.json({ success: true });
-    });
-  });
-  
-  // Test route for debugging OAuth callback issues
-  app.get('/api/auth/test-callback', (req, res) => {
-    console.log('[TEST] Test callback hit with query:', req.query);
-    console.log('[TEST] Session data:', (req as any).session);
-    res.json({ 
-      message: 'Test callback successful', 
-      query: req.query, 
-      sessionId: req.sessionID,
-      hasSession: !!(req as any).session 
-    });
-  });
+  // Setup Replit Auth first
+  await setupAuth(app);
 
-  // Get current user route - supports both Google OAuth and username/password
-  app.get('/api/auth/user', async (req: any, res) => {
+  // Get current user route - uses Replit Auth
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.session?.userId;
-      if (!userId) {
-        return res.status(401).json({ error: 'Authentication required' });
-      }
-
+      const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ error: 'User not found' });
-      }
-      
-      // Return user without sensitive information, including customerUuid for business operations
-      const { passwordHash, googleAccessToken, googleRefreshToken, ...userWithoutSensitiveInfo } = user;
-      res.json(userWithoutSensitiveInfo);
+      res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
-      res.status(500).json({ error: "Failed to fetch user" });
+      res.status(500).json({ message: "Failed to fetch user" });
     }
   });
 
@@ -269,12 +150,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Document upload endpoint
   app.post('/api/documents/upload', isAuthenticated, upload.any(), async (req: any, res) => {
     try {
-      const userId = (req as any).session.userId; // Get authenticated user ID
-      const user = await storage.getUser(userId);
-      if (!user) {
+      // Get user from Google OAuth session (via user claims)
+      const user = (req as any).user;
+      if (!user || !user.claims || !user.claims.sub) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Get user by Google ID to retrieve customerUuid
+      const dbUser = await storage.getUserByGoogleId(user.claims.sub);
+      if (!dbUser) {
         return res.status(404).json({ message: "User not found" });
       }
-      const customerUuid = user.customerUuid; // Use customer UUID for business operations
+      const customerUuid = dbUser.customerUuid; // Use customer UUID for business operations
       const files = (req.files as Express.Multer.File[]) || [];
       
       console.log(`=== UPLOAD DEBUG ===`);
@@ -675,7 +562,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const document = await storage.createDocument(validatedKey.userId, validationResult.data);
+      const document = await storage.createDocument(validatedKey.customerUuid, validationResult.data);
       await queueProcessor.addToQueue(document.id);
       
       // Parse focus standards if provided

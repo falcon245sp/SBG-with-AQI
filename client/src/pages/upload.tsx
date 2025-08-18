@@ -14,7 +14,7 @@ export default function UploadPage() {
   const { toast } = useToast();
   // Use authenticated user data
   const { user } = useAuth();
-  const customerId = user?.customerUuid || "";
+  const customerId = (user as any)?.customerUuid || "";
   const jurisdictions = "Common Core"; // Default jurisdiction
   const [focusStandards, setFocusStandards] = useState("");
   const [callbackUrl, setCallbackUrl] = useState("");
