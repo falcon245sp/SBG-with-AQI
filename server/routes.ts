@@ -72,8 +72,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: 'Authentication required' });
       }
 
-      // Get user from database using session user ID
-      const user = await storage.getUser(userId);
+      // Get user from database using CustomerLookupService
+      const user = await CustomerLookupService.getUserFromSession(userId);
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }
@@ -103,11 +103,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Authentication required" });
       }
       
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      const customerUuid = user.customerUuid; // Use customer UUID for business operations
+      const { user, customerUuid } = await CustomerLookupService.requireUserAndCustomerUuid(userId);
       const file = req.file;
       
       if (!file) {
@@ -178,12 +174,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Authentication required" });
       }
       
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
-      const customerUuid = user.customerUuid;
+      const customerUuid = await CustomerLookupService.requireCustomerUuid(userId);
       const files = (req.files as Express.Multer.File[]) || [];
       
       console.log(`=== UPLOAD DEBUG ===`);

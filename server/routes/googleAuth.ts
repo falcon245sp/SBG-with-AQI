@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { GoogleAuthService } from "../services/googleAuth";
 import { storage } from "../storage";
+import { CustomerLookupService } from "../services/customerLookupService";
 
 // Initialize Google Auth service with renamed environment variables
 const googleAuth = new GoogleAuthService();
@@ -158,7 +159,7 @@ export async function syncClassroomData(req: Request, res: Response) {
       return res.status(401).json({ error: 'User not authenticated' });
     }
 
-    const user = await storage.getUser(userId);
+    const user = await CustomerLookupService.getUserFromSession(userId);
     if (!user?.googleAccessToken) {
       return res.status(400).json({ error: 'Google access token not found' });
     }
@@ -185,12 +186,8 @@ export async function getUserClassrooms(req: Request, res: Response) {
       return res.status(401).json({ error: 'User not authenticated' });
     }
 
-    const user = await storage.getUser(userId);
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    const classrooms = await storage.getTeacherClassrooms(user.customerUuid);
+    const { user, customerUuid } = await CustomerLookupService.requireUserAndCustomerUuid(userId);
+    const classrooms = await storage.getTeacherClassrooms(customerUuid);
     res.json(classrooms);
   } catch (error) {
     console.error('[OAuth] Error fetching user classrooms:', error);
@@ -206,7 +203,7 @@ export async function getCurrentUser(req: Request, res: Response) {
       return res.status(401).json({ error: 'User not authenticated' });
     }
 
-    const user = await storage.getUser(userId);
+    const user = await CustomerLookupService.getUserFromSession(userId);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
