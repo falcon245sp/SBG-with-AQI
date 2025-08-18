@@ -8,7 +8,7 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -87,6 +87,7 @@ const FILE_CABINET_EXPORT_TYPES = {
   'standards_summary': { label: 'Standards Summary', icon: '📚', color: 'bg-orange-100 text-orange-800' },
   'question_analysis': { label: 'Question Analysis', icon: '🔍', color: 'bg-indigo-100 text-indigo-800' },
   'teacher_guide': { label: 'Teacher Guide', icon: '👩‍🏫', color: 'bg-yellow-100 text-yellow-800' },
+  'collated_graded_submissions': { label: 'Collated Grades', icon: '📋', color: 'bg-emerald-100 text-emerald-800' },
 };
 
 export default function FileCabinet() {
@@ -94,10 +95,31 @@ export default function FileCabinet() {
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [tagFilter, setTagFilter] = useState('');
-  const [exportTypeFilter, setExportTypeFilter] = useState('');
+  const [exportTypeFilter, setExportTypeFilter] = useState('all');
   const [newTags, setNewTags] = useState<Record<string, string>>({});
 
   const queryClient = useQueryClient();
+
+  // Handle collation of submissions for a document
+  const collateMutation = useMutation({
+    mutationFn: async (documentId: string) => {
+      return apiRequest(`/api/file-cabinet/documents/${documentId}/collate-submissions`, {
+        method: 'POST'
+      });
+    },
+    onSuccess: (data, documentId) => {
+      // Refresh the file cabinet to show the new collated document
+      queryClient.invalidateQueries({ queryKey: ['file-cabinet'] });
+      console.log(`Collation completed for ${documentId}:`, data);
+    },
+    onError: (error) => {
+      console.error('Failed to collate submissions:', error);
+    }
+  });
+
+  const handleCollateSubmissions = (documentId: string) => {
+    collateMutation.mutate(documentId);
+  };
 
   // Fetch File Cabinet data
   const { data: fileCabinetData, isLoading } = useQuery({
@@ -108,7 +130,7 @@ export default function FileCabinet() {
         sortBy,
         sortOrder,
         ...(tagFilter && { tags: tagFilter }),
-        ...(exportTypeFilter && { exportType: exportTypeFilter }),
+        ...(exportTypeFilter && exportTypeFilter !== 'all' && { exportType: exportTypeFilter }),
       });
       
       const response = await fetch(`/api/file-cabinet?${params}`, {
@@ -288,7 +310,7 @@ export default function FileCabinet() {
                     <SelectValue placeholder="All types" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All types</SelectItem>
+                    <SelectItem value="all">All types</SelectItem>
                     {fileCabinetData?.availableExportTypes.map(type => (
                       <SelectItem key={type} value={type}>
                         {FILE_CABINET_EXPORT_TYPES[type as keyof typeof FILE_CABINET_EXPORT_TYPES]?.label || type}
@@ -428,6 +450,16 @@ export default function FileCabinet() {
                             <Button size="sm" variant="outline">
                               <FileText className="h-4 w-4" />
                             </Button>
+                            {doc.assetType === 'uploaded' && (
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                title="Collate graded submissions into a single PDF"
+                                onClick={() => handleCollateSubmissions(doc.id)}
+                              >
+                                📋
+                              </Button>
+                            )}
                             <Link href={`/documents/${doc.id}/inspect`}>
                               <Button size="sm" variant="outline" title="Inspect document relationships and details">
                                 <Eye className="h-4 w-4" />

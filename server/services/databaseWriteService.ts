@@ -449,6 +449,7 @@ export class DatabaseWriteService {
   static async createGradeSubmission(gradeData: {
     sequenceNumberId: string;
     documentId: string;
+    originalDocumentId?: string;
     studentId: string;
     questionGrades: any;
     totalScore?: number;
@@ -462,6 +463,27 @@ export class DatabaseWriteService {
     try {
       const submission = await storage.createGradeSubmission(gradeData);
       console.log(`[DatabaseWriteService] Grade submission created: ${submission.id}`);
+      
+      // Trigger automatic collation for this document
+      try {
+        const { RubricCollationService } = await import('./rubricCollationService.js');
+        
+        // Use originalDocumentId if available, otherwise use documentId
+        const documentToCollate = gradeData.originalDocumentId || gradeData.documentId;
+        if (documentToCollate) {
+          // Run collation in background without blocking submission processing
+          setTimeout(async () => {
+            try {
+              await RubricCollationService.autoCollateOnNewSubmission(documentToCollate);
+            } catch (collationError) {
+              console.warn(`[DatabaseWriteService] Background collation failed for ${documentToCollate}:`, collationError);
+            }
+          }, 100); // Small delay to ensure submission is fully processed
+        }
+      } catch (importError) {
+        console.warn('[DatabaseWriteService] Could not import RubricCollationService for auto-collation:', importError);
+      }
+      
       return submission;
     } catch (error) {
       console.error(`[DatabaseWriteService] Failed to create grade submission:`, error);

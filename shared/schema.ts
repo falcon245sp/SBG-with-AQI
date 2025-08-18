@@ -96,7 +96,7 @@ export const assetTypeEnum = pgEnum('asset_type', [
 
 // Export type enum for generated documents  
 export const exportTypeEnum = pgEnum('export_type', [
-  'rubric_pdf', 'cover_sheet', 'processing_report', 'standards_summary', 'question_analysis', 'teacher_guide'
+  'rubric_pdf', 'cover_sheet', 'processing_report', 'standards_summary', 'question_analysis', 'teacher_guide', 'collated_graded_submissions'
 ]);
 
 // Grade submission status enum

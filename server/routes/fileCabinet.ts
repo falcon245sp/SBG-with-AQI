@@ -8,6 +8,7 @@ import { storage } from '../storage';
 import { ActiveUserService } from '../services/activeUserService';
 import { DatabaseWriteService } from '../services/databaseWriteService';
 import { generateDocumentTags, identifyDocumentType, ExportType } from '../utils/documentTagging';
+import { RubricCollationService } from '../services/rubricCollationService';
 
 export const fileCabinetRouter = Router();
 
@@ -243,6 +244,45 @@ fileCabinetRouter.post('/api/file-cabinet/documents/:id/generate-exports', async
   } catch (error) {
     console.error('[FileCabinet] Error queuing exports:', error);
     res.status(500).json({ message: 'Failed to queue exports' });
+  }
+});
+
+// Manually trigger rubric collation for an assessment
+fileCabinetRouter.post('/api/file-cabinet/documents/:id/collate-submissions', async (req: any, res) => {
+  try {
+    const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+    const { id } = req.params;
+    
+    // Validate document ownership
+    const document = await storage.getDocument(id);
+    if (!document || document.customerUuid !== customerUuid) {
+      return res.status(404).json({ message: 'Document not found' });
+    }
+    
+    // Only allow collation for uploaded documents (original assessments)
+    if (document.assetType !== 'uploaded') {
+      return res.status(400).json({ message: 'Can only collate submissions for uploaded documents' });
+    }
+    
+    const result = await RubricCollationService.manualCollation(id, customerUuid);
+    
+    if (result.success) {
+      console.log(`[FileCabinet] Manual collation completed for document ${id}: ${result.collatedDocumentId}`);
+      res.json({
+        success: true,
+        message: result.message,
+        collatedDocumentId: result.collatedDocumentId
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: result.message
+      });
+    }
+    
+  } catch (error) {
+    console.error('[FileCabinet] Error in manual collation:', error);
+    res.status(500).json({ message: 'Failed to collate submissions' });
   }
 });
 
