@@ -28,7 +28,9 @@ import {
   Settings,
   Eye,
   RefreshCw,
-  Trash2
+  Trash2,
+  ArrowLeft,
+  Home
 } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { Link } from 'wouter';
@@ -289,11 +291,19 @@ export default function FileCabinet() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Standards Sherpa File Cabinet</h1>
-          <p className="text-muted-foreground">
-            Manage your uploaded documents and generated exports with comprehensive type identification
-          </p>
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard">
+            <Button variant="outline" size="sm" className="flex items-center gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Dashboard
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold">Standards Sherpa File Cabinet</h1>
+            <p className="text-muted-foreground">
+              Manage your uploaded documents and generated exports with comprehensive type identification
+            </p>
+          </div>
         </div>
         <Button variant="outline" className="gap-2">
           <Settings className="h-4 w-4" />

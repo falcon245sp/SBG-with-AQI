@@ -534,11 +534,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Can only resubmit uploaded documents' });
       }
       
-      // Add to processing queue
-      await queueProcessor.addToQueue(id);
+      // Reset document status to pending first (required for queue processor)
+      await DatabaseWriteService.updateDocumentStatus(id, 'pending');
       
-      // Update document status to queued
-      await DatabaseWriteService.updateDocumentStatus(id, 'queued');
+      // Add to processing queue via storage (this handles the database)
+      await storage.addToProcessingQueue(id, 1); // priority 1 for resubmitted documents
+      
+      // Trigger the queue processor to start processing
+      await queueProcessor.addToQueue(id, 1);
       
       console.log(`[Documents] Document ${id} resubmitted for processing`);
       
