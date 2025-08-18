@@ -1,88 +1,10 @@
-# Document Processing Service - Standards Sherpa v0.7.1
+# Document Processing Service - Standards Sherpa
 
 ## Overview
-
-The Document Processing Service is a full-stack web application that provides AI-powered educational document analysis. It automatically analyzes educational documents (PDFs, Word docs, Google Docs) to identify standards alignment and determine cognitive rigor levels using multiple AI engines. The application features a RESTful API backend with Express.js and a React frontend, providing educational institutions and EdTech companies with automated document processing capabilities. The business vision is to empower educators with efficient tools for analyzing and aligning educational content, improving curriculum development and assessment.
-
-## Version 0.7.4 - Document Re-submission Overwrite System
-**Release Date:** August 18, 2025
-
-### Document Overwrite on Re-submission
-This version implements comprehensive document overwrite functionality to prevent duplicate generated documents when customers re-submit the same test for analysis:
-
-**Automatic Cleanup System:**
-- **Generated Document Cleanup**: When documents are re-processed, all previously generated documents (rubrics, cover sheets) for that source document are automatically deleted
-- **Export Queue Clearing**: Pending and failed export queue items are cleared to prevent duplicate processing
-- **Physical File Removal**: Both database records and physical PDF files are removed from the uploads directory
-- **Seamless Re-generation**: After cleanup, new exports are automatically generated with fresh analysis results
-
-**Implementation Details:**
-- `deleteGeneratedDocumentsForSource()`: Removes all generated documents linked to a source document
-- `clearExportQueueForDocument()`: Cleans export queue entries for re-submitted documents  
-- Integrated into document processing workflow before export generation
-- Comprehensive logging for troubleshooting cleanup operations
-
-**User-Friendly Filename Generation:**
-- **Enhanced Readability**: Generated document filenames now use descriptive, clean names based on the original document
-- **Format**: `[Original-Document-Name]_[type]_[YYYY-MM-DD].pdf` (e.g., "Copy-of-71-74-Quiz-V3_rubric_2025-08-18.pdf")
-- **UUID Removal**: Eliminated long UUID strings that caused UI wrapping and formatting issues
-- **Date Format**: Uses human-readable YYYY-MM-DD date format instead of timestamps
-- **Clean Characters**: Removes special characters and replaces spaces with hyphens for file system compatibility
-
-**Automated Testing System:**
-- **System Health Endpoint**: `/api/system-health` validates database, export processor, file system, and filename implementation
-- **Export Testing**: `/api/test-export` endpoint for manually triggering and testing export generation
-- **UX Testing Suite**: `/api/run-ux-tests` comprehensive endpoint validation to prevent dead links and 404 errors
-- **Testing Dashboard**: `/testing-dashboard` UI for running automated tests and viewing results in real-time
-- **Real-time Validation**: Comprehensive system validation with immediate feedback on all major components
-- **Filename Validation**: Automated checking for user-friendly filename implementation vs legacy UUID formats
-- **Link Validation**: Automated testing of all public routes, API endpoints, file serving, and error handling
-
-## Version 0.7.3 - Rubric Collation System
-**Release Date:** August 18, 2025
-
-### Major Rubric Collation Achievement
-This version delivers comprehensive rubric collation functionality that automatically combines individual graded rubric submissions into organized multipage PDFs:
-
-**Rubric Collation System:**
-- **Automatic Collation**: When new grades are submitted, the system automatically regenerates collated PDFs
-- **Manual Collation**: Teachers can manually trigger collation via File Cabinet interface
-- **Smart Organization**: PDFs organized alphabetically by student name with complete scoring details
-- **Comprehensive Content**: Includes student names, scores, question breakdowns, feedback, and teacher notes
-- **File Cabinet Integration**: Collated PDFs appear as new export type in the Generated Documents drawer
-- **Multi-Format Document Viewing**: Direct viewing of PDF, text, images, and other document types within File Cabinet interface
-
-**Three-Drawer File Cabinet:**
-- **Uploaded Documents**: Original assessments and source materials
-- **Generated Documents**: Rubrics, cover sheets, and collated grade PDFs
-- **Graded Submissions**: Individual student grade entries with detailed scoring
-
-**Anti-Fraud QR Grading System:**
-- **One-Time Sequence Numbers**: Each rubric QR code contains a unique UUID that can only be scanned once
-- **Duplicate Prevention**: Multiple submissions of the same graded rubric are automatically rejected
-- **Audit Trail**: Complete tracking of who scanned which QR codes and when
-- **Tamper Protection**: QR codes become invalid after first successful scan, preventing grade manipulation
-
-### Key Benefits Delivered
-- ✅ **Automatic PDF Collation**: Individual grade submissions automatically combined into organized multipage PDFs
-- ✅ **Teacher Workflow Optimization**: One consolidated PDF per assessment instead of individual files per student
-- ✅ **Real-Time Updates**: Collated PDFs automatically regenerate when new grades are submitted
-- ✅ **Professional Organization**: Student submissions sorted alphabetically with complete scoring details
-- ✅ **Anti-Fraud Protection**: Zero tolerance for duplicate grade submissions with one-time QR sequences
-- ✅ **Complete Document Management**: Three-drawer system for comprehensive file organization
-- ✅ **Multi-Format Document Viewing**: PDF, text, image, and .docx viewing capabilities with smart download options
+The Document Processing Service, personified as "Standards Sherpa," is a full-stack web application that provides AI-powered analysis of educational documents (PDFs, Word docs, Google Docs). Its main purpose is to automatically identify standards alignment and determine cognitive rigor levels using multiple AI engines. The application aims to empower educators and EdTech companies with efficient tools for analyzing and aligning educational content, thereby improving curriculum development and assessment. Key capabilities include automated document processing, rubric collation, anti-fraud grading, and comprehensive document management.
 
 ## User Preferences
-
 Preferred communication style: Simple, everyday language.
-
-## Known Issues & Improvements Needed
-
-### Session Management Enhancement (High Priority)
-- **Issue**: Session expirations are not handled elegantly when users are actively logged in
-- **Impact**: Users may experience unexpected authentication failures during active use
-- **Needed**: Implement graceful session expiration handling with automatic refresh or user-friendly re-authentication prompts
-- **Status**: Documented for future implementation - August 18, 2025
 
 ## System Architecture
 
@@ -101,10 +23,10 @@ Preferred communication style: Simple, everyday language.
 - **Authentication**: Replit Auth integration with session management
 - **File Processing**: Multer for uploads, PDF-extract for PDFs, Mammoth for Word documents
 - **AI Integration**: Multiple AI service integrations
-- **Three-Layer Architecture**: Complete separation of concerns implemented
-  - **ActiveUserService**: Centralized service for accessing currently authenticated user data from session with clean API for session management
-  - **CustomerLookupService**: Single database service for all customer UUID resolution, supporting lookups by session user ID, email, Google ID, customer UUID, and name search with centralized PII decryption
-  - **DatabaseWriteService**: Centralized write operations service with business logic, error handling, audit trails, and transaction management
+- **Three-Layer Architecture**:
+    - **ActiveUserService**: Centralized service for accessing authenticated user data.
+    - **CustomerLookupService**: Single database service for customer UUID resolution and PII decryption.
+    - **DatabaseWriteService**: Centralized write operations service with business logic, error handling, audit trails, and transaction management.
 
 ### Database Design
 - **Primary Database**: PostgreSQL via Neon serverless
@@ -122,19 +44,17 @@ Preferred communication style: Simple, everyday language.
 - **Question Parsing**: Intelligent parsing to extract individual questions and context.
 - **Asynchronous Processing**: Queue-based system for handling large documents.
 - **Multi-File Upload**: Support for uploading and processing multiple documents simultaneously.
+- **Document Re-submission Overwrite System**: Automatically deletes previously generated documents and clears export queues for re-processed source documents, ensuring seamless re-generation.
+- **User-Friendly Filename Generation**: Generated documents use descriptive names (e.g., `[Original-Document-Name]_[type]_[YYYY-MM-DD].pdf`).
 
 ### Security & Authentication
-- **Authentication Provider**: Replit Auth with OpenID Connect (note: traditional username/password authentication also implemented due to Replit OAuth URL rewriting issues).
-- **Session Management**: PostgreSQL-based session storage with automatic cleanup of expired sessions.
-- **Session Cleanup**: Automated hourly cleanup process removes expired sessions to maintain database efficiency.
+- **Authentication Provider**: Replit Auth with OpenID Connect (with fallback username/password).
+- **Session Management**: PostgreSQL-based session storage with automatic cleanup.
 - **API Security**: Session-based authentication.
 - **File Validation**: MIME type validation and file size limits.
-- **PII Encryption**: All personally identifiable information encrypted at rest using AES encryption in both development and production environments.
-- **Credential Security**: All OAuth credentials stored in environment variables with no hardcoded credentials in client-side code
-- **Pre-Deployment Security**: Comprehensive security audit completed with hardcoded credential removal and secure credential management implementation
-- **Centralized Data Access**: 
-  - **CustomerLookupService**: Centralized database service that handles all customer UUID resolution and user data access, with PII decryption managed in one place for security consistency.
-  - **DatabaseWriteService**: All database write operations centralized with consistent business logic, error handling, and audit trails for security compliance.
+- **PII Encryption**: All personally identifiable information encrypted at rest using AES encryption.
+- **Credential Security**: OAuth credentials stored in environment variables.
+- **Centralized Data Access**: CustomerLookupService and DatabaseWriteService enforce secure and consistent data handling.
 
 ### Error Handling & Monitoring
 - **Structured Logging**: Request/response logging with timing.
@@ -142,12 +62,12 @@ Preferred communication style: Simple, everyday language.
 - **Status Tracking**: Real-time processing status updates.
 
 ### Feature Specifications
-- **Student Facing Test Cover Sheet**: PDF export with four-column layout (Question, Standard, Topic, Rigor Level) for student preview without answer revelation.
-- **Teacher Override System**: Database and UI for teachers to save and manage corrections to AI analysis, including confidence scoring and edit history with "Revert to Sherpa" functionality.
-- **Google Classroom Integration**: Google Classroom API integration for automated roster and class management, including student roster synchronization.
-- **Anti-Fraud QR Grading**: One-time sequence number system prevents duplicate grade submissions from the same rubric, ensuring grade integrity and preventing manipulation.
-- **File Cabinet Document Management**: Comprehensive document organization with reliable type identification, Mac Finder-style interface, and performance optimization for document re-use.
-- **Persona**: The platform is personified as "Standards Sherpa" or "Sherpa" – a knowledgeable guide for educational standards and analysis. All user-facing references use this persona.
+- **Student Facing Test Cover Sheet**: PDF export with four-column layout (Question, Standard, Topic, Rigor Level).
+- **Teacher Override System**: Database and UI for teachers to save corrections to AI analysis, including confidence scoring and "Revert to Sherpa" functionality.
+- **Google Classroom Integration**: Google Classroom API integration for roster and class management.
+- **Anti-Fraud QR Grading**: One-time sequence number system prevents duplicate grade submissions for rubrics.
+- **Rubric Collation System**: Automatically combines individual graded rubric submissions into organized multipage PDFs, integrating with the File Cabinet.
+- **File Cabinet Document Management**: Three-drawer system (Uploaded, Generated, Graded) with reliable type identification and Mac Finder-style interface.
 - **Visual Design**: Warm scholarly aesthetic with a rich blue and wood tone color palette.
 
 ## External Dependencies
@@ -161,32 +81,9 @@ Preferred communication style: Simple, everyday language.
 - **Neon Database**: Serverless PostgreSQL
 - **Google Cloud Storage**: Configured for file storage (not actively used)
 
-### Production Deployment Requirements
-- **Separate Google OAuth App**: Production requires dedicated OAuth application with .replit.app domain
-- **Unsynced Secrets**: SHERPA_* environment variables must be unsynced in production deployment
-- **API Enablement**: Google APIs (Classroom, People, OAuth) must be enabled for production OAuth app
-
 ### Authentication & Google Integration
-- **Google OAuth**: Primary authentication using renamed environment variables (SHERPA_*) to avoid Replit platform conflicts
-- **OAuth Implementation**: Successfully implemented Google OAuth with renamed env vars to prevent redirect URI overwrites
-- **Google Classroom Integration**: Full OAuth-based integration with proper token management and refresh capabilities
-- **Fallback Authentication**: Traditional username/password available as secondary option
-- **Production Secret Management**: 
-  - Development uses environment variables for secure credential storage (DEV_GOOGLE_*)
-  - Production requires "unsyncing" Google secrets in Replit Secrets Manager to use different OAuth application  
-  - Must create separate Google OAuth application for production with .replit.app domain redirect URI
-  - Unsync DEV_GOOGLE_CLIENT_ID, DEV_GOOGLE_CLIENT_SECRET, DEV_GOOGLE_REDIRECT_URI in production deployment
-- **OAuth Configuration Status**: 
-  - **Development OAuth Application**:
-    - Client ID: [Stored in DEV_GOOGLE_CLIENT_ID environment variable]
-    - JavaScript Origin: ✅ Current development domain (auto-detected)
-    - Redirect URI: ✅ CONFIGURED using environment variables
-    - Environment Variables: DEV_GOOGLE_CLIENT_ID, DEV_GOOGLE_CLIENT_SECRET, DEV_GOOGLE_REDIRECT_URI (SYNCED)
-    - Status: ✅ FULLY WORKING - OAuth flow complete with secure credential management
-  - **Production OAuth Application**: 
-    - Domain: docu-proc-serv-jfielder1.replit.app
-    - Environment Variables: PROD_GOOGLE_CLIENT_ID, PROD_GOOGLE_CLIENT_SECRET, PROD_GOOGLE_REDIRECT_URI (UNSYNCED)
-    - Status: ✅ Ready for deployment - will work in single browser window without popup requirement
+- **Google OAuth**: Primary authentication, configured with renamed environment variables (SHERPA_*) to avoid Replit platform conflicts.
+- **Google Classroom Integration**: Full OAuth-based integration with proper token management.
 
 ### UI Libraries
 - **Radix UI**: Headless component primitives
