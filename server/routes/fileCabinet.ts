@@ -210,13 +210,10 @@ fileCabinetRouter.patch('/api/file-cabinet/documents/:id/tags', async (req: any,
   }
 });
 
-// Add a broader debug middleware to see what's happening
+// Clean debug middleware for export generation only
 fileCabinetRouter.use((req: any, res, next) => {
-  console.log(`[FileCabinet DEBUG] Request: ${req.method} ${req.path}`);
   if (req.path.includes('generate-exports')) {
-    console.log(`[FileCabinet DEBUG] Generate exports request found!`);
-    console.log(`[FileCabinet DEBUG] Params:`, req.params);
-    console.log(`[FileCabinet DEBUG] Body:`, req.body);
+    console.log(`[FileCabinet] Export generation request: ${req.method} ${req.path}`);
   }
   next();
 });
