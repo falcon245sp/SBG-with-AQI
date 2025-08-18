@@ -10,6 +10,8 @@ import {
   processingQueue,
   teacherOverrides,
   exportQueue,
+  qrSequenceNumbers,
+  gradeSubmissions,
   type User,
   type UpsertUser,
   type Classroom,
@@ -21,6 +23,8 @@ import {
   type ApiKey,
   type ProcessingQueue,
   type TeacherOverride,
+  type QrSequenceNumber,
+  type GradeSubmission,
   type InsertUser,
   type InsertClassroom,
   type InsertStudent,
@@ -29,6 +33,8 @@ import {
   type InsertAiResponse,
   type InsertApiKey,
   type InsertTeacherOverride,
+  type InsertQrSequenceNumber,
+  type InsertGradeSubmission,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, inArray, sql, like, or } from "drizzle-orm";
@@ -107,6 +113,17 @@ export interface IStorage {
     medium: number;
     spicy: number;
   }>;
+  
+  // QR Anti-fraud operations
+  createQrSequenceNumber(qrData: InsertQrSequenceNumber): Promise<QrSequenceNumber>;
+  findQrSequenceByNumber(sequenceNumber: string): Promise<QrSequenceNumber | undefined>;
+  markQrSequenceAsUsed(sequenceId: string, usedByTeacher: string): Promise<void>;
+  getQrSequencesForDocument(documentId: string): Promise<QrSequenceNumber[]>;
+  
+  // Grade submission operations
+  createGradeSubmission(gradeData: InsertGradeSubmission): Promise<GradeSubmission>;
+  getGradeSubmissionsForDocument(documentId: string): Promise<GradeSubmission[]>;
+  getStudentGradeSubmissions(studentId: string): Promise<GradeSubmission[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1079,6 +1096,61 @@ export class DatabaseStorage implements IStorage {
       result,
       aiResponses: aiResponsesData,
     }];
+  }
+  
+  // QR Anti-fraud operations
+  async createQrSequenceNumber(qrData: InsertQrSequenceNumber): Promise<QrSequenceNumber> {
+    const [sequence] = await db.insert(qrSequenceNumbers).values(qrData).returning();
+    return sequence;
+  }
+  
+  async findQrSequenceByNumber(sequenceNumber: string): Promise<QrSequenceNumber | undefined> {
+    const [sequence] = await db
+      .select()
+      .from(qrSequenceNumbers)
+      .where(eq(qrSequenceNumbers.sequenceNumber, sequenceNumber));
+    return sequence;
+  }
+  
+  async markQrSequenceAsUsed(sequenceId: string, usedByTeacher: string): Promise<void> {
+    await db
+      .update(qrSequenceNumbers)
+      .set({
+        isUsed: true,
+        usedAt: new Date(),
+        usedByTeacher,
+      })
+      .where(eq(qrSequenceNumbers.id, sequenceId));
+  }
+  
+  async getQrSequencesForDocument(documentId: string): Promise<QrSequenceNumber[]> {
+    return await db
+      .select()
+      .from(qrSequenceNumbers)
+      .where(eq(qrSequenceNumbers.documentId, documentId))
+      .orderBy(qrSequenceNumbers.createdAt);
+  }
+  
+  // Grade submission operations
+  async createGradeSubmission(gradeData: InsertGradeSubmission): Promise<GradeSubmission> {
+    const [submission] = await db.insert(gradeSubmissions).values(gradeData).returning();
+    return submission;
+  }
+  
+  async getGradeSubmissionsForDocument(documentId: string): Promise<GradeSubmission[]> {
+    return await db
+      .select()
+      .from(gradeSubmissions)
+      .where(eq(gradeSubmissions.documentId, documentId))
+      .orderBy(gradeSubmissions.scannedAt);
+  }
+  
+  async getStudentGradeSubmissions(studentId: string): Promise<GradeSubmission[]> {
+    return await db
+      .select()
+      .from(gradeSubmissions)
+      .where(eq(gradeSubmissions.studentId, studentId))
+      .orderBy(gradeSubmissions.scannedAt);
   }
 }
 

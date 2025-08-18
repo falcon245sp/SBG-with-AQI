@@ -4,29 +4,32 @@
 
 The Document Processing Service is a full-stack web application that provides AI-powered educational document analysis. It automatically analyzes educational documents (PDFs, Word docs, Google Docs) to identify standards alignment and determine cognitive rigor levels using multiple AI engines. The application features a RESTful API backend with Express.js and a React frontend, providing educational institutions and EdTech companies with automated document processing capabilities. The business vision is to empower educators with efficient tools for analyzing and aligning educational content, improving curriculum development and assessment.
 
-## Version 0.7.1 - Security Hardened Release  
+## Version 0.7.2 - Anti-Fraud QR Grading System  
 **Release Date:** August 18, 2025
 
-### Major Security & Architecture Achievement
-This version completes both the centralized three-layer architecture and comprehensive security hardening for production deployment:
+### Major Anti-Fraud & File Management Achievement
+This version delivers two breakthrough features: comprehensive anti-fraud QR grading protection and advanced File Cabinet document management:
 
-**Architecture Completions:**
-- **Application Routes Layer**: HTTP endpoints and request handling only
-- **DatabaseWriteService Layer**: Centralized business logic for all database write operations  
-- **Storage Layer**: Pure data access without business logic
+**Anti-Fraud QR Grading System:**
+- **One-Time Sequence Numbers**: Each rubric QR code contains a unique UUID that can only be scanned once
+- **Duplicate Prevention**: Multiple submissions of the same graded rubric are automatically rejected
+- **Audit Trail**: Complete tracking of who scanned which QR codes and when
+- **Tamper Protection**: QR codes become invalid after first successful scan, preventing grade manipulation
 
-**Security Hardening:**
-- **Credential Security**: Complete removal of hardcoded OAuth credentials from client code
-- **Environment Variable Management**: All sensitive data now stored in secure environment variables
-- **Documentation Sanitization**: All credential exposure removed from project documentation
+**File Cabinet Document Management:**
+- **Comprehensive Document Type Identification**: Three-layer system (export_type enum + automatic tags + filename analysis)
+- **Mac Finder-Style Interface**: Sortable columns (Name, Upload Date, Status, Tags) with clickable headers
+- **Two-Drawer Organization**: Separate "uploaded" vs "generated" document views
+- **On-the-fly Tag Management**: Create and assign tags directly from the interface
+- **Queue-Based Architecture**: Background generation of exports with immediate availability
 
 ### Key Benefits Delivered
-- ✅ **100% Write Centralization**: All database mutations flow through DatabaseWriteService
-- ✅ **Consistent Business Logic**: Standardized patterns across all write operations
-- ✅ **Comprehensive Error Handling**: Uniform error responses and logging
-- ✅ **Complete Audit Trail**: All write operations logged for compliance
-- ✅ **Production Security**: Zero hardcoded credentials, deployment-ready security posture
-- ✅ **Technical Debt Elimination**: Clean separation removes scattered write logic
+- ✅ **Anti-Fraud Protection**: Zero tolerance for duplicate grade submissions with one-time QR sequences
+- ✅ **Grade Integrity**: Teachers cannot accidentally or intentionally re-submit the same graded assessment
+- ✅ **Complete Audit Trail**: Full tracking of all grade submissions with teacher identification
+- ✅ **Document Organization**: Reliable identification and management of all document types
+- ✅ **Performance Optimization**: File Cabinet allows re-use of previously uploaded documents without re-upload
+- ✅ **User Experience**: Intuitive document management with familiar Mac Finder-style interface
 
 ## User Preferences
 
@@ -93,6 +96,8 @@ Preferred communication style: Simple, everyday language.
 - **Student Facing Test Cover Sheet**: PDF export with four-column layout (Question, Standard, Topic, Rigor Level) for student preview without answer revelation.
 - **Teacher Override System**: Database and UI for teachers to save and manage corrections to AI analysis, including confidence scoring and edit history with "Revert to Sherpa" functionality.
 - **Google Classroom Integration**: Google Classroom API integration for automated roster and class management, including student roster synchronization.
+- **Anti-Fraud QR Grading**: One-time sequence number system prevents duplicate grade submissions from the same rubric, ensuring grade integrity and preventing manipulation.
+- **File Cabinet Document Management**: Comprehensive document organization with reliable type identification, Mac Finder-style interface, and performance optimization for document re-use.
 - **Persona**: The platform is personified as "Standards Sherpa" or "Sherpa" – a knowledgeable guide for educational standards and analysis. All user-facing references use this persona.
 - **Visual Design**: Warm scholarly aesthetic with a rich blue and wood tone color palette.
 

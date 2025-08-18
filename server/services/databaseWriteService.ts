@@ -381,4 +381,91 @@ export class DatabaseWriteService {
   private static logWriteOperation(operation: string, entityType: string, entityId: string, customerUuid: string): void {
     console.log(`[DatabaseWriteService] [AUDIT] ${operation} ${entityType} ${entityId} for customer ${customerUuid} at ${new Date().toISOString()}`);
   }
+  
+  // ==================== QR ANTI-FRAUD OPERATIONS ====================
+  
+  /**
+   * Create a one-time QR sequence number for anti-fraud protection
+   */
+  static async createQrSequenceNumber(qrData: {
+    documentId: string;
+    studentId: string;
+    sequenceNumber: string;
+  }): Promise<any> {
+    console.log(`[DatabaseWriteService] Creating QR sequence for document ${qrData.documentId}, student ${qrData.studentId}`);
+    
+    try {
+      const qrSequence = await storage.createQrSequenceNumber(qrData);
+      console.log(`[DatabaseWriteService] QR sequence created: ${qrSequence.id}`);
+      return qrSequence;
+    } catch (error) {
+      console.error(`[DatabaseWriteService] Failed to create QR sequence:`, error);
+      throw new Error(`Failed to create QR sequence: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+  
+  /**
+   * Find QR sequence by sequence number (for validation)
+   */
+  static async findQrSequenceNumber(sequenceNumber: string): Promise<any> {
+    try {
+      return await storage.findQrSequenceByNumber(sequenceNumber);
+    } catch (error) {
+      console.error(`[DatabaseWriteService] Failed to find QR sequence:`, error);
+      return null;
+    }
+  }
+  
+  /**
+   * Mark QR sequence as used (anti-fraud protection)
+   */
+  static async markQrSequenceAsUsed(sequenceId: string, usedByTeacher: string): Promise<void> {
+    console.log(`[DatabaseWriteService] Marking QR sequence ${sequenceId} as used by ${usedByTeacher}`);
+    
+    try {
+      await storage.markQrSequenceAsUsed(sequenceId, usedByTeacher);
+      console.log(`[DatabaseWriteService] QR sequence marked as used successfully`);
+    } catch (error) {
+      console.error(`[DatabaseWriteService] Failed to mark QR sequence as used:`, error);
+      throw new Error(`Failed to mark QR sequence as used: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+  
+  /**
+   * Get all QR sequences for a document
+   */
+  static async getQrSequencesForDocument(documentId: string): Promise<any[]> {
+    try {
+      return await storage.getQrSequencesForDocument(documentId);
+    } catch (error) {
+      console.error(`[DatabaseWriteService] Failed to get QR sequences:`, error);
+      return [];
+    }
+  }
+  
+  /**
+   * Create a grade submission after successful QR scan
+   */
+  static async createGradeSubmission(gradeData: {
+    sequenceNumberId: string;
+    documentId: string;
+    studentId: string;
+    questionGrades: any;
+    totalScore?: number;
+    maxPossibleScore?: number;
+    percentageScore?: number;
+    scannerNotes?: string;
+    processedBy: string;
+  }): Promise<any> {
+    console.log(`[DatabaseWriteService] Creating grade submission for student ${gradeData.studentId}`);
+    
+    try {
+      const submission = await storage.createGradeSubmission(gradeData);
+      console.log(`[DatabaseWriteService] Grade submission created: ${submission.id}`);
+      return submission;
+    } catch (error) {
+      console.error(`[DatabaseWriteService] Failed to create grade submission:`, error);
+      throw new Error(`Failed to create grade submission: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
 }

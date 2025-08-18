@@ -99,6 +99,11 @@ export const exportTypeEnum = pgEnum('export_type', [
   'rubric_pdf', 'cover_sheet', 'processing_report', 'standards_summary', 'question_analysis', 'teacher_guide'
 ]);
 
+// Grade submission status enum
+export const gradeSubmissionStatusEnum = pgEnum('grade_submission_status', [
+  'pending', 'processed', 'duplicate_rejected', 'invalid_qr'
+]);
+
 // Documents table - enhanced for File Cabinet functionality
 export const documents: any = pgTable("documents", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -221,6 +226,37 @@ export const exportQueue = pgTable("export_queue", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// QR Code Sequence Numbers - One-time use anti-fraud system
+export const qrSequenceNumbers = pgTable("qr_sequence_numbers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  documentId: varchar("document_id").notNull().references(() => documents.id, { onDelete: 'cascade' }),
+  studentId: varchar("student_id").notNull().references(() => students.id, { onDelete: 'cascade' }),
+  sequenceNumber: varchar("sequence_number").notNull().unique(), // One-time use UUID
+  isUsed: boolean("is_used").notNull().default(false),
+  qrCodeGenerated: timestamp("qr_code_generated").defaultNow(),
+  usedAt: timestamp("used_at"),
+  usedByTeacher: varchar("used_by_teacher"), // Track who scanned it
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Grade Submissions - Results from QR code scans
+export const gradeSubmissions = pgTable("grade_submissions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sequenceNumberId: varchar("sequence_number_id").notNull().references(() => qrSequenceNumbers.id),
+  documentId: varchar("document_id").notNull().references(() => documents.id),
+  studentId: varchar("student_id").notNull().references(() => students.id),
+  questionGrades: jsonb("question_grades").notNull(), // Array of {questionId, score, maxScore}
+  totalScore: decimal("total_score", { precision: 5, scale: 2 }),
+  maxPossibleScore: decimal("max_possible_score", { precision: 5, scale: 2 }),
+  percentageScore: decimal("percentage_score", { precision: 5, scale: 2 }),
+  status: gradeSubmissionStatusEnum("status").notNull().default('pending'),
+  scannerNotes: text("scanner_notes"), // Optional notes from scanning process
+  processedBy: varchar("processed_by"), // Teacher who scanned
+  scannedAt: timestamp("scanned_at").defaultNow(),
+  processedAt: timestamp("processed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   googleId: true,
@@ -308,6 +344,24 @@ export const insertExportQueueSchema = createInsertSchema(exportQueue).pick({
   priority: true,
 });
 
+export const insertQrSequenceNumberSchema = createInsertSchema(qrSequenceNumbers).pick({
+  documentId: true,
+  studentId: true,
+  sequenceNumber: true,
+});
+
+export const insertGradeSubmissionSchema = createInsertSchema(gradeSubmissions).pick({
+  sequenceNumberId: true,
+  documentId: true,
+  studentId: true,
+  questionGrades: true,
+  totalScore: true,
+  maxPossibleScore: true,
+  percentageScore: true,
+  scannerNotes: true,
+  processedBy: true,
+});
+
 // Types
 export type UpsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -320,6 +374,8 @@ export type QuestionResult = typeof questionResults.$inferSelect;
 export type ApiKey = typeof apiKeys.$inferSelect;
 export type ProcessingQueue = typeof processingQueue.$inferSelect;
 export type TeacherOverride = typeof teacherOverrides.$inferSelect;
+export type QrSequenceNumber = typeof qrSequenceNumbers.$inferSelect;
+export type GradeSubmission = typeof gradeSubmissions.$inferSelect;
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertClassroom = z.infer<typeof insertClassroomSchema>;
@@ -329,3 +385,5 @@ export type InsertQuestion = z.infer<typeof insertQuestionSchema>;
 export type InsertAiResponse = z.infer<typeof insertAiResponseSchema>;
 export type InsertApiKey = z.infer<typeof insertApiKeySchema>;
 export type InsertTeacherOverride = z.infer<typeof insertTeacherOverrideSchema>;
+export type InsertQrSequenceNumber = z.infer<typeof insertQrSequenceNumberSchema>;
+export type InsertGradeSubmission = z.infer<typeof insertGradeSubmissionSchema>;
