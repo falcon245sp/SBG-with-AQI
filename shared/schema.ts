@@ -113,6 +113,7 @@ export const questions = pgTable("questions", {
   questionNumber: text("question_number").notNull(),
   questionText: text("question_text").notNull(),
   context: text("context"),
+  questionType: varchar("question_type"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -139,6 +140,8 @@ export const questionResults = pgTable("question_results", {
   standardsVotes: jsonb("standards_votes").notNull(), // Voting breakdown
   rigorVotes: jsonb("rigor_votes").notNull(), // Rigor voting breakdown
   confidenceScore: decimal("confidence_score", { precision: 3, scale: 2 }),
+  aiAgreementLevel: varchar("ai_agreement_level"), // Field found in database
+  processingNotes: text("processing_notes"), // Field found in database
   createdAt: timestamp("created_at").defaultNow(),
 });
 
