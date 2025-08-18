@@ -30,7 +30,7 @@ import {
   type InsertTeacherOverride,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, inArray, sql } from "drizzle-orm";
+import { eq, desc, and, inArray, sql, like, or } from "drizzle-orm";
 import { PIIEncryption } from "./utils/encryption";
 
 export interface IStorage {
@@ -38,7 +38,10 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   getUserByGoogleId(googleId: string): Promise<User | undefined>;
+  getUserByCustomerUuid(customerUuid: string): Promise<User | undefined>;
+  getUsersByName(firstName?: string, lastName?: string): Promise<User[]>;
   createUser(user: UpsertUser): Promise<User>;
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserTokens(userId: string, accessToken: string, refreshToken?: string, expiry?: Date): Promise<void>;
@@ -230,6 +233,49 @@ export class DatabaseStorage implements IStorage {
       console.warn('PII decryption failed for user lookup by customer UUID, returning user data:', error.message);
       return user;
     }
+  }
+
+  async getUsersByName(firstName?: string, lastName?: string): Promise<User[]> {
+    let query = db.select().from(users);
+
+    // Build conditions for name search - note: we need to search encrypted fields
+    const conditions = [];
+    if (firstName) {
+      const encryptedFirstName = PIIEncryption.encrypt(firstName);
+      if (encryptedFirstName) {
+        conditions.push(like(users.firstName, `%${encryptedFirstName}%`));
+      }
+    }
+    if (lastName) {
+      const encryptedLastName = PIIEncryption.encrypt(lastName);
+      if (encryptedLastName) {
+        conditions.push(like(users.lastName, `%${encryptedLastName}%`));
+      }
+    }
+
+    if (conditions.length > 0) {
+      query = query.where(or(...conditions)) as any;
+    }
+
+    const userResults = await query.limit(50); // Limit to prevent large result sets
+
+    // Handle decryption for all users
+    return userResults.map(user => {
+      try {
+        return {
+          ...user,
+          ...PIIEncryption.decryptUserPII({
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            profileImageUrl: user.profileImageUrl,
+          }),
+        };
+      } catch (error) {
+        console.warn('PII decryption failed for user during getUsersByName, returning user data:', error.message);
+        return user;
+      }
+    });
   }
 
   async createUser(userData: UpsertUser): Promise<User> {

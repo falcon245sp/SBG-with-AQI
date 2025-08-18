@@ -2,8 +2,9 @@ import { storage } from '../storage';
 import { User } from '../../shared/schema';
 
 /**
- * Centralized service for customer and user data resolution
- * Handles decryption in one place and provides clean data to calling functions
+ * Centralized database service for customer and user data resolution
+ * Single source of truth for all customer UUID lookups and user data access
+ * Handles PII decryption in one place and provides clean data to calling functions
  */
 export class CustomerLookupService {
   /**
@@ -124,6 +125,100 @@ export class CustomerLookupService {
     } catch (error) {
       console.error('CustomerLookupService: Failed to validate customer access:', error);
       return false;
+    }
+  }
+
+  /**
+   * Get customer UUID by email address
+   * Returns null if user not found
+   */
+  static async getCustomerUuidByEmail(email: string): Promise<string | null> {
+    try {
+      const user = await storage.getUserByEmail(email);
+      return user?.customerUuid || null;
+    } catch (error) {
+      console.error('CustomerLookupService: Failed to get customer UUID by email:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get user data by email address with decryption handled
+   */
+  static async getUserByEmail(email: string): Promise<User | null> {
+    try {
+      const user = await storage.getUserByEmail(email);
+      return user || null;
+    } catch (error) {
+      console.error('CustomerLookupService: Failed to get user by email:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get user data by customer UUID with decryption handled
+   */
+  static async getUserByCustomerUuid(customerUuid: string): Promise<User | null> {
+    try {
+      const user = await storage.getUserByCustomerUuid(customerUuid);
+      return user || null;
+    } catch (error) {
+      console.error('CustomerLookupService: Failed to get user by customer UUID:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get customer UUID by Google ID
+   * Returns null if user not found
+   */
+  static async getCustomerUuidByGoogleId(googleId: string): Promise<string | null> {
+    try {
+      const user = await storage.getUserByGoogleId(googleId);
+      return user?.customerUuid || null;
+    } catch (error) {
+      console.error('CustomerLookupService: Failed to get customer UUID by Google ID:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get user data by Google ID with decryption handled
+   */
+  static async getUserByGoogleId(googleId: string): Promise<User | null> {
+    try {
+      const user = await storage.getUserByGoogleId(googleId);
+      return user || null;
+    } catch (error) {
+      console.error('CustomerLookupService: Failed to get user by Google ID:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Search for customer UUID by name (first name or last name)
+   * Returns array of matching customer UUIDs since names may not be unique
+   */
+  static async getCustomerUuidsByName(firstName?: string, lastName?: string): Promise<string[]> {
+    try {
+      const users = await storage.getUsersByName(firstName, lastName);
+      return users.map(user => user.customerUuid).filter(Boolean);
+    } catch (error) {
+      console.error('CustomerLookupService: Failed to get customer UUIDs by name:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Search for users by name with decryption handled
+   */
+  static async getUsersByName(firstName?: string, lastName?: string): Promise<User[]> {
+    try {
+      const users = await storage.getUsersByName(firstName, lastName);
+      return users;
+    } catch (error) {
+      console.error('CustomerLookupService: Failed to get users by name:', error);
+      return [];
     }
   }
 }
