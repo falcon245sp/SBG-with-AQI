@@ -374,16 +374,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Document not found' });
       }
       
-      const filePath = path.join(process.cwd(), 'uploads', document.filePath);
+      // Determine file path based on document type and available paths
+      let filePath: string;
+      let fileName: string;
+      
+      if (document.originalPath) {
+        // For uploaded documents, originalPath might be just filename or full path
+        if (path.isAbsolute(document.originalPath)) {
+          filePath = document.originalPath;
+        } else {
+          filePath = path.join(process.cwd(), 'uploads', document.originalPath);
+        }
+        fileName = document.originalFilename || document.fileName || 'document';
+      } else {
+        return res.status(404).json({ message: 'Document file path not found' });
+      }
       
       // Check if file exists
       if (!fs.existsSync(filePath)) {
+        console.error(`[Documents] File not found: ${filePath}`);
         return res.status(404).json({ message: 'File not found on disk' });
       }
       
-      // Force download with original filename
-      res.setHeader('Content-Disposition', `attachment; filename="${document.originalFilename || document.fileName}"`);
-      res.setHeader('Content-Type', 'application/octet-stream');
+      // Get file stats
+      const stats = fs.statSync(filePath);
+      const ext = path.extname(fileName).toLowerCase();
+      
+      // Set content type based on file extension
+      let contentType = document.mimeType || 'application/octet-stream';
+      if (ext === '.pdf') contentType = 'application/pdf';
+      
+      // For PDF documents, use inline display for viewing
+      const disposition = ext === '.pdf' ? 'inline' : 'attachment';
+      
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Length', stats.size.toString());
+      res.setHeader('Content-Disposition', `${disposition}; filename="${fileName}"`);
       
       // Stream the file
       const fileStream = fs.createReadStream(filePath);
