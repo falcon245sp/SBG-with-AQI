@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { GoogleAuthService } from "../services/googleAuth";
 import { storage } from "../storage";
 import { CustomerLookupService } from "../services/customerLookupService";
+import { ActiveUserService } from "../services/activeUserService";
 
 // Initialize Google Auth service with renamed environment variables
 const googleAuth = new GoogleAuthService();
@@ -154,12 +155,7 @@ export async function handleGoogleCallback(req: Request, res: Response) {
 // Sync classroom data for authenticated user
 export async function syncClassroomData(req: Request, res: Response) {
   try {
-    const userId = (req as any).session?.userId;
-    if (!userId) {
-      return res.status(401).json({ error: 'User not authenticated' });
-    }
-
-    const user = await CustomerLookupService.getUserFromSession(userId);
+    const user = await ActiveUserService.requireActiveUser(req);
     if (!user?.googleAccessToken) {
       return res.status(400).json({ error: 'Google access token not found' });
     }
@@ -181,12 +177,7 @@ export async function syncClassroomData(req: Request, res: Response) {
 // Get user's classrooms
 export async function getUserClassrooms(req: Request, res: Response) {
   try {
-    const userId = (req as any).session?.userId;
-    if (!userId) {
-      return res.status(401).json({ error: 'User not authenticated' });
-    }
-
-    const { user, customerUuid } = await CustomerLookupService.requireUserAndCustomerUuid(userId);
+    const { user, customerUuid } = await ActiveUserService.requireActiveUserAndCustomerUuid(req);
     const classrooms = await storage.getTeacherClassrooms(customerUuid);
     res.json(classrooms);
   } catch (error) {
@@ -198,12 +189,7 @@ export async function getUserClassrooms(req: Request, res: Response) {
 // Get current authenticated user
 export async function getCurrentUser(req: Request, res: Response) {
   try {
-    const userId = (req as any).session?.userId;
-    if (!userId) {
-      return res.status(401).json({ error: 'User not authenticated' });
-    }
-
-    const user = await CustomerLookupService.getUserFromSession(userId);
+    const user = await ActiveUserService.requireActiveUser(req);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }

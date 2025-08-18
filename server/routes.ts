@@ -58,6 +58,7 @@ async function verifyPassword(password: string, hash: string): Promise<boolean> 
 // Import the proper Replit Auth middleware
 import { setupAuth } from './replitAuth';
 import { CustomerLookupService } from './services/customerLookupService';
+import { ActiveUserService } from './services/activeUserService';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Replit Auth first
@@ -66,20 +67,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get current user route - uses session-based authentication
   app.get('/api/auth/user', async (req: any, res) => {
     try {
-      // Check if user is authenticated via session userId 
-      const userId = req.session?.userId;
-      if (!userId) {
-        return res.status(401).json({ error: 'Authentication required' });
-      }
-
-      // Get user from database using CustomerLookupService
-      const user = await CustomerLookupService.getUserFromSession(userId);
-      if (!user) {
-        return res.status(404).json({ error: 'User not found' });
-      }
-      
+      const user = await ActiveUserService.requireActiveUser(req);
       res.json(user);
     } catch (error) {
+      if (error.message === 'Authentication required') {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+      if (error.message === 'User not found') {
+        return res.status(404).json({ error: 'User not found' });
+      }
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
     }
@@ -98,12 +94,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Document upload with standards focus endpoint
   app.post('/api/documents/upload-with-standards', upload.single('document'), async (req: any, res) => {
     try {
-      const userId = req.session?.userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-      
-      const { user, customerUuid } = await CustomerLookupService.requireUserAndCustomerUuid(userId);
+      const { user, customerUuid } = await ActiveUserService.requireActiveUserAndCustomerUuid(req);
       const file = req.file;
       
       if (!file) {
@@ -169,12 +160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/documents/upload', upload.any(), async (req: any, res) => {
     try {
       // Get authenticated user's customer UUID
-      const userId = req.session?.userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-      
-      const customerUuid = await CustomerLookupService.requireCustomerUuid(userId);
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
       const files = (req.files as Express.Multer.File[]) || [];
       
       console.log(`=== UPLOAD DEBUG ===`);
@@ -292,12 +278,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user documents
   app.get('/api/documents', async (req: any, res) => {
     try {
-      const userId = req.session?.userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-      
-      const customerUuid = await CustomerLookupService.requireCustomerUuid(userId);
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
       const documents = await storage.getUserDocuments(customerUuid);
       res.json(documents);
     } catch (error) {
@@ -309,13 +290,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get document details with results
   app.get('/api/documents/:id/results', async (req: any, res) => {
     try {
-      const userId = req.session?.userId;
-      
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-      
-      const customerUuid = await CustomerLookupService.requireCustomerUuid(userId);
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
       const { id } = req.params;
       
       const document = await storage.getDocument(id);
@@ -372,12 +347,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get processing stats
   app.get('/api/stats', async (req: any, res) => {
     try {
-      const userId = req.session?.userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-      
-      const customerUuid = await CustomerLookupService.requireCustomerUuid(userId);
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
       const stats = await storage.getProcessingStats(customerUuid);
       const rigorDistribution = await storage.getRigorDistribution(customerUuid);
       
@@ -394,10 +364,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Prompt customization endpoints
   app.post('/api/prompt-templates', async (req: any, res) => {
     try {
-      const userId = req.session?.userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
+      const userId = ActiveUserService.requireSessionUserId(req);
       
       const { name, description, customization } = req.body;
       
@@ -436,10 +403,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/prompt-templates', async (req: any, res) => {
     try {
-      const userId = req.session?.userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
+      const userId = ActiveUserService.requireSessionUserId(req);
       
       // In a real implementation, you'd fetch from the database
       // For now, return sample templates
@@ -520,10 +484,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API Key management
   app.post('/api/api-keys', async (req: any, res) => {
     try {
-      const userId = req.session?.userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
+      const userId = ActiveUserService.requireSessionUserId(req);
       const { keyName } = req.body;
       
       if (!keyName) {
@@ -553,10 +514,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/api-keys', async (req: any, res) => {
     try {
-      const userId = req.session?.userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
+      const userId = ActiveUserService.requireSessionUserId(req);
       const keys = await storage.getUserApiKeys(userId);
       
       // Don't return the actual key hash
@@ -647,12 +605,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Teacher override endpoints
   app.post('/api/questions/:questionId/override', async (req: any, res) => {
     try {
-      const userId = req.session?.userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-      
-      const customerUuid = await CustomerLookupService.requireCustomerUuid(userId);
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
       const questionId = req.params.questionId;
       
       const validationResult = insertTeacherOverrideSchema.safeParse({
@@ -700,12 +653,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Revert to Sherpa analysis (deactivate current override)
   app.post('/api/questions/:questionId/revert-to-ai', async (req: any, res) => {
     try {
-      const userId = req.session?.userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-      
-      const customerUuid = await CustomerLookupService.requireCustomerUuid(userId);
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
       const questionId = req.params.questionId;
       
       console.log(`Processing revert request for question ${questionId}`);
@@ -724,12 +672,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/questions/:questionId/override', async (req: any, res) => {
     try {
-      const userId = req.session?.userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-      
-      const customerUuid = await CustomerLookupService.requireCustomerUuid(userId);
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
       const questionId = req.params.questionId;
       
       const override = await storage.getQuestionOverride(questionId, customerUuid);
@@ -748,10 +691,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Session management endpoints
   app.get('/api/admin/sessions/stats', async (req: any, res) => {
     try {
-      const userId = req.session?.userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
+      ActiveUserService.requireSessionUserId(req);
       
       const stats = await SessionCleanup.getSessionStats();
       res.json(stats);
@@ -763,10 +703,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.post('/api/admin/sessions/cleanup', async (req: any, res) => {
     try {
-      const userId = req.session?.userId;
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
+      ActiveUserService.requireSessionUserId(req);
       
       const result = await SessionCleanup.runCleanup();
       res.json({

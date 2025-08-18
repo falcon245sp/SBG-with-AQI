@@ -25,6 +25,7 @@ Preferred communication style: Simple, everyday language.
 - **Authentication**: Replit Auth integration with session management
 - **File Processing**: Multer for uploads, PDF-extract for PDFs, Mammoth for Word documents
 - **AI Integration**: Multiple AI service integrations
+- **ActiveUserService**: Centralized service for accessing currently authenticated user data from session with clean API for session management
 - **CustomerLookupService**: Single database service for all customer UUID resolution, supporting lookups by session user ID, email, Google ID, customer UUID, and name search with centralized PII decryption
 
 ### Database Design
