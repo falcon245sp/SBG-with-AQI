@@ -1,8 +1,9 @@
 import { storage } from '../storage';
+import { User } from '../../shared/schema';
 
 /**
- * Centralized service for customer UUID resolution
- * Prevents scattered database lookups across the application
+ * Centralized service for customer and user data resolution
+ * Handles decryption in one place and provides clean data to calling functions
  */
 export class CustomerLookupService {
   /**
@@ -14,6 +15,19 @@ export class CustomerLookupService {
       return user?.customerUuid || null;
     } catch (error) {
       console.error('CustomerLookupService: Failed to get customer UUID from session:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get full user data from session user ID with decryption handled
+   */
+  static async getUserFromSession(sessionUserId: string): Promise<User | null> {
+    try {
+      const user = await storage.getUser(sessionUserId);
+      return user || null;
+    } catch (error) {
+      console.error('CustomerLookupService: Failed to get user from session:', error);
       return null;
     }
   }
@@ -75,12 +89,41 @@ export class CustomerLookupService {
    */
   static async requireCustomerUuid(sessionUserId: string): Promise<string> {
     console.log(`[CustomerLookupService] Looking up customer UUID for session user: ${sessionUserId}`);
-    const customerUuid = await this.getCustomerUuidFromSession(sessionUserId);
-    if (!customerUuid) {
+    const user = await this.getUserFromSession(sessionUserId);
+    if (!user?.customerUuid) {
       console.error(`[CustomerLookupService] No customer UUID found for session user: ${sessionUserId}`);
       throw new Error('Customer UUID not found for authenticated user');
     }
-    console.log(`[CustomerLookupService] Found customer UUID: ${customerUuid} for session user: ${sessionUserId}`);
-    return customerUuid;
+    console.log(`[CustomerLookupService] Found customer UUID: ${user.customerUuid} for session user: ${sessionUserId}`);
+    return user.customerUuid;
+  }
+
+  /**
+   * Get both user data and customer UUID from session in one call
+   * Reduces database hits and ensures consistency
+   */
+  static async requireUserAndCustomerUuid(sessionUserId: string): Promise<{ user: User; customerUuid: string }> {
+    console.log(`[CustomerLookupService] Looking up user and customer UUID for session user: ${sessionUserId}`);
+    const user = await this.getUserFromSession(sessionUserId);
+    if (!user?.customerUuid) {
+      console.error(`[CustomerLookupService] No user or customer UUID found for session user: ${sessionUserId}`);
+      throw new Error('User or customer UUID not found for authenticated user');
+    }
+    console.log(`[CustomerLookupService] Found user and customer UUID: ${user.customerUuid} for session user: ${sessionUserId}`);
+    return { user, customerUuid: user.customerUuid };
+  }
+
+  /**
+   * Validate that session user has access to specific customer UUID
+   * Used for authorization checks
+   */
+  static async validateUserCustomerAccess(sessionUserId: string, targetCustomerUuid: string): Promise<boolean> {
+    try {
+      const user = await this.getUserFromSession(sessionUserId);
+      return user?.customerUuid === targetCustomerUuid;
+    } catch (error) {
+      console.error('CustomerLookupService: Failed to validate customer access:', error);
+      return false;
+    }
   }
 }
