@@ -139,6 +139,7 @@ export async function handleGoogleCallback(req: Request, res: Response) {
     (req as any).session.userEmail = user.email;
     
     console.log('[OAuth] User authenticated successfully:', user.email);
+    console.log('[OAuth] Session userId set to:', user.id);
     
     // Redirect to dashboard on successful authentication
     console.log('[OAuth] Authentication successful, redirecting to dashboard');

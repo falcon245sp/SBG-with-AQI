@@ -61,14 +61,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Replit Auth first
   await setupAuth(app);
 
-  // Get current user route - return your user data directly
+  // Get current user route - uses session-based authentication
   app.get('/api/auth/user', async (req: any, res) => {
     try {
-      // Return your user data directly since you're authenticated
-      const user = await storage.getUserByGoogleId('113728882848615331686');
+      // Check if user is authenticated via session userId 
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      // Get user from database using session user ID
+      const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }
+      
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
