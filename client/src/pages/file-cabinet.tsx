@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   FileText, 
   Upload, 
@@ -738,17 +739,67 @@ export default function FileCabinet() {
       )}
 
       {/* Document Viewer Modal */}
-      {selectedDocument && (
-        <DocumentViewer
-          documentId={selectedDocument.id}
-          fileName={selectedDocument.originalFilename || selectedDocument.fileName}
-          isOpen={viewerOpen}
-          onClose={() => {
-            setViewerOpen(false);
-            setSelectedDocument(null);
-          }}
-        />
-      )}
+      <Dialog open={viewerOpen} onOpenChange={setViewerOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedDocument?.originalFilename || selectedDocument?.fileName || 'Document Viewer'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden">
+            {selectedDocument && (
+              <div className="p-4">
+                {/* For PDF files, show embedded viewer */}
+                {(selectedDocument.mimeType === 'application/pdf' || 
+                  selectedDocument.originalFilename?.toLowerCase().endsWith('.pdf') ||
+                  selectedDocument.fileName?.toLowerCase().endsWith('.pdf')) ? (
+                  <div className="w-full h-96">
+                    <iframe
+                      src={`/api/documents/${selectedDocument.id}/download`}
+                      width="100%"
+                      height="100%"
+                      className="border rounded"
+                      title="Document Preview"
+                    />
+                  </div>
+                ) : (
+                  /* For other file types, show metadata and download option */
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <h3 className="font-semibold">File Information</h3>
+                        <p className="text-sm text-gray-600">Name: {selectedDocument.originalFilename || selectedDocument.fileName}</p>
+                        <p className="text-sm text-gray-600">Type: {selectedDocument.mimeType}</p>
+                        <p className="text-sm text-gray-600">Size: {formatFileSize(selectedDocument.fileSize)}</p>
+                        <p className="text-sm text-gray-600">Created: {new Date(selectedDocument.createdAt).toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">Actions</h3>
+                        <div className="space-y-2">
+                          <Button 
+                            onClick={() => {
+                              const link = document.createElement('a');
+                              link.href = `/api/documents/${selectedDocument.id}/download`;
+                              link.download = selectedDocument.originalFilename || selectedDocument.fileName;
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                            }}
+                            className="w-full"
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            Download Document
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
