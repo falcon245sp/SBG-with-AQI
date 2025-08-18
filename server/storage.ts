@@ -9,6 +9,7 @@ import {
   apiKeys,
   processingQueue,
   teacherOverrides,
+  exportQueue,
   type User,
   type UpsertUser,
   type Classroom,
@@ -74,7 +75,7 @@ export interface IStorage {
   
   // Results operations
   createQuestionResult(result: any): Promise<QuestionResult>;
-  getDocumentResults(documentId: string): Promise<Array<Question & { result?: QuestionResult; aiResponses: AiResponse[]; teacherOverride?: TeacherOverride }>>;
+  getDocumentResults(documentId: string, customerUuid: string): Promise<Array<Question & { result?: QuestionResult; aiResponses: AiResponse[]; teacherOverride?: TeacherOverride }>>;
   
   // API Key operations
   createApiKey(customerUuid: string, apiKey: InsertApiKey): Promise<ApiKey>;
@@ -689,6 +690,30 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date(),
       })
       .where(eq(documents.id, id));
+  }
+
+  async updateDocumentTags(id: string, tags: string[]): Promise<void> {
+    await db
+      .update(documents)
+      .set({
+        tags,
+        updatedAt: new Date(),
+      })
+      .where(eq(documents.id, id));
+  }
+
+  // Export Queue operations
+  async createExportQueueItem(queueData: any): Promise<any> {
+    const [item] = await db.insert(exportQueue).values(queueData).returning();
+    return item;
+  }
+
+  async getExportQueueItems(): Promise<any[]> {
+    return await db
+      .select()
+      .from(exportQueue)
+      .where(eq(exportQueue.status, 'pending'))
+      .orderBy(desc(exportQueue.priority), exportQueue.scheduledFor);
   }
 
   // Question operations

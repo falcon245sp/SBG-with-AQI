@@ -717,6 +717,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Register File Cabinet router
+  const { fileCabinetRouter } = await import('./routes/fileCabinet');
+  app.use(fileCabinetRouter);
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -8,13 +8,15 @@ import {
   Key, 
   Settings,
   FileText,
-  LogOut
+  LogOut,
+  FolderOpen
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: BarChart3 },
   { name: 'Upload Documents', href: '/upload', icon: Upload },
+  { name: 'File Cabinet', href: '/file-cabinet', icon: FolderOpen },
   { name: 'Processing Results', href: '/results', icon: Search },
   { name: 'Prompt Config', href: '/prompt-config', icon: Brain },
   { name: 'API Management', href: '/api-keys', icon: Key },

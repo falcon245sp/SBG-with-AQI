@@ -1,5 +1,6 @@
 import { storage } from '../storage';
 import { CustomerLookupService } from './customerLookupService';
+import { generateDocumentTags, ExportType } from '../utils/documentTagging';
 
 /**
  * DatabaseWriteService - Centralized service for all database write operations
@@ -34,6 +35,53 @@ export class DatabaseWriteService {
   }
 
   /**
+   * Create a generated document (rubric, cover sheet, etc.) with automatic tagging
+   */
+  static async createGeneratedDocument(
+    customerUuid: string, 
+    parentDocumentId: string,
+    exportType: ExportType,
+    documentData: any,
+    userTags: string[] = []
+  ): Promise<any> {
+    console.log(`[DatabaseWriteService] Creating generated document (${exportType}) for customer: ${customerUuid}`);
+    
+    try {
+      // Generate automatic tags based on export type
+      const autoTags = generateDocumentTags(exportType, userTags);
+      
+      const generatedDoc = await storage.createDocument(customerUuid, {
+        ...documentData,
+        assetType: 'generated',
+        parentDocumentId,
+        exportType,
+        tags: autoTags,
+      });
+      
+      console.log(`[DatabaseWriteService] Generated document created successfully: ${generatedDoc.id} with tags: ${autoTags.join(', ')}`);
+      return generatedDoc;
+    } catch (error) {
+      console.error(`[DatabaseWriteService] Failed to create generated document:`, error);
+      throw new Error(`Failed to create generated document: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Update document tags (for File Cabinet organization)
+   */
+  static async updateDocumentTags(documentId: string, newTags: string[]): Promise<void> {
+    console.log(`[DatabaseWriteService] Updating document ${documentId} tags`);
+    
+    try {
+      await storage.updateDocumentTags(documentId, newTags);
+      console.log(`[DatabaseWriteService] Document tags updated successfully: ${newTags.join(', ')}`);
+    } catch (error) {
+      console.error(`[DatabaseWriteService] Failed to update document tags:`, error);
+      throw new Error(`Failed to update document tags: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
    * Update document processing status
    */
   static async updateDocumentStatus(documentId: string, status: string, processingError?: string): Promise<void> {
@@ -45,6 +93,30 @@ export class DatabaseWriteService {
     } catch (error) {
       console.error(`[DatabaseWriteService] Failed to update document status:`, error);
       throw new Error(`Failed to update document status: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  // ==================== EXPORT QUEUE OPERATIONS ====================
+  
+  /**
+   * Add document to export generation queue
+   */
+  static async queueDocumentExport(documentId: string, exportType: ExportType, priority: number = 0): Promise<any> {
+    console.log(`[DatabaseWriteService] Queuing ${exportType} export for document: ${documentId}`);
+    
+    try {
+      const queueItem = await storage.createExportQueueItem({
+        documentId,
+        exportType,
+        priority,
+        status: 'pending'
+      });
+      
+      console.log(`[DatabaseWriteService] Export queued successfully: ${queueItem.id}`);
+      return queueItem;
+    } catch (error) {
+      console.error(`[DatabaseWriteService] Failed to queue export:`, error);
+      throw new Error(`Failed to queue export: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 

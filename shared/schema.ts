@@ -96,7 +96,7 @@ export const assetTypeEnum = pgEnum('asset_type', [
 
 // Export type enum for generated documents  
 export const exportTypeEnum = pgEnum('export_type', [
-  'rubric_pdf', 'cover_sheet', 'processing_report', 'standards_summary'
+  'rubric_pdf', 'cover_sheet', 'processing_report', 'standards_summary', 'question_analysis', 'teacher_guide'
 ]);
 
 // Documents table - enhanced for File Cabinet functionality

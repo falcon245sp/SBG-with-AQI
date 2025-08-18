@@ -14,6 +14,7 @@ import UploadPage from "@/pages/upload";
 import ResultsPage from "@/pages/results";
 import DocumentResults from "@/pages/document-results";
 import PromptConfig from "@/pages/prompt-config";
+import FileCabinet from "@/pages/file-cabinet";
 
 function Router() {
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -47,6 +48,7 @@ function Router() {
           <Route path="/results" component={ResultsPage} />
           <Route path="/results/:id" component={DocumentResults} />
           <Route path="/prompt-config" component={PromptConfig} />
+          <Route path="/file-cabinet" component={FileCabinet} />
           <Route component={NotFound} />
         </>
       )}
