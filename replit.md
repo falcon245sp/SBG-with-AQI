@@ -45,7 +45,8 @@ Preferred communication style: Simple, everyday language.
 
 ### Security & Authentication
 - **Authentication Provider**: Replit Auth with OpenID Connect (note: traditional username/password authentication also implemented due to Replit OAuth URL rewriting issues).
-- **Session Management**: PostgreSQL-based session storage.
+- **Session Management**: PostgreSQL-based session storage with automatic cleanup of expired sessions.
+- **Session Cleanup**: Automated hourly cleanup process removes expired sessions to maintain database efficiency.
 - **API Security**: Session-based authentication.
 - **File Validation**: MIME type validation and file size limits.
 - **PII Encryption**: All personally identifiable information encrypted at rest using AES encryption in both development and production environments.

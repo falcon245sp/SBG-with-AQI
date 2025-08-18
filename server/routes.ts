@@ -18,6 +18,7 @@ import multer from "multer";
 import { aiService } from "./services/aiService";
 import path from "path";
 import fs from "fs";
+import { SessionCleanup } from "./utils/sessionCleanup";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -697,6 +698,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching teacher override:', error);
       res.status(500).json({ message: 'Failed to fetch override' });
+    }
+  });
+
+  // Session management endpoints
+  app.get('/api/admin/sessions/stats', async (req: any, res) => {
+    try {
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const stats = await SessionCleanup.getSessionStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching session stats:", error);
+      res.status(500).json({ message: "Failed to fetch session stats" });
+    }
+  });
+  
+  app.post('/api/admin/sessions/cleanup', async (req: any, res) => {
+    try {
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const result = await SessionCleanup.runCleanup();
+      res.json({
+        message: `Session cleanup completed`,
+        deletedCount: result.deletedCount
+      });
+    } catch (error) {
+      console.error("Error running session cleanup:", error);
+      res.status(500).json({ message: "Failed to run session cleanup" });
     }
   });
 
