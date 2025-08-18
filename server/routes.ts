@@ -1225,6 +1225,11 @@ ${failed > 0 ? 'FAILED TESTS:\n' + testResults.filter(r => r.status === 'fail').
     }
   });
 
+  // Handle 404 for API routes before Vite middleware
+  app.use('/api/*', (req, res) => {
+    res.status(404).json({ message: 'API endpoint not found' });
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
