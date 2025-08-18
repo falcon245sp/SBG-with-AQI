@@ -55,7 +55,7 @@ async function verifyPassword(password: string, hash: string): Promise<boolean> 
 }
 
 // Import the proper Replit Auth middleware
-import { isAuthenticated, setupAuth } from './replitAuth';
+import { setupAuth } from './replitAuth';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Replit Auth first
@@ -94,9 +94,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/classrooms', getUserClassrooms);
 
   // Document upload with standards focus endpoint
-  app.post('/api/documents/upload-with-standards', isAuthenticated, upload.single('document'), async (req: any, res) => {
+  app.post('/api/documents/upload-with-standards', upload.single('document'), async (req: any, res) => {
     try {
-      const userId = (req as any).session.userId; // Get authenticated user ID
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
       const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -274,9 +278,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user documents
-  app.get('/api/documents', isAuthenticated, async (req: any, res) => {
+  app.get('/api/documents', async (req: any, res) => {
     try {
-      const userId = (req as any).session.userId;
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
       const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -290,9 +298,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get document details with results
-  app.get('/api/documents/:id/results', isAuthenticated, async (req: any, res) => {
+  app.get('/api/documents/:id/results', async (req: any, res) => {
     try {
-      const userId = (req as any).session.userId;
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
       const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -334,9 +346,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get processing stats
-  app.get('/api/stats', isAuthenticated, async (req: any, res) => {
+  app.get('/api/stats', async (req: any, res) => {
     try {
-      const userId = (req as any).session.userId;
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
       const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -355,9 +371,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Prompt customization endpoints
-  app.post('/api/prompt-templates', isAuthenticated, async (req: any, res) => {
+  app.post('/api/prompt-templates', async (req: any, res) => {
     try {
-      const userId = (req as any).session.userId;
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
       const { name, description, customization } = req.body;
       
       if (!name || !customization) {

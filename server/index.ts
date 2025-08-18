@@ -27,8 +27,10 @@ app.use(session({
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: false, // Allow HTTP in development
     maxAge: sessionTtl,
+    sameSite: 'lax', // Allow cross-site requests for OAuth
+    path: '/', // Ensure cookie works for all paths
   },
   name: 'sherpa.sid',
 }));
