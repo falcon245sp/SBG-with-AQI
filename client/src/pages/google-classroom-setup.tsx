@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { ExternalLink, CheckCircle, AlertCircle, BookOpen } from "lucide-react";
+import { User } from "@/../../shared/schema";
 
 export default function GoogleClassroomSetup() {
   const [apiKey, setApiKey] = useState("");
@@ -17,17 +18,13 @@ export default function GoogleClassroomSetup() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: user } = useQuery({
+  const { data: user } = useQuery<User>({
     queryKey: ["/api/auth/user"],
   });
 
   const connectMutation = useMutation({
     mutationFn: async (data: { credentials: any }) => {
-      return apiRequest('/api/google/connect', {
-        method: 'POST',
-        body: JSON.stringify(data),
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return apiRequest('POST', '/api/google/connect', data);
     },
     onSuccess: () => {
       toast({
@@ -213,7 +210,7 @@ export default function GoogleClassroomSetup() {
                             id="serviceaccount"
                             value={serviceAccount}
                             onChange={(e) => setServiceAccount(e.target.value)}
-                            placeholder='{"type": "service_account", "project_id": "...", ...}'
+                            placeholder="Paste your complete service account JSON file contents here"
                             rows={8}
                             required
                           />
