@@ -36,6 +36,8 @@ import {
 import { apiRequest } from '@/lib/queryClient';
 import { Link } from 'wouter';
 import { DocumentViewer } from '@/components/DocumentViewer';
+import { useSessionHandler } from '@/hooks/useSessionHandler';
+import { useToast } from '@/hooks/use-toast';
 
 interface Document {
   id: string;
@@ -186,6 +188,9 @@ export default function FileCabinet() {
 
 
 
+  const { fetchWithSessionHandling } = useSessionHandler();
+  const { toast } = useToast();
+
   // Fetch File Cabinet data
   const { data: fileCabinetData, isLoading } = useQuery({
     queryKey: ['file-cabinet', currentDrawer, sortBy, sortOrder, tagFilter, exportTypeFilter],
@@ -198,15 +203,29 @@ export default function FileCabinet() {
         ...(exportTypeFilter && exportTypeFilter !== 'all' && { exportType: exportTypeFilter }),
       });
       
-      const response = await fetch(`/api/file-cabinet?${params}`, {
-        credentials: 'include',
-      });
+      const response = await fetchWithSessionHandling(`/api/file-cabinet?${params}`);
+      
+      if (!response) {
+        // Session error was handled by the hook
+        throw new Error('Session expired');
+      }
       
       if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          throw new Error('Authentication required');
+        }
         throw new Error('Failed to fetch file cabinet data');
       }
       
       return response.json();
+    },
+    retry: (failureCount, error) => {
+      // Don't retry session errors
+      if (error.message.includes('Session expired') || 
+          error.message.includes('Authentication required')) {
+        return false;
+      }
+      return failureCount < 3;
     },
   });
 

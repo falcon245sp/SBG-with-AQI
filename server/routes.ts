@@ -24,6 +24,7 @@ import { DatabaseWriteService } from "./services/databaseWriteService";
 import { CustomerLookupService } from "./services/customerLookupService";
 import { ActiveUserService } from "./services/activeUserService";
 import { requireAdmin } from "./middleware/adminAuth";
+import { sessionErrorHandler, withSessionHandling } from "./middleware/sessionHandler";
 
 // Configure multer for file uploads
 const upload = multer({

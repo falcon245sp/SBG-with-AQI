@@ -111,13 +111,26 @@ export class CustomerLookupService {
    */
   static async requireCustomerUuid(sessionUserId: string): Promise<string> {
     console.log(`[CustomerLookupService] Looking up customer UUID for session user: ${sessionUserId}`);
-    const user = await this.getUserFromSession(sessionUserId);
-    if (!user?.customerUuid) {
-      console.error(`[CustomerLookupService] No customer UUID found for session user: ${sessionUserId}`);
-      throw new Error('Customer UUID not found for authenticated user');
+    
+    try {
+      const user = await this.getUserFromSession(sessionUserId);
+      if (!user?.customerUuid) {
+        console.error(`[CustomerLookupService] No customer UUID found for session user: ${sessionUserId}`);
+        throw new Error('Session expired - please sign in again');
+      }
+      console.log(`[CustomerLookupService] Found customer UUID: ${user.customerUuid} for session user: ${sessionUserId}`);
+      return user.customerUuid;
+    } catch (error) {
+      // Handle session corruption gracefully
+      if (error instanceof Error && 
+          (error.message.includes('Failed to decrypt') || 
+           error.message.includes('Malformed UTF-8 data') ||
+           error.message.includes('invalid key or corrupted data'))) {
+        console.error(`[CustomerLookupService] Session data corrupted for user: ${sessionUserId}`);
+        throw new Error('Session data corrupted - please sign in again');
+      }
+      throw error;
     }
-    console.log(`[CustomerLookupService] Found customer UUID: ${user.customerUuid} for session user: ${sessionUserId}`);
-    return user.customerUuid;
   }
 
   /**
