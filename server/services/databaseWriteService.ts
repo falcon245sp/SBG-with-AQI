@@ -95,7 +95,7 @@ export class DatabaseWriteService {
     console.log(`[DatabaseWriteService] Creating question result for question: ${resultData.questionId}`);
     
     try {
-      const result = await storage.createProcessedResult(resultData);
+      const result = await storage.createQuestionResult(resultData);
       
       console.log(`[DatabaseWriteService] Question result created successfully: ${result.id}`);
       return result;

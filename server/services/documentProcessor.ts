@@ -319,16 +319,19 @@ export class DocumentProcessor {
       
       console.log('Successfully stored Grok AI result');
 
-      await DatabaseWriteService.createAIResponse({
-        questionId: question.id,
-        aiEngine: 'claude',
-        standardsIdentified: aiResults.claude.standards,
-        rigorLevel: aiResults.claude.rigor.level,
-        rigorJustification: aiResults.claude.rigor.justification,
-        confidence: aiResults.claude.rigor.confidence.toString(),
-        rawResponse: aiResults.claude.rawResponse,
-        processingTime: aiResults.claude.processingTime,
-      });
+      // Only store Claude response if it exists
+      if (aiResults.claude) {
+        await DatabaseWriteService.createAIResponse({
+          questionId: question.id,
+          aiEngine: 'claude',
+          standardsIdentified: aiResults.claude.standards || [],
+          rigorLevel: aiResults.claude.rigor?.level || 'mild',
+          rigorJustification: aiResults.claude.rigor?.justification || 'No justification provided',
+          confidence: (aiResults.claude.rigor?.confidence || 0.5).toString(),
+          rawResponse: aiResults.claude.rawResponse || {},
+          processingTime: aiResults.claude.processingTime || 0,
+        });
+      }
 
       // Use single-engine analysis (Grok only)
       const consensusResult = rigorAnalyzer.analyzeSingleEngineResult(aiResults);
