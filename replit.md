@@ -42,6 +42,14 @@ This version delivers comprehensive rubric collation functionality that automati
 
 Preferred communication style: Simple, everyday language.
 
+## Known Issues & Improvements Needed
+
+### Session Management Enhancement (High Priority)
+- **Issue**: Session expirations are not handled elegantly when users are actively logged in
+- **Impact**: Users may experience unexpected authentication failures during active use
+- **Needed**: Implement graceful session expiration handling with automatic refresh or user-friendly re-authentication prompts
+- **Status**: Documented for future implementation - August 18, 2025
+
 ## System Architecture
 
 ### Frontend Architecture
