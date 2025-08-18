@@ -128,6 +128,38 @@ export default function DocumentResults() {
     refetchIntervalInBackground: true,
   });
 
+  // Handle Accept and Proceed action
+  const handleAcceptAndProceed = async () => {
+    if (!documentId) return;
+    
+    try {
+      const response = await fetch(`/api/documents/${documentId}/accept-and-proceed`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to accept and proceed');
+      }
+
+      await queryClient.invalidateQueries({ queryKey: [`/api/documents/${documentId}/results`] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/file-cabinet'] });
+      
+      toast({
+        title: "Analysis Accepted",
+        description: "Cover sheets and rubrics are now being generated and will appear in the File Cabinet.",
+        variant: "default",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || 'Failed to accept analysis',
+        variant: "destructive",
+      });
+    }
+  };
+
   // Mutation for reverting to Sherpa analysis
   const revertToAiMutation = useMutation({
     mutationFn: async (questionId: string) => {
@@ -609,10 +641,30 @@ export default function DocumentResults() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                     <div>
                       <p className="text-sm font-medium text-slate-500">Status</p>
                       <ProcessingStatus status={document.status} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-slate-500">Teacher Review</p>
+                      <div className="flex items-center space-x-2">
+                        {document.teacherReviewStatus === 'not_reviewed' && (
+                          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                            Awaiting Review
+                          </Badge>
+                        )}
+                        {document.teacherReviewStatus === 'reviewed_and_accepted' && (
+                          <Badge variant="secondary" className="bg-green-100 text-green-800">
+                            ✓ Accepted
+                          </Badge>
+                        )}
+                        {document.teacherReviewStatus === 'reviewed_and_overridden' && (
+                          <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                            ✓ Reviewed with Edits
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                     <div>
                       <p className="text-sm font-medium text-slate-500">File Size</p>
@@ -638,6 +690,43 @@ export default function DocumentResults() {
                       </div>
                     </div>
                   </div>
+                  
+                  {/* Teacher Review Actions - only show for completed documents needing review */}
+                  {document.status === 'completed' && document.teacherReviewStatus === 'not_reviewed' && (
+                    <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h4 className="text-lg font-semibold text-blue-900">Ready for Teacher Review</h4>
+                          <p className="text-sm text-blue-700 mt-1">
+                            Standards Sherpa has completed its analysis. Please review the results below and choose your next step.
+                          </p>
+                        </div>
+                        <div className="flex space-x-3 ml-4">
+                          <Button
+                            onClick={handleAcceptAndProceed}
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                            size="sm"
+                          >
+                            ✅ Accept & Proceed
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              // Focus on the first Override button to guide teacher to editing
+                              const firstOverrideButton = document.querySelector('[data-testid="override-button"]') as HTMLElement;
+                              if (firstOverrideButton) {
+                                firstOverrideButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                firstOverrideButton.focus();
+                              }
+                            }}
+                            size="sm"
+                          >
+                            ✏️ Edit Analysis
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -765,6 +854,7 @@ export default function DocumentResults() {
                                         <Button 
                                           variant="outline" 
                                           size="sm"
+                                          data-testid="override-button"
                                           onClick={() => {
                                             setEditingQuestionId(question.id);
                                             setOpenDialogs(prev => ({ ...prev, [question.id]: true }));

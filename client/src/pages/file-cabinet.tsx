@@ -591,30 +591,20 @@ export default function FileCabinet() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1 flex-wrap">
-                            {/* Teacher Review Actions - only show for uploaded documents needing review */}
-                            {doc.assetType === 'uploaded' && 
-                             doc.status === 'completed' && 
-                             doc.teacherReviewStatus === 'not_reviewed' && (
-                              <>
+                            {/* Review Results Action - only show for uploaded documents with completed analysis */}
+                            {doc.assetType === 'uploaded' && doc.status === 'completed' && (
+                              <Link href={`/documents/${doc.id}/results`}>
                                 <Button
                                   size="sm"
-                                  variant="default"
-                                  className="bg-green-600 hover:bg-green-700"
-                                  title="Accept AI analysis and proceed to generate documents"
-                                  onClick={() => handleAcceptAndProceed(doc.id)}
+                                  variant={doc.teacherReviewStatus === 'not_reviewed' ? 'default' : 'outline'}
+                                  className={doc.teacherReviewStatus === 'not_reviewed' ? 'bg-blue-600 hover:bg-blue-700' : ''}
+                                  title={doc.teacherReviewStatus === 'not_reviewed' ? 
+                                    'Review AI analysis and decide on next steps' : 
+                                    'View analysis results'}
                                 >
-                                  ✅ Accept & Proceed
+                                  📊 Review Results
                                 </Button>
-                                <Link href={`/documents/${doc.id}/review`}>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    title="Edit AI analysis before proceeding"
-                                  >
-                                    ✏️ Edit
-                                  </Button>
-                                </Link>
-                              </>
+                              </Link>
                             )}
                             
                             <Button 
