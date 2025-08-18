@@ -1117,13 +1117,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('[UXTests] Starting comprehensive UX validation...');
       
-      const { uxTester } = await import('../tests/uxTests.js');
-      const results = await uxTester.runAllUXTests();
+      // Inline UX testing implementation for immediate functionality
+      const testResults = [];
+      const startTime = Date.now();
+      
+      // Test critical endpoints
+      const endpoints = [
+        { path: '/', name: 'Landing Page' },
+        { path: '/dashboard', name: 'Dashboard' },
+        { path: '/upload', name: 'Upload Page' },
+        { path: '/file-cabinet', name: 'File Cabinet' },
+        { path: '/testing-dashboard', name: 'Testing Dashboard' },
+        { path: '/api/system-health', name: 'System Health API' },
+        { path: '/api/auth/user', name: 'Auth Status API' },
+        { path: '/api/documents', name: 'Documents API' },
+        { path: '/api/nonexistent', name: '404 Test' }
+      ];
+      
+      for (const endpoint of endpoints) {
+        try {
+          const testStartTime = Date.now();
+          const { default: fetch } = await import('node-fetch');
+          const response = await fetch(`http://localhost:5000${endpoint.path}`, {
+            method: 'GET',
+            headers: { 'User-Agent': 'Standards-Sherpa-UX-Test/1.0' }
+          });
+          
+          const responseTime = Date.now() - testStartTime;
+          const isSuccess = endpoint.name === '404 Test' ? 
+            response.status === 404 : 
+            [200, 304, 401, 302].includes(response.status);
+          
+          testResults.push({
+            testName: `Route: ${endpoint.name}`,
+            endpoint: endpoint.path,
+            method: 'GET',
+            status: isSuccess ? 'pass' : 'fail',
+            statusCode: response.status,
+            responseTime,
+            error: isSuccess ? undefined : `Unexpected status ${response.status}`
+          });
+        } catch (error) {
+          testResults.push({
+            testName: `Route: ${endpoint.name}`,
+            endpoint: endpoint.path,
+            method: 'GET',
+            status: 'fail',
+            error: error instanceof Error ? error.message : 'Request failed'
+          });
+        }
+      }
+      
+      const passed = testResults.filter(r => r.status === 'pass').length;
+      const failed = testResults.filter(r => r.status === 'fail').length;
+      const totalTime = Date.now() - startTime;
+      
+      const summary = `
+===== UX TEST RESULTS =====
+Total Tests: ${testResults.length}
+Passed: ${passed} ✅
+Failed: ${failed} ${failed > 0 ? '❌' : ''}
+Total Time: ${totalTime}ms
+Success Rate: ${((passed / testResults.length) * 100).toFixed(1)}%
+
+${failed > 0 ? 'FAILED TESTS:\n' + testResults.filter(r => r.status === 'fail').map(r => `- ${r.testName}: ${r.error}`).join('\n') : 'All tests passed!'}
+===========================`;
       
       res.json({
         success: true,
         timestamp: new Date().toISOString(),
-        ...results
+        totalTests: testResults.length,
+        passed,
+        failed,
+        results: testResults,
+        summary,
+        executionTime: totalTime
       });
       
     } catch (error) {
