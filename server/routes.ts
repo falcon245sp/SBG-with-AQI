@@ -276,6 +276,122 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Document content endpoint for viewing
+  app.get('/api/documents/:id/content', async (req: any, res) => {
+    try {
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+      const { id } = req.params;
+      
+      // Get document and verify ownership
+      const document = await storage.getDocument(id);
+      if (!document || document.customerUuid !== customerUuid) {
+        return res.status(404).json({ message: 'Document not found' });
+      }
+      
+      const filePath = path.join(process.cwd(), 'uploads', document.filePath);
+      
+      // Check if file exists
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: 'File not found on disk' });
+      }
+      
+      // Get file stats and extension
+      const stats = fs.statSync(filePath);
+      const ext = path.extname(document.originalFilename || document.fileName).toLowerCase();
+      
+      // Set appropriate content type
+      let contentType = 'application/octet-stream';
+      switch (ext) {
+        case '.pdf':
+          contentType = 'application/pdf';
+          break;
+        case '.txt':
+          contentType = 'text/plain';
+          break;
+        case '.md':
+          contentType = 'text/markdown';
+          break;
+        case '.csv':
+          contentType = 'text/csv';
+          break;
+        case '.json':
+          contentType = 'application/json';
+          break;
+        case '.xml':
+          contentType = 'application/xml';
+          break;
+        case '.html':
+          contentType = 'text/html';
+          break;
+        case '.jpg':
+        case '.jpeg':
+          contentType = 'image/jpeg';
+          break;
+        case '.png':
+          contentType = 'image/png';
+          break;
+        case '.gif':
+          contentType = 'image/gif';
+          break;
+        case '.svg':
+          contentType = 'image/svg+xml';
+          break;
+        case '.webp':
+          contentType = 'image/webp';
+          break;
+      }
+      
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Length', stats.size);
+      
+      // For PDFs and images, enable inline viewing
+      if (ext === '.pdf' || ['.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp'].includes(ext)) {
+        res.setHeader('Content-Disposition', `inline; filename="${document.originalFilename || document.fileName}"`);
+      }
+      
+      // Stream the file
+      const fileStream = fs.createReadStream(filePath);
+      fileStream.pipe(res);
+      
+    } catch (error) {
+      console.error('[Documents] Error serving document content:', error);
+      res.status(500).json({ message: 'Failed to load document content' });
+    }
+  });
+
+  // Document download endpoint
+  app.get('/api/documents/:id/download', async (req: any, res) => {
+    try {
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+      const { id } = req.params;
+      
+      // Get document and verify ownership
+      const document = await storage.getDocument(id);
+      if (!document || document.customerUuid !== customerUuid) {
+        return res.status(404).json({ message: 'Document not found' });
+      }
+      
+      const filePath = path.join(process.cwd(), 'uploads', document.filePath);
+      
+      // Check if file exists
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: 'File not found on disk' });
+      }
+      
+      // Force download with original filename
+      res.setHeader('Content-Disposition', `attachment; filename="${document.originalFilename || document.fileName}"`);
+      res.setHeader('Content-Type', 'application/octet-stream');
+      
+      // Stream the file
+      const fileStream = fs.createReadStream(filePath);
+      fileStream.pipe(res);
+      
+    } catch (error) {
+      console.error('[Documents] Error downloading document:', error);
+      res.status(500).json({ message: 'Failed to download document' });
+    }
+  });
+
   // Get user documents
   app.get('/api/documents', async (req: any, res) => {
     try {

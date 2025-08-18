@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { Link } from 'wouter';
+import { DocumentViewer } from '@/components/DocumentViewer';
 
 interface Document {
   id: string;
@@ -97,6 +98,8 @@ export default function FileCabinet() {
   const [tagFilter, setTagFilter] = useState('');
   const [exportTypeFilter, setExportTypeFilter] = useState('all');
   const [newTags, setNewTags] = useState<Record<string, string>>({});
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -446,10 +449,30 @@ export default function FileCabinet() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
-                            <Button size="sm" variant="outline">
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              title="Download document"
+                              onClick={() => {
+                                const link = document.createElement('a');
+                                link.href = `/api/documents/${doc.id}/download`;
+                                link.download = doc.originalFilename || doc.fileName;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                              }}
+                            >
                               <Download className="h-4 w-4" />
                             </Button>
-                            <Button size="sm" variant="outline">
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              title="View document"
+                              onClick={() => {
+                                setSelectedDocument(doc);
+                                setViewerOpen(true);
+                              }}
+                            >
                               <FileText className="h-4 w-4" />
                             </Button>
                             {doc.assetType === 'uploaded' && (
@@ -620,6 +643,19 @@ export default function FileCabinet() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Document Viewer Modal */}
+      {selectedDocument && (
+        <DocumentViewer
+          documentId={selectedDocument.id}
+          fileName={selectedDocument.originalFilename || selectedDocument.fileName}
+          isOpen={viewerOpen}
+          onClose={() => {
+            setViewerOpen(false);
+            setSelectedDocument(null);
+          }}
+        />
       )}
     </div>
   );

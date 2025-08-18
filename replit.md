@@ -16,6 +16,7 @@ This version delivers comprehensive rubric collation functionality that automati
 - **Smart Organization**: PDFs organized alphabetically by student name with complete scoring details
 - **Comprehensive Content**: Includes student names, scores, question breakdowns, feedback, and teacher notes
 - **File Cabinet Integration**: Collated PDFs appear as new export type in the Generated Documents drawer
+- **Multi-Format Document Viewing**: Direct viewing of PDF, text, images, and other document types within File Cabinet interface
 
 **Three-Drawer File Cabinet:**
 - **Uploaded Documents**: Original assessments and source materials
@@ -35,6 +36,7 @@ This version delivers comprehensive rubric collation functionality that automati
 - ✅ **Professional Organization**: Student submissions sorted alphabetically with complete scoring details
 - ✅ **Anti-Fraud Protection**: Zero tolerance for duplicate grade submissions with one-time QR sequences
 - ✅ **Complete Document Management**: Three-drawer system for comprehensive file organization
+- ✅ **Multi-Format Document Viewing**: PDF, text, image, and .docx viewing capabilities with smart download options
 
 ## User Preferences
 
