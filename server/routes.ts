@@ -165,8 +165,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Document upload endpoint - uses session-based auth
   app.post('/api/documents/upload', upload.any(), async (req: any, res) => {
     try {
-      // Use your permanent customerUuid directly since you're already authenticated
-      const customerUuid = '47b49153-0965-40bc-96ea-7c6d0f22e1c4';
+      // Get authenticated user's customer UUID
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const customerUuid = user.customerUuid;
       const files = (req.files as Express.Multer.File[]) || [];
       
       console.log(`=== UPLOAD DEBUG ===`);
@@ -303,23 +313,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.session?.userId;
       
-      // TEMPORARY: If no session, use the correct customer UUID that owns the document
-      let user = null;
       if (!userId) {
-        console.log("No userId in session, creating temporary user for testing");
-        // Use the customer UUID that owns the document and should see teacher overrides
-        user = {
-          id: 'test-user',
-          customerUuid: '47b49153-0965-40bc-96ea-7c6d0f22e1c4',
-          email: 'test@example.com'
-        };
-        console.log(`Using temporary user for testing (customerUuid: ${user.customerUuid})`);
-      } else {
-        user = await storage.getUser(userId);
-        if (!user) {
-          console.log(`User not found for userId: ${userId}`);
-          return res.status(404).json({ message: "User not found" });
-        }
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        console.log(`User not found for userId: ${userId}`);
+        return res.status(404).json({ message: "User not found" });
       }
       
       const { id } = req.params;
@@ -445,7 +446,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/prompt-templates', async (req: any, res) => {
     try {
-      const userId = 'test-user-123'; // Mock user ID
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
       
       // In a real implementation, you'd fetch from the database
       // For now, return sample templates
@@ -526,7 +530,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API Key management
   app.post('/api/api-keys', async (req: any, res) => {
     try {
-      const userId = 'test-user-123'; // Mock user ID
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
       const { keyName } = req.body;
       
       if (!keyName) {
@@ -556,7 +563,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/api-keys', async (req: any, res) => {
     try {
-      const userId = 'test-user-123'; // Mock user ID
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
       const keys = await storage.getUserApiKeys(userId);
       
       // Don't return the actual key hash
@@ -647,7 +657,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Teacher override endpoints
   app.post('/api/questions/:questionId/override', async (req: any, res) => {
     try {
-      const userId = 'test-user-123'; // Mock user ID
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
       const questionId = req.params.questionId;
       
       const validationResult = insertTeacherOverrideSchema.safeParse({
@@ -695,7 +708,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Revert to Sherpa analysis (deactivate current override)
   app.post('/api/questions/:questionId/revert-to-ai', async (req: any, res) => {
     try {
-      const userId = 'test-user-123'; // Mock user ID
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
       const questionId = req.params.questionId;
       
       console.log(`Processing revert request for question ${questionId}`);
@@ -714,7 +730,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/questions/:questionId/override', async (req: any, res) => {
     try {
-      const userId = 'test-user-123'; // Mock user ID
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
       const questionId = req.params.questionId;
       
       const override = await storage.getQuestionOverride(questionId, userId);
