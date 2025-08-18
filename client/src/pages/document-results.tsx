@@ -796,9 +796,7 @@ export default function DocumentResults() {
                                           questionText={question.questionText}
                                           initialData={overrideFormData}
                                           onSuccess={() => {
-                                            toast({ title: "Override saved successfully" });
-                                            queryClient.invalidateQueries({ queryKey: [`/api/documents/${documentId}/results`] });
-                                            // Close the dialog
+                                            // Close the dialog - cache invalidation is handled in the mutation
                                             setOpenDialogs(prev => ({ ...prev, [question.id]: false }));
                                           }}
                                         />
@@ -929,10 +927,12 @@ function TeacherOverrideForm({
       
       return await apiRequest('POST', `/api/questions/${questionId}/override`, payload);
     },
-    onSuccess: async () => {
-      // Invalidate and refetch the document results to show the updated teacher override
+    onSuccess: async (data, variables) => {
+      console.log('Override saved, invalidating cache for document:', documentId);
+      // Use the same pattern as the revert mutation that works
       await queryClient.invalidateQueries({ queryKey: [`/api/documents/${documentId}/results`] });
       await queryClient.refetchQueries({ queryKey: [`/api/documents/${documentId}/results`] });
+      console.log('Cache refetch completed');
       
       toast({
         title: "Override Saved",
