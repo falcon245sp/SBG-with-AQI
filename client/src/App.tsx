@@ -16,6 +16,7 @@ import DocumentResults from "@/pages/document-results";
 import PromptConfig from "@/pages/prompt-config";
 import FileCabinet from "@/pages/file-cabinet";
 import DocumentInspector from "@/pages/document-inspector";
+import TestingDashboard from "@/pages/testing-dashboard";
 
 function Router() {
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -51,6 +52,7 @@ function Router() {
           <Route path="/prompt-config" component={PromptConfig} />
           <Route path="/file-cabinet" component={FileCabinet} />
           <Route path="/documents/:documentId/inspect" component={DocumentInspector} />
+          <Route path="/testing-dashboard" component={TestingDashboard} />
           <Route component={NotFound} />
         </>
       )}

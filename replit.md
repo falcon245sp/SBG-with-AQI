@@ -32,8 +32,11 @@ This version implements comprehensive document overwrite functionality to preven
 **Automated Testing System:**
 - **System Health Endpoint**: `/api/system-health` validates database, export processor, file system, and filename implementation
 - **Export Testing**: `/api/test-export` endpoint for manually triggering and testing export generation
+- **UX Testing Suite**: `/api/run-ux-tests` comprehensive endpoint validation to prevent dead links and 404 errors
+- **Testing Dashboard**: `/testing-dashboard` UI for running automated tests and viewing results in real-time
 - **Real-time Validation**: Comprehensive system validation with immediate feedback on all major components
 - **Filename Validation**: Automated checking for user-friendly filename implementation vs legacy UUID formats
+- **Link Validation**: Automated testing of all public routes, API endpoints, file serving, and error handling
 
 ## Version 0.7.3 - Rubric Collation System
 **Release Date:** August 18, 2025

@@ -1112,6 +1112,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // UX testing endpoint
+  app.get('/api/run-ux-tests', async (req, res) => {
+    try {
+      console.log('[UXTests] Starting comprehensive UX validation...');
+      
+      const { uxTester } = await import('../tests/uxTests.js');
+      const results = await uxTester.runAllUXTests();
+      
+      res.json({
+        success: true,
+        timestamp: new Date().toISOString(),
+        ...results
+      });
+      
+    } catch (error) {
+      console.error('[UXTests] UX test execution failed:', error);
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
