@@ -517,6 +517,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Resubmit document for reprocessing
+  app.post('/api/documents/:id/resubmit', async (req: any, res) => {
+    try {
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+      const { id } = req.params;
+      
+      // Get document and verify ownership
+      const document = await storage.getDocument(id);
+      if (!document || document.customerUuid !== customerUuid) {
+        return res.status(404).json({ message: 'Document not found' });
+      }
+      
+      // Only allow resubmission for uploaded documents
+      if (document.assetType !== 'uploaded') {
+        return res.status(400).json({ message: 'Can only resubmit uploaded documents' });
+      }
+      
+      // Add to processing queue
+      await queueProcessor.addToQueue(id);
+      
+      // Update document status to queued
+      await DatabaseWriteService.updateDocumentStatus(id, 'queued');
+      
+      console.log(`[Documents] Document ${id} resubmitted for processing`);
+      
+      res.json({
+        success: true,
+        message: 'Document resubmitted for processing',
+        documentId: id,
+        status: 'queued'
+      });
+    } catch (error) {
+      console.error('[Documents] Error resubmitting document:', error);
+      res.status(500).json({ message: 'Failed to resubmit document' });
+    }
+  });
+
+  // Delete document
+  app.delete('/api/documents/:id', async (req: any, res) => {
+    try {
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+      const { id } = req.params;
+      
+      // Get document and verify ownership
+      const document = await storage.getDocument(id);
+      if (!document || document.customerUuid !== customerUuid) {
+        return res.status(404).json({ message: 'Document not found' });
+      }
+      
+      // Delete the document from the database
+      await DatabaseWriteService.deleteDocument(id);
+      
+      // Clean up physical file if it exists
+      const filePath = path.join(process.cwd(), 'uploads', document.filePath);
+      if (fs.existsSync(filePath)) {
+        try {
+          fs.unlinkSync(filePath);
+          console.log(`[Documents] Deleted physical file: ${filePath}`);
+        } catch (fileError) {
+          console.warn(`[Documents] Could not delete physical file ${filePath}:`, fileError);
+        }
+      }
+      
+      console.log(`[Documents] Document ${id} deleted by user`);
+      
+      res.json({
+        success: true,
+        message: 'Document deleted successfully',
+        documentId: id
+      });
+    } catch (error) {
+      console.error('[Documents] Error deleting document:', error);
+      res.status(500).json({ message: 'Failed to delete document' });
+    }
+  });
+
   // Get processing queue status
   app.get('/api/queue', async (req: any, res) => {
     try {

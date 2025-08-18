@@ -26,7 +26,9 @@ import {
   Filter,
   FolderOpen,
   Settings,
-  Eye
+  Eye,
+  RefreshCw,
+  Trash2
 } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { Link } from 'wouter';
@@ -125,6 +127,58 @@ export default function FileCabinet() {
 
   const handleCollateSubmissions = (documentId: string) => {
     collateMutation.mutate(documentId);
+  };
+
+  // Resubmit document to Sherpa for reprocessing
+  const resubmitMutation = useMutation({
+    mutationFn: async (documentId: string) => {
+      const response = await fetch(`/api/documents/${documentId}/resubmit`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to resubmit document');
+      return response.json();
+    },
+    onSuccess: (data, documentId) => {
+      queryClient.invalidateQueries({ queryKey: ['file-cabinet'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/documents'] });
+      console.log(`Document ${documentId} resubmitted for processing:`, data);
+    },
+    onError: (error) => {
+      console.error('Failed to resubmit document:', error);
+    }
+  });
+
+  // Delete document
+  const deleteMutation = useMutation({
+    mutationFn: async (documentId: string) => {
+      const response = await fetch(`/api/documents/${documentId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to delete document');
+      return response.json();
+    },
+    onSuccess: (data, documentId) => {
+      queryClient.invalidateQueries({ queryKey: ['file-cabinet'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/documents'] });
+      console.log(`Document ${documentId} deleted:`, data);
+    },
+    onError: (error) => {
+      console.error('Failed to delete document:', error);
+    }
+  });
+
+  const handleResubmitDocument = (documentId: string) => {
+    if (confirm('Resubmit this document to Standards Sherpa for reprocessing? This will analyze the document again.')) {
+      resubmitMutation.mutate(documentId);
+    }
+  };
+
+  const handleDeleteDocument = (documentId: string, fileName: string) => {
+    if (confirm(`Are you sure you want to delete "${fileName}"? This action cannot be undone.`)) {
+      deleteMutation.mutate(documentId);
+    }
   };
 
   // Fetch File Cabinet data
@@ -489,11 +543,32 @@ export default function FileCabinet() {
                                 📋
                               </Button>
                             )}
+                            {doc.assetType === 'uploaded' && (
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                title="Resubmit to Standards Sherpa for reprocessing"
+                                onClick={() => handleResubmitDocument(doc.id)}
+                                disabled={resubmitMutation.isPending}
+                              >
+                                <RefreshCw className={`h-4 w-4 ${resubmitMutation.isPending ? 'animate-spin' : ''}`} />
+                              </Button>
+                            )}
                             <Link href={`/documents/${doc.id}/inspect`}>
                               <Button size="sm" variant="outline" title="Inspect document relationships and details">
                                 <Eye className="h-4 w-4" />
                               </Button>
                             </Link>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              title="Delete document"
+                              onClick={() => handleDeleteDocument(doc.id, doc.originalFilename || doc.fileName)}
+                              disabled={deleteMutation.isPending}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>

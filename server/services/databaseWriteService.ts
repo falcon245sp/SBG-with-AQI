@@ -82,6 +82,37 @@ export class DatabaseWriteService {
   }
 
   /**
+   * Update document status (for resubmission tracking)
+   */
+  static async updateDocumentStatus(documentId: string, status: string, errorMessage?: string): Promise<void> {
+    console.log(`[DatabaseWriteService] Updating document ${documentId} status to: ${status}`);
+    
+    try {
+      await storage.updateDocumentStatus(documentId, status, errorMessage);
+      console.log(`[DatabaseWriteService] Document status updated successfully`);
+    } catch (error) {
+      console.error(`[DatabaseWriteService] Failed to update document status:`, error);
+      throw new Error(`Failed to update document status: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Delete document and all related data
+   */
+  static async deleteDocument(documentId: string): Promise<void> {
+    console.log(`[DatabaseWriteService] Deleting document: ${documentId}`);
+    
+    try {
+      // Delete the document record (this should cascade to related data)
+      await storage.deleteDocument(documentId);
+      console.log(`[DatabaseWriteService] Document deleted successfully: ${documentId}`);
+    } catch (error) {
+      console.error(`[DatabaseWriteService] Failed to delete document:`, error);
+      throw new Error(`Failed to delete document: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
    * Update document processing status
    */
   static async updateDocumentStatus(documentId: string, status: string, processingError?: string): Promise<void> {

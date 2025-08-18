@@ -70,6 +70,7 @@ export interface IStorage {
   getDocument(id: string): Promise<Document | undefined>;
   getUserDocuments(customerUuid: string, limit?: number): Promise<Document[]>;
   updateDocumentStatus(id: string, status: string, errorMessage?: string): Promise<void>;
+  deleteDocument(id: string): Promise<void>;
   
   // Question operations
   createQuestion(question: InsertQuestion): Promise<Question>;
@@ -725,6 +726,13 @@ export class DatabaseStorage implements IStorage {
         tags,
         updatedAt: new Date(),
       })
+      .where(eq(documents.id, id));
+  }
+
+  async deleteDocument(id: string): Promise<void> {
+    // Delete document and all related data (cascading deletes should handle related records)
+    await db
+      .delete(documents)
       .where(eq(documents.id, id));
   }
 
