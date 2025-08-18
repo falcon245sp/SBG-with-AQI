@@ -183,6 +183,45 @@ export default function FileCabinet() {
     }
   };
 
+  // Generate exports mutation
+  const generateExportsMutation = useMutation({
+    mutationFn: async ({ documentId, exportTypes }: { documentId: string; exportTypes: string[] }) => {
+      const response = await fetch(`/api/file-cabinet/documents/${documentId}/generate-exports`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ exportTypes }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate exports');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data, { documentId }) => {
+      queryClient.invalidateQueries({ queryKey: ['file-cabinet'] });
+      console.log(`Export generation queued for document ${documentId}:`, data);
+    },
+    onError: (error) => {
+      console.error('Failed to generate exports:', error);
+    }
+  });
+
+  const handleGenerateRubric = (documentId: string) => {
+    generateExportsMutation.mutate({ documentId, exportTypes: ['rubric_pdf'] });
+  };
+
+  const handleGenerateCoverSheet = (documentId: string) => {
+    generateExportsMutation.mutate({ documentId, exportTypes: ['cover_sheet'] });
+  };
+
+  const handleGenerateAllExports = (documentId: string) => {
+    generateExportsMutation.mutate({ documentId, exportTypes: ['rubric_pdf', 'cover_sheet'] });
+  };
+
   // Fetch File Cabinet data
   const { data: fileCabinetData, isLoading } = useQuery({
     queryKey: ['file-cabinet', currentDrawer, sortBy, sortOrder, tagFilter, exportTypeFilter],
@@ -541,6 +580,39 @@ export default function FileCabinet() {
                                 }}
                               >
                                 <FileText className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {doc.assetType === 'uploaded' && (
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                title="Generate rubric PDF for grading"
+                                onClick={() => handleGenerateRubric(doc.id)}
+                                disabled={generateExportsMutation.isPending}
+                              >
+                                📝
+                              </Button>
+                            )}
+                            {doc.assetType === 'uploaded' && (
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                title="Generate cover sheet PDF for students"
+                                onClick={() => handleGenerateCoverSheet(doc.id)}
+                                disabled={generateExportsMutation.isPending}
+                              >
+                                📄
+                              </Button>
+                            )}
+                            {doc.assetType === 'uploaded' && (
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                title="Generate all exports (rubric + cover sheet)"
+                                onClick={() => handleGenerateAllExports(doc.id)}
+                                disabled={generateExportsMutation.isPending}
+                              >
+                                📦
                               </Button>
                             )}
                             {doc.assetType === 'uploaded' && (
