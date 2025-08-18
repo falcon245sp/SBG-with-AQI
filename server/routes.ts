@@ -721,6 +721,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { fileCabinetRouter } = await import('./routes/fileCabinet');
   app.use(fileCabinetRouter);
 
+  // Register Document Traversal router
+  const documentTraversalRouter = await import('./routes/documentTraversal');
+  app.use(documentTraversalRouter.default);
+
   const httpServer = createServer(app);
   return httpServer;
 }

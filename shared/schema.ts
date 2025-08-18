@@ -243,7 +243,8 @@ export const qrSequenceNumbers = pgTable("qr_sequence_numbers", {
 export const gradeSubmissions = pgTable("grade_submissions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   sequenceNumberId: varchar("sequence_number_id").notNull().references(() => qrSequenceNumbers.id),
-  documentId: varchar("document_id").notNull().references(() => documents.id),
+  rubricDocumentId: varchar("rubric_document_id").notNull().references(() => documents.id), // The generated rubric being graded
+  originalDocumentId: varchar("original_document_id").notNull().references(() => documents.id), // Original uploaded assessment
   studentId: varchar("student_id").notNull().references(() => students.id),
   questionGrades: jsonb("question_grades").notNull(), // Array of {questionId, score, maxScore}
   totalScore: decimal("total_score", { precision: 5, scale: 2 }),

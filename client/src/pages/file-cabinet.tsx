@@ -25,9 +25,11 @@ import {
   ArrowUpDown,
   Filter,
   FolderOpen,
-  Settings
+  Settings,
+  Eye
 } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
+import { Link } from 'wouter';
 
 interface Document {
   id: string;
@@ -402,6 +404,11 @@ export default function FileCabinet() {
                             <Button size="sm" variant="outline">
                               <FileText className="h-4 w-4" />
                             </Button>
+                            <Link href={`/documents/${doc.id}/inspect`}>
+                              <Button size="sm" variant="outline" title="Inspect document relationships and details">
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </Link>
                           </div>
                         </TableCell>
                       </TableRow>

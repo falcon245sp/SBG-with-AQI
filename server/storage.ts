@@ -123,7 +123,15 @@ export interface IStorage {
   // Grade submission operations
   createGradeSubmission(gradeData: InsertGradeSubmission): Promise<GradeSubmission>;
   getGradeSubmissionsForDocument(documentId: string): Promise<GradeSubmission[]>;
+  getGradeSubmissionsForRubric(rubricDocumentId: string): Promise<GradeSubmission[]>;
   getStudentGradeSubmissions(studentId: string): Promise<GradeSubmission[]>;
+  
+  // Document relationship operations
+  getGeneratedDocuments(parentDocumentId: string): Promise<Document[]>;
+  getDocument(documentId: string): Promise<Document | undefined>;
+  getCustomerDocuments(customerUuid: string): Promise<Document[]>;
+  getStudent(studentId: string): Promise<Student | undefined>;
+  getQrSequenceById(sequenceId: string): Promise<QrSequenceNumber | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1141,7 +1149,18 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(gradeSubmissions)
-      .where(eq(gradeSubmissions.documentId, documentId))
+      .where(or(
+        eq(gradeSubmissions.rubricDocumentId, documentId),
+        eq(gradeSubmissions.originalDocumentId, documentId)
+      ))
+      .orderBy(gradeSubmissions.scannedAt);
+  }
+  
+  async getGradeSubmissionsForRubric(rubricDocumentId: string): Promise<GradeSubmission[]> {
+    return await db
+      .select()
+      .from(gradeSubmissions)
+      .where(eq(gradeSubmissions.rubricDocumentId, rubricDocumentId))
       .orderBy(gradeSubmissions.scannedAt);
   }
   
@@ -1151,6 +1170,50 @@ export class DatabaseStorage implements IStorage {
       .from(gradeSubmissions)
       .where(eq(gradeSubmissions.studentId, studentId))
       .orderBy(gradeSubmissions.scannedAt);
+  }
+  
+  // Document relationship operations
+  async getGeneratedDocuments(parentDocumentId: string): Promise<Document[]> {
+    return await db
+      .select()
+      .from(documents)
+      .where(and(
+        eq(documents.parentDocumentId, parentDocumentId),
+        eq(documents.assetType, 'generated')
+      ))
+      .orderBy(documents.createdAt);
+  }
+  
+  async getDocument(documentId: string): Promise<Document | undefined> {
+    const [document] = await db
+      .select()
+      .from(documents)
+      .where(eq(documents.id, documentId));
+    return document;
+  }
+  
+  async getCustomerDocuments(customerUuid: string): Promise<Document[]> {
+    return await db
+      .select()
+      .from(documents)
+      .where(eq(documents.customerUuid, customerUuid))
+      .orderBy(desc(documents.createdAt));
+  }
+  
+  async getStudent(studentId: string): Promise<Student | undefined> {
+    const [student] = await db
+      .select()
+      .from(students)
+      .where(eq(students.id, studentId));
+    return student;
+  }
+  
+  async getQrSequenceById(sequenceId: string): Promise<QrSequenceNumber | undefined> {
+    const [sequence] = await db
+      .select()
+      .from(qrSequenceNumbers)
+      .where(eq(qrSequenceNumbers.id, sequenceId));
+    return sequence;
   }
 }
 
