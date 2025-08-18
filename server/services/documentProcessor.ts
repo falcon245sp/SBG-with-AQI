@@ -1,4 +1,5 @@
 import { storage } from '../storage';
+import { DatabaseWriteService } from './databaseWriteService';
 import { aiService } from './aiService';
 import { rigorAnalyzer } from './rigorAnalyzer';
 import * as fs from 'fs';
@@ -19,7 +20,7 @@ export class DocumentProcessor {
       console.log(`Starting processing for document: ${documentId}`);
       
       // Update status to processing
-      await storage.updateDocumentStatus(documentId, 'processing');
+      await DatabaseWriteService.updateDocumentStatus(documentId, 'processing');
       
       const document = await storage.getDocument(documentId);
       if (!document) {
@@ -60,7 +61,7 @@ export class DocumentProcessor {
       const questionRecords = [];
       for (let i = 0; i < analysisResults.questions.length; i++) {
         const questionData = analysisResults.questions[i];
-        const question = await storage.createQuestion({
+        const question = await DatabaseWriteService.createQuestion({
           documentId: document.id,
           questionNumber: String(i + 1), // Use sequential numbering
           questionText: questionData.text,
@@ -75,7 +76,7 @@ export class DocumentProcessor {
       }
 
       // Update status to completed
-      await storage.updateDocumentStatus(documentId, 'completed');
+      await DatabaseWriteService.updateDocumentStatus(documentId, 'completed');
       
       // Send callback notification if provided
       if (callbackUrl) {
@@ -111,7 +112,7 @@ export class DocumentProcessor {
       
       console.error('=== END PROCESSING FAILURE ANALYSIS ===');
       
-      await storage.updateDocumentStatus(documentId, 'failed', error instanceof Error ? error.message : 'Unknown error');
+      await DatabaseWriteService.updateDocumentStatus(documentId, 'failed', error instanceof Error ? error.message : 'Unknown error');
       
       if (callbackUrl) {
         await this.sendCallback(callbackUrl, {
@@ -152,7 +153,7 @@ export class DocumentProcessor {
       console.log('Consensus result:', JSON.stringify(consensusResult, null, 2));
       
       // Store consensus result
-      await storage.createQuestionResult({
+      await DatabaseWriteService.createQuestionResult({
         questionId: question.id,
         consensusStandards: consensusResult.consensusStandards,
         consensusRigorLevel: consensusResult.consensusRigorLevel,
@@ -269,7 +270,7 @@ export class DocumentProcessor {
         processingTime: grokResult.processingTime
       });
       
-      await storage.createAiResponse({
+      await DatabaseWriteService.createAIResponse({
         questionId: question.id,
         aiEngine: 'grok',
         standardsIdentified: grokResult.standards || [],
@@ -305,7 +306,7 @@ export class DocumentProcessor {
       });
       
       // Store Grok AI response
-      await storage.createAiResponse({
+      await DatabaseWriteService.createAIResponse({
         questionId: question.id,
         aiEngine: 'grok',
         standardsIdentified: grokResult.standards || [],
@@ -318,7 +319,7 @@ export class DocumentProcessor {
       
       console.log('Successfully stored Grok AI result');
 
-      await storage.createAiResponse({
+      await DatabaseWriteService.createAIResponse({
         questionId: question.id,
         aiEngine: 'claude',
         standardsIdentified: aiResults.claude.standards,
@@ -333,7 +334,7 @@ export class DocumentProcessor {
       const consensusResult = rigorAnalyzer.analyzeSingleEngineResult(aiResults);
 
       // Store consensus result
-      await storage.createQuestionResult({
+      await DatabaseWriteService.createQuestionResult({
         questionId: question.id,
         consensusStandards: consensusResult.consensusStandards,
         consensusRigorLevel: consensusResult.consensusRigorLevel,

@@ -126,7 +126,7 @@ export class DatabaseStorage implements IStorage {
         }),
       };
     } catch (error) {
-      console.warn('PII decryption failed for user, returning user data:', error.message);
+      console.warn('PII decryption failed for user, returning user data:', (error as Error).message);
       return user;
     }
   }
@@ -145,7 +145,7 @@ export class DatabaseStorage implements IStorage {
           }),
         };
       } catch (error) {
-        console.warn('PII decryption failed for user during getAllUsers, returning user data:', error.message);
+        console.warn('PII decryption failed for user during getAllUsers, returning user data:', (error as Error).message);
         return user;
       }
     });
@@ -190,7 +190,7 @@ export class DatabaseStorage implements IStorage {
         }),
       };
     } catch (error) {
-      console.warn('PII decryption failed for user lookup by email, returning user data:', error.message);
+      console.warn('PII decryption failed for user lookup by email, returning user data:', (error as Error).message);
       return user;
     }
   }
@@ -210,7 +210,7 @@ export class DatabaseStorage implements IStorage {
         }),
       };
     } catch (error) {
-      console.warn('PII decryption failed for user lookup by Google ID, returning user data:', error.message);
+      console.warn('PII decryption failed for user lookup by Google ID, returning user data:', (error as Error).message);
       return user;
     }
   }
@@ -230,7 +230,7 @@ export class DatabaseStorage implements IStorage {
         }),
       };
     } catch (error) {
-      console.warn('PII decryption failed for user lookup by customer UUID, returning user data:', error.message);
+      console.warn('PII decryption failed for user lookup by customer UUID, returning user data:', (error as Error).message);
       return user;
     }
   }
@@ -272,7 +272,7 @@ export class DatabaseStorage implements IStorage {
           }),
         };
       } catch (error) {
-        console.warn('PII decryption failed for user during getUsersByName, returning user data:', error.message);
+        console.warn('PII decryption failed for user during getUsersByName, returning user data:', (error as Error).message);
         return user;
       }
     });

@@ -25,8 +25,10 @@ Preferred communication style: Simple, everyday language.
 - **Authentication**: Replit Auth integration with session management
 - **File Processing**: Multer for uploads, PDF-extract for PDFs, Mammoth for Word documents
 - **AI Integration**: Multiple AI service integrations
-- **ActiveUserService**: Centralized service for accessing currently authenticated user data from session with clean API for session management
-- **CustomerLookupService**: Single database service for all customer UUID resolution, supporting lookups by session user ID, email, Google ID, customer UUID, and name search with centralized PII decryption
+- **Three-Layer Architecture**: Complete separation of concerns implemented
+  - **ActiveUserService**: Centralized service for accessing currently authenticated user data from session with clean API for session management
+  - **CustomerLookupService**: Single database service for all customer UUID resolution, supporting lookups by session user ID, email, Google ID, customer UUID, and name search with centralized PII decryption
+  - **DatabaseWriteService**: Centralized write operations service with business logic, error handling, audit trails, and transaction management
 
 ### Database Design
 - **Primary Database**: PostgreSQL via Neon serverless
@@ -52,7 +54,9 @@ Preferred communication style: Simple, everyday language.
 - **API Security**: Session-based authentication.
 - **File Validation**: MIME type validation and file size limits.
 - **PII Encryption**: All personally identifiable information encrypted at rest using AES encryption in both development and production environments.
-- **CustomerLookupService**: Centralized database service that handles all customer UUID resolution and user data access, with PII decryption managed in one place for security consistency.
+- **Centralized Data Access**: 
+  - **CustomerLookupService**: Centralized database service that handles all customer UUID resolution and user data access, with PII decryption managed in one place for security consistency.
+  - **DatabaseWriteService**: All database write operations centralized with consistent business logic, error handling, and audit trails for security compliance.
 
 ### Error Handling & Monitoring
 - **Structured Logging**: Request/response logging with timing.

@@ -19,6 +19,9 @@ import { aiService } from "./services/aiService";
 import path from "path";
 import fs from "fs";
 import { SessionCleanup } from "./utils/sessionCleanup";
+import { DatabaseWriteService } from "./services/databaseWriteService";
+import { CustomerLookupService } from "./services/customerLookupService";
+import { ActiveUserService } from "./services/activeUserService";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -57,8 +60,6 @@ async function verifyPassword(password: string, hash: string): Promise<boolean> 
 
 // Import the proper Replit Auth middleware
 import { setupAuth } from './replitAuth';
-import { CustomerLookupService } from './services/customerLookupService';
-import { ActiveUserService } from './services/activeUserService';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Replit Auth first
@@ -70,10 +71,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await ActiveUserService.requireActiveUser(req);
       res.json(user);
     } catch (error) {
-      if (error.message === 'Authentication required') {
+      if ((error as Error).message === 'Authentication required') {
         return res.status(401).json({ error: 'Authentication required' });
       }
-      if (error.message === 'User not found') {
+      if ((error as Error).message === 'User not found') {
         return res.status(404).json({ error: 'User not found' });
       }
       console.error("Error fetching user:", error);
@@ -138,7 +139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Create document record
-      const document = await storage.createDocument(customerUuid, validationResult.data);
+      const document = await DatabaseWriteService.createDocument(customerUuid, validationResult.data);
       
       // Add to event-driven processing queue
       await queueProcessor.addToQueue(document.id);
@@ -205,7 +206,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
 
           // Create document record
-          const document = await storage.createDocument(customerUuid, validationResult.data);
+          const document = await DatabaseWriteService.createDocument(customerUuid, validationResult.data);
           
           console.log(`Created document ${document.id} for file ${file.originalname}`);
           
@@ -495,7 +496,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const apiKey = `dps_${Math.random().toString(36).substr(2, 9)}_${Date.now()}`;
       const keyHash = Buffer.from(apiKey).toString('base64');
       
-      const createdKey = await storage.createApiKey(userId, {
+      const createdKey = await DatabaseWriteService.createApiKey(userId, {
         keyName,
         keyHash,
       });
@@ -625,11 +626,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (existingOverride) {
         // Update existing override
-        await storage.updateTeacherOverride(existingOverride.id, validationResult.data);
+        await DatabaseWriteService.updateTeacherOverride(existingOverride.id, validationResult.data);
         res.json({ message: "Override updated successfully", overrideId: existingOverride.id });
       } else {
         // Create new override
-        const override = await storage.createTeacherOverride(customerUuid, validationResult.data);
+        const override = await DatabaseWriteService.createTeacherOverride(customerUuid, validationResult.data);
         res.json({ message: "Override created successfully", overrideId: override.id });
       }
     } catch (error) {
@@ -657,7 +658,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const questionId = req.params.questionId;
       
       console.log(`Processing revert request for question ${questionId}`);
-      await storage.revertToAI(questionId, customerUuid);
+      await DatabaseWriteService.revertQuestionToAI(questionId, customerUuid);
       console.log(`Successfully reverted question ${questionId} to Sherpa analysis`);
       res.json({ message: "Successfully reverted to Sherpa analysis" });
     } catch (error) {
