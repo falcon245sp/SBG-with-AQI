@@ -89,17 +89,37 @@ export const aiEngineEnum = pgEnum('ai_engine', [
   'chatgpt', 'grok', 'claude'
 ]);
 
-// Documents table
-export const documents = pgTable("documents", {
+// Asset type enum for File Cabinet
+export const assetTypeEnum = pgEnum('asset_type', [
+  'uploaded', 'generated'
+]);
+
+// Export type enum for generated documents  
+export const exportTypeEnum = pgEnum('export_type', [
+  'rubric_pdf', 'cover_sheet', 'processing_report', 'standards_summary'
+]);
+
+// Documents table - enhanced for File Cabinet functionality
+export const documents: any = pgTable("documents", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   customerUuid: varchar("customer_uuid").notNull().references(() => users.customerUuid),
   fileName: text("file_name").notNull(),
-  originalPath: text("original_path").notNull(),
+  originalPath: text("original_path").notNull(), // File path in uploads/ or exports/ directory
   mimeType: text("mime_type").notNull(),
   fileSize: integer("file_size").notNull(),
   extractedText: text("extracted_text"),
-  jurisdictions: text("jurisdictions").array().notNull(),
+  jurisdictions: text("jurisdictions").array(),
   status: processingStatusEnum("status").notNull().default('pending'),
+  
+  // File Cabinet enhancement fields
+  assetType: assetTypeEnum("asset_type").notNull().default('uploaded'), // uploaded vs generated
+  parentDocumentId: varchar("parent_document_id"), // Links generated assets to originals
+  exportType: exportTypeEnum("export_type"), // Type of generated document (null for uploads)
+  tags: text("tags").array().default(sql`'{}'`), // User-defined tags for organization
+  originalFilename: text("original_filename"), // User's original filename (for display)
+  retentionDate: timestamp("retention_date"), // Calculated based on subscription status
+  
+  // Processing fields
   processingStarted: timestamp("processing_started"),
   processingCompleted: timestamp("processing_completed"),
   errorMessage: text("error_message"),
@@ -185,6 +205,22 @@ export const processingQueue = pgTable("processing_queue", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Export generation queue for File Cabinet
+export const exportQueue = pgTable("export_queue", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  documentId: varchar("document_id").notNull().references(() => documents.id), // Source document
+  exportType: exportTypeEnum("export_type").notNull(), // Type to generate
+  priority: integer("priority").notNull().default(0),
+  attempts: integer("attempts").notNull().default(0),
+  maxAttempts: integer("max_attempts").notNull().default(3),
+  status: processingStatusEnum("status").notNull().default('pending'),
+  errorMessage: text("error_message"),
+  scheduledFor: timestamp("scheduled_for").defaultNow(),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   googleId: true,
@@ -225,6 +261,13 @@ export const insertDocumentSchema = createInsertSchema(documents).pick({
   mimeType: true,
   fileSize: true,
   jurisdictions: true,
+  assetType: true,
+  parentDocumentId: true,
+  exportType: true,
+  tags: true,
+  originalFilename: true,
+  retentionDate: true,
+  customerUuid: true,
 });
 
 export const insertQuestionSchema = createInsertSchema(questions).pick({
@@ -257,6 +300,12 @@ export const insertTeacherOverrideSchema = createInsertSchema(teacherOverrides).
   confidenceScore: true,
   notes: true,
   editReason: true,
+});
+
+export const insertExportQueueSchema = createInsertSchema(exportQueue).pick({
+  documentId: true,
+  exportType: true,
+  priority: true,
 });
 
 // Types
