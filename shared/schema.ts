@@ -9,6 +9,7 @@ import {
   integer,
   boolean,
   decimal,
+  real,
   pgEnum
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
@@ -152,10 +153,9 @@ export const teacherOverrides = pgTable("teacher_overrides", {
   customerUuid: varchar("customer_uuid").notNull().references(() => users.customerUuid),
   overriddenStandards: jsonb("overridden_standards").notNull(), // Teacher's corrected standards
   overriddenRigorLevel: rigorLevelEnum("overridden_rigor_level"),
-  teacherJustification: text("teacher_justification"), // Teacher's reasoning
-  confidenceLevel: integer("confidence_level").notNull().default(5), // 1-5 scale
-  hasDomainChange: boolean("has_domain_change").notNull().default(false), // Flag for cross-domain changes
-  domainChangeDetails: jsonb("domain_change_details"), // Store domain change information
+  confidenceScore: real("confidence_score"), // Confidence level as real number
+  notes: text("notes"), // Teacher's notes
+  editReason: varchar("edit_reason"), // Reason for the edit
   isActive: boolean("is_active").notNull().default(true), // Flag to track current active override
   isRevertedToAi: boolean("is_reverted_to_ai").notNull().default(false), // Flag for AI reversion
   createdAt: timestamp("created_at").defaultNow(),
@@ -254,8 +254,9 @@ export const insertTeacherOverrideSchema = createInsertSchema(teacherOverrides).
   questionId: true,
   overriddenStandards: true,
   overriddenRigorLevel: true,
-  teacherJustification: true,
-  confidenceLevel: true,
+  confidenceScore: true,
+  notes: true,
+  editReason: true,
 });
 
 // Types
