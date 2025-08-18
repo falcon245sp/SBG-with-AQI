@@ -464,17 +464,21 @@ export default function FileCabinet() {
                             >
                               <Download className="h-4 w-4" />
                             </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              title="View document"
-                              onClick={() => {
-                                setSelectedDocument(doc);
-                                setViewerOpen(true);
-                              }}
-                            >
-                              <FileText className="h-4 w-4" />
-                            </Button>
+                            {/* Only show view button for non-docx files */}
+                            {!doc.originalFilename?.toLowerCase().endsWith('.docx') && 
+                             !doc.fileName?.toLowerCase().endsWith('.docx') && (
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                title="View document"
+                                onClick={() => {
+                                  setSelectedDocument(doc);
+                                  setViewerOpen(true);
+                                }}
+                              >
+                                <FileText className="h-4 w-4" />
+                              </Button>
+                            )}
                             {doc.assetType === 'uploaded' && (
                               <Button 
                                 size="sm" 

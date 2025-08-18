@@ -188,10 +188,7 @@ export function DocumentViewer({ documentId, fileName, fileType, isOpen, onClose
               <div className="space-y-2">
                 <h3 className="text-lg font-medium">Preview not available</h3>
                 <p className="text-muted-foreground max-w-sm">
-                  {isDocx 
-                    ? 'Word documents need to be downloaded and opened with Microsoft Word or a compatible application.'
-                    : 'This file type cannot be previewed in the browser. Download the file to view it with an appropriate application.'
-                  }
+                  This file type cannot be previewed in the browser. Download the file to view it with an appropriate application.
                 </p>
               </div>
               <div className="flex gap-2">
@@ -199,18 +196,7 @@ export function DocumentViewer({ documentId, fileName, fileType, isOpen, onClose
                   <Download className="h-4 w-4 mr-2" />
                   Download to View
                 </Button>
-                {isDocx && (
-                  <Button variant="outline" asChild>
-                    <a 
-                      href="https://office.live.com/start/Word.aspx" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                    >
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Open in Word Online
-                    </a>
-                  </Button>
-                )}
+
               </div>
             </div>
           )}
