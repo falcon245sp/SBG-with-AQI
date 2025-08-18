@@ -6,6 +6,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { logger } from '../utils/logger';
 
 const execAsync = promisify(exec);
 import mammoth from 'mammoth';
@@ -17,7 +18,11 @@ export class DocumentProcessor {
     focusStandards?: string[]
   ): Promise<void> {
     try {
-      console.log(`Starting processing for document: ${documentId}`);
+      logger.documentProcessing('Starting document processing', {
+        documentId,
+        callbackUrl,
+        focusStandards: focusStandards?.length || 0
+      });
       
       // Update status to processing
       await DatabaseWriteService.updateDocumentStatus(documentId, 'processing');
@@ -27,15 +32,32 @@ export class DocumentProcessor {
         throw new Error(`Document ${documentId} not found`);
       }
 
+      logger.documentProcessing('Document retrieved', {
+        documentId,
+        mimeType: document.mimeType,
+        fileName: document.name,
+        fileSize: document.fileSize,
+        jurisdictions: document.jurisdictions?.length || 0
+      });
+
       // Extract text content from the document
-      console.log(`Extracting text from document: ${document.originalPath}`);
+      logger.documentProcessing('Starting text extraction', {
+        documentId,
+        originalPath: document.originalPath,
+        mimeType: document.mimeType
+      });
+      
       const extractedText = await this.extractTextFromDocument(document.originalPath, document.mimeType);
       
       if (!extractedText || extractedText.trim().length === 0) {
         throw new Error('No text content could be extracted from the document');
       }
       
-      console.log(`Extracted ${extractedText.length} characters from document`);
+      logger.documentProcessing('Text extraction completed', {
+        documentId,
+        extractedLength: extractedText.length,
+        extractedWords: extractedText.split(/\s+/).length
+      });
       
       // Send extracted text to AI engines for analysis
       const analysisResults = focusStandards && focusStandards.length > 0
@@ -52,10 +74,20 @@ export class DocumentProcessor {
           );
       
       // Create question records from AI analysis
-      console.log(`=== DOCUMENT PROCESSOR DEBUG ===`);
-      console.log(`Number of questions returned from AI: ${analysisResults.questions.length}`);
-      analysisResults.questions.forEach((q, i) => {
-        console.log(`Question ${i + 1}: ${q.text?.substring(0, 100)}...`);
+      logger.documentProcessing('AI analysis completed', {
+        documentId,
+        questionsFound: analysisResults.questions.length,
+        processingTime: Date.now()
+      });
+      
+      logger.debug('Questions extracted from AI analysis', {
+        documentId,
+        questions: analysisResults.questions.map((q, i) => ({
+          questionNumber: i + 1,
+          textPreview: q.text?.substring(0, 100) + '...',
+          hasContext: !!q.context,
+          hasAiResults: !!q.aiResults
+        }))
       });
       
       const questionRecords = [];

@@ -1,5 +1,6 @@
 import { storage } from '../storage';
 import { User } from '../../shared/schema';
+import { logger } from '../utils/logger';
 
 /**
  * Centralized database service for customer and user data resolution
@@ -15,7 +16,11 @@ export class CustomerLookupService {
       const user = await storage.getUser(sessionUserId);
       return user?.customerUuid || null;
     } catch (error) {
-      console.error('CustomerLookupService: Failed to get customer UUID from session:', error);
+      logger.error('Failed to get customer UUID from session', {
+        sessionUserId,
+        component: 'customer-lookup-service',
+        operation: 'getCustomerUuidFromSession'
+      }, error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -28,7 +33,11 @@ export class CustomerLookupService {
       const user = await storage.getUser(sessionUserId);
       return user || null;
     } catch (error) {
-      console.error('CustomerLookupService: Failed to get user from session:', error);
+      logger.error('Failed to get user from session', {
+        sessionUserId,
+        component: 'customer-lookup-service',
+        operation: 'getUserFromSession'
+      }, error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -41,7 +50,11 @@ export class CustomerLookupService {
       const user = await storage.getUserByEmail(email);
       return user?.customerUuid || null;
     } catch (error) {
-      console.error('CustomerLookupService: Failed to get customer UUID from email:', error);
+      logger.error('Failed to get customer UUID from email', {
+        email,
+        component: 'customer-lookup-service',
+        operation: 'getCustomerUuidFromEmail'
+      }, error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -54,7 +67,11 @@ export class CustomerLookupService {
       const user = await storage.getUserByGoogleId(googleId);
       return user?.customerUuid || null;
     } catch (error) {
-      console.error('CustomerLookupService: Failed to get customer UUID from Google ID:', error);
+      logger.error('Failed to get customer UUID from Google ID', {
+        googleId,
+        component: 'customer-lookup-service',
+        operation: 'getCustomerUuidFromGoogleId'
+      }, error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -67,7 +84,11 @@ export class CustomerLookupService {
       const user = await storage.getUserByCustomerUuid(customerUuid);
       return !!user;
     } catch (error) {
-      console.error('CustomerLookupService: Failed to validate customer UUID:', error);
+      logger.error('Failed to validate customer UUID', {
+        customerUuid,
+        component: 'customer-lookup-service',
+        operation: 'validateCustomerUuid'
+      }, error instanceof Error ? error : new Error(String(error)));
       return false;
     }
   }

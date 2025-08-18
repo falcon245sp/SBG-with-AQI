@@ -1,6 +1,7 @@
 import type { Request } from "express";
 import { CustomerLookupService } from "./customerLookupService";
 import type { User } from "@shared/schema";
+import { logger, Logger } from "../utils/logger";
 
 /**
  * ActiveUserService - Centralized service for accessing currently authenticated user data
@@ -38,7 +39,11 @@ export class ActiveUserService {
     try {
       return await CustomerLookupService.getCustomerUuidFromSession(userId);
     } catch (error) {
-      console.error('[ActiveUserService] Error getting customer UUID:', error);
+      logger.error('Failed to get customer UUID', {
+        userId,
+        component: 'active-user-service',
+        operation: 'getActiveCustomerUuid'
+      }, error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -61,7 +66,11 @@ export class ActiveUserService {
     try {
       return await CustomerLookupService.getUserFromSession(userId);
     } catch (error) {
-      console.error('[ActiveUserService] Error getting active user:', error);
+      logger.error('Failed to get active user', {
+        userId,
+        component: 'active-user-service',
+        operation: 'getActiveUser'
+      }, error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }

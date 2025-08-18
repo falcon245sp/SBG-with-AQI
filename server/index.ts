@@ -5,6 +5,7 @@ import connectPg from "connect-pg-simple";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { SessionCleanup } from "./utils/sessionCleanup";
+import { logger, requestLoggingMiddleware } from "./utils/logger";
 
 const app = express();
 app.use(express.json());
@@ -36,35 +37,8 @@ app.use(session({
   name: 'sherpa.sid',
 }));
 
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
-      log(logLine);
-    }
-  });
-
-  next();
-});
+// Use the new comprehensive logging middleware
+app.use(requestLoggingMiddleware);
 
 (async () => {
   const server = await registerRoutes(app);
@@ -72,12 +46,23 @@ app.use((req, res, next) => {
   // Start automatic session cleanup
   SessionCleanup.startAutomaticCleanup();
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
+    // Log the error with full context for production debugging
+    logger.error('Unhandled application error', {
+      requestId: (req as any).requestId,
+      customerUuid: (req as any).user?.customerUuid,
+      userId: (req as any).user?.id,
+      method: req.method,
+      path: req.path,
+      statusCode: status,
+      userAgent: req.get('User-Agent'),
+      ip: req.ip
+    }, err);
+
     res.status(status).json({ message });
-    throw err;
   });
 
   // importantly only setup vite in development and after
@@ -99,6 +84,10 @@ app.use((req, res, next) => {
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    log(`serving on port ${port}`);
+    logger.info('Standards Sherpa server started', {
+      port: port,
+      environment: process.env.NODE_ENV || 'development',
+      version: process.env.npm_package_version || '0.7.4'
+    });
   });
 })();
