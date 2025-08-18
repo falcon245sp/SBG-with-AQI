@@ -168,20 +168,68 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    // Encrypt the email to match encrypted data in database
+    const encryptedEmail = PIIEncryption.encrypt(email);
+    if (!encryptedEmail) return undefined;
+    
+    const [user] = await db.select().from(users).where(eq(users.email, encryptedEmail));
+    if (!user) return undefined;
+    
+    try {
+      return {
+        ...user,
+        ...PIIEncryption.decryptUserPII({
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          profileImageUrl: user.profileImageUrl,
+        }),
+      };
+    } catch (error) {
+      console.warn('PII decryption failed for user lookup by email, returning user data:', error.message);
+      return user;
+    }
+  }
+
   async getUserByGoogleId(googleId: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.googleId, googleId));
     if (!user) return undefined;
     
-    // Decrypt PII fields before returning
-    return {
-      ...user,
-      ...PIIEncryption.decryptUserPII({
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        profileImageUrl: user.profileImageUrl,
-      }),
-    };
+    try {
+      return {
+        ...user,
+        ...PIIEncryption.decryptUserPII({
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          profileImageUrl: user.profileImageUrl,
+        }),
+      };
+    } catch (error) {
+      console.warn('PII decryption failed for user lookup by Google ID, returning user data:', error.message);
+      return user;
+    }
+  }
+
+  async getUserByCustomerUuid(customerUuid: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.customerUuid, customerUuid));
+    if (!user) return undefined;
+    
+    try {
+      return {
+        ...user,
+        ...PIIEncryption.decryptUserPII({
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          profileImageUrl: user.profileImageUrl,
+        }),
+      };
+    } catch (error) {
+      console.warn('PII decryption failed for user lookup by customer UUID, returning user data:', error.message);
+      return user;
+    }
   }
 
   async createUser(userData: UpsertUser): Promise<User> {

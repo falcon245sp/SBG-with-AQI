@@ -57,6 +57,7 @@ async function verifyPassword(password: string, hash: string): Promise<boolean> 
 
 // Import the proper Replit Auth middleware
 import { setupAuth } from './replitAuth';
+import { CustomerLookupService } from './services/customerLookupService';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Replit Auth first
@@ -305,11 +306,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Authentication required" });
       }
       
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      const documents = await storage.getUserDocuments(user.customerUuid);
+      const customerUuid = await CustomerLookupService.requireCustomerUuid(userId);
+      const documents = await storage.getUserDocuments(customerUuid);
       res.json(documents);
     } catch (error) {
       console.error("Error fetching documents:", error);
@@ -326,12 +324,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Authentication required" });
       }
       
-      const user = await storage.getUser(userId);
-      if (!user) {
-        console.log(`User not found for userId: ${userId}`);
-        return res.status(404).json({ message: "User not found" });
-      }
-      
+      const customerUuid = await CustomerLookupService.requireCustomerUuid(userId);
       const { id } = req.params;
       
       const document = await storage.getDocument(id);
@@ -340,13 +333,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Document not found" });
       }
       
-      if (document.customerUuid !== user.customerUuid) {
-        console.log(`Document ${id} belongs to different customer: ${document.customerUuid} vs ${user.customerUuid}`);
+      if (document.customerUuid !== customerUuid) {
+        console.log(`Document ${id} belongs to different customer: ${document.customerUuid} vs ${customerUuid}`);
         return res.status(404).json({ message: "Document not found" });
       }
 
-      console.log(`Fetching results for document ${id}, customer ${user.customerUuid}`);
-      const results = await storage.getDocumentResults(id, user.customerUuid);
+      console.log(`Fetching results for document ${id}, customer ${customerUuid}`);
+      const results = await storage.getDocumentResults(id, customerUuid);
       console.log(`Found ${results.length} results for document ${id}`);
       
       // Debug: Check if results is valid
@@ -393,12 +386,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Authentication required" });
       }
       
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      const stats = await storage.getProcessingStats(user.customerUuid);
-      const rigorDistribution = await storage.getRigorDistribution(user.customerUuid);
+      const customerUuid = await CustomerLookupService.requireCustomerUuid(userId);
+      const stats = await storage.getProcessingStats(customerUuid);
+      const rigorDistribution = await storage.getRigorDistribution(customerUuid);
       
       res.json({
         ...stats,
@@ -671,11 +661,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Authentication required" });
       }
       
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
+      const customerUuid = await CustomerLookupService.requireCustomerUuid(userId);
       const questionId = req.params.questionId;
       
       const validationResult = insertTeacherOverrideSchema.safeParse({
@@ -691,7 +677,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if override already exists for this customer/question
-      const existingOverride = await storage.getQuestionOverride(questionId, user.customerUuid);
+      const existingOverride = await storage.getQuestionOverride(questionId, customerUuid);
       
       if (existingOverride) {
         // Update existing override
@@ -699,7 +685,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({ message: "Override updated successfully", overrideId: existingOverride.id });
       } else {
         // Create new override
-        const override = await storage.createTeacherOverride(user.customerUuid, validationResult.data);
+        const override = await storage.createTeacherOverride(customerUuid, validationResult.data);
         res.json({ message: "Override created successfully", overrideId: override.id });
       }
     } catch (error) {
@@ -728,15 +714,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Authentication required" });
       }
       
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
+      const customerUuid = await CustomerLookupService.requireCustomerUuid(userId);
       const questionId = req.params.questionId;
       
       console.log(`Processing revert request for question ${questionId}`);
-      await storage.revertToAI(questionId, user.customerUuid);
+      await storage.revertToAI(questionId, customerUuid);
       console.log(`Successfully reverted question ${questionId} to Sherpa analysis`);
       res.json({ message: "Successfully reverted to Sherpa analysis" });
     } catch (error) {
@@ -756,14 +738,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Authentication required" });
       }
       
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
+      const customerUuid = await CustomerLookupService.requireCustomerUuid(userId);
       const questionId = req.params.questionId;
       
-      const override = await storage.getQuestionOverride(questionId, user.customerUuid);
+      const override = await storage.getQuestionOverride(questionId, customerUuid);
       
       if (override) {
         res.json(override);
