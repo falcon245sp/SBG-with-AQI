@@ -1,24 +1,31 @@
-# Document Processing Service - Standards Sherpa v0.7
+# Document Processing Service - Standards Sherpa v0.7.1
 
 ## Overview
 
 The Document Processing Service is a full-stack web application that provides AI-powered educational document analysis. It automatically analyzes educational documents (PDFs, Word docs, Google Docs) to identify standards alignment and determine cognitive rigor levels using multiple AI engines. The application features a RESTful API backend with Express.js and a React frontend, providing educational institutions and EdTech companies with automated document processing capabilities. The business vision is to empower educators with efficient tools for analyzing and aligning educational content, improving curriculum development and assessment.
 
-## Version 0.7 - DatabaseWriteService Architecture
+## Version 0.7.1 - Security Hardened Release  
 **Release Date:** August 18, 2025
 
-### Major Architectural Achievement
-This version completes the implementation of a fully centralized three-layer architecture with comprehensive separation of concerns:
+### Major Security & Architecture Achievement
+This version completes both the centralized three-layer architecture and comprehensive security hardening for production deployment:
 
+**Architecture Completions:**
 - **Application Routes Layer**: HTTP endpoints and request handling only
 - **DatabaseWriteService Layer**: Centralized business logic for all database write operations  
 - **Storage Layer**: Pure data access without business logic
+
+**Security Hardening:**
+- **Credential Security**: Complete removal of hardcoded OAuth credentials from client code
+- **Environment Variable Management**: All sensitive data now stored in secure environment variables
+- **Documentation Sanitization**: All credential exposure removed from project documentation
 
 ### Key Benefits Delivered
 - ✅ **100% Write Centralization**: All database mutations flow through DatabaseWriteService
 - ✅ **Consistent Business Logic**: Standardized patterns across all write operations
 - ✅ **Comprehensive Error Handling**: Uniform error responses and logging
 - ✅ **Complete Audit Trail**: All write operations logged for compliance
+- ✅ **Production Security**: Zero hardcoded credentials, deployment-ready security posture
 - ✅ **Technical Debt Elimination**: Clean separation removes scattered write logic
 
 ## User Preferences
