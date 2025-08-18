@@ -93,13 +93,28 @@ Focus on:
 - Be accurate and consistent`;
 
 export class AIService {
-  private generatePromptWithStandards(focusStandards?: string[]): string {
+  private generatePromptWithStandards(focusStandards?: string[], jurisdictions?: string[]): string {
+    // Use provided jurisdictions or default to Common Core
+    const targetJurisdictions = jurisdictions && jurisdictions.length > 0 ? jurisdictions : ['Common Core'];
+    const primaryJurisdiction = targetJurisdictions[0];
+    
     let prompt = `You are an expert in education and Standards-Based Grading (SBG) aligned to multiple jurisdiction standards. I need you to analyze the provided educational documents to:
 
 For each assessment, analyze and identify:
 
 1. The primary educational standard(s) that align with each question/problem
 2. A rigor level assessment based on cognitive complexity
+
+TARGET JURISDICTIONS:
+`;
+    
+    // Dynamically insert target jurisdictions
+    targetJurisdictions.forEach(jurisdiction => {
+      prompt += `- ${jurisdiction.trim()}
+`;
+    });
+    prompt += `
+Focus your analysis on standards from these jurisdictions, with preference for ${primaryJurisdiction}.
 
 `;
     
@@ -129,7 +144,7 @@ Give special attention to identifying alignment with these specific standards.
     
     prompt += `ANALYSIS REQUIREMENTS:
 `;
-    prompt += `- Map to specific, relevant educational standards
+    prompt += `- Map to specific, relevant educational standards from the target jurisdictions
 `;
     prompt += `- Provide clear justification for rigor level assignments
 `;
@@ -151,7 +166,7 @@ Give special attention to identifying alignment with these specific standards.
 `;
     prompt += `      "description": "Recognize that in a multi-digit number...",
 `;
-    prompt += `      "jurisdiction": "Common Core",
+    prompt += `      "jurisdiction": "${primaryJurisdiction}",
 `;
     prompt += `      "gradeLevel": "5",
 `;
@@ -355,7 +370,7 @@ Give special attention to identifying alignment with these specific standards.
                 standards: [{
                   code: problem.standardCode,
                   description: problem.standardDescription,
-                  jurisdiction: "Common Core",
+                  jurisdiction: jurisdictions[0] || "Common Core",
                   gradeLevel: "9-12",
                   subject: "Mathematics"
                 }],
@@ -1385,7 +1400,7 @@ Give special attention to identifying alignment with these specific standards.
       console.log('Analyzing document with focus standards:', focusStandards);
       console.log('Document content length:', documentContent.length);
       
-      const dynamicPrompt = this.generatePromptWithStandards(focusStandards);
+      const dynamicPrompt = this.generatePromptWithStandards(focusStandards, jurisdictions);
       
       console.log('Using Grok for document analysis with standards');
       const grokResult = await this.analyzeGrokWithPrompt(
