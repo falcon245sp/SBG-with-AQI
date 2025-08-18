@@ -772,8 +772,8 @@ export default function DocumentResults() {
                                             const currentData = question.teacherOverride ? {
                                               rigorLevel: question.teacherOverride.overriddenRigorLevel,
                                               standards: question.teacherOverride.overriddenStandards?.map(s => s.code).join(', ') || '',
-                                              justification: question.teacherOverride.teacherJustification || '',
-                                              confidence: question.teacherOverride.confidenceLevel || 5
+                                              justification: question.teacherOverride.notes || question.teacherOverride.editReason || '',
+                                              confidence: question.teacherOverride.confidenceScore || 5
                                             } : {
                                               rigorLevel: question.result?.consensusRigorLevel || 'mild',
                                               standards: question.result?.consensusStandards?.map(s => s.code).join(', ') || '',
@@ -867,6 +867,9 @@ function TeacherOverrideForm({
 }) {
   const [formData, setFormData] = useState(initialData);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const params = useParams<{ id: string }>();
+  const documentId = params?.id;
   const [standardsValidation, setStandardsValidation] = useState<{
     valid: CommonCoreStandard[];
     invalid: string[];
@@ -926,7 +929,17 @@ function TeacherOverrideForm({
       
       return await apiRequest('POST', `/api/questions/${questionId}/override`, payload);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      // Invalidate and refetch the document results to show the updated teacher override
+      await queryClient.invalidateQueries({ queryKey: [`/api/documents/${documentId}/results`] });
+      await queryClient.refetchQueries({ queryKey: [`/api/documents/${documentId}/results`] });
+      
+      toast({
+        title: "Override Saved",
+        description: "Your changes have been saved successfully.",
+        variant: "default",
+      });
+      
       onSuccess();
     },
     onError: (error) => {
