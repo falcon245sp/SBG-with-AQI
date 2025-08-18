@@ -23,6 +23,7 @@ import { SessionCleanup } from "./utils/sessionCleanup";
 import { DatabaseWriteService } from "./services/databaseWriteService";
 import { CustomerLookupService } from "./services/customerLookupService";
 import { ActiveUserService } from "./services/activeUserService";
+import { requireAdmin } from "./middleware/adminAuth";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -1114,8 +1115,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // UX testing endpoint
-  app.get('/api/run-ux-tests', async (req, res) => {
+  // UX testing endpoint - admin only
+  app.get('/api/admin/run-ux-tests', async (req, res) => {
     try {
       console.log('[UXTests] Starting comprehensive UX validation...');
       

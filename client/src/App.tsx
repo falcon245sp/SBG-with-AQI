@@ -8,6 +8,8 @@ import NotFound from "@/pages/not-found";
 import GoogleOAuthLanding from "@/pages/google-oauth-landing";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/Dashboard";
+import CustomerDashboard from "@/pages/customer-dashboard";
+import AdminDashboard from "@/pages/admin-dashboard";
 import AuthError from "@/pages/auth-error";
 import TraditionalLogin from "@/pages/traditional-login";
 import UploadPage from "@/pages/upload";
@@ -47,8 +49,9 @@ function Router() {
         </>
       ) : (
         <>
-          <Route path="/" component={Dashboard} />
-          <Route path="/dashboard" component={Dashboard} />
+          <Route path="/" component={CustomerDashboard} />
+          <Route path="/dashboard" component={CustomerDashboard} />
+          <Route path="/admin" component={AdminDashboard} />
           <Route path="/upload" component={UploadPage} />
           <Route path="/results" component={ResultsPage} />
           <Route path="/results/:id" component={DocumentResults} />

@@ -8,6 +8,7 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 - **August 18, 2025**: Implemented comprehensive production-ready logging system with customer context correlation, request tracing, and specialized logging methods for debugging customer issues in production environments. Created PRODUCTION_LOGGING_GUIDE.md with complete debugging workflows.
+- **August 18, 2025**: Split UX into dual system: customer-facing dashboard for document operations (upload, file cabinet, results) and admin panel for system diagnostics, monitoring, and debugging tools. Admin access restricted to specific email addresses.
 
 ## System Architecture
 
