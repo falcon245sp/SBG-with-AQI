@@ -134,7 +134,7 @@ export default function DocumentResults() {
     if (!documentId) return;
     
     try {
-      const response = await fetch(`/api/documents/${documentId}/accept-and-proceed`, {
+      const response = await fetch(`/api/documents/${documentId}/accept`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -699,7 +699,7 @@ export default function DocumentResults() {
                         <div>
                           <h4 className="text-lg font-semibold text-blue-900">Ready for Teacher Review</h4>
                           <p className="text-sm text-blue-700 mt-1">
-                            Standards Sherpa has completed its analysis. Please review the results below and choose your next step.
+                            Standards Sherpa has completed its analysis. Review the results below and click "Accept & Proceed" to generate documents, or use "Override" buttons to edit specific questions.
                           </p>
                         </div>
                         <div className="flex space-x-3 ml-4">
@@ -709,20 +709,6 @@ export default function DocumentResults() {
                             size="sm"
                           >
                             ✅ Accept & Proceed
-                          </Button>
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              // Focus on the first Override button to guide teacher to editing
-                              const firstOverrideButton = document.querySelector('[data-testid="override-button"]') as HTMLElement;
-                              if (firstOverrideButton) {
-                                firstOverrideButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                firstOverrideButton.focus();
-                              }
-                            }}
-                            size="sm"
-                          >
-                            ✏️ Edit Analysis
                           </Button>
                         </div>
                       </div>

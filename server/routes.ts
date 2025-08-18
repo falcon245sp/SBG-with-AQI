@@ -1079,8 +1079,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Queue test exports
-      await storage.addToExportQueue(documentId, 'rubric_pdf', 0);
-      await storage.addToExportQueue(documentId, 'cover_sheet', 0);
+      await storage.addToExportQueue(documentId, 'rubric_pdf');
+      await storage.addToExportQueue(documentId, 'cover_sheet');
       
       // Process exports
       await exportProcessor.processPendingExports();
@@ -1104,8 +1104,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Queue test exports
-      await storage.addToExportQueue(documentId, 'rubric_pdf', 0);
-      await storage.addToExportQueue(documentId, 'cover_sheet', 0);
+      await storage.addToExportQueue(documentId, 'rubric_pdf');
+      await storage.addToExportQueue(documentId, 'cover_sheet');
       
       // Process exports immediately
       setTimeout(() => {
