@@ -110,16 +110,21 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     if (!user) return undefined;
     
-    // Decrypt PII fields before returning
-    return {
-      ...user,
-      ...PIIEncryption.decryptUserPII({
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        profileImageUrl: user.profileImageUrl,
-      }),
-    };
+    // Try to decrypt PII fields, return user data even if decryption fails
+    try {
+      return {
+        ...user,
+        ...PIIEncryption.decryptUserPII({
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          profileImageUrl: user.profileImageUrl,
+        }),
+      };
+    } catch (error) {
+      console.warn('PII decryption failed for user, returning user data:', error.message);
+      return user;
+    }
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
