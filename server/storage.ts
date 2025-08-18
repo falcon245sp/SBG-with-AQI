@@ -111,7 +111,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
+    const [user] = await db.select().from(users).where(eq(users.email, username));
     return user;
   }
 
@@ -524,26 +524,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   // API Key operations
-  async createApiKey(userId: string, apiKey: InsertApiKey): Promise<ApiKey> {
+  async createApiKey(customerUuid: string, apiKey: InsertApiKey): Promise<ApiKey> {
     const [key] = await db
       .insert(apiKeys)
       .values({
         ...apiKey,
-        userId,
+        customerUuid,
       })
       .returning();
     return key;
   }
 
-  async getUserApiKeys(userId: string): Promise<ApiKey[]> {
+  async getUserApiKeys(customerUuid: string): Promise<ApiKey[]> {
     return await db
       .select()
       .from(apiKeys)
-      .where(eq(apiKeys.userId, userId))
+      .where(eq(apiKeys.customerUuid, customerUuid))
       .orderBy(desc(apiKeys.createdAt));
   }
 
-  async validateApiKey(keyHash: string): Promise<{ userId: string } | null> {
+  async validateApiKey(keyHash: string): Promise<{ customerUuid: string } | null> {
     const [key] = await db
       .select()
       .from(apiKeys)
@@ -559,7 +559,7 @@ export class DatabaseStorage implements IStorage {
         })
         .where(eq(apiKeys.id, key.id));
       
-      return { userId: key.userId };
+      return { customerUuid: key.customerUuid };
     }
     
     return null;
@@ -609,13 +609,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Analytics operations
-  async getProcessingStats(userId?: string): Promise<{
+  async getProcessingStats(customerUuid?: string): Promise<{
     documentsProcessed: number;
     aiAnalyses: number;
     standardsIdentified: number;
     avgProcessingTime: string;
   }> {
-    const whereClause = userId ? eq(documents.userId, userId) : undefined;
+    const whereClause = customerUuid ? eq(documents.customerUuid, customerUuid) : undefined;
     
     const [docStats] = await db
       .select({
@@ -644,11 +644,12 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async getRigorDistribution(userId?: string): Promise<{
+  async getRigorDistribution(customerUuid?: string): Promise<{
     mild: number;
     medium: number;
     spicy: number;
   }> {
+    // For now, return basic stats without filtering by customer since questionResults doesn't have customerUuid
     const [stats] = await db
       .select({
         mild: sql<number>`count(*) filter (where consensus_rigor_level = 'mild')`,
@@ -665,7 +666,7 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Teacher override operations with edit history
-  async createTeacherOverride(userId: string, override: InsertTeacherOverride): Promise<TeacherOverride> {
+  async createTeacherOverride(customerUuid: string, override: InsertTeacherOverride): Promise<TeacherOverride> {
     // First deactivate any existing active overrides for this question
     await db
       .update(teacherOverrides)
@@ -680,7 +681,7 @@ export class DatabaseStorage implements IStorage {
       .insert(teacherOverrides)
       .values({
         ...override,
-        userId,
+        customerUuid,
         isActive: true,
         isRevertedToAi: false,
       })
@@ -688,9 +689,9 @@ export class DatabaseStorage implements IStorage {
     return teacherOverride;
   }
 
-  async getQuestionOverride(questionId: string, userId?: string): Promise<TeacherOverride | undefined> {
-    const whereClause = userId 
-      ? and(eq(teacherOverrides.questionId, questionId), eq(teacherOverrides.userId, userId), eq(teacherOverrides.isActive, true))
+  async getQuestionOverride(questionId: string, customerUuid?: string): Promise<TeacherOverride | undefined> {
+    const whereClause = customerUuid 
+      ? and(eq(teacherOverrides.questionId, questionId), eq(teacherOverrides.customerUuid, customerUuid), eq(teacherOverrides.isActive, true))
       : and(eq(teacherOverrides.questionId, questionId), eq(teacherOverrides.isActive, true));
     
     const [override] = await db
