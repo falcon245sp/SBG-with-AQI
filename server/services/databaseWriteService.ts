@@ -449,6 +449,7 @@ export class DatabaseWriteService {
   static async createGradeSubmission(gradeData: {
     sequenceNumberId: string;
     documentId: string;
+    rubricDocumentId: string;
     originalDocumentId?: string;
     studentId: string;
     questionGrades: any;
@@ -468,8 +469,8 @@ export class DatabaseWriteService {
       try {
         const { RubricCollationService } = await import('./rubricCollationService.js');
         
-        // Use originalDocumentId if available, otherwise use documentId
-        const documentToCollate = gradeData.originalDocumentId || gradeData.documentId;
+        // Use originalDocumentId if available, otherwise use documentId  
+        const documentToCollate = (gradeData as any).originalDocumentId || gradeData.documentId;
         if (documentToCollate) {
           // Run collation in background without blocking submission processing
           setTimeout(async () => {
