@@ -127,13 +127,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Parse jurisdictions with Common Core as default
+      let parsedJurisdictions: string[] = ['Common Core'];
+      if (jurisdictions && jurisdictions.trim()) {
+        parsedJurisdictions = jurisdictions.split(',').map((j: string) => j.trim()).filter(Boolean).slice(0, 3);
+      }
+      
       // Validate request data
       const validationResult = insertDocumentSchema.safeParse({
         fileName: file.originalname,
         originalPath: file.path,
         mimeType: file.mimetype,
         fileSize: file.size,
-        jurisdictions: jurisdictions.split(',').map((j: string) => j.trim()).slice(0, 3),
+        jurisdictions: parsedJurisdictions,
       });
 
       if (!validationResult.success) {
@@ -191,8 +197,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { jurisdictions, focusStandards, callbackUrl } = req.body;
       
-      // Parse jurisdictions
-      const parsedJurisdictions = jurisdictions.split(',').map((j: string) => j.trim()).slice(0, 3);
+      // Parse jurisdictions with Common Core as default
+      let parsedJurisdictions: string[] = ['Common Core'];
+      if (jurisdictions && jurisdictions.trim()) {
+        parsedJurisdictions = jurisdictions.split(',').map((j: string) => j.trim()).filter(Boolean).slice(0, 3);
+      }
       
       // Process each file and create separate documents
       const jobs = [];

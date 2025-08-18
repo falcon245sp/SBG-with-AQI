@@ -47,17 +47,20 @@ router.post('/process', validateApiKey, upload.array('documents', 10), async (re
 
     const { customerId, jurisdictions, focusStandards, callbackUrl } = req.body;
     
-    if (!customerId || !jurisdictions) {
+    if (!customerId) {
       return res.status(400).json({
         error: 'missing_parameters',
-        message: 'customerId and jurisdictions are required'
+        message: 'customerId is required'
       });
     }
 
-    // Parse jurisdictions and focus standards
-    const parsedJurisdictions = typeof jurisdictions === 'string' 
-      ? jurisdictions.split(',').map((j: string) => j.trim())
-      : jurisdictions;
+    // Parse jurisdictions with Common Core as default
+    let parsedJurisdictions: string[] = ['Common Core'];
+    if (jurisdictions) {
+      parsedJurisdictions = typeof jurisdictions === 'string' 
+        ? jurisdictions.split(',').map((j: string) => j.trim()).filter(Boolean)
+        : jurisdictions;
+    }
     
     let parsedFocusStandards: string[] = [];
     if (focusStandards) {
