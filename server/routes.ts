@@ -444,6 +444,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Document inspection endpoint - provides comprehensive document relationships and metadata
+  app.get('/api/documents/:id/inspection', async (req: any, res) => {
+    try {
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+      const { id } = req.params;
+      
+      // Get the main document and verify ownership
+      const document = await storage.getDocument(id);
+      if (!document || document.customerUuid !== customerUuid) {
+        return res.status(404).json({ message: 'Document not found' });
+      }
+
+      // Determine document type
+      let documentType: 'original' | 'generated' | 'unknown' = 'unknown';
+      if (document.assetType === 'uploaded') {
+        documentType = 'original';
+      } else if (document.assetType === 'generated') {
+        documentType = 'generated';
+      }
+
+      // Get all user documents to build relationships
+      const allDocuments = await storage.getUserDocuments(customerUuid);
+      
+      // Build document lineage (parents)
+      const lineage = [];
+      if (document.parentDocumentId) {
+        const parent = allDocuments.find(d => d.id === document.parentDocumentId);
+        if (parent) {
+          lineage.push(parent);
+        }
+      }
+
+      // Find children (documents generated from this one)
+      const children = allDocuments.filter(d => d.parentDocumentId === id);
+
+      // Get grade submissions related to this document
+      const gradeSubmissions = await storage.getCustomerGradeSubmissions(customerUuid);
+      const relatedSubmissions = gradeSubmissions.filter(
+        sub => sub.originalDocumentId === id || sub.rubricDocumentId === id
+      );
+
+      // Get questions for this document
+      const questions = await storage.getDocumentResults(id, customerUuid);
+
+      // Get processing results
+      const processingResults = await storage.getDocumentResults(id, customerUuid);
+
+      // Calculate relationship counts
+      const relationships = {
+        parentCount: lineage.length,
+        childCount: children.length,
+        submissionCount: relatedSubmissions.length,
+        questionCount: questions.length
+      };
+
+      const inspectionData = {
+        document,
+        lineage,
+        children,
+        gradeSubmissions: relatedSubmissions,
+        questions,
+        processingResults,
+        documentType,
+        relationships
+      };
+
+      res.json(inspectionData);
+    } catch (error) {
+      console.error('[Documents] Error in document inspection:', error);
+      res.status(500).json({ message: 'Failed to inspect document' });
+    }
+  });
+
   // Get processing queue status
   app.get('/api/queue', async (req: any, res) => {
     try {
