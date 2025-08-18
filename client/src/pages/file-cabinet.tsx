@@ -91,7 +91,7 @@ const FILE_CABINET_EXPORT_TYPES = {
 };
 
 export default function FileCabinet() {
-  const [currentDrawer, setCurrentDrawer] = useState<'all' | 'uploaded' | 'generated' | 'graded'>('all');
+  const [currentDrawer, setCurrentDrawer] = useState<'uploaded' | 'generated' | 'graded'>('uploaded');
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [tagFilter, setTagFilter] = useState('');
@@ -103,9 +103,12 @@ export default function FileCabinet() {
   // Handle collation of submissions for a document
   const collateMutation = useMutation({
     mutationFn: async (documentId: string) => {
-      return apiRequest(`/api/file-cabinet/documents/${documentId}/collate-submissions`, {
-        method: 'POST'
+      const response = await fetch(`/api/file-cabinet/documents/${documentId}/collate-submissions`, {
+        method: 'POST',
+        credentials: 'include'
       });
+      if (!response.ok) throw new Error('Failed to collate submissions');
+      return response.json();
     },
     onSuccess: (data, documentId) => {
       // Refresh the file cabinet to show the new collated document
@@ -241,13 +244,9 @@ export default function FileCabinet() {
         </Button>
       </div>
 
-      {/* Two-Drawer System */}
-      <Tabs value={currentDrawer} onValueChange={(value) => setCurrentDrawer(value as any)}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="all" className="gap-2">
-            <FolderOpen className="h-4 w-4" />
-            All Documents ({fileCabinetData?.totalCount || 0})
-          </TabsTrigger>
+      {/* Three-Drawer System */}
+      <Tabs value={currentDrawer} onValueChange={(value) => setCurrentDrawer(value as 'uploaded' | 'generated' | 'graded')}>
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="uploaded" className="gap-2">
             <Upload className="h-4 w-4" />
             Uploaded Documents
@@ -601,7 +600,7 @@ export default function FileCabinet() {
       </Tabs>
 
       {/* Available Tags Quick Reference */}
-      {fileCabinetData?.availableTags.length > 0 && (
+      {fileCabinetData?.availableTags && fileCabinetData.availableTags.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-sm">Available Tags</CardTitle>
