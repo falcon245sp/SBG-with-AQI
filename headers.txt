@@ -1,10 +1,9 @@
 HTTP/1.1 302 Found
 X-Powered-By: Express
-Location: https://accounts.google.com/o/oauth2/v2/auth?access_type=offline&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email&prompt=select_account&state=&include_granted_scopes=true&response_type=code&client_id=1064115232790-0rbc41hch5df1vtctncbfm1aft5241a0.apps.googleusercontent.com&redirect_uri=https%3A%2F%2Fbe365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev%2Fapi%2Fauth%2Fgoogle%2Fcallback
+Location: [Google OAuth URL with environment variables - credentials removed for security]
 Vary: Accept
 Content-Type: text/plain; charset=utf-8
 Content-Length: 503
 Date: Mon, 18 Aug 2025 00:53:57 GMT
 Connection: keep-alive
 Keep-Alive: timeout=5
-

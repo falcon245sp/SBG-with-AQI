@@ -3,12 +3,12 @@
 ## Critical Setup Requirements
 
 ### Development Environment (Current)
-- **Domain**: `be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev`
-- **Google OAuth Client ID**: `1064115232790-0rbc41hch5df1vtctncbfm1aft5241a0.apps.googleusercontent.com`
+- **Domain**: Auto-detected from REPLIT_DOMAINS environment variable
+- **Google OAuth Client ID**: Stored in DEV_GOOGLE_CLIENT_ID environment variable
 - **Environment Variables**: 
-  - `DEV_GOOGLE_CLIENT_ID` = 1064115232790-0rbc41hch5df1vtctncbfm1aft5241a0.apps.googleusercontent.com
-  - `DEV_GOOGLE_CLIENT_SECRET` = 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
-  - `DEV_GOOGLE_REDIRECT_URI` = https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev/api/auth/google/callback
+  - `DEV_GOOGLE_CLIENT_ID` = [Google OAuth Client ID - stored securely]
+  - `DEV_GOOGLE_CLIENT_SECRET` = [Google OAuth Client Secret - stored securely] 
+  - `DEV_GOOGLE_REDIRECT_URI` = [Redirect URI - auto-constructed from domain]
 - **Secret Sync**: **SYNCED** (shared between dev environments)
 
 ### Production Environment
@@ -32,14 +32,14 @@ The current development Google OAuth application needs the redirect URI updated:
 ### Step 2: Verify Environment Variable Isolation
 **Development (SYNCED)**:
 ```
-SHERPA_GOOGLE_CLIENT_ID=1064115232790-0rbc41hch5df1vtctncbfm1aft5241a0.apps.googleusercontent.com
-SHERPA_GOOGLE_CLIENT_SECRET=[dev-secret]
+DEV_GOOGLE_CLIENT_ID=[development-oauth-client-id]
+DEV_GOOGLE_CLIENT_SECRET=[development-oauth-client-secret]
 ```
 
 **Production (UNSYNCED)**:
 ```
-SHERPA_GOOGLE_CLIENT_ID=[production-oauth-client-id]
-SHERPA_GOOGLE_CLIENT_SECRET=[production-oauth-client-secret]
+PROD_GOOGLE_CLIENT_ID=[production-oauth-client-id]
+PROD_GOOGLE_CLIENT_SECRET=[production-oauth-client-secret]
 ```
 
 ### Step 3: Domain-Based Redirect URI Logic

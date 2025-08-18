@@ -71,6 +71,8 @@ Preferred communication style: Simple, everyday language.
 - **API Security**: Session-based authentication.
 - **File Validation**: MIME type validation and file size limits.
 - **PII Encryption**: All personally identifiable information encrypted at rest using AES encryption in both development and production environments.
+- **Credential Security**: All OAuth credentials stored in environment variables with no hardcoded credentials in client-side code
+- **Pre-Deployment Security**: Comprehensive security audit completed with hardcoded credential removal and secure credential management implementation
 - **Centralized Data Access**: 
   - **CustomerLookupService**: Centralized database service that handles all customer UUID resolution and user data access, with PII decryption managed in one place for security consistency.
   - **DatabaseWriteService**: All database write operations centralized with consistent business logic, error handling, and audit trails for security compliance.
@@ -109,17 +111,17 @@ Preferred communication style: Simple, everyday language.
 - **Google Classroom Integration**: Full OAuth-based integration with proper token management and refresh capabilities
 - **Fallback Authentication**: Traditional username/password available as secondary option
 - **Production Secret Management**: 
-  - Development uses current domain: be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev
-  - Production requires "unsyncing" Google secrets in Replit Secrets Manager to use different OAuth application
+  - Development uses environment variables for secure credential storage (DEV_GOOGLE_*)
+  - Production requires "unsyncing" Google secrets in Replit Secrets Manager to use different OAuth application  
   - Must create separate Google OAuth application for production with .replit.app domain redirect URI
-  - Unsync SHERPA_GOOGLE_CLIENT_ID, SHERPA_GOOGLE_CLIENT_SECRET, SHERPA_GOOGLE_REDIRECT_URI in production deployment
+  - Unsync DEV_GOOGLE_CLIENT_ID, DEV_GOOGLE_CLIENT_SECRET, DEV_GOOGLE_REDIRECT_URI in production deployment
 - **OAuth Configuration Status**: 
   - **Development OAuth Application**:
-    - Client ID: 1064115232790-0rbc41hch5df1vtctncbfm1aft5241a0.apps.googleusercontent.com
-    - JavaScript Origin: ✅ https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev
-    - Redirect URI: ✅ CONFIGURED https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev/api/auth/google/callback
+    - Client ID: [Stored in DEV_GOOGLE_CLIENT_ID environment variable]
+    - JavaScript Origin: ✅ Current development domain (auto-detected)
+    - Redirect URI: ✅ CONFIGURED using environment variables
     - Environment Variables: DEV_GOOGLE_CLIENT_ID, DEV_GOOGLE_CLIENT_SECRET, DEV_GOOGLE_REDIRECT_URI (SYNCED)
-    - Status: ✅ FULLY WORKING - OAuth flow complete with popup window workaround for iframe restrictions
+    - Status: ✅ FULLY WORKING - OAuth flow complete with secure credential management
   - **Production OAuth Application**: 
     - Domain: docu-proc-serv-jfielder1.replit.app
     - Environment Variables: PROD_GOOGLE_CLIENT_ID, PROD_GOOGLE_CLIENT_SECRET, PROD_GOOGLE_REDIRECT_URI (UNSYNCED)
