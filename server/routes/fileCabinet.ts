@@ -16,7 +16,7 @@ fileCabinetRouter.get('/api/file-cabinet', async (req: any, res) => {
   try {
     const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
     const { 
-      drawer = 'all', // 'uploaded', 'generated', or 'all'
+      drawer = 'all', // 'uploaded', 'generated', 'graded', or 'all'
       sortBy = 'createdAt', 
       sortOrder = 'desc', 
       tags,
@@ -24,6 +24,71 @@ fileCabinetRouter.get('/api/file-cabinet', async (req: any, res) => {
     } = req.query;
     
     console.log(`[FileCabinet] Fetching documents for customer ${customerUuid}, drawer: ${drawer}`);
+    
+    // Handle graded submissions drawer separately
+    if (drawer === 'graded') {
+      const gradeSubmissions = await storage.getCustomerGradeSubmissions(customerUuid);
+      
+      // Enrich grade submissions with student and document details
+      const enrichedSubmissions = [];
+      for (const submission of gradeSubmissions) {
+        const student = await storage.getStudent(submission.studentId);
+        const rubricDocument = await storage.getDocument(submission.rubricDocumentId);
+        const originalDocument = await storage.getDocument(submission.originalDocumentId);
+        
+        enrichedSubmissions.push({
+          id: submission.id,
+          type: 'grade_submission',
+          studentName: student ? `${student.firstName} ${student.lastName}` : 'Unknown Student',
+          studentId: submission.studentId,
+          rubricDocument,
+          originalDocument,
+          totalScore: submission.totalScore,
+          maxPossibleScore: submission.maxPossibleScore,
+          percentageScore: submission.percentageScore,
+          status: submission.status,
+          processedBy: submission.processedBy,
+          scannedAt: submission.scannedAt,
+          createdAt: submission.createdAt,
+          questionGrades: submission.questionGrades,
+          scannerNotes: submission.scannerNotes
+        });
+      }
+      
+      // Sort graded submissions
+      enrichedSubmissions.sort((a, b) => {
+        let aVal: any, bVal: any;
+        
+        switch (sortBy) {
+          case 'name':
+            aVal = a.studentName.toLowerCase();
+            bVal = b.studentName.toLowerCase();
+            break;
+          case 'score':
+            aVal = Number(a.totalScore) || 0;
+            bVal = Number(b.totalScore) || 0;
+            break;
+          case 'scannedAt':
+          case 'createdAt':
+            aVal = new Date(a.scannedAt || a.createdAt || 0);
+            bVal = new Date(b.scannedAt || b.createdAt || 0);
+            break;
+          default:
+            aVal = new Date(a.scannedAt || a.createdAt || 0);
+            bVal = new Date(b.scannedAt || b.createdAt || 0);
+        }
+        
+        const comparison = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+        return sortOrder === 'desc' ? -comparison : comparison;
+      });
+      
+      return res.json({
+        gradeSubmissions: enrichedSubmissions,
+        totalCount: enrichedSubmissions.length,
+        drawer: 'graded',
+        filters: { drawer, sortBy, sortOrder }
+      });
+    }
     
     const allDocuments = await storage.getUserDocuments(customerUuid);
     

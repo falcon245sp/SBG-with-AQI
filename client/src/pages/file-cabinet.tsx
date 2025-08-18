@@ -46,9 +46,29 @@ interface Document {
   parentDocument?: Document;
 }
 
+interface GradeSubmission {
+  id: string;
+  type: 'grade_submission';
+  studentName: string;
+  studentId: string;
+  rubricDocument?: any;
+  originalDocument?: any;
+  totalScore?: string;
+  maxPossibleScore?: string;
+  percentageScore?: string;
+  status: string;
+  processedBy?: string;
+  scannedAt: string;
+  createdAt: string;
+  questionGrades: any;
+  scannerNotes?: string;
+}
+
 interface FileCabinetResponse {
-  documents: Document[];
+  documents?: Document[];
+  gradeSubmissions?: GradeSubmission[];
   totalCount: number;
+  drawer?: string;
   filters: {
     drawer: string;
     sortBy: string;
@@ -56,8 +76,8 @@ interface FileCabinetResponse {
     tags?: string;
     exportType?: string;
   };
-  availableTags: string[];
-  availableExportTypes: string[];
+  availableTags?: string[];
+  availableExportTypes?: string[];
 }
 
 const FILE_CABINET_EXPORT_TYPES = {
@@ -70,7 +90,7 @@ const FILE_CABINET_EXPORT_TYPES = {
 };
 
 export default function FileCabinet() {
-  const [currentDrawer, setCurrentDrawer] = useState<'all' | 'uploaded' | 'generated'>('all');
+  const [currentDrawer, setCurrentDrawer] = useState<'all' | 'uploaded' | 'generated' | 'graded'>('all');
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [tagFilter, setTagFilter] = useState('');
@@ -201,7 +221,7 @@ export default function FileCabinet() {
 
       {/* Two-Drawer System */}
       <Tabs value={currentDrawer} onValueChange={(value) => setCurrentDrawer(value as any)}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="all" className="gap-2">
             <FolderOpen className="h-4 w-4" />
             All Documents ({fileCabinetData?.totalCount || 0})
@@ -213,6 +233,10 @@ export default function FileCabinet() {
           <TabsTrigger value="generated" className="gap-2">
             <Download className="h-4 w-4" />
             Generated Documents
+          </TabsTrigger>
+          <TabsTrigger value="graded" className="gap-2">
+            <CheckCircle className="h-4 w-4" />
+            Graded Submissions
           </TabsTrigger>
         </TabsList>
 
@@ -421,6 +445,120 @@ export default function FileCabinet() {
                     No documents found in this drawer.
                   </div>
                 )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Graded Submissions Drawer */}
+        <TabsContent value="graded" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                Graded Rubric Submissions
+              </CardTitle>
+              <CardDescription>
+                View and manage all graded assessment submissions with scores and student details
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="cursor-pointer hover:bg-muted/50">
+                        Student Name
+                        <ArrowUpDown className="ml-1 h-4 w-4 inline" />
+                      </TableHead>
+                      <TableHead className="cursor-pointer hover:bg-muted/50">
+                        Assessment
+                        <ArrowUpDown className="ml-1 h-4 w-4 inline" />
+                      </TableHead>
+                      <TableHead className="cursor-pointer hover:bg-muted/50">
+                        Score
+                        <ArrowUpDown className="ml-1 h-4 w-4 inline" />
+                      </TableHead>
+                      <TableHead className="cursor-pointer hover:bg-muted/50">
+                        Graded Date
+                        <ArrowUpDown className="ml-1 h-4 w-4 inline" />
+                      </TableHead>
+                      <TableHead className="cursor-pointer hover:bg-muted/50">
+                        Teacher
+                        <ArrowUpDown className="ml-1 h-4 w-4 inline" />
+                      </TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {fileCabinetData?.gradeSubmissions && fileCabinetData.gradeSubmissions.length > 0 ? (
+                      fileCabinetData.gradeSubmissions.map((submission) => (
+                        <TableRow key={submission.id}>
+                          <TableCell className="font-medium">
+                            {submission.studentName}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="font-medium">{submission.originalDocument?.fileName || 'Unknown Assessment'}</span>
+                              {submission.rubricDocument && (
+                                <span className="text-sm text-muted-foreground">
+                                  via {submission.rubricDocument.fileName}
+                                </span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {submission.totalScore && submission.maxPossibleScore ? (
+                              <div className="flex flex-col">
+                                <span className="font-medium">
+                                  {submission.totalScore}/{submission.maxPossibleScore}
+                                </span>
+                                {submission.percentageScore && (
+                                  <span className="text-sm text-muted-foreground">
+                                    {Number(submission.percentageScore).toFixed(1)}%
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">Not scored</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span>{new Date(submission.scannedAt).toLocaleDateString()}</span>
+                              <span className="text-sm text-muted-foreground">
+                                {new Date(submission.scannedAt).toLocaleTimeString()}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {submission.processedBy || 'Unknown'}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-1">
+                              <Button size="sm" variant="outline" title="View submission details">
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              {submission.originalDocument && (
+                                <Link href={`/documents/${submission.originalDocument.id}/inspect`}>
+                                  <Button size="sm" variant="outline" title="Inspect original document">
+                                    <FileText className="h-4 w-4" />
+                                  </Button>
+                                </Link>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                          No graded submissions found. Grade some rubrics to see them here.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
               </div>
             </CardContent>
           </Card>

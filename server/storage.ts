@@ -132,6 +132,7 @@ export interface IStorage {
   getCustomerDocuments(customerUuid: string): Promise<Document[]>;
   getStudent(studentId: string): Promise<Student | undefined>;
   getQrSequenceById(sequenceId: string): Promise<QrSequenceNumber | undefined>;
+  getCustomerGradeSubmissions(customerUuid: string): Promise<GradeSubmission[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1214,6 +1215,16 @@ export class DatabaseStorage implements IStorage {
       .from(qrSequenceNumbers)
       .where(eq(qrSequenceNumbers.id, sequenceId));
     return sequence;
+  }
+  
+  async getCustomerGradeSubmissions(customerUuid: string): Promise<GradeSubmission[]> {
+    return await db
+      .select()
+      .from(gradeSubmissions)
+      .innerJoin(documents, eq(gradeSubmissions.originalDocumentId, documents.id))
+      .where(eq(documents.customerUuid, customerUuid))
+      .orderBy(desc(gradeSubmissions.scannedAt))
+      .then(results => results.map(result => result.grade_submissions));
   }
 }
 
