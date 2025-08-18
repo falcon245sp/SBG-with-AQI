@@ -183,7 +183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'User not found' });
       }
       
-      // Return user without sensitive information
+      // Return user without sensitive information, including customerUuid for business operations
       const { passwordHash, googleAccessToken, googleRefreshToken, ...userWithoutSensitiveInfo } = user;
       res.json(userWithoutSensitiveInfo);
     } catch (error) {
@@ -206,6 +206,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/documents/upload-with-standards', isAuthenticated, upload.single('document'), async (req: any, res) => {
     try {
       const userId = (req as any).session.userId; // Get authenticated user ID
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      const customerUuid = user.customerUuid; // Use customer UUID for business operations
       const file = req.file;
       
       if (!file) {
@@ -243,7 +248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Create document record
-      const document = await storage.createDocument(userId, validationResult.data);
+      const document = await storage.createDocument(customerUuid, validationResult.data);
       
       // Add to event-driven processing queue
       await queueProcessor.addToQueue(document.id);
@@ -265,6 +270,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/documents/upload', isAuthenticated, upload.any(), async (req: any, res) => {
     try {
       const userId = (req as any).session.userId; // Get authenticated user ID
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      const customerUuid = user.customerUuid; // Use customer UUID for business operations
       const files = (req.files as Express.Multer.File[]) || [];
       
       console.log(`=== UPLOAD DEBUG ===`);
@@ -306,7 +316,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
 
           // Create document record
-          const document = await storage.createDocument(userId, validationResult.data);
+          const document = await storage.createDocument(customerUuid, validationResult.data);
           
           console.log(`Created document ${document.id} for file ${file.originalname}`);
           
@@ -380,7 +390,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/documents', isAuthenticated, async (req: any, res) => {
     try {
       const userId = (req as any).session.userId;
-      const documents = await storage.getUserDocuments(userId);
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      const documents = await storage.getUserDocuments(user.customerUuid);
       res.json(documents);
     } catch (error) {
       console.error("Error fetching documents:", error);
@@ -392,10 +406,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/documents/:id/results', isAuthenticated, async (req: any, res) => {
     try {
       const userId = (req as any).session.userId;
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
       const { id } = req.params;
       
       const document = await storage.getDocument(id);
-      if (!document || document.userId !== userId) {
+      if (!document || document.customerUuid !== user.customerUuid) {
         return res.status(404).json({ message: "Document not found" });
       }
 
@@ -432,8 +450,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/stats', isAuthenticated, async (req: any, res) => {
     try {
       const userId = (req as any).session.userId;
-      const stats = await storage.getProcessingStats(userId);
-      const rigorDistribution = await storage.getRigorDistribution(userId);
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      const stats = await storage.getProcessingStats(user.customerUuid);
+      const rigorDistribution = await storage.getRigorDistribution(user.customerUuid);
       
       res.json({
         ...stats,

@@ -184,7 +184,12 @@ export async function getUserClassrooms(req: Request, res: Response) {
       return res.status(401).json({ error: 'User not authenticated' });
     }
 
-    const classrooms = await storage.getTeacherClassrooms(userId);
+    const user = await storage.getUser(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const classrooms = await storage.getTeacherClassrooms(user.customerUuid);
     res.json(classrooms);
   } catch (error) {
     console.error('[OAuth] Error fetching user classrooms:', error);

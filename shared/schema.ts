@@ -28,6 +28,7 @@ export const sessions = pgTable(
 // User storage table - supports both OAuth and username/password auth
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  customerUuid: varchar("customer_uuid").unique().notNull().default(sql`gen_random_uuid()`), // Permanent business identifier
   email: varchar("email").unique(),
   passwordHash: varchar("password_hash"), // For username/password auth
   googleId: varchar("google_id").unique(), // Google user ID
@@ -47,7 +48,7 @@ export const users = pgTable("users", {
 export const classrooms = pgTable("classrooms", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   googleClassId: varchar("google_class_id").notNull(), // Google Classroom ID
-  teacherId: varchar("teacher_id").notNull().references(() => users.id),
+  customerUuid: varchar("customer_uuid").notNull().references(() => users.customerUuid),
   name: text("name").notNull(),
   section: text("section"),
   description: text("description"),
@@ -90,7 +91,7 @@ export const aiEngineEnum = pgEnum('ai_engine', [
 // Documents table
 export const documents = pgTable("documents", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id),
+  customerUuid: varchar("customer_uuid").notNull().references(() => users.customerUuid),
   fileName: text("file_name").notNull(),
   originalPath: text("original_path").notNull(),
   mimeType: text("mime_type").notNull(),
@@ -145,7 +146,7 @@ export const questionResults = pgTable("question_results", {
 export const teacherOverrides = pgTable("teacher_overrides", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   questionId: varchar("question_id").notNull().references(() => questions.id),
-  userId: varchar("user_id").notNull().references(() => users.id),
+  customerUuid: varchar("customer_uuid").notNull().references(() => users.customerUuid),
   overriddenStandards: jsonb("overridden_standards").notNull(), // Teacher's corrected standards
   overriddenRigorLevel: rigorLevelEnum("overridden_rigor_level"),
   teacherJustification: text("teacher_justification"), // Teacher's reasoning
@@ -161,7 +162,7 @@ export const teacherOverrides = pgTable("teacher_overrides", {
 // API keys for users
 export const apiKeys = pgTable("api_keys", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id),
+  customerUuid: varchar("customer_uuid").notNull().references(() => users.customerUuid),
   keyName: text("key_name").notNull(),
   keyHash: text("key_hash").notNull(),
   isActive: boolean("is_active").notNull().default(true),
@@ -196,7 +197,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export const insertClassroomSchema = createInsertSchema(classrooms).pick({
   googleClassId: true,
-  teacherId: true,
+  customerUuid: true,
   name: true,
   section: true,
   description: true,

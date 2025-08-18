@@ -54,9 +54,9 @@ export interface IStorage {
   syncStudents(classroomId: string, studentData: any[]): Promise<Student[]>;
   
   // Document operations
-  createDocument(userId: string, document: InsertDocument): Promise<Document>;
+  createDocument(customerUuid: string, document: InsertDocument): Promise<Document>;
   getDocument(id: string): Promise<Document | undefined>;
-  getUserDocuments(userId: string, limit?: number): Promise<Document[]>;
+  getUserDocuments(customerUuid: string, limit?: number): Promise<Document[]>;
   updateDocumentStatus(id: string, status: string, errorMessage?: string): Promise<void>;
   
   // Question operations
@@ -72,9 +72,9 @@ export interface IStorage {
   getDocumentResults(documentId: string): Promise<Array<Question & { result?: QuestionResult; aiResponses: AiResponse[]; teacherOverride?: TeacherOverride }>>;
   
   // API Key operations
-  createApiKey(userId: string, apiKey: InsertApiKey): Promise<ApiKey>;
-  getUserApiKeys(userId: string): Promise<ApiKey[]>;
-  validateApiKey(keyHash: string): Promise<{ userId: string } | null>;
+  createApiKey(customerUuid: string, apiKey: InsertApiKey): Promise<ApiKey>;
+  getUserApiKeys(customerUuid: string): Promise<ApiKey[]>;
+  validateApiKey(keyHash: string): Promise<{ customerUuid: string } | null>;
   
   // Processing queue operations
   addToProcessingQueue(documentId: string, priority?: number): Promise<ProcessingQueue>;
@@ -83,20 +83,20 @@ export interface IStorage {
   getQueueStatus(): Promise<Array<ProcessingQueue & { document?: Document }>>;
   
   // Teacher override operations
-  createTeacherOverride(userId: string, override: InsertTeacherOverride): Promise<TeacherOverride>;
-  getQuestionOverride(questionId: string, userId?: string): Promise<TeacherOverride | undefined>;
+  createTeacherOverride(customerUuid: string, override: InsertTeacherOverride): Promise<TeacherOverride>;
+  getQuestionOverride(questionId: string, customerUuid?: string): Promise<TeacherOverride | undefined>;
   updateTeacherOverride(overrideId: string, updates: Partial<InsertTeacherOverride>): Promise<void>;
   getQuestionWithOverrides(questionId: string): Promise<Array<Question & { override?: TeacherOverride; result?: QuestionResult; aiResponses: AiResponse[] }>>;
   
   // Analytics operations
-  getProcessingStats(userId?: string): Promise<{
+  getProcessingStats(customerUuid?: string): Promise<{
     documentsProcessed: number;
     aiAnalyses: number;
     standardsIdentified: number;
     avgProcessingTime: string;
   }>;
   
-  getRigorDistribution(userId?: string): Promise<{
+  getRigorDistribution(customerUuid?: string): Promise<{
     mild: number;
     medium: number;
     spicy: number;
@@ -280,11 +280,11 @@ export class DatabaseStorage implements IStorage {
     return classroom;
   }
 
-  async getTeacherClassrooms(teacherId: string): Promise<Classroom[]> {
+  async getTeacherClassrooms(customerUuid: string): Promise<Classroom[]> {
     return await db
       .select()
       .from(classrooms)
-      .where(eq(classrooms.teacherId, teacherId))
+      .where(eq(classrooms.customerUuid, customerUuid))
       .orderBy(classrooms.name);
   }
 
@@ -296,7 +296,7 @@ export class DatabaseStorage implements IStorage {
     return classroom;
   }
 
-  async syncClassrooms(teacherId: string, classroomData: any[]): Promise<Classroom[]> {
+  async syncClassrooms(customerUuid: string, classroomData: any[]): Promise<Classroom[]> {
     const syncedClassrooms: Classroom[] = [];
     
     for (const classData of classroomData) {
@@ -323,7 +323,7 @@ export class DatabaseStorage implements IStorage {
         // Create new classroom
         const newClassroom = await this.createClassroom({
           googleClassId: classData.id,
-          teacherId,
+          customerUuid,
           name: classData.name,
           section: classData.section,
           description: classData.description,
@@ -405,12 +405,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Document operations
-  async createDocument(userId: string, document: InsertDocument): Promise<Document> {
+  async createDocument(customerUuid: string, document: InsertDocument): Promise<Document> {
     const [doc] = await db
       .insert(documents)
       .values({
         ...document,
-        userId,
+        customerUuid,
       })
       .returning();
     return doc;
@@ -421,11 +421,11 @@ export class DatabaseStorage implements IStorage {
     return doc;
   }
 
-  async getUserDocuments(userId: string, limit = 50): Promise<Document[]> {
+  async getUserDocuments(customerUuid: string, limit = 50): Promise<Document[]> {
     return await db
       .select()
       .from(documents)
-      .where(eq(documents.userId, userId))
+      .where(eq(documents.customerUuid, customerUuid))
       .orderBy(desc(documents.createdAt))
       .limit(limit);
   }
