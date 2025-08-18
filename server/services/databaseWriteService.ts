@@ -522,4 +522,53 @@ export class DatabaseWriteService {
       throw new Error(`Failed to create grade submission: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
+
+  /**
+   * Update document teacher review status
+   */
+  static async updateDocumentTeacherReviewStatus(
+    documentId: string,
+    customerUuid: string,
+    status: 'not_reviewed' | 'reviewed_and_accepted' | 'reviewed_and_overridden'
+  ): Promise<void> {
+    console.log(`[DatabaseWriteService] Updating document ${documentId} teacher review status to: ${status}`);
+    
+    try {
+      // Verify document ownership
+      const document = await storage.getDocument(documentId);
+      if (!document || document.customerUuid !== customerUuid) {
+        throw new Error('Document not found or access denied');
+      }
+
+      await storage.updateDocumentTeacherReviewStatus(documentId, status);
+      console.log(`[DatabaseWriteService] Teacher review status updated successfully`);
+    } catch (error) {
+      console.error(`[DatabaseWriteService] Failed to update teacher review status:`, error);
+      throw new Error(`Failed to update teacher review status: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Queue document exports (cover sheets, rubrics) for generation
+   */
+  static async queueDocumentExports(documentId: string, customerUuid: string): Promise<void> {
+    console.log(`[DatabaseWriteService] Queueing document exports for ${documentId}`);
+    
+    try {
+      // Verify document ownership and status
+      const document = await storage.getDocument(documentId);
+      if (!document || document.customerUuid !== customerUuid) {
+        throw new Error('Document not found or access denied');
+      }
+
+      // Queue cover sheet and rubric generation
+      await storage.addToExportQueue(documentId, 'cover_sheet');
+      await storage.addToExportQueue(documentId, 'rubric_pdf');
+      
+      console.log(`[DatabaseWriteService] Export queue entries created for document ${documentId}`);
+    } catch (error) {
+      console.error(`[DatabaseWriteService] Failed to queue document exports:`, error);
+      throw new Error(`Failed to queue document exports: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
 }

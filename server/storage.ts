@@ -1347,6 +1347,31 @@ export class DatabaseStorage implements IStorage {
     
     console.log(`[Storage] Cleared ${deletedItems.length} export queue items for document: ${documentId}`);
   }
+
+  /**
+   * Update document teacher review status
+   */
+  async updateDocumentTeacherReviewStatus(
+    documentId: string,
+    status: 'not_reviewed' | 'reviewed_and_accepted' | 'reviewed_and_overridden'
+  ): Promise<void> {
+    await this.db
+      .update(documents)
+      .set({ teacherReviewStatus: status })
+      .where(eq(documents.id, documentId));
+  }
+
+  /**
+   * Add document export to queue
+   */
+  async addToExportQueue(documentId: string, exportType: string): Promise<void> {
+    await this.db.insert(exportQueue).values({
+      documentId,
+      exportType: exportType as any,
+      priority: 0,
+      status: 'pending'
+    });
+  }
 }
 
 export const storage = new DatabaseStorage();

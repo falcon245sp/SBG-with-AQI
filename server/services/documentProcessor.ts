@@ -110,18 +110,17 @@ export class DocumentProcessor {
       // Update status to completed
       await DatabaseWriteService.updateDocumentStatus(documentId, 'completed');
       
+      // Set teacher review status to 'not_reviewed' - AI analysis complete, awaiting teacher review
+      // Documents will only be generated after teacher approval via "Accept and Proceed" or override workflow
+      
       // Clean up any existing generated documents for this source document (overwrite on re-submission)
       await storage.deleteGeneratedDocumentsForSource(documentId);
       await storage.clearExportQueueForDocument(documentId);
       
-      // Automatically generate common exports for completed documents
-      await this.autoGenerateExports(documentId);
+      // DO NOT auto-generate exports - wait for teacher review
+      // Exports are now triggered only after teacher review status is "reviewed_and_accepted" or "reviewed_and_overridden"
       
-      // Trigger export processing
-      setTimeout(async () => {
-        const { exportProcessor } = await import('./exportProcessor');
-        await exportProcessor.processPendingExports();
-      }, 1000); // Small delay to ensure export queue items are saved
+      // No export processing until teacher review is complete
       
       // Send callback notification if provided
       if (callbackUrl) {

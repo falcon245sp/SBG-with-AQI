@@ -421,6 +421,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Teacher review - Accept and Proceed
+  app.post('/api/documents/:documentId/accept', async (req: any, res) => {
+    try {
+      const { documentId } = req.params;
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+      
+      if (!customerUuid) return;
+
+      // Update document status to reviewed_and_accepted
+      await DatabaseWriteService.updateDocumentTeacherReviewStatus(
+        documentId,
+        customerUuid,
+        'reviewed_and_accepted'
+      );
+
+      // Trigger document generation (cover sheets, rubrics)
+      await DatabaseWriteService.queueDocumentExports(documentId, customerUuid);
+
+      res.json({ 
+        success: true, 
+        message: 'Analysis accepted, document generation queued',
+        documentId 
+      });
+
+    } catch (error) {
+      console.error('Failed to accept and proceed:', error);
+      res.status(500).json({ 
+        error: 'Failed to accept and proceed',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Get user documents
   app.get('/api/documents', async (req: any, res) => {
     try {

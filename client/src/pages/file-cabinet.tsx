@@ -47,6 +47,7 @@ interface Document {
   exportType?: string;
   tags: string[];
   status: string;
+  teacherReviewStatus?: 'not_reviewed' | 'reviewed_and_accepted' | 'reviewed_and_overridden';
   createdAt: string;
   fileSize: number;
   detectedType?: string;
@@ -186,6 +187,40 @@ export default function FileCabinet() {
     }
   };
 
+  // Accept AI analysis and proceed to document generation
+  const acceptAndProceedMutation = useMutation({
+    mutationFn: async (documentId: string) => {
+      const response = await fetch(`/api/documents/${documentId}/accept`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to accept and proceed');
+      return response.json();
+    },
+    onSuccess: (data, documentId) => {
+      queryClient.invalidateQueries({ queryKey: ['file-cabinet'] });
+      toast({
+        title: "Analysis Accepted",
+        description: "Document generation has been triggered. Check the Generated Documents drawer for results.",
+      });
+      console.log(`Document ${documentId} accepted and proceeding to generation:`, data);
+    },
+    onError: (error) => {
+      console.error('Failed to accept and proceed:', error);
+      toast({
+        title: "Error",
+        description: "Failed to accept the analysis. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleAcceptAndProceed = (documentId: string) => {
+    if (confirm('Accept the AI analysis and proceed to generate cover sheets and rubrics?')) {
+      acceptAndProceedMutation.mutate(documentId);
+    }
+  };
+
 
 
   const { fetchWithSessionHandling } = useSessionHandler();
@@ -285,6 +320,19 @@ export default function FileCabinet() {
       case 'failed': return <AlertCircle className="h-4 w-4 text-red-500" />;
       default: return <Clock className="h-4 w-4 text-gray-500" />;
     }
+  };
+
+  const getTeacherReviewStatusBadge = (reviewStatus?: string) => {
+    if (!reviewStatus || reviewStatus === 'not_reviewed') {
+      return <Badge variant="outline" className="text-yellow-700 bg-yellow-50 text-xs">🟡 Not Reviewed</Badge>;
+    }
+    if (reviewStatus === 'reviewed_and_accepted') {
+      return <Badge variant="outline" className="text-green-700 bg-green-50 text-xs">🟢 Accepted</Badge>;
+    }
+    if (reviewStatus === 'reviewed_and_overridden') {
+      return <Badge variant="outline" className="text-blue-700 bg-blue-50 text-xs">🔵 Overridden</Badge>;
+    }
+    return null;
   };
 
   const getExportTypeBadge = (exportType?: string) => {
@@ -488,9 +536,17 @@ export default function FileCabinet() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2">
-                            {getStatusIcon(doc.status)}
-                            <span className="capitalize">{doc.status}</span>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              {getStatusIcon(doc.status)}
+                              <span className="capitalize">{doc.status}</span>
+                            </div>
+                            {/* Show teacher review status for uploaded documents */}
+                            {doc.assetType === 'uploaded' && doc.status === 'completed' && (
+                              <div className="flex gap-1">
+                                {getTeacherReviewStatusBadge(doc.teacherReviewStatus)}
+                              </div>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -534,7 +590,33 @@ export default function FileCabinet() {
                           {formatFileSize(doc.fileSize)}
                         </TableCell>
                         <TableCell>
-                          <div className="flex gap-1">
+                          <div className="flex gap-1 flex-wrap">
+                            {/* Teacher Review Actions - only show for uploaded documents needing review */}
+                            {doc.assetType === 'uploaded' && 
+                             doc.status === 'completed' && 
+                             doc.teacherReviewStatus === 'not_reviewed' && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="default"
+                                  className="bg-green-600 hover:bg-green-700"
+                                  title="Accept AI analysis and proceed to generate documents"
+                                  onClick={() => handleAcceptAndProceed(doc.id)}
+                                >
+                                  ✅ Accept & Proceed
+                                </Button>
+                                <Link href={`/documents/${doc.id}/review`}>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    title="Edit AI analysis before proceeding"
+                                  >
+                                    ✏️ Edit
+                                  </Button>
+                                </Link>
+                              </>
+                            )}
+                            
                             <Button 
                               size="sm" 
                               variant="outline" 
@@ -576,17 +658,7 @@ export default function FileCabinet() {
                                 📋
                               </Button>
                             )}
-                            {doc.assetType === 'uploaded' && (
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                title="Resubmit to Standards Sherpa for reprocessing"
-                                onClick={() => handleResubmitDocument(doc.id)}
-                                disabled={resubmitMutation.isPending}
-                              >
-                                <RefreshCw className={`h-4 w-4 ${resubmitMutation.isPending ? 'animate-spin' : ''}`} />
-                              </Button>
-                            )}
+
                             <Link href={`/documents/${doc.id}/inspect`}>
                               <Button size="sm" variant="outline" title="Inspect document relationships and details">
                                 <Eye className="h-4 w-4" />

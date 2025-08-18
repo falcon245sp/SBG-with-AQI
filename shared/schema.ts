@@ -104,6 +104,13 @@ export const gradeSubmissionStatusEnum = pgEnum('grade_submission_status', [
   'pending', 'processed', 'duplicate_rejected', 'invalid_qr'
 ]);
 
+// Teacher review status enum
+export const teacherReviewStatusEnum = pgEnum('teacher_review_status', [
+  'not_reviewed',
+  'reviewed_and_accepted', 
+  'reviewed_and_overridden'
+]);
+
 // Documents table - enhanced for File Cabinet functionality
 export const documents: any = pgTable("documents", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -115,6 +122,7 @@ export const documents: any = pgTable("documents", {
   extractedText: text("extracted_text"),
   jurisdictions: text("jurisdictions").array(),
   status: processingStatusEnum("status").notNull().default('pending'),
+  teacherReviewStatus: teacherReviewStatusEnum("teacher_review_status").notNull().default('not_reviewed'),
   
   // File Cabinet enhancement fields
   assetType: assetTypeEnum("asset_type").notNull().default('uploaded'), // uploaded vs generated
