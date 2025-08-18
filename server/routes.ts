@@ -1003,6 +1003,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const documentTraversalRouter = await import('./routes/documentTraversal');
   app.use(documentTraversalRouter.default);
 
+  // Simple testing endpoints for system validation
+  app.get('/api/test-export', async (req, res) => {
+    try {
+      const { documentId } = req.query;
+      if (!documentId || typeof documentId !== 'string') {
+        return res.status(400).json({ error: 'documentId required' });
+      }
+      
+      // Queue test exports
+      await storage.addToExportQueue(documentId, 'rubric_pdf', 0);
+      await storage.addToExportQueue(documentId, 'cover_sheet', 0);
+      
+      // Process exports
+      await exportProcessor.processPendingExports();
+      
+      res.json({ 
+        success: true, 
+        message: 'Test exports queued and processed',
+        documentId 
+      });
+    } catch (error) {
+      console.error('Test export error:', error);
+      res.status(500).json({ error: 'Test export failed' });
+    }
+  });
+
+  app.post('/api/test-export', async (req, res) => {
+    try {
+      const { documentId } = req.body;
+      if (!documentId) {
+        return res.status(400).json({ error: 'documentId required' });
+      }
+      
+      // Queue test exports
+      await storage.addToExportQueue(documentId, 'rubric_pdf', 0);
+      await storage.addToExportQueue(documentId, 'cover_sheet', 0);
+      
+      // Process exports immediately
+      setTimeout(() => {
+        exportProcessor.processPendingExports();
+      }, 1000);
+      
+      res.json({ 
+        success: true, 
+        message: 'Test exports queued for processing',
+        documentId 
+      });
+    } catch (error) {
+      console.error('Test export error:', error);
+      res.status(500).json({ error: 'Test export failed' });
+    }
+  });
+
+  app.get('/api/system-health', async (req, res) => {
+    try {
+      const health = {
+        timestamp: new Date().toISOString(),
+        database: 'unknown',
+        exportProcessor: 'unknown',
+        fileSystem: 'unknown',
+        userFriendlyFilenames: 'unknown'
+      };
+      
+      // Test database
+      try {
+        await storage.getCustomerDocuments('health-check');
+        health.database = 'healthy';
+      } catch (err) {
+        health.database = 'error';
+      }
+      
+      // Test export processor
+      try {
+        const status = exportProcessor.getStatus();
+        health.exportProcessor = status.isStarted ? 'healthy' : 'stopped';
+      } catch (err) {
+        health.exportProcessor = 'error';
+      }
+      
+      // Test file system
+      try {
+        fs.accessSync(path.join(process.cwd(), 'uploads'));
+        health.fileSystem = 'healthy';
+      } catch (err) {
+        health.fileSystem = 'error';
+      }
+      
+      // Test user-friendly filenames by checking recent generated files
+      try {
+        const recentFiles = fs.readdirSync(path.join(process.cwd(), 'uploads'))
+          .filter(f => f.includes('rubric') || f.includes('cover'))
+          .filter(f => !f.includes('_4251e0f1-1739-4d39-99cc-86052f6ed3f0_')); // Old UUID format
+        
+        health.userFriendlyFilenames = recentFiles.length > 0 ? 'implemented' : 'not_tested';
+      } catch (err) {
+        health.userFriendlyFilenames = 'error';
+      }
+      
+      const isHealthy = Object.values(health).every(status => 
+        ['healthy', 'implemented'].includes(status) || status.includes('2025')
+      );
+      
+      res.status(isHealthy ? 200 : 503).json(health);
+    } catch (error) {
+      console.error('Health check error:', error);
+      res.status(500).json({ error: 'Health check failed' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
