@@ -134,6 +134,10 @@ export interface IStorage {
   getStudent(studentId: string): Promise<Student | undefined>;
   getQrSequenceById(sequenceId: string): Promise<QrSequenceNumber | undefined>;
   getCustomerGradeSubmissions(customerUuid: string): Promise<GradeSubmission[]>;
+  
+  // Generated document cleanup operations
+  deleteGeneratedDocumentsForSource(sourceDocumentId: string): Promise<void>;
+  clearExportQueueForDocument(documentId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -763,7 +767,7 @@ export class DatabaseStorage implements IStorage {
       .update(exportQueue)
       .set({
         status: status as any,
-        processedAt: status === 'completed' || status === 'failed' ? new Date() : undefined
+        completedAt: status === 'completed' || status === 'failed' ? new Date() : undefined
       })
       .where(eq(exportQueue.id, id));
   }
@@ -1289,6 +1293,59 @@ export class DatabaseStorage implements IStorage {
       .where(eq(documents.customerUuid, customerUuid))
       .orderBy(desc(gradeSubmissions.scannedAt))
       .then(results => results.map(result => result.grade_submissions));
+  }
+
+  // Generated document cleanup operations
+  async deleteGeneratedDocumentsForSource(sourceDocumentId: string): Promise<void> {
+    console.log(`[Storage] Cleaning up generated documents for source document: ${sourceDocumentId}`);
+    
+    // Find all generated documents that were created from this source document
+    const generatedDocs = await db
+      .select()
+      .from(documents)
+      .where(and(
+        eq(documents.parentDocumentId, sourceDocumentId),
+        eq(documents.assetType, 'generated')
+      ));
+    
+    console.log(`[Storage] Found ${generatedDocs.length} generated documents to delete`);
+    
+    // Delete the physical files and database records
+    for (const doc of generatedDocs) {
+      try {
+        // Delete physical file
+        const fs = await import('fs');
+        const path = await import('path');
+        const filePath = path.join('uploads', doc.fileName);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          console.log(`[Storage] Deleted physical file: ${doc.fileName}`);
+        }
+      } catch (error) {
+        console.warn(`[Storage] Failed to delete physical file ${doc.fileName}:`, error);
+      }
+    }
+    
+    // Delete database records
+    if (generatedDocs.length > 0) {
+      const docIds = generatedDocs.map(doc => doc.id);
+      await db
+        .delete(documents)
+        .where(inArray(documents.id, docIds));
+      console.log(`[Storage] Deleted ${generatedDocs.length} generated document records from database`);
+    }
+  }
+
+  async clearExportQueueForDocument(documentId: string): Promise<void> {
+    console.log(`[Storage] Clearing export queue for document: ${documentId}`);
+    
+    // Delete all pending and failed export queue items for this document
+    const deletedItems = await db
+      .delete(exportQueue)
+      .where(eq(exportQueue.documentId, documentId))
+      .returning();
+    
+    console.log(`[Storage] Cleared ${deletedItems.length} export queue items for document: ${documentId}`);
   }
 }
 

@@ -78,6 +78,10 @@ export class DocumentProcessor {
       // Update status to completed
       await DatabaseWriteService.updateDocumentStatus(documentId, 'completed');
       
+      // Clean up any existing generated documents for this source document (overwrite on re-submission)
+      await storage.deleteGeneratedDocumentsForSource(documentId);
+      await storage.clearExportQueueForDocument(documentId);
+      
       // Automatically generate common exports for completed documents
       await this.autoGenerateExports(documentId);
       

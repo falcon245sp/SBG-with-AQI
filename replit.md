@@ -4,6 +4,24 @@
 
 The Document Processing Service is a full-stack web application that provides AI-powered educational document analysis. It automatically analyzes educational documents (PDFs, Word docs, Google Docs) to identify standards alignment and determine cognitive rigor levels using multiple AI engines. The application features a RESTful API backend with Express.js and a React frontend, providing educational institutions and EdTech companies with automated document processing capabilities. The business vision is to empower educators with efficient tools for analyzing and aligning educational content, improving curriculum development and assessment.
 
+## Version 0.7.4 - Document Re-submission Overwrite System
+**Release Date:** August 18, 2025
+
+### Document Overwrite on Re-submission
+This version implements comprehensive document overwrite functionality to prevent duplicate generated documents when customers re-submit the same test for analysis:
+
+**Automatic Cleanup System:**
+- **Generated Document Cleanup**: When documents are re-processed, all previously generated documents (rubrics, cover sheets) for that source document are automatically deleted
+- **Export Queue Clearing**: Pending and failed export queue items are cleared to prevent duplicate processing
+- **Physical File Removal**: Both database records and physical PDF files are removed from the uploads directory
+- **Seamless Re-generation**: After cleanup, new exports are automatically generated with fresh analysis results
+
+**Implementation Details:**
+- `deleteGeneratedDocumentsForSource()`: Removes all generated documents linked to a source document
+- `clearExportQueueForDocument()`: Cleans export queue entries for re-submitted documents  
+- Integrated into document processing workflow before export generation
+- Comprehensive logging for troubleshooting cleanup operations
+
 ## Version 0.7.3 - Rubric Collation System
 **Release Date:** August 18, 2025
 
