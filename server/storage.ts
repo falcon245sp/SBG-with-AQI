@@ -630,7 +630,7 @@ export class DatabaseStorage implements IStorage {
     return qr;
   }
 
-  async getDocumentResults(documentId: string): Promise<Array<Question & { result?: QuestionResult; aiResponses: AiResponse[]; teacherOverride?: TeacherOverride }>> {
+  async getDocumentResults(documentId: string, customerUuid: string): Promise<Array<Question & { result?: QuestionResult; aiResponses: AiResponse[]; teacherOverride?: TeacherOverride }>> {
     const questionsData = await db
       .select()
       .from(questions)
@@ -649,8 +649,30 @@ export class DatabaseStorage implements IStorage {
         .from(aiResponses)
         .where(eq(aiResponses.questionId, question.id));
 
-      // TEMPORARY: Skip teacher override lookup due to schema mismatch
-      const teacherOverride = null;
+      // Get active teacher override if exists
+      const [teacherOverride] = await db
+        .select({
+          id: teacherOverrides.id,
+          questionId: teacherOverrides.questionId,
+          customerUuid: teacherOverrides.customerUuid,
+          overriddenStandards: teacherOverrides.overriddenStandards,
+          overriddenRigorLevel: teacherOverrides.overriddenRigorLevel,
+          confidenceScore: teacherOverrides.confidenceScore,
+          notes: teacherOverrides.notes,
+          editReason: teacherOverrides.editReason,
+          isActive: teacherOverrides.isActive,
+          isRevertedToAi: teacherOverrides.isRevertedToAi,
+          createdAt: teacherOverrides.createdAt,
+          updatedAt: teacherOverrides.updatedAt,
+        })
+        .from(teacherOverrides)
+        .where(and(
+          eq(teacherOverrides.questionId, question.id),
+          eq(teacherOverrides.customerUuid, customerUuid),
+          eq(teacherOverrides.isActive, true)
+        ))
+        .orderBy(desc(teacherOverrides.updatedAt))
+        .limit(1);
       
       // Debug logging for specific question
       if (question.id === '98a5b027-17d4-42f0-9b04-94c0d21a0abc') {

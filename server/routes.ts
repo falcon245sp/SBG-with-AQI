@@ -336,7 +336,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log(`Fetching results for document ${id}, customer ${user.customerUuid}`);
-      const results = await storage.getDocumentResults(id);
+      const results = await storage.getDocumentResults(id, user.customerUuid);
       console.log(`Found ${results.length} results for document ${id}`);
       
       // Debug: Check if results is valid
