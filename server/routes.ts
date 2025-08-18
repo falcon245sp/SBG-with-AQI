@@ -303,11 +303,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.session?.userId;
       
-      // TEMPORARY: If no session, use the known customer UUID for testing
+      // TEMPORARY: If no session, use the correct customer UUID that owns the document
       let user = null;
       if (!userId) {
         console.log("No userId in session, creating temporary user for testing");
-        // Use the known customer UUID from our database analysis
+        // Use the customer UUID that owns the document and should see teacher overrides
         user = {
           id: 'test-user',
           customerUuid: '47b49153-0965-40bc-96ea-7c6d0f22e1c4',

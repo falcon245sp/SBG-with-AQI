@@ -674,6 +674,27 @@ export class DatabaseStorage implements IStorage {
         .orderBy(desc(teacherOverrides.updatedAt))
         .limit(1);
       
+      // Debug logging for Question 1 to understand the customer filtering issue
+      if (question.questionNumber === '1') {
+        console.log(`[DEBUG] Question 1 (${question.id}): Looking for overrides with customerUuid: ${customerUuid}`);
+        
+        // Check all overrides for this question regardless of customer to debug
+        const allOverrides = await db
+          .select({
+            id: teacherOverrides.id,
+            customerUuid: teacherOverrides.customerUuid,
+            isActive: teacherOverrides.isActive,
+            isRevertedToAi: teacherOverrides.isRevertedToAi,
+            updatedAt: teacherOverrides.updatedAt,
+          })
+          .from(teacherOverrides)
+          .where(eq(teacherOverrides.questionId, question.id))
+          .orderBy(desc(teacherOverrides.updatedAt));
+        
+        console.log(`[DEBUG] All overrides for Question 1:`, allOverrides);
+        console.log(`[DEBUG] Found ${teacherOverride ? 'active' : 'no active'} override for customer ${customerUuid}`);
+      }
+      
       // Debug logging for specific question
       if (question.id === '98a5b027-17d4-42f0-9b04-94c0d21a0abc') {
         console.log(`Question ${question.id}: found ${teacherOverride ? 'active' : 'no active'} override`);
