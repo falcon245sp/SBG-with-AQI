@@ -12,6 +12,7 @@ import {
 } from "./routes/googleAuth";
 import { checkAuthStatus } from "./routes/auth";
 import { documentProcessor, queueProcessor } from "./services/documentProcessor";
+import { exportProcessor } from "./services/exportProcessor";
 import { insertDocumentSchema, insertTeacherOverrideSchema } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
@@ -869,6 +870,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Start the queue processor for sequential document processing
   queueProcessor.start();
+  
+  // Start export processor
+  exportProcessor.start();
+  
+  // Process pending exports on startup
+  setTimeout(() => {
+    exportProcessor.processPendingExports();
+  }, 5000); // Wait 5 seconds for system to fully initialize
   console.log('Queue processor started for sequential document processing');
 
   // Teacher override endpoints

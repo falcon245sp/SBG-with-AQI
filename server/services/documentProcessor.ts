@@ -78,6 +78,15 @@ export class DocumentProcessor {
       // Update status to completed
       await DatabaseWriteService.updateDocumentStatus(documentId, 'completed');
       
+      // Automatically generate common exports for completed documents
+      await this.autoGenerateExports(documentId);
+      
+      // Trigger export processing
+      setTimeout(async () => {
+        const { exportProcessor } = await import('./exportProcessor');
+        await exportProcessor.processPendingExports();
+      }, 1000); // Small delay to ensure export queue items are saved
+      
       // Send callback notification if provided
       if (callbackUrl) {
         await this.sendCallback(callbackUrl, {
@@ -415,6 +424,35 @@ export class DocumentProcessor {
       return result.value.trim();
     } catch (error) {
       throw new Error(`Word document extraction failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Automatically generate common exports after document processing completes
+   */
+  private async autoGenerateExports(documentId: string): Promise<void> {
+    try {
+      console.log(`[DocumentProcessor] Auto-generating exports for document: ${documentId}`);
+      
+      // Import dynamically to avoid circular dependency
+      const { ExportType } = await import('../utils/documentTagging');
+      
+      // Generate common exports that teachers typically need
+      const commonExports: ExportType[] = ['rubric_pdf', 'cover_sheet'];
+      
+      for (const exportType of commonExports) {
+        try {
+          await DatabaseWriteService.queueDocumentExport(documentId, exportType, 0);
+          console.log(`[DocumentProcessor] Queued ${exportType} generation for document: ${documentId}`);
+        } catch (error) {
+          console.warn(`[DocumentProcessor] Failed to queue ${exportType} for document ${documentId}:`, error);
+        }
+      }
+      
+      console.log(`[DocumentProcessor] Auto-export generation completed for document: ${documentId}`);
+    } catch (error) {
+      console.error(`[DocumentProcessor] Error during auto-export generation:`, error);
+      // Don't throw - export generation failure shouldn't break main processing
     }
   }
 

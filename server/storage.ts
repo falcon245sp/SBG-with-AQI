@@ -750,6 +750,47 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(exportQueue.priority), exportQueue.scheduledFor);
   }
 
+  async getExportQueueItem(id: string): Promise<any> {
+    const [item] = await db
+      .select()
+      .from(exportQueue)
+      .where(eq(exportQueue.id, id));
+    return item;
+  }
+
+  async updateExportQueueStatus(id: string, status: string): Promise<void> {
+    await db
+      .update(exportQueue)
+      .set({
+        status: status as any,
+        processedAt: status === 'completed' || status === 'failed' ? new Date() : undefined
+      })
+      .where(eq(exportQueue.id, id));
+  }
+
+  async getPendingExports(): Promise<any[]> {
+    return await db
+      .select()
+      .from(exportQueue)
+      .where(eq(exportQueue.status, 'pending'))
+      .orderBy(desc(exportQueue.priority), exportQueue.scheduledFor);
+  }
+
+  async getQuestionsByDocumentId(documentId: string): Promise<any[]> {
+    return await db
+      .select()
+      .from(questions)
+      .where(eq(questions.documentId, documentId))
+      .orderBy(questions.questionNumber);
+  }
+
+  async getQuestionResultsByDocumentId(documentId: string): Promise<any[]> {
+    return await db
+      .select()
+      .from(questionResults)
+      .where(eq(questionResults.documentId, documentId));
+  }
+
   // Question operations
   async createQuestion(question: InsertQuestion): Promise<Question> {
     const [q] = await db.insert(questions).values(question).returning();
