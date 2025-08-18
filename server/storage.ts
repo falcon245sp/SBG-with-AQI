@@ -31,6 +31,7 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, inArray, sql } from "drizzle-orm";
+import { PIIEncryption } from "./utils/encryption";
 
 export interface IStorage {
   // User operations (supports both OAuth and username/password)
@@ -107,25 +108,83 @@ export class DatabaseStorage implements IStorage {
   // User operations (supports both OAuth and username/password)
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    if (!user) return undefined;
+    
+    // Decrypt PII fields before returning
+    return {
+      ...user,
+      ...PIIEncryption.decryptUserPII({
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        profileImageUrl: user.profileImageUrl,
+      }),
+    };
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, username));
-    return user;
+    // Note: For username lookup, we need to encrypt the search term to match encrypted data
+    const encryptedEmail = PIIEncryption.encrypt(username);
+    if (!encryptedEmail) return undefined;
+    
+    const [user] = await db.select().from(users).where(eq(users.email, encryptedEmail));
+    if (!user) return undefined;
+    
+    // Decrypt PII fields before returning
+    return {
+      ...user,
+      ...PIIEncryption.decryptUserPII({
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        profileImageUrl: user.profileImageUrl,
+      }),
+    };
   }
 
   async getUserByGoogleId(googleId: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.googleId, googleId));
-    return user;
+    if (!user) return undefined;
+    
+    // Decrypt PII fields before returning
+    return {
+      ...user,
+      ...PIIEncryption.decryptUserPII({
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        profileImageUrl: user.profileImageUrl,
+      }),
+    };
   }
 
   async createUser(userData: UpsertUser): Promise<User> {
+    // Encrypt PII fields before storing
+    const encryptedUserData = {
+      ...userData,
+      ...PIIEncryption.encryptUserPII({
+        email: userData.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        profileImageUrl: userData.profileImageUrl,
+      }),
+    };
+    
     const [user] = await db
       .insert(users)
-      .values(userData)
+      .values(encryptedUserData)
       .returning();
-    return user;
+    
+    // Decrypt PII fields before returning
+    return {
+      ...user,
+      ...PIIEncryption.decryptUserPII({
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        profileImageUrl: user.profileImageUrl,
+      }),
+    };
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
@@ -144,41 +203,79 @@ export class DatabaseStorage implements IStorage {
             new_email: userData.email
           });
           
+          // Encrypt PII fields before updating
+          const encryptedUserData = {
+            ...userData,
+            ...PIIEncryption.encryptUserPII({
+              email: userData.email,
+              firstName: userData.firstName,
+              lastName: userData.lastName,
+              profileImageUrl: userData.profileImageUrl,
+            }),
+            updatedAt: new Date(),
+          };
+          
           // Update existing user
           const [user] = await db
             .update(users)
-            .set({
-              ...userData,
-              updatedAt: new Date(),
-            })
+            .set(encryptedUserData)
             .where(eq(users.googleId, userData.googleId))
             .returning();
             
           console.log('[Database] User updated successfully:', {
             database_id: user.id,
             google_id: user.googleId,
-            email: user.email
+            email: userData.email // Log original unencrypted email
           });
           
-          return user;
+          // Decrypt PII fields before returning
+          return {
+            ...user,
+            ...PIIEncryption.decryptUserPII({
+              email: user.email,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              profileImageUrl: user.profileImageUrl,
+            }),
+          };
         }
       }
 
       console.log('[Database] No existing user found, creating new user');
       
+      // Encrypt PII fields before storing
+      const encryptedUserData = {
+        ...userData,
+        ...PIIEncryption.encryptUserPII({
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          profileImageUrl: userData.profileImageUrl,
+        }),
+      };
+      
       // Create new user
       const [user] = await db
         .insert(users)
-        .values(userData)
+        .values(encryptedUserData)
         .returning();
         
       console.log('[Database] New user created successfully:', {
         database_id: user.id,
         google_id: user.googleId,
-        email: user.email
+        email: userData.email // Log original unencrypted email
       });
       
-      return user;
+      // Decrypt PII fields before returning
+      return {
+        ...user,
+        ...PIIEncryption.decryptUserPII({
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          profileImageUrl: user.profileImageUrl,
+        }),
+      };
     } catch (error: any) {
       console.error('[Database] ERROR - User upsert failed:', {
         error_type: 'DATABASE_ERROR',
@@ -341,19 +438,42 @@ export class DatabaseStorage implements IStorage {
 
   // Student operations
   async createStudent(studentData: InsertStudent): Promise<Student> {
+    // Encrypt PII fields before storing
+    const encryptedStudentData = {
+      ...studentData,
+      firstName: PIIEncryption.encrypt(studentData.firstName) || studentData.firstName,
+      lastName: PIIEncryption.encrypt(studentData.lastName) || studentData.lastName,
+      email: studentData.email ? PIIEncryption.encrypt(studentData.email) : studentData.email,
+    };
+    
     const [student] = await db
       .insert(students)
-      .values(studentData)
+      .values(encryptedStudentData)
       .returning();
-    return student;
+      
+    // Decrypt PII fields before returning
+    return {
+      ...student,
+      firstName: PIIEncryption.decrypt(student.firstName) || '',
+      lastName: PIIEncryption.decrypt(student.lastName) || '',
+      email: PIIEncryption.decrypt(student.email),
+    };
   }
 
   async getClassroomStudents(classroomId: string): Promise<Student[]> {
-    return await db
+    const students_data = await db
       .select()
       .from(students)
       .where(eq(students.classroomId, classroomId))
       .orderBy(students.lastName, students.firstName);
+      
+    // Decrypt PII fields before returning
+    return students_data.map(student => ({
+      ...student,
+      firstName: PIIEncryption.decrypt(student.firstName) || '',
+      lastName: PIIEncryption.decrypt(student.lastName) || '',
+      email: PIIEncryption.decrypt(student.email),
+    }));
   }
 
   async syncStudents(classroomId: string, studentData: any[]): Promise<Student[]> {
@@ -374,19 +494,29 @@ export class DatabaseStorage implements IStorage {
         );
       
       if (existingStudent) {
+        // Encrypt PII fields before updating
+        const encryptedUpdateData = {
+          firstName: PIIEncryption.encrypt(profile.name.givenName) || profile.name.givenName,
+          lastName: PIIEncryption.encrypt(profile.name.familyName) || profile.name.familyName,
+          email: profile.emailAddress ? PIIEncryption.encrypt(profile.emailAddress) : null,
+          photoUrl: profile.photoUrl,
+          updatedAt: new Date(),
+        };
+        
         // Update existing student
         const [updated] = await db
           .update(students)
-          .set({
-            firstName: profile.name.givenName,
-            lastName: profile.name.familyName,
-            email: profile.emailAddress,
-            photoUrl: profile.photoUrl,
-            updatedAt: new Date(),
-          })
+          .set(encryptedUpdateData)
           .where(eq(students.id, existingStudent.id))
           .returning();
-        syncedStudents.push(updated);
+          
+        // Decrypt PII fields before adding to results
+        syncedStudents.push({
+          ...updated,
+          firstName: PIIEncryption.decrypt(updated.firstName) || '',
+          lastName: PIIEncryption.decrypt(updated.lastName) || '',
+          email: PIIEncryption.decrypt(updated.email),
+        });
       } else {
         // Create new student
         const newStudent = await this.createStudent({

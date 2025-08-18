@@ -48,6 +48,7 @@ Preferred communication style: Simple, everyday language.
 - **Session Management**: PostgreSQL-based session storage.
 - **API Security**: Session-based authentication.
 - **File Validation**: MIME type validation and file size limits.
+- **PII Encryption**: All personally identifiable information encrypted at rest using AES encryption in both development and production environments.
 
 ### Error Handling & Monitoring
 - **Structured Logging**: Request/response logging with timing.
