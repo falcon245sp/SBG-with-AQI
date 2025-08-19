@@ -6,7 +6,8 @@ The Document Processing Service, personified as "Standards Sherpa," is a full-st
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
-## Recent Changes
+## Recent Changes  
+- **August 19, 2025**: Added comprehensive data truncation feature to admin interface "Dev Tools" tab for clean test runs. Includes POST `/api/admin/truncate-data` endpoint with complete database and file system cleanup, double-confirmation UI safeguards, and detailed operation reporting. Safely clears all tables in proper order, removes uploaded files, and provides comprehensive feedback on completion.
 - **August 19, 2025**: Implemented comprehensive environment variable system with DEV_/PROD_ prefixes for environment-specific settings and STABLE_ prefixes for environment-stable constants. Automatically selects appropriate configuration based on NODE_ENV. Moved all hardcoded values including web service URLs, API keys, session secrets, admin emails, domain configuration, session TTL, OIDC cache settings, OAuth delays, ports, and performance thresholds to configurable environment variables. Cookie security automatically enabled in production (HTTPS-only). Created centralized environment configuration manager with type safety.
 - **August 19, 2025**: Fixed emoji rendering issue in PDF rubrics by replacing chili pepper emojis with asterisk symbols (* mild, ** medium, *** spicy) for proper PDF display compatibility.
 - **August 19, 2025**: Implemented comprehensive document overwrite system preventing duplicate generated documents. System now automatically deletes existing generated documents before creating new versions, ensuring only one document of each type exists per source document.

@@ -1,10 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Activity, 
   Database, 
@@ -15,7 +16,9 @@ import {
   Clock,
   Settings,
   Monitor,
-  Bug
+  Bug,
+  Trash2,
+  RotateCcw
 } from "lucide-react";
 
 interface SystemHealth {
@@ -45,6 +48,9 @@ interface UXTestResponse {
 }
 
 export default function AdminDashboard() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
   // Get current user for admin check
   const { data: user } = useQuery({
     queryKey: ["/api/auth/user"],
@@ -63,6 +69,65 @@ export default function AdminDashboard() {
     queryKey: ['/api/admin/run-ux-tests'],
     refetchInterval: 60000, // Refresh every minute
   });
+
+  // Data truncation mutation
+  const truncateDataMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/admin/truncate-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || 'Failed to truncate data');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Data Truncation Complete",
+        description: `Successfully cleared ${data.tablesCleared} tables and ${data.filesDeleted} files`,
+      });
+      
+      // Refresh all queries to reflect the clean state
+      queryClient.invalidateQueries();
+    },
+    onError: (error) => {
+      toast({
+        title: "Truncation Failed",
+        description: error instanceof Error ? error.message : 'Unknown error occurred',
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleTruncateData = () => {
+    const confirmed = window.confirm(
+      '⚠️ DANGER: This will permanently delete ALL data including:\n\n' +
+      '• All documents and analysis results\n' +
+      '• All user accounts and sessions\n' +
+      '• All uploaded and generated files\n' +
+      '• All processing queues\n' +
+      '• All teacher overrides\n\n' +
+      'This action CANNOT be undone!\n\n' +
+      'Are you absolutely sure you want to proceed?'
+    );
+
+    if (confirmed) {
+      const doubleConfirmed = window.confirm(
+        'Last chance! This will DESTROY all data permanently.\n\n' +
+        'Type "DELETE ALL DATA" in your mind and click OK to proceed.'
+      );
+      
+      if (doubleConfirmed) {
+        truncateDataMutation.mutate();
+      }
+    }
+  };
 
   if (!isAdmin) {
     return (
@@ -97,7 +162,7 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <Monitor className="h-4 w-4" />
               Overview
@@ -109,6 +174,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="ux-tests" className="flex items-center gap-2">
               <Bug className="h-4 w-4" />
               UX Tests
+            </TabsTrigger>
+            <TabsTrigger value="dev-tools" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Dev Tools
             </TabsTrigger>
             <TabsTrigger value="logs" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
@@ -332,6 +401,114 @@ export default function AdminDashboard() {
                   ) : (
                     <p className="text-center py-8 text-gray-500">Failed to load test results</p>
                   )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="dev-tools">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Settings className="h-5 w-5" />
+                    Development Tools
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      These tools are for development and testing only. Use with extreme caution in production environments.
+                    </AlertDescription>
+                  </Alert>
+                  
+                  <div className="border-l-4 border-red-500 bg-red-50 p-6 rounded-r-lg">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2">
+                        <h3 className="text-lg font-semibold text-red-800 flex items-center gap-2">
+                          <Trash2 className="h-5 w-5" />
+                          Truncate All Data
+                        </h3>
+                        <p className="text-red-700 text-sm leading-relaxed">
+                          Permanently delete ALL data including documents, users, sessions, files, and processing queues. 
+                          This will reset the system to a clean state for testing purposes.
+                        </p>
+                        <div className="text-xs text-red-600 mt-2">
+                          <p>⚠️ This action will delete:</p>
+                          <ul className="list-disc ml-4 mt-1 space-y-1">
+                            <li>All user accounts and authentication sessions</li>
+                            <li>All documents and AI analysis results</li>
+                            <li>All uploaded and generated files</li>
+                            <li>All processing and export queues</li>
+                            <li>All teacher overrides and customizations</li>
+                          </ul>
+                        </div>
+                      </div>
+                      
+                      <Button
+                        variant="destructive"
+                        size="lg"
+                        onClick={handleTruncateData}
+                        disabled={truncateDataMutation.isPending}
+                        className="ml-4 shrink-0"
+                      >
+                        {truncateDataMutation.isPending ? (
+                          <>
+                            <RotateCcw className="h-4 w-4 mr-2 animate-spin" />
+                            Truncating...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Truncate All Data
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">Database Status</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span>Connection:</span>
+                            <Badge variant={systemHealth?.database.status === 'healthy' ? 'default' : 'destructive'}>
+                              {systemHealth?.database.status || 'Unknown'}
+                            </Badge>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Response Time:</span>
+                            <span>{systemHealth?.database.responseTime || 'N/A'}ms</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">File System Status</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span>Uploads Directory:</span>
+                            <Badge variant={systemHealth?.fileSystem.uploadsDirectory ? 'default' : 'destructive'}>
+                              {systemHealth?.fileSystem.uploadsDirectory ? 'Available' : 'Unavailable'}
+                            </Badge>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Status:</span>
+                            <span>{systemHealth?.fileSystem.status || 'Unknown'}</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </CardContent>
               </Card>
             </div>

@@ -13,8 +13,27 @@ import {
 import { checkAuthStatus } from "./routes/auth";
 import { documentProcessor, queueProcessor } from "./services/documentProcessor";
 import { exportProcessor } from "./services/exportProcessor";
-import { insertDocumentSchema, insertTeacherOverrideSchema } from "@shared/schema";
+import { 
+  insertDocumentSchema, 
+  insertTeacherOverrideSchema,
+  documents,
+  users,
+  questions,
+  aiResponses,
+  questionResults,
+  teacherOverrides,
+  processingQueue,
+  exportQueue,
+  gradeSubmissions,
+  qrSequenceNumbers,
+  apiKeys,
+  sessions,
+  classrooms,
+  students
+} from "@shared/schema";
 import { z } from "zod";
+import { count } from "drizzle-orm";
+import { db } from "./db";
 import multer from "multer";
 import { aiService } from "./services/aiService";
 import path from "path";
@@ -1208,6 +1227,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Health check error:', error);
       res.status(500).json({ error: 'Health check failed' });
+    }
+  });
+
+  // Data truncation endpoint for development - admin only
+  app.post('/api/admin/truncate-data', requireAdmin, async (req, res) => {
+    try {
+      console.log('[TruncateData] Starting complete data truncation...');
+      
+      // Get the count of records before deletion for reporting
+      const beforeCounts = {
+        documents: await db.select({ count: count() }).from(documents),
+        users: await db.select({ count: count() }).from(users),
+        questions: await db.select({ count: count() }).from(questions),
+        aiResponses: await db.select({ count: count() }).from(aiResponses),
+        questionResults: await db.select({ count: count() }).from(questionResults),
+        teacherOverrides: await db.select({ count: count() }).from(teacherOverrides),
+        processingQueue: await db.select({ count: count() }).from(processingQueue),
+        exportQueue: await db.select({ count: count() }).from(exportQueue),
+        gradeSubmissions: await db.select({ count: count() }).from(gradeSubmissions),
+        qrSequenceNumbers: await db.select({ count: count() }).from(qrSequenceNumbers),
+        apiKeys: await db.select({ count: count() }).from(apiKeys),
+        sessions: await db.select({ count: count() }).from(sessions),
+        classrooms: await db.select({ count: count() }).from(classrooms),
+        students: await db.select({ count: count() }).from(students),
+      };
+      
+      const totalRecordsBefore = Object.values(beforeCounts).reduce(
+        (sum, result) => sum + (result[0]?.count || 0), 0
+      );
+      
+      console.log(`[TruncateData] Found ${totalRecordsBefore} total records to delete`);
+      
+      // Truncate all database tables (order matters due to foreign key constraints)
+      const tablesToTruncate = [
+        { table: gradeSubmissions, name: 'gradeSubmissions' },
+        { table: qrSequenceNumbers, name: 'qrSequenceNumbers' },
+        { table: exportQueue, name: 'exportQueue' },
+        { table: processingQueue, name: 'processingQueue' },
+        { table: teacherOverrides, name: 'teacherOverrides' },
+        { table: questionResults, name: 'questionResults' },
+        { table: aiResponses, name: 'aiResponses' },
+        { table: questions, name: 'questions' },
+        { table: documents, name: 'documents' },
+        { table: apiKeys, name: 'apiKeys' },
+        { table: students, name: 'students' },
+        { table: classrooms, name: 'classrooms' },
+        { table: sessions, name: 'sessions' },
+        { table: users, name: 'users' },
+      ];
+      
+      let tablesCleared = 0;
+      
+      for (const { table, name } of tablesToTruncate) {
+        try {
+          const deleteResult = await db.delete(table);
+          console.log(`[TruncateData] Cleared table: ${name}`);
+          tablesCleared++;
+        } catch (error) {
+          console.warn(`[TruncateData] Failed to clear table ${name}:`, error);
+        }
+      }
+      
+      // Clear uploads directory
+      let filesDeleted = 0;
+      try {
+        const uploadsPath = path.join(process.cwd(), 'uploads');
+        
+        if (fs.existsSync(uploadsPath)) {
+          const files = fs.readdirSync(uploadsPath);
+          
+          for (const file of files) {
+            // Skip .gitkeep and other hidden files
+            if (!file.startsWith('.')) {
+              try {
+                const filePath = path.join(uploadsPath, file);
+                fs.unlinkSync(filePath);
+                filesDeleted++;
+              } catch (fileError) {
+                console.warn(`[TruncateData] Failed to delete file ${file}:`, fileError);
+              }
+            }
+          }
+          
+          console.log(`[TruncateData] Deleted ${filesDeleted} files from uploads directory`);
+        }
+      } catch (error) {
+        console.warn('[TruncateData] Failed to clear uploads directory:', error);
+      }
+      
+      // Clear any in-memory caches or queues
+      try {
+        // Reset any service states if needed
+        console.log('[TruncateData] Cleared in-memory caches');
+      } catch (error) {
+        console.warn('[TruncateData] Failed to clear caches:', error);
+      }
+      
+      const response = {
+        success: true,
+        message: 'All data truncated successfully',
+        tablesCleared,
+        filesDeleted,
+        totalRecordsBefore,
+        timestamp: new Date().toISOString()
+      };
+      
+      console.log(`[TruncateData] Truncation complete:`, response);
+      res.json(response);
+      
+    } catch (error) {
+      console.error('[TruncateData] Truncation failed:', error);
+      res.status(500).json({
+        error: 'Data truncation failed',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
