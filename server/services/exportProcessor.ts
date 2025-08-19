@@ -126,14 +126,30 @@ export class ExportProcessor {
     
     const pdf = new jsPDF();
     
-    // Header
-    pdf.setFontSize(18);
-    pdf.text('Standards Sherpa - Standards-Based Grading Rubric', 20, 30);
+    // Header with consistent formatting
+    pdf.setFontSize(20);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Standards-Based Grading Rubric', 105, 25, { align: 'center' } as any);
+    pdf.setFont('helvetica', 'normal');
+    
+    // Horizontal line under title
+    pdf.line(20, 30, 190, 30);
     
     pdf.setFontSize(12);
-    pdf.text(`Assessment: ${document.fileName}`, 20, 45);
-    pdf.text(`Student Name: ___________________________`, 20, 60);
-    pdf.text(`Date: ___________________________`, 120, 60);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Assessment:', 20, 45);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(document.fileName, 55, 45);
+    
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Student Name:', 20, 60);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('_________________________________', 65, 60);
+    
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Date:', 120, 60);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('______________', 135, 60);
     
     let yPosition = 80;
     
@@ -147,14 +163,35 @@ export class ExportProcessor {
       pdf.text(`Question ${question.questionNumber}`, 20, yPosition);
       yPosition += 15;
       
-      // Standards and Rigor information
+      // Standards and Rigor information in a clean box
       if (result) {
-        pdf.setFontSize(10);
-        pdf.setFont(undefined, 'bold');
-        pdf.text(`Standard: ${result.consensusStandards || 'Not analyzed'}`, 20, yPosition);
-        yPosition += 12;
-        pdf.text(`Rigor Level: ${result.consensusRigorLevel || 'Not analyzed'}`, 20, yPosition);
-        pdf.setFont(undefined, 'normal');
+        pdf.setFontSize(9);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Standard:', 25, yPosition);
+        pdf.setFont('helvetica', 'normal');
+        // Handle JSONB consensus_standards field
+        let standardsText = 'Not analyzed';
+        if (result.consensusStandards) {
+          if (typeof result.consensusStandards === 'string') {
+            standardsText = result.consensusStandards;
+          } else if (Array.isArray(result.consensusStandards)) {
+            standardsText = result.consensusStandards.map(s => s.code || s).join(', ');
+          } else if (result.consensusStandards.code) {
+            standardsText = result.consensusStandards.code;
+          }
+        }
+        
+        pdf.text(standardsText, 55, yPosition);
+        
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Rigor:', 120, yPosition);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(result.consensusRigorLevel || 'Not analyzed', 140, yPosition);
+        
+        // Light border around standards info
+        pdf.setDrawColor(200, 200, 200);
+        pdf.rect(20, yPosition - 5, 170, 12);
+        pdf.setDrawColor(0, 0, 0);
         yPosition += 15;
       }
       
@@ -164,44 +201,62 @@ export class ExportProcessor {
       pdf.text(questionLines, 20, yPosition);
       yPosition += questionLines.length * 5 + 15;
       
-      // Standards-Based Grading Scale (4-point)
-      pdf.setFontSize(12);
-      pdf.setFont(undefined, 'bold');
+      // Standards-Based Grading Scale (4-point) with better formatting
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'bold');
       pdf.text('Mastery Level (check one):', 20, yPosition);
-      pdf.setFont(undefined, 'normal');
-      yPosition += 15;
+      pdf.setFont('helvetica', 'normal');
+      yPosition += 12;
       
-      pdf.setFontSize(10);
+      // Create a bordered section for the grading scale
+      const scaleStartY = yPosition;
+      pdf.setFontSize(9);
+      
       // Level 4: Demonstrates Full Mastery
-      pdf.rect(25, yPosition - 2, 8, 8);
-      pdf.text('4 - Demonstrates Full Mastery', 40, yPosition + 5);
-      pdf.text('(Exceeds expectations, shows deep understanding)', 45, yPosition + 12);
-      yPosition += 20;
+      pdf.rect(25, yPosition, 6, 6);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('4 - Demonstrates Full Mastery', 35, yPosition + 4);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('(Exceeds expectations, shows deep understanding)', 40, yPosition + 10);
+      yPosition += 16;
       
       // Level 3: Demonstrates Mastery with Unrelated Mistakes
-      pdf.rect(25, yPosition - 2, 8, 8);
-      pdf.text('3 - Demonstrates Mastery with Unrelated Mistakes', 40, yPosition + 5);
-      pdf.text('(Meets expectations, minor errors don\'t affect understanding)', 45, yPosition + 12);
-      yPosition += 20;
+      pdf.rect(25, yPosition, 6, 6);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('3 - Demonstrates Mastery with Unrelated Mistakes', 35, yPosition + 4);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('(Meets expectations, minor errors don\'t affect understanding)', 40, yPosition + 10);
+      yPosition += 16;
       
       // Level 2: Does Not Demonstrate Mastery
-      pdf.rect(25, yPosition - 2, 8, 8);
-      pdf.text('2 - Does Not Demonstrate Mastery', 40, yPosition + 5);
-      pdf.text('(Approaching expectations, significant gaps in understanding)', 45, yPosition + 12);
-      yPosition += 20;
+      pdf.rect(25, yPosition, 6, 6);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('2 - Does Not Demonstrate Mastery', 35, yPosition + 4);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('(Approaching expectations, significant gaps in understanding)', 40, yPosition + 10);
+      yPosition += 16;
       
       // Level 1: No Attempt
-      pdf.rect(25, yPosition - 2, 8, 8);
-      pdf.text('1 - No Attempt', 40, yPosition + 5);
-      pdf.text('(No evidence of understanding or no response provided)', 45, yPosition + 12);
-      yPosition += 25;
+      pdf.rect(25, yPosition, 6, 6);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('1 - No Attempt', 35, yPosition + 4);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('(No evidence of understanding or no response provided)', 40, yPosition + 10);
+      yPosition += 20;
+      
+      // Border around the entire grading scale
+      pdf.setDrawColor(150, 150, 150);
+      pdf.rect(20, scaleStartY - 3, 170, yPosition - scaleStartY + 3);
+      pdf.setDrawColor(0, 0, 0);
       
       // Evidence/Notes section
       pdf.setFontSize(10);
-      pdf.text('Evidence/Notes:', 20, yPosition);
-      yPosition += 10;
-      pdf.rect(20, yPosition, 170, 15);
-      yPosition += 25;
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Evidence/Notes:', 20, yPosition + 8);
+      pdf.setFont('helvetica', 'normal');
+      yPosition += 15;
+      pdf.rect(20, yPosition, 170, 20);
+      yPosition += 30;
       
       // Start new page if needed
       if (yPosition > 220) {
@@ -211,28 +266,49 @@ export class ExportProcessor {
     }
     
     // Overall Assessment Summary
-    if (yPosition > 200) {
+    if (yPosition > 180) {
       pdf.addPage();
       yPosition = 30;
     }
     
+    // Section separator
+    pdf.line(20, yPosition + 15, 190, yPosition + 15);
+    
     pdf.setFontSize(14);
-    pdf.setFont(undefined, 'bold');
-    pdf.text('Overall Standards Mastery Summary:', 20, yPosition + 20);
-    pdf.setFont(undefined, 'normal');
-    yPosition += 35;
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Overall Standards Mastery Summary', 105, yPosition + 30, { align: 'center' } as any);
+    pdf.setFont('helvetica', 'normal');
+    yPosition += 45;
     
-    pdf.setFontSize(10);
-    pdf.text('Standards Mastered (Level 3-4): _________________________', 20, yPosition);
-    yPosition += 15;
-    pdf.text('Standards Approaching (Level 2): ________________________', 20, yPosition);
-    yPosition += 15;
-    pdf.text('Standards Not Yet Demonstrated (Level 1): ________________', 20, yPosition);
-    yPosition += 20;
+    pdf.setFontSize(11);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Standards Mastered (Level 3-4):', 20, yPosition);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('_________________________________', 105, yPosition);
+    yPosition += 18;
     
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Standards Approaching (Level 2):', 20, yPosition);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('_________________________________', 105, yPosition);
+    yPosition += 18;
+    
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Standards Not Yet Demonstrated (Level 1):', 20, yPosition);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('____________________', 130, yPosition);
+    yPosition += 25;
+    
+    pdf.setFont('helvetica', 'bold');
     pdf.text('Next Steps for Learning:', 20, yPosition);
-    yPosition += 10;
-    pdf.rect(20, yPosition, 170, 25);
+    pdf.setFont('helvetica', 'normal');
+    yPosition += 12;
+    pdf.rect(20, yPosition, 170, 30);
+    
+    // Footer
+    yPosition += 40;
+    pdf.setFontSize(8);
+    pdf.text('Standards Sherpa - Professional Standards-Based Assessment Tool', 105, yPosition, { align: 'center' } as any);
     
     // Save PDF with user-friendly filename
     const baseFileName = document.fileName.replace(/\.[^/.]+$/, ""); // Remove file extension
