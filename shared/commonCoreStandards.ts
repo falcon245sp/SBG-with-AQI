@@ -10,6 +10,16 @@ export interface CommonCoreStandard {
   majorDomain?: 'Algebra' | 'Geometry' | 'Statistics' | 'Functions' | 'NumberSense' | 'Reading' | 'Writing' | 'Speaking' | 'Language';
 }
 
+export interface NGSSStandard {
+  code: string;
+  description: string;
+  subject: 'Science';
+  gradeLevel: string;
+  domain: 'Physical Science' | 'Life Science' | 'Earth Science' | 'Engineering Design';
+  majorDomain: 'Physics' | 'Chemistry' | 'Biology' | 'Earth/Space' | 'Engineering';
+  practiceArea?: 'Asking Questions' | 'Developing Models' | 'Planning Investigations' | 'Analyzing Data' | 'Using Mathematics' | 'Constructing Explanations' | 'Engaging in Argument' | 'Obtaining Information';
+}
+
 export const COMMON_CORE_MATH_STANDARDS: CommonCoreStandard[] = [
   // Kindergarten
   { code: 'K.CC.A.1', description: 'Count to 100 by ones and by tens', subject: 'Math', gradeLevel: 'K', domain: 'Counting & Cardinality', majorDomain: 'NumberSense' },
@@ -223,3 +233,41 @@ export function detectDomainChange(originalStandards: string[], newStandards: st
     changes
   };
 }
+
+// NGSS (Next Generation Science Standards) Sample Standards
+export const NGSS_SCIENCE_STANDARDS: NGSSStandard[] = [
+  // Kindergarten
+  { code: 'K-PS2-1', description: 'Plan and conduct an investigation to compare the effects of different strengths or different directions of pushes and pulls', subject: 'Science', gradeLevel: 'K', domain: 'Physical Science', majorDomain: 'Physics', practiceArea: 'Planning Investigations' },
+  { code: 'K-LS1-1', description: 'Use observations to describe patterns of what plants and animals (including humans) need to survive', subject: 'Science', gradeLevel: 'K', domain: 'Life Science', majorDomain: 'Biology', practiceArea: 'Asking Questions' },
+  { code: 'K-ESS2-2', description: 'Construct an argument supported by evidence for how plants and animals (including humans) can change the environment', subject: 'Science', gradeLevel: 'K', domain: 'Earth Science', majorDomain: 'Earth/Space', practiceArea: 'Constructing Explanations' },
+  
+  // Elementary (Grades 1-5)
+  { code: '1-PS4-1', description: 'Plan and conduct investigations to provide evidence that vibrating materials can make sound', subject: 'Science', gradeLevel: '1', domain: 'Physical Science', majorDomain: 'Physics', practiceArea: 'Planning Investigations' },
+  { code: '2-LS4-1', description: 'Make observations of plants and animals to compare the diversity of life in different habitats', subject: 'Science', gradeLevel: '2', domain: 'Life Science', majorDomain: 'Biology', practiceArea: 'Asking Questions' },
+  { code: '3-PS2-3', description: 'Ask questions to determine cause and effect relationships of electric or magnetic interactions', subject: 'Science', gradeLevel: '3', domain: 'Physical Science', majorDomain: 'Physics', practiceArea: 'Asking Questions' },
+  { code: '4-LS1-1', description: 'Construct an argument that plants and animals have internal and external structures', subject: 'Science', gradeLevel: '4', domain: 'Life Science', majorDomain: 'Biology', practiceArea: 'Constructing Explanations' },
+  { code: '5-ESS1-2', description: 'Represent data in graphical displays to reveal patterns of daily changes in length and direction of shadows', subject: 'Science', gradeLevel: '5', domain: 'Earth Science', majorDomain: 'Earth/Space', practiceArea: 'Analyzing Data' },
+  
+  // Middle School (Grades 6-8)
+  { code: 'MS-PS1-1', description: 'Develop models to describe the atomic composition of simple molecules and extended structures', subject: 'Science', gradeLevel: '6-8', domain: 'Physical Science', majorDomain: 'Chemistry', practiceArea: 'Developing Models' },
+  { code: 'MS-PS1-2', description: 'Analyze and interpret data on the properties of substances before and after the substances interact', subject: 'Science', gradeLevel: '6-8', domain: 'Physical Science', majorDomain: 'Chemistry', practiceArea: 'Analyzing Data' },
+  { code: 'MS-LS1-2', description: 'Develop and use a model to describe the function of a cell as a whole and ways parts of cells contribute', subject: 'Science', gradeLevel: '6-8', domain: 'Life Science', majorDomain: 'Biology', practiceArea: 'Developing Models' },
+  { code: 'MS-ESS1-2', description: 'Use mathematical representations to describe and/or support scientific conclusions about the proportion of minerals', subject: 'Science', gradeLevel: '6-8', domain: 'Earth Science', majorDomain: 'Earth/Space', practiceArea: 'Using Mathematics' },
+  { code: 'MS-ETS1-1', description: 'Define the criteria and constraints of a design problem with sufficient precision', subject: 'Science', gradeLevel: '6-8', domain: 'Engineering Design', majorDomain: 'Engineering', practiceArea: 'Asking Questions' },
+  
+  // High School (Grades 9-12)
+  { code: 'HS-PS1-1', description: 'Use the periodic table as a model to predict the relative properties of elements', subject: 'Science', gradeLevel: '9-12', domain: 'Physical Science', majorDomain: 'Chemistry', practiceArea: 'Developing Models' },
+  { code: 'HS-PS1-2', description: 'Construct and revise an explanation for the outcome of a simple chemical reaction', subject: 'Science', gradeLevel: '9-12', domain: 'Physical Science', majorDomain: 'Chemistry', practiceArea: 'Constructing Explanations' },
+  { code: 'HS-PS1-3', description: 'Plan and conduct an investigation to gather evidence to compare the structure of substances', subject: 'Science', gradeLevel: '9-12', domain: 'Physical Science', majorDomain: 'Chemistry', practiceArea: 'Planning Investigations' },
+  { code: 'HS-PS2-1', description: 'Analyze data to support the claim that Newton\'s second law of motion describes the mathematical relationship', subject: 'Science', gradeLevel: '9-12', domain: 'Physical Science', majorDomain: 'Physics', practiceArea: 'Analyzing Data' },
+  { code: 'HS-LS1-1', description: 'Construct an explanation based on evidence for how the structure of DNA determines the structure of proteins', subject: 'Science', gradeLevel: '9-12', domain: 'Life Science', majorDomain: 'Biology', practiceArea: 'Constructing Explanations' },
+  { code: 'HS-LS1-2', description: 'Develop and use a model to illustrate the hierarchical organization of interacting systems', subject: 'Science', gradeLevel: '9-12', domain: 'Life Science', majorDomain: 'Biology', practiceArea: 'Developing Models' },
+  { code: 'HS-ESS1-1', description: 'Develop a model based on evidence to illustrate the life span of the sun and the role of nuclear fusion', subject: 'Science', gradeLevel: '9-12', domain: 'Earth Science', majorDomain: 'Earth/Space', practiceArea: 'Developing Models' },
+  { code: 'HS-ESS1-2', description: 'Construct an explanation of the Big Bang theory based on astronomical evidence', subject: 'Science', gradeLevel: '9-12', domain: 'Earth Science', majorDomain: 'Earth/Space', practiceArea: 'Constructing Explanations' },
+  { code: 'HS-ETS1-1', description: 'Analyze major global challenges faced by humans and propose solutions', subject: 'Science', gradeLevel: '9-12', domain: 'Engineering Design', majorDomain: 'Engineering', practiceArea: 'Asking Questions' },
+  { code: 'HS-ETS1-2', description: 'Design solutions to complex real-world problems by breaking them down into smaller, more manageable problems', subject: 'Science', gradeLevel: '9-12', domain: 'Engineering Design', majorDomain: 'Engineering', practiceArea: 'Asking Questions' },
+];
+
+export const ALL_NGSS_STANDARDS = [
+  ...NGSS_SCIENCE_STANDARDS
+];

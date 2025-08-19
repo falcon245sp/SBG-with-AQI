@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Sidebar } from "@/components/Sidebar";
@@ -188,7 +189,10 @@ export default function UploadPage() {
                       <Label htmlFor="focusStandards">Focus Standards (Optional)</Label>
                       <Input
                         id="focusStandards"
-                        placeholder="e.g., CCSS.MATH.HSA, NGSS.HS.PS1"
+                        placeholder={jurisdictions === "NGSS" 
+                          ? "e.g., NGSS.HS-PS1-1, NGSS.MS-LS1-2, NGSS.5-ESS1-2"
+                          : "e.g., CCSS.MATH.HSA.REI.B.3, CCSS.ELA-LITERACY.RST.9-10.7"
+                        }
                         value={focusStandards}
                         onChange={(e) => setFocusStandards(e.target.value)}
                         className="mt-1"
