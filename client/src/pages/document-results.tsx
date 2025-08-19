@@ -131,18 +131,36 @@ export default function DocumentResults() {
 
   // Handle Accept and Proceed action
   const handleAcceptAndProceed = async () => {
-    if (!documentId) return;
+    if (!documentId) {
+      console.error('[Accept] No document ID available');
+      return;
+    }
+    
+    console.log(`[Accept] Starting accept process for document: ${documentId}`);
     
     try {
+      console.log(`[Accept] Making POST request to: /api/documents/${documentId}/accept`);
+      
       const response = await fetch(`/api/documents/${documentId}/accept`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include'
       });
 
+      console.log(`[Accept] Response received - Status: ${response.status}, OK: ${response.ok}`);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to accept and proceed');
+        console.error(`[Accept] Response not OK - Status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('[Accept] Error data:', errorData);
+        throw new Error(errorData.error || `Server error: ${response.status}`);
       }
+
+      const responseData = await response.json();
+      console.log('[Accept] Success response:', responseData);
 
       await queryClient.invalidateQueries({ queryKey: [`/api/documents/${documentId}/results`] });
       await queryClient.invalidateQueries({ queryKey: ['/api/file-cabinet'] });
@@ -153,6 +171,7 @@ export default function DocumentResults() {
         variant: "default",
       });
     } catch (error: any) {
+      console.error('[Accept] Error in handleAcceptAndProceed:', error);
       toast({
         title: "Error",
         description: error.message || 'Failed to accept analysis',
