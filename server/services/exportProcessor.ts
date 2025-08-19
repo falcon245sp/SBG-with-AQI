@@ -115,19 +115,20 @@ export class ExportProcessor {
   }
 
   /**
-   * Generate a grading rubric PDF
+   * Generate a Standards-Based Grading rubric PDF
    */
   private async generateRubricPDF(document: any, exportItem: any): Promise<string> {
-    console.log(`[ExportProcessor] Generating rubric PDF for document: ${document.fileName}`);
+    console.log(`[ExportProcessor] Generating SBG rubric PDF for document: ${document.fileName}`);
 
     // Get questions and AI results for the document
     const questions = await storage.getQuestionsByDocumentId(document.id);
+    const questionResults = await storage.getQuestionResultsByDocumentId(document.id);
     
     const pdf = new jsPDF();
     
     // Header
     pdf.setFontSize(18);
-    pdf.text('Standards Sherpa - Grading Rubric', 20, 30);
+    pdf.text('Standards Sherpa - Standards-Based Grading Rubric', 20, 30);
     
     pdf.setFontSize(12);
     pdf.text(`Assessment: ${document.fileName}`, 20, 45);
@@ -136,36 +137,102 @@ export class ExportProcessor {
     
     let yPosition = 80;
     
-    // Add questions with grading spaces
+    // Add questions with standards-based grading
     for (let i = 0; i < questions.length; i++) {
       const question = questions[i];
+      const result = questionResults.find(r => r.questionNumber === question.questionNumber);
       
       // Question header
       pdf.setFontSize(14);
-      pdf.text(`Question ${i + 1}`, 20, yPosition);
+      pdf.text(`Question ${question.questionNumber}`, 20, yPosition);
       yPosition += 15;
+      
+      // Standards and Rigor information
+      if (result) {
+        pdf.setFontSize(10);
+        pdf.setFont(undefined, 'bold');
+        pdf.text(`Standard: ${result.consensusStandards || 'Not analyzed'}`, 20, yPosition);
+        yPosition += 12;
+        pdf.text(`Rigor Level: ${result.consensusRigorLevel || 'Not analyzed'}`, 20, yPosition);
+        pdf.setFont(undefined, 'normal');
+        yPosition += 15;
+      }
       
       // Question text (wrapped)
       pdf.setFontSize(10);
       const questionLines = pdf.splitTextToSize(question.questionText, 170);
       pdf.text(questionLines, 20, yPosition);
-      yPosition += questionLines.length * 5 + 10;
+      yPosition += questionLines.length * 5 + 15;
       
-      // Grading box
-      pdf.rect(20, yPosition, 170, 20);
-      pdf.text('Score: _____ / _____ points', 25, yPosition + 12);
-      yPosition += 30;
+      // Standards-Based Grading Scale (4-point)
+      pdf.setFontSize(12);
+      pdf.setFont(undefined, 'bold');
+      pdf.text('Mastery Level (check one):', 20, yPosition);
+      pdf.setFont(undefined, 'normal');
+      yPosition += 15;
+      
+      pdf.setFontSize(10);
+      // Level 4: Demonstrates Full Mastery
+      pdf.rect(25, yPosition - 2, 8, 8);
+      pdf.text('4 - Demonstrates Full Mastery', 40, yPosition + 5);
+      pdf.text('(Exceeds expectations, shows deep understanding)', 45, yPosition + 12);
+      yPosition += 20;
+      
+      // Level 3: Demonstrates Mastery with Unrelated Mistakes
+      pdf.rect(25, yPosition - 2, 8, 8);
+      pdf.text('3 - Demonstrates Mastery with Unrelated Mistakes', 40, yPosition + 5);
+      pdf.text('(Meets expectations, minor errors don\'t affect understanding)', 45, yPosition + 12);
+      yPosition += 20;
+      
+      // Level 2: Does Not Demonstrate Mastery
+      pdf.rect(25, yPosition - 2, 8, 8);
+      pdf.text('2 - Does Not Demonstrate Mastery', 40, yPosition + 5);
+      pdf.text('(Approaching expectations, significant gaps in understanding)', 45, yPosition + 12);
+      yPosition += 20;
+      
+      // Level 1: No Attempt
+      pdf.rect(25, yPosition - 2, 8, 8);
+      pdf.text('1 - No Attempt', 40, yPosition + 5);
+      pdf.text('(No evidence of understanding or no response provided)', 45, yPosition + 12);
+      yPosition += 25;
+      
+      // Evidence/Notes section
+      pdf.setFontSize(10);
+      pdf.text('Evidence/Notes:', 20, yPosition);
+      yPosition += 10;
+      pdf.rect(20, yPosition, 170, 15);
+      yPosition += 25;
       
       // Start new page if needed
-      if (yPosition > 250) {
+      if (yPosition > 220) {
         pdf.addPage();
         yPosition = 30;
       }
     }
     
-    // Total score section
+    // Overall Assessment Summary
+    if (yPosition > 200) {
+      pdf.addPage();
+      yPosition = 30;
+    }
+    
     pdf.setFontSize(14);
-    pdf.text('Total Score: _____ / _____ points', 20, yPosition + 20);
+    pdf.setFont(undefined, 'bold');
+    pdf.text('Overall Standards Mastery Summary:', 20, yPosition + 20);
+    pdf.setFont(undefined, 'normal');
+    yPosition += 35;
+    
+    pdf.setFontSize(10);
+    pdf.text('Standards Mastered (Level 3-4): _________________________', 20, yPosition);
+    yPosition += 15;
+    pdf.text('Standards Approaching (Level 2): ________________________', 20, yPosition);
+    yPosition += 15;
+    pdf.text('Standards Not Yet Demonstrated (Level 1): ________________', 20, yPosition);
+    yPosition += 20;
+    
+    pdf.text('Next Steps for Learning:', 20, yPosition);
+    yPosition += 10;
+    pdf.rect(20, yPosition, 170, 25);
     
     // Save PDF with user-friendly filename
     const baseFileName = document.fileName.replace(/\.[^/.]+$/, ""); // Remove file extension

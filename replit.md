@@ -7,6 +7,7 @@ The Document Processing Service, personified as "Standards Sherpa," is a full-st
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
+- **August 19, 2025**: Completely overhauled rubric generation to align with Standards-Based Grading methodology. The new SBG rubric displays standard/rigor pairs for each question and uses the proper 4-level mastery scale: "Demonstrates Full Mastery" (4), "Demonstrates Mastery with Unrelated Mistakes" (3), "Does Not Demonstrate Mastery" (2), and "No Attempt" (1), replacing the previous points-based system.
 - **August 19, 2025**: Fixed critical "Accept & Proceed" functionality that was failing due to database access errors in storage.ts. Resolved TypeScript errors where `this.db` was incorrectly used instead of the imported `db` instance. The teacher review workflow now functions properly, allowing documents to transition from "not_reviewed" to "reviewed_and_accepted" status and trigger cover sheet and rubric generation.
 - **August 18, 2025**: Implemented comprehensive production-ready logging system with customer context correlation, request tracing, and specialized logging methods for debugging customer issues in production environments. Created PRODUCTION_LOGGING_GUIDE.md with complete debugging workflows.
 - **August 18, 2025**: Split UX into dual system: customer-facing dashboard for document operations (upload, file cabinet, results) and admin panel for system diagnostics, monitoring, and debugging tools. Admin access restricted to specific email addresses.
