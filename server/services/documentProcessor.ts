@@ -1,4 +1,5 @@
 import { storage } from '../storage';
+import { ProcessingStatus, TeacherReviewStatus, AssetType, ExportType, AiEngine, RigorLevel, GradeSubmissionStatus, BusinessDefaults } from "../../shared/businessEnums";
 import { DatabaseWriteService } from './databaseWriteService';
 import { aiService } from './aiService';
 import { rigorAnalyzer } from './rigorAnalyzer';
@@ -25,7 +26,7 @@ export class DocumentProcessor {
       });
       
       // Update status to processing
-      await DatabaseWriteService.updateDocumentStatus(documentId, 'processing');
+      await DatabaseWriteService.updateDocumentStatus(documentId, ProcessingStatus.PROCESSING);
       
       const document = await storage.getDocument(documentId);
       if (!document) {
@@ -108,7 +109,7 @@ export class DocumentProcessor {
       }
 
       // Update status to completed
-      await DatabaseWriteService.updateDocumentStatus(documentId, 'completed');
+      await DatabaseWriteService.updateDocumentStatus(documentId, ProcessingStatus.COMPLETED);
       
       // Set teacher review status to 'not_reviewed' - AI analysis complete, awaiting teacher review
       // Documents will only be generated after teacher approval via "Accept and Proceed" or override workflow
@@ -126,7 +127,7 @@ export class DocumentProcessor {
       if (callbackUrl) {
         await this.sendCallback(callbackUrl, {
           documentId,
-          status: 'completed',
+          status: ProcessingStatus.COMPLETED,
           resultsUrl: `/api/documents/${documentId}/results`
         });
       }
@@ -156,12 +157,12 @@ export class DocumentProcessor {
       
       console.error('=== END PROCESSING FAILURE ANALYSIS ===');
       
-      await DatabaseWriteService.updateDocumentStatus(documentId, 'failed', error instanceof Error ? error.message : 'Unknown error');
+      await DatabaseWriteService.updateDocumentStatus(documentId, ProcessingStatus.FAILED, error instanceof Error ? error.message : 'Unknown error');
       
       if (callbackUrl) {
         await this.sendCallback(callbackUrl, {
           documentId,
-          status: 'failed',
+          status: ProcessingStatus.FAILED,
           error: error instanceof Error ? error.message : 'Unknown error'
         });
       }
@@ -183,7 +184,7 @@ export class DocumentProcessor {
         grok: {
           ...aiResults.grok,
           jsonResponse: this.extractJsonFromResponse(aiResults.grok, 'grok'),
-          aiEngine: 'grok'
+          aiEngine: AiEngine.GROK
         }
       };
       

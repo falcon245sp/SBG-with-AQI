@@ -38,6 +38,7 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, inArray, sql, like, or } from "drizzle-orm";
+import { ProcessingStatus, TeacherReviewStatus, AssetType, ExportType, AiEngine, RigorLevel, GradeSubmissionStatus, BusinessDefaults } from "../shared/businessEnums";
 import { PIIEncryption } from "./utils/encryption";
 import crypto from "crypto";
 
@@ -1372,7 +1373,7 @@ export class DatabaseStorage implements IStorage {
    */
   async updateDocumentTeacherReviewStatus(
     documentId: string,
-    status: 'not_reviewed' | 'reviewed_and_accepted' | 'reviewed_and_overridden'
+    status: TeacherReviewStatus
   ): Promise<void> {
     await db
       .update(documents)
@@ -1388,7 +1389,7 @@ export class DatabaseStorage implements IStorage {
       documentId,
       exportType: exportType as any,
       priority: 0,
-      status: 'pending'
+      status: BusinessDefaults.INITIAL_PROCESSING_STATUS
     });
   }
 }

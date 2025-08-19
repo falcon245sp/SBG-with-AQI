@@ -1,6 +1,7 @@
 import { storage } from '../storage';
 import { CustomerLookupService } from './customerLookupService';
 import { generateDocumentTags, ExportType } from '../utils/documentTagging';
+import { ProcessingStatus, TeacherReviewStatus, AssetType, ExportType as BusinessExportType, AiEngine, RigorLevel, GradeSubmissionStatus, BusinessDefaults } from '../../shared/businessEnums';
 
 /**
  * DatabaseWriteService - Centralized service for all database write operations
@@ -86,7 +87,7 @@ export class DatabaseWriteService {
       
       const generatedDoc = await storage.createDocument(customerUuid, {
         ...documentData,
-        assetType: 'generated',
+        assetType: AssetType.GENERATED,
         parentDocumentId,
         exportType,
         tags: autoTags,
@@ -550,7 +551,7 @@ export class DatabaseWriteService {
   static async updateDocumentTeacherReviewStatus(
     documentId: string,
     customerUuid: string,
-    status: 'not_reviewed' | 'reviewed_and_accepted' | 'reviewed_and_overridden'
+    status: TeacherReviewStatus
   ): Promise<void> {
     console.log(`[DatabaseWriteService] Updating document ${documentId} teacher review status to: ${status}`);
     
@@ -583,8 +584,8 @@ export class DatabaseWriteService {
       }
 
       // Queue cover sheet and rubric generation
-      await storage.addToExportQueue(documentId, 'cover_sheet');
-      await storage.addToExportQueue(documentId, 'rubric_pdf');
+      await storage.addToExportQueue(documentId, BusinessExportType.COVER_SHEET);
+      await storage.addToExportQueue(documentId, BusinessExportType.RUBRIC_PDF);
       
       console.log(`[DatabaseWriteService] Export queue entries created for document ${documentId}`);
     } catch (error) {

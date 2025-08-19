@@ -14,6 +14,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { ProcessingStatus, TeacherReviewStatus, AssetType, ExportType, AiEngine, RigorLevel, GradeSubmissionStatus, BusinessDefaults } from "./businessEnums";
 
 // Session storage table for Replit Auth
 export const sessions = pgTable(
@@ -40,7 +41,7 @@ export const users = pgTable("users", {
   googleRefreshToken: text("google_refresh_token"), // For token refresh
   googleTokenExpiry: timestamp("google_token_expiry"), // Token expiration
   googleCredentials: text("google_credentials"), // JSON string of service account credentials
-  classroomConnected: boolean("classroom_connected").default(false), // Classroom authorization status
+  classroomConnected: boolean("classroom_connected").default(BusinessDefaults.DEFAULT_CLASSROOM_CONNECTED), // Classroom authorization status
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -74,41 +75,43 @@ export const students = pgTable("students", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Processing status enum
+// Processing status enum - using business enum values
 export const processingStatusEnum = pgEnum('processing_status', [
-  'pending', 'processing', 'completed', 'failed'
+  ProcessingStatus.PENDING, ProcessingStatus.PROCESSING, ProcessingStatus.COMPLETED, ProcessingStatus.FAILED
 ]);
 
-// Rigor level enum
+// Rigor level enum - using business enum values
 export const rigorLevelEnum = pgEnum('rigor_level', [
-  'mild', 'medium', 'spicy'
+  RigorLevel.MILD, RigorLevel.MEDIUM, RigorLevel.SPICY
 ]);
 
-// AI engine enum
+// AI engine enum - using business enum values
 export const aiEngineEnum = pgEnum('ai_engine', [
-  'chatgpt', 'grok', 'claude'
+  AiEngine.CHATGPT, AiEngine.GROK, AiEngine.CLAUDE
 ]);
 
-// Asset type enum for File Cabinet
+// Asset type enum for File Cabinet - using business enum values
 export const assetTypeEnum = pgEnum('asset_type', [
-  'uploaded', 'generated'
+  AssetType.UPLOADED, AssetType.GENERATED
 ]);
 
-// Export type enum for generated documents  
+// Export type enum for generated documents - using business enum values
 export const exportTypeEnum = pgEnum('export_type', [
-  'rubric_pdf', 'cover_sheet', 'processing_report', 'standards_summary', 'question_analysis', 'teacher_guide', 'collated_graded_submissions'
+  ExportType.RUBRIC_PDF, ExportType.COVER_SHEET, ExportType.PROCESSING_REPORT, 
+  ExportType.STANDARDS_SUMMARY, ExportType.QUESTION_ANALYSIS, ExportType.TEACHER_GUIDE, 
+  ExportType.COLLATED_GRADED_SUBMISSIONS
 ]);
 
-// Grade submission status enum
+// Grade submission status enum - using business enum values
 export const gradeSubmissionStatusEnum = pgEnum('grade_submission_status', [
-  'pending', 'processed', 'duplicate_rejected', 'invalid_qr'
+  GradeSubmissionStatus.PENDING, GradeSubmissionStatus.PROCESSED, 
+  GradeSubmissionStatus.DUPLICATE_REJECTED, GradeSubmissionStatus.INVALID_QR
 ]);
 
-// Teacher review status enum
+// Teacher review status enum - using business enum values
 export const teacherReviewStatusEnum = pgEnum('teacher_review_status', [
-  'not_reviewed',
-  'reviewed_and_accepted', 
-  'reviewed_and_overridden'
+  TeacherReviewStatus.NOT_REVIEWED, TeacherReviewStatus.REVIEWED_AND_ACCEPTED, 
+  TeacherReviewStatus.REVIEWED_AND_OVERRIDDEN
 ]);
 
 // Documents table - enhanced for File Cabinet functionality
@@ -121,11 +124,11 @@ export const documents: any = pgTable("documents", {
   fileSize: integer("file_size").notNull(),
   extractedText: text("extracted_text"),
   jurisdictions: text("jurisdictions").array(),
-  status: processingStatusEnum("status").notNull().default('pending'),
-  teacherReviewStatus: teacherReviewStatusEnum("teacher_review_status").notNull().default('not_reviewed'),
+  status: processingStatusEnum("status").notNull().default(BusinessDefaults.INITIAL_PROCESSING_STATUS),
+  teacherReviewStatus: teacherReviewStatusEnum("teacher_review_status").notNull().default(BusinessDefaults.INITIAL_TEACHER_REVIEW_STATUS),
   
   // File Cabinet enhancement fields
-  assetType: assetTypeEnum("asset_type").notNull().default('uploaded'), // uploaded vs generated
+  assetType: assetTypeEnum("asset_type").notNull().default(BusinessDefaults.DEFAULT_ASSET_TYPE), // uploaded vs generated
   parentDocumentId: varchar("parent_document_id"), // Links generated assets to originals
   exportType: exportTypeEnum("export_type"), // Type of generated document (null for uploads)
   tags: text("tags").array().default(sql`'{}'`), // User-defined tags for organization
@@ -189,8 +192,8 @@ export const teacherOverrides = pgTable("teacher_overrides", {
   confidenceScore: real("confidence_score"), // Confidence level as real number
   notes: text("notes"), // Teacher's notes
   editReason: varchar("edit_reason"), // Reason for the edit
-  isActive: boolean("is_active").notNull().default(true), // Flag to track current active override
-  isRevertedToAi: boolean("is_reverted_to_ai").notNull().default(false), // Flag for AI reversion
+  isActive: boolean("is_active").notNull().default(BusinessDefaults.DEFAULT_IS_ACTIVE), // Flag to track current active override
+  isRevertedToAi: boolean("is_reverted_to_ai").notNull().default(BusinessDefaults.DEFAULT_IS_REVERTED_TO_AI), // Flag for AI reversion
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -201,9 +204,9 @@ export const apiKeys = pgTable("api_keys", {
   customerUuid: varchar("customer_uuid").notNull().references(() => users.customerUuid),
   keyName: text("key_name").notNull(),
   keyHash: text("key_hash").notNull(),
-  isActive: boolean("is_active").notNull().default(true),
+  isActive: boolean("is_active").notNull().default(BusinessDefaults.DEFAULT_IS_ACTIVE),
   lastUsed: timestamp("last_used"),
-  usageCount: integer("usage_count").notNull().default(0),
+  usageCount: integer("usage_count").notNull().default(BusinessDefaults.DEFAULT_USAGE_COUNT),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
