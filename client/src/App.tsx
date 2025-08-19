@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import GoogleOAuthLanding from "@/pages/google-oauth-landing";
 import Landing from "@/pages/landing";
-import Dashboard from "@/pages/Dashboard";
+import RoleSelection from "@/pages/role-selection";
 import CustomerDashboard from "@/pages/customer-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
 import AuthError from "@/pages/auth-error";
@@ -49,7 +49,8 @@ function Router() {
         </>
       ) : (
         <>
-          <Route path="/" component={CustomerDashboard} />
+          <Route path="/" component={RoleSelection} />
+          <Route path="/role-selection" component={RoleSelection} />
           <Route path="/dashboard" component={CustomerDashboard} />
           <Route path="/admin" component={AdminDashboard} />
           <Route path="/upload" component={UploadPage} />

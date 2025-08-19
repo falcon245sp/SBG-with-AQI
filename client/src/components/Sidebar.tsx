@@ -9,9 +9,12 @@ import {
   Settings,
   FileText,
   LogOut,
-  FolderOpen
+  FolderOpen,
+  UserCheck,
+  Shield
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: BarChart3 },
@@ -24,11 +27,17 @@ const navigation = [
 ];
 
 export function Sidebar() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const { user } = useAuth() as { user: any; };
+
+  const currentRole = sessionStorage.getItem('userRole') || 'customer';
 
   const handleLogout = () => {
     window.location.href = '/api/logout';
+  };
+
+  const switchRole = () => {
+    setLocation('/role-selection');
   };
 
   return (
@@ -65,6 +74,29 @@ export function Sidebar() {
               })}
             </nav>
             
+            {/* Role Switcher */}
+            <div className="border-t border-slate-200 p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-slate-600">Current Role</span>
+                <div className="flex items-center">
+                  {currentRole === 'admin' ? (
+                    <Shield className="w-3 h-3 text-amber-500 mr-1" />
+                  ) : (
+                    <UserCheck className="w-3 h-3 text-blue-500 mr-1" />
+                  )}
+                  <span className="text-xs text-slate-500 capitalize">{currentRole}</span>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={switchRole}
+                className="w-full text-xs"
+              >
+                Switch Role
+              </Button>
+            </div>
+
             {/* User Profile */}
             <div className="flex-shrink-0 flex border-t border-slate-200 p-4">
               <div className="flex items-center w-full">
