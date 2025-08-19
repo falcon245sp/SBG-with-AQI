@@ -57,9 +57,9 @@ export class DatabaseWriteService {
         for (const existingDoc of existingDocs) {
           try {
             // Delete the physical file if it exists
-            const fs = require('fs');
-            const path = require('path');
             if (existingDoc.originalPath) {
+              const fs = await import('fs');
+              const path = await import('path');
               const fullPath = path.join(process.cwd(), 'uploads', existingDoc.originalPath);
               if (fs.existsSync(fullPath)) {
                 fs.unlinkSync(fullPath);

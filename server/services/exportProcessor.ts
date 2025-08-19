@@ -213,13 +213,13 @@ export class ExportProcessor {
         }
       }
       
-      // Get rigor level as chili peppers
-      let rigorDisplay = '🌶️';
+      // Get rigor level as text symbols (emojis don't render in PDF)
+      let rigorDisplay = '*';
       if (result && result.consensusRigorLevel) {
         const rigor = result.consensusRigorLevel.toLowerCase();
-        if (rigor === 'mild') rigorDisplay = '🌶️';
-        else if (rigor === 'medium') rigorDisplay = '🌶️🌶️';
-        else if (rigor === 'spicy') rigorDisplay = '🌶️🌶️🌶️';
+        if (rigor === 'mild') rigorDisplay = '*';
+        else if (rigor === 'medium') rigorDisplay = '**';
+        else if (rigor === 'spicy') rigorDisplay = '***';
       }
       
       // Draw row borders
