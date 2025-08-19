@@ -1355,7 +1355,7 @@ export class DatabaseStorage implements IStorage {
     documentId: string,
     status: 'not_reviewed' | 'reviewed_and_accepted' | 'reviewed_and_overridden'
   ): Promise<void> {
-    await this.db
+    await db
       .update(documents)
       .set({ teacherReviewStatus: status })
       .where(eq(documents.id, documentId));
@@ -1365,7 +1365,7 @@ export class DatabaseStorage implements IStorage {
    * Add document export to queue
    */
   async addToExportQueue(documentId: string, exportType: string): Promise<void> {
-    await this.db.insert(exportQueue).values({
+    await db.insert(exportQueue).values({
       documentId,
       exportType: exportType as any,
       priority: 0,

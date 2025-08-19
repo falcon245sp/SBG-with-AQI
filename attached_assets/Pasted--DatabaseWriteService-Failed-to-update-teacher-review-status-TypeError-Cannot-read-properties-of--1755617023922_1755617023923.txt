@@ -1,0 +1,22 @@
+[DatabaseWriteService] Failed to update teacher review status: TypeError: Cannot read properties of undefined (reading 'update')
+    at DatabaseStorage.updateDocumentTeacherReviewStatus (/home/runner/workspace/server/storage.ts:1359:8)
+    at Function.updateDocumentTeacherReviewStatus (/home/runner/workspace/server/services/databaseWriteService.ts:543:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:443:7)
+[Accept] Failed to accept and proceed for document 4251e0f1-1739-4d39-99cc-86052f6ed3f0: Error: Failed to update teacher review status: Cannot read properties of undefined (reading 'update')
+    at Function.updateDocumentTeacherReviewStatus (/home/runner/workspace/server/services/databaseWriteService.ts:547:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:443:7)
+2025-08-19T15:23:12.410Z [INFO] API Request | method=POST, path=/api/documents/4251e0f1-1739-4d39-99cc-86052f6ed3f0/accept, statusCode=500, duration=234, requestId=330daf45f6b955475bcfbccce0a39904, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.0.13, sessionId=FwxM9jUCdCpZ9rqGGXQNUYzXRHtr1XIk
+2025-08-19T15:23:14.816Z [DEBUG] Request started | requestId=b486ba27b08b897238d4bfcdb8e9eab4, method=GET, path=/api/documents, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.81, sessionId=FwxM9jUCdCpZ9rqGGXQNUYzXRHtr1XIk
+[CustomerLookupService] Looking up customer UUID for session user: 604b663d-b06f-4600-ae4e-e7c68caf3b72
+[CustomerLookupService] Found customer UUID: 8c738868-a29c-4a0e-b904-2af9887ac1e1 for session user: 604b663d-b06f-4600-ae4e-e7c68caf3b72
+2025-08-19T15:23:15.044Z [INFO] API Request | method=GET, path=/api/documents, statusCode=304, duration=228, requestId=b486ba27b08b897238d4bfcdb8e9eab4, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.81, sessionId=FwxM9jUCdCpZ9rqGGXQNUYzXRHtr1XIk
+2025-08-19T15:23:18.230Z [DEBUG] Request started | requestId=831ee552545f98b33bbee73a48621968, method=GET, path=/api/documents, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.81, sessionId=FwxM9jUCdCpZ9rqGGXQNUYzXRHtr1XIk
+[CustomerLookupService] Looking up customer UUID for session user: 604b663d-b06f-4600-ae4e-e7c68caf3b72
+[CustomerLookupService] Found customer UUID: 8c738868-a29c-4a0e-b904-2af9887ac1e1 for session user: 604b663d-b06f-4600-ae4e-e7c68caf3b72
+2025-08-19T15:23:18.454Z [INFO] API Request | method=GET, path=/api/documents, statusCode=304, duration=224, requestId=831ee552545f98b33bbee73a48621968, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.81, sessionId=FwxM9jUCdCpZ9rqGGXQNUYzXRHtr1XIk
+2025-08-19T15:23:21.653Z [DEBUG] Request started | requestId=1f0afbab5ab0806f784932692f0d9e08, method=GET, path=/api/documents, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.81, sessionId=FwxM9jUCdCpZ9rqGGXQNUYzXRHtr1XIk
+[CustomerLookupService] Looking up customer UUID for session user: 604b663d-b06f-4600-ae4e-e7c68caf3b72
+[CustomerLookupService] Found customer UUID: 8c738868-a29c-4a0e-b904-2af9887ac1e1 for session user: 604b663d-b06f-4600-ae4e-e7c68caf3b72
+2025-08-19T15:23:21.878Z [INFO] API Request | method=GET, path=/api/documents, statusCode=304, duration=225, requestId=1f0afbab5ab0806f784932692f0d9e08, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.81, sessionId=FwxM9jUCdCpZ9rqGGXQNUYzXRHtr1XIk
