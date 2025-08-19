@@ -332,7 +332,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Document not found' });
       }
       
-      const filePath = path.join(process.cwd(), 'uploads', document.filePath);
+      const filePath = path.join(process.cwd(), 'uploads', document.originalPath);
       
       // Check if file exists
       if (!fs.existsSync(filePath)) {
@@ -702,7 +702,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await DatabaseWriteService.deleteDocument(id);
       
       // Clean up physical file if it exists
-      const filePath = path.join(process.cwd(), 'uploads', document.filePath);
+      const filePath = path.join(process.cwd(), 'uploads', document.originalPath);
       if (fs.existsSync(filePath)) {
         try {
           fs.unlinkSync(filePath);
