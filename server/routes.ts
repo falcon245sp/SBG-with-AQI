@@ -31,6 +31,7 @@ import {
   classrooms,
   students
 } from "@shared/schema";
+import { TeacherReviewStatus } from "@shared/businessEnums";
 import { z } from "zod";
 import { count } from "drizzle-orm";
 import { db } from "./db";
@@ -462,7 +463,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await DatabaseWriteService.updateDocumentTeacherReviewStatus(
         documentId,
         customerUuid,
-        'reviewed_and_accepted'
+        TeacherReviewStatus.REVIEWED_AND_ACCEPTED
       );
 
       console.log(`[Accept] Status updated, queueing exports for document: ${documentId}`);

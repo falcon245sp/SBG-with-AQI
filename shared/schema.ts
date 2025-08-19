@@ -41,7 +41,7 @@ export const users = pgTable("users", {
   googleRefreshToken: text("google_refresh_token"), // For token refresh
   googleTokenExpiry: timestamp("google_token_expiry"), // Token expiration
   googleCredentials: text("google_credentials"), // JSON string of service account credentials
-  classroomConnected: boolean("classroom_connected").default(BusinessDefaults.DEFAULT_CLASSROOM_CONNECTED), // Classroom authorization status
+  classroomConnected: boolean("classroom_connected").default(false), // Classroom authorization status
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -124,11 +124,11 @@ export const documents: any = pgTable("documents", {
   fileSize: integer("file_size").notNull(),
   extractedText: text("extracted_text"),
   jurisdictions: text("jurisdictions").array(),
-  status: processingStatusEnum("status").notNull().default(BusinessDefaults.INITIAL_PROCESSING_STATUS),
-  teacherReviewStatus: teacherReviewStatusEnum("teacher_review_status").notNull().default(BusinessDefaults.INITIAL_TEACHER_REVIEW_STATUS),
+  status: processingStatusEnum("status").notNull().default(ProcessingStatus.PENDING),
+  teacherReviewStatus: teacherReviewStatusEnum("teacher_review_status").notNull().default(TeacherReviewStatus.NOT_REVIEWED),
   
   // File Cabinet enhancement fields
-  assetType: assetTypeEnum("asset_type").notNull().default(BusinessDefaults.DEFAULT_ASSET_TYPE), // uploaded vs generated
+  assetType: assetTypeEnum("asset_type").notNull().default(AssetType.UPLOADED), // uploaded vs generated
   parentDocumentId: varchar("parent_document_id"), // Links generated assets to originals
   exportType: exportTypeEnum("export_type"), // Type of generated document (null for uploads)
   tags: text("tags").array().default(sql`'{}'`), // User-defined tags for organization

@@ -63,7 +63,7 @@ export default function AdminDashboard() {
   });
 
   // Check if user is admin - temporarily allow any authenticated user for development
-  const isAdmin = !!user?.email;
+  const isAdmin = !!(user as any)?.email;
 
   const { data: systemHealth, isLoading: healthLoading } = useQuery<SystemHealth>({
     queryKey: ['/api/system-health'],

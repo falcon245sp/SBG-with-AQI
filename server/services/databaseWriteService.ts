@@ -1,6 +1,6 @@
 import { storage } from '../storage';
 import { CustomerLookupService } from './customerLookupService';
-import { generateDocumentTags, ExportType } from '../utils/documentTagging';
+import { generateDocumentTags, ExportType as DocumentTaggingExportType } from '../utils/documentTagging';
 import { ProcessingStatus, TeacherReviewStatus, AssetType, ExportType as BusinessExportType, AiEngine, RigorLevel, GradeSubmissionStatus, BusinessDefaults } from '../../shared/businessEnums';
 
 /**
@@ -42,7 +42,7 @@ export class DatabaseWriteService {
   static async createGeneratedDocument(
     customerUuid: string, 
     parentDocumentId: string,
-    exportType: ExportType,
+    exportType: DocumentTaggingExportType,
     documentData: any,
     userTags: string[] = []
   ): Promise<any> {
@@ -50,7 +50,7 @@ export class DatabaseWriteService {
     
     try {
       // OVERWRITE LOGIC: Delete existing generated documents of the same type for this parent
-      const existingDocs = await storage.getGeneratedDocumentsByParentAndType(parentDocumentId, exportType);
+      const existingDocs = await storage.getGeneratedDocumentsByParentAndType(parentDocumentId, exportType as any);
       
       if (existingDocs.length > 0) {
         console.log(`[DatabaseWriteService] Found ${existingDocs.length} existing ${exportType} documents for parent ${parentDocumentId}, deleting them`);
