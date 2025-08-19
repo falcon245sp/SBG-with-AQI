@@ -717,12 +717,14 @@ export default function DocumentResults() {
                     <p className="text-red-700 mb-2"><strong>Document ID:</strong> {document.id}</p>
                     <p className="text-red-700 mb-2"><strong>Status:</strong> {document.status}</p>
                     <p className="text-red-700 mb-2"><strong>Teacher Review:</strong> {document.teacherReviewStatus}</p>
-                    <p className="text-red-700 mb-4"><strong>Should show button:</strong> {String(document.status === 'completed' && document.teacherReviewStatus === 'not_reviewed')}</p>
+                    <p className="text-red-700 mb-2"><strong>Should show button:</strong> {String(document.status === 'completed' && document.teacherReviewStatus === 'not_reviewed')}</p>
+                    <p className="text-red-700 mb-4"><strong>Document ID available:</strong> {String(!!document.id)}</p>
                     <div className="flex gap-4">
                       <button
                         onClick={() => {
                           console.log('🐛 DEBUG: Simple test button clicked');
-                          alert('Simple test button works!');
+                          console.log('🐛 DEBUG: Document object:', document);
+                          alert('Simple test button works! Check console for document object.');
                         }}
                         className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
                       >
