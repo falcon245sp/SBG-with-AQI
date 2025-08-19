@@ -184,7 +184,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/documents/upload', upload.any(), async (req: any, res) => {
     try {
       // Get authenticated user's customer UUID
-      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+      let customerUuid;
+      try {
+        customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+        console.log(`[Upload] Customer UUID found: ${customerUuid}`);
+      } catch (authError) {
+        console.error(`[Upload] Authentication failed:`, authError);
+        return res.status(401).json({ 
+          message: "Please sign in to upload documents", 
+          error: "authentication_required",
+          shouldRedirect: true,
+          redirectUrl: "/auth/login",
+          details: "You need to be signed in to upload and process documents. Click 'Sign in with Google' to continue."
+        });
+      }
       const files = (req.files as Express.Multer.File[]) || [];
       
       console.log(`=== UPLOAD DEBUG ===`);
