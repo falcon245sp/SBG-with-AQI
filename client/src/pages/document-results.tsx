@@ -735,7 +735,17 @@ export default function DocumentResults() {
                       </button>
                       <button
                         onClick={() => {
-                          console.log('🐛 DEBUG: Accept button clicked - starting handleAcceptAndProceed');
+                          console.log('🐛 DEBUG: DEBUG Accept & Proceed button clicked');
+                          console.log('🐛 DEBUG: Document ID:', document.id);
+                          console.log('🐛 DEBUG: About to call handleAcceptAndProceed with document.id:', document.id);
+                          console.log('🐛 DEBUG: typeof document.id:', typeof document.id);
+                          
+                          if (!document.id) {
+                            console.error('🐛 DEBUG: ERROR - No document ID available!');
+                            alert('ERROR: No document ID available!');
+                            return;
+                          }
+                          
                           try {
                             handleAcceptAndProceed();
                           } catch (error: any) {
