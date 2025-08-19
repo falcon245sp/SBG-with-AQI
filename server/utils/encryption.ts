@@ -37,7 +37,7 @@ export class PIIEncryption {
       
       return plaintext;
     } catch (error) {
-      console.error('Decryption error:', error);
+      // Silenced: Decryption error in encryption utils
       throw new Error('Failed to decrypt PII data');
     }
   }

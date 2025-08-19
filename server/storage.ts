@@ -158,7 +158,7 @@ export class DatabaseStorage implements IStorage {
         }),
       };
     } catch (error) {
-      console.warn('PII decryption failed for user, returning user data:', (error as Error).message);
+      // Silenced: PII decryption failed for user, returning user data
       return user;
     }
   }
@@ -177,7 +177,7 @@ export class DatabaseStorage implements IStorage {
           }),
         };
       } catch (error) {
-        console.warn('PII decryption failed for user during getAllUsers, returning user data:', (error as Error).message);
+        // Silenced: PII decryption failed for user during getAllUsers
         return user;
       }
     });
