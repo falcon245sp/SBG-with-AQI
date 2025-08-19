@@ -711,12 +711,43 @@ export default function DocumentResults() {
                     </div>
                   </div>
                   
-                  {/* Teacher Review Actions - always show for debugging */}
-                  {(()=> {
-                    console.log('[Render] Document status:', document.status, 'Teacher review status:', document.teacherReviewStatus);
-                    console.log('[Render] Should show button:', document.status === 'completed' && document.teacherReviewStatus === 'not_reviewed');
-                    return true; // Force show for debugging
-                  })() && (
+                  {/* DEBUG SECTION - ALWAYS VISIBLE */}
+                  <div className="mt-6 p-4 bg-red-50 border-2 border-red-300 rounded-lg">
+                    <h3 className="text-lg font-bold text-red-900 mb-2">🐛 DEBUG INFO</h3>
+                    <p className="text-red-700 mb-2"><strong>Document ID:</strong> {document.id}</p>
+                    <p className="text-red-700 mb-2"><strong>Status:</strong> {document.status}</p>
+                    <p className="text-red-700 mb-2"><strong>Teacher Review:</strong> {document.teacherReviewStatus}</p>
+                    <p className="text-red-700 mb-4"><strong>Should show button:</strong> {String(document.status === 'completed' && document.teacherReviewStatus === 'not_reviewed')}</p>
+                    <div className="flex gap-4">
+                      <button
+                        onClick={() => {
+                          console.log('🐛 DEBUG: Simple test button clicked');
+                          alert('Simple test button works!');
+                        }}
+                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+                      >
+                        🧪 Test Button
+                      </button>
+                      <button
+                        onClick={() => {
+                          console.log('🐛 DEBUG: Accept button clicked - starting handleAcceptAndProceed');
+                          try {
+                            handleAcceptAndProceed();
+                          } catch (error) {
+                            console.error('🐛 DEBUG: Error in handleAcceptAndProceed:', error);
+                            alert('Error: ' + error.message);
+                          }
+                        }}
+                        disabled={acceptMutation.isPending}
+                        className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-6 py-2 rounded-lg font-medium"
+                      >
+                        {acceptMutation.isPending ? '⏳ Processing...' : '✅ DEBUG Accept & Proceed'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Teacher Review Actions - conditional display */}
+                  {document.status === 'completed' && document.teacherReviewStatus === 'not_reviewed' && (
                     <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                       <div className="flex items-start justify-between">
                         <div>
