@@ -948,13 +948,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Start the queue processor for sequential document processing
   queueProcessor.start();
   
+  // Test route to manually trigger export processing (for debugging)
+  app.post('/api/test/trigger-export-processing', async (req, res) => {
+    try {
+      console.log('[DEBUG] Manually triggering export processing...');
+      await exportProcessor.processPendingExports();
+      res.json({ success: true, message: 'Export processing triggered manually' });
+    } catch (error) {
+      console.error('[DEBUG] Failed to trigger export processing:', error);
+      res.status(500).json({ success: false, message: 'Failed to trigger export processing' });
+    }
+  });
+
   // Start export processor
   exportProcessor.start();
   
-  // Process pending exports on startup
+  // Process pending exports on startup with longer delay and interval checking
   setTimeout(() => {
+    console.log('[Routes] Processing pending exports on startup...');
     exportProcessor.processPendingExports();
-  }, 5000); // Wait 5 seconds for system to fully initialize
+  }, 10000); // Wait 10 seconds for system to fully initialize
+  
+  // Set up periodic export processing every 30 seconds
+  setInterval(() => {
+    exportProcessor.processPendingExports();
+  }, 30000); // Check for pending exports every 30 seconds
   console.log('Queue processor started for sequential document processing');
 
   // Teacher override endpoints
