@@ -711,10 +711,11 @@ export default function DocumentResults() {
                     </div>
                   </div>
                   
-                  {/* Teacher Review Actions - only show for completed documents needing review */}
+                  {/* Teacher Review Actions - always show for debugging */}
                   {(()=> {
                     console.log('[Render] Document status:', document.status, 'Teacher review status:', document.teacherReviewStatus);
-                    return document.status === 'completed' && document.teacherReviewStatus === 'not_reviewed';
+                    console.log('[Render] Should show button:', document.status === 'completed' && document.teacherReviewStatus === 'not_reviewed');
+                    return true; // Force show for debugging
                   })() && (
                     <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                       <div className="flex items-start justify-between">
