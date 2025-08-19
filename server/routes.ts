@@ -225,13 +225,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (const file of files) {
         try {
           // Validate request data for each file
-          const validationResult = insertDocumentSchema.safeParse({
+          const documentData = {
             fileName: file.originalname,
             originalPath: file.path,
             mimeType: file.mimetype,
             fileSize: file.size,
             jurisdictions: parsedJurisdictions,
-          });
+          };
+          console.log(`[Upload] Validating document data:`, documentData);
+          const validationResult = insertDocumentSchema.safeParse(documentData);
 
           if (!validationResult.success) {
             errors.push({
@@ -242,6 +244,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
 
           // Create document record
+          console.log(`[Upload] Creating document record for ${file.originalname} with data:`, validationResult.data);
           const document = await DatabaseWriteService.createDocument(customerUuid, validationResult.data);
           
           console.log(`Created document ${document.id} for file ${file.originalname}`);

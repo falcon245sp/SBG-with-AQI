@@ -309,13 +309,14 @@ export const insertDocumentSchema = createInsertSchema(documents).pick({
   mimeType: true,
   fileSize: true,
   jurisdictions: true,
-  assetType: true,
-  parentDocumentId: true,
-  exportType: true,
-  tags: true,
-  originalFilename: true,
-  retentionDate: true,
-  customerUuid: true,
+}).extend({
+  // Make optional fields actually optional
+  assetType: z.enum([AssetType.UPLOADED, AssetType.GENERATED] as const).optional(),
+  parentDocumentId: z.string().optional(),
+  exportType: z.enum([ExportType.RUBRIC_PDF, ExportType.COVER_SHEET, ExportType.PROCESSING_REPORT, ExportType.STANDARDS_SUMMARY, ExportType.QUESTION_ANALYSIS, ExportType.TEACHER_GUIDE, ExportType.COLLATED_GRADED_SUBMISSIONS] as const).optional(),
+  tags: z.array(z.string()).optional(),
+  originalFilename: z.string().optional(),
+  retentionDate: z.date().optional(),
 });
 
 export const insertQuestionSchema = createInsertSchema(questions).pick({
