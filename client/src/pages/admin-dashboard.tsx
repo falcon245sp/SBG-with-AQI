@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "wouter";
 import { 
   Activity, 
   Database, 
@@ -18,7 +19,11 @@ import {
   Monitor,
   Bug,
   Trash2,
-  RotateCcw
+  RotateCcw,
+  ArrowLeft,
+  Home,
+  Upload,
+  FolderOpen
 } from "lucide-react";
 
 interface SystemHealth {
@@ -152,13 +157,46 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Admin Dashboard
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            System monitoring and debugging tools
-          </p>
+        {/* Navigation Header */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <Link href="/dashboard">
+              <Button variant="outline" className="flex items-center gap-2">
+                <ArrowLeft className="h-4 w-4" />
+                Back to Dashboard
+              </Button>
+            </Link>
+            
+            <div className="flex items-center gap-2">
+              <Link href="/dashboard">
+                <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                  <Home className="h-4 w-4" />
+                  Dashboard
+                </Button>
+              </Link>
+              <Link href="/upload">
+                <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  Upload
+                </Button>
+              </Link>
+              <Link href="/file-cabinet">
+                <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                  <FolderOpen className="h-4 w-4" />
+                  File Cabinet
+                </Button>
+              </Link>
+            </div>
+          </div>
+          
+          <div className="mb-4">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              Admin Dashboard
+            </h1>
+            <p className="text-gray-600 dark:text-gray-300">
+              System monitoring and debugging tools
+            </p>
+          </div>
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
