@@ -724,7 +724,10 @@ export default function DocumentResults() {
                         onClick={() => {
                           console.log('🐛 DEBUG: Simple test button clicked');
                           console.log('🐛 DEBUG: Document object:', document);
-                          alert('Simple test button works! Check console for document object.');
+                          console.log('🐛 DEBUG: Document ID exists:', !!document.id);
+                          console.log('🐛 DEBUG: Document status:', document.status);
+                          console.log('🐛 DEBUG: Teacher review status:', document.teacherReviewStatus);
+                          alert('✅ TEST BUTTON WORKS! Check browser console (F12) for debug logs.');
                         }}
                         className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
                       >
