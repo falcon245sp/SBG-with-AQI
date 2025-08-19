@@ -8,16 +8,9 @@ import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
-// Environment-aware production domain configuration
-const getProductionDomain = () => {
-  const isProduction = process.env.NODE_ENV === 'production';
-  const prefix = isProduction ? 'PROD_' : 'DEV_';
-  
-  return process.env[`${prefix}PRODUCTION_DOMAIN`] || 
-    'docu-proc-serv-jfielder1.replit.app';
-};
+import { config } from './config/environment';
 
-const PRODUCTION_DOMAIN = getProductionDomain();
+const PRODUCTION_DOMAIN = config.productionDomain;
 if (!process.env.REPLIT_DOMAINS) {
   console.log("REPLIT_DOMAINS not set, using configured domain:", PRODUCTION_DOMAIN);
 }
@@ -29,17 +22,17 @@ const getOidcConfig = memoize(
       process.env.REPL_ID!
     );
   },
-  { maxAge: 3600 * 1000 }
+  { maxAge: config.oidcCacheMaxAgeMs }
 );
 
 export function getSession() {
-  const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
+  const sessionTtl = config.sessionTtlMs;
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
     conString: process.env.DATABASE_URL,
     createTableIfMissing: false,
     ttl: sessionTtl,
-    tableName: "sessions",
+    tableName: config.databaseTableName,
   });
   return session({
     secret: process.env.SESSION_SECRET!,

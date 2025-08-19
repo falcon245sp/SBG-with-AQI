@@ -72,12 +72,37 @@ VITE_PROD_WEB_SERVICE_API_KEY=your_production_api_key_here
 VITE_PROD_ADMIN_EMAIL=admin@yourproductiondomain.com
 ```
 
+## Environment-Stable Variables (STABLE_)
+
+These values remain consistent across environments but can be customized if needed:
+
+```bash
+# Session Configuration
+STABLE_SESSION_TTL_MS=604800000              # 1 week in milliseconds
+STABLE_OIDC_CACHE_MAX_AGE_MS=3600000         # 1 hour in milliseconds
+STABLE_OAUTH_REDIRECT_DELAY_MS=2000          # 2 seconds
+
+# Server Configuration  
+STABLE_DEFAULT_PORT=5000                     # Default server port
+STABLE_DATABASE_TABLE_NAME=sessions          # Session table name
+
+# Performance Configuration
+STABLE_PERFORMANCE_WARN_THRESHOLD_MS=5000    # Performance warning threshold
+```
+
+## Frontend Stable Variables (Vite)
+
+```bash
+VITE_STABLE_OAUTH_REDIRECT_DELAY_MS=2000     # OAuth redirect delay
+```
+
 ## Automatic Environment Selection
 
 The system automatically detects the environment using `process.env.NODE_ENV`:
 
 - **Development**: `NODE_ENV !== 'production'` → Uses `DEV_` prefixed variables
 - **Production**: `NODE_ENV === 'production'` → Uses `PROD_` prefixed variables
+- **Stable Values**: Always uses `STABLE_` prefixed variables (or defaults)
 
 ## Fallback Values
 

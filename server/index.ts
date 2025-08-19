@@ -6,43 +6,31 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { SessionCleanup } from "./utils/sessionCleanup";
 import { logger, requestLoggingMiddleware } from "./utils/logger";
+import { config } from './config/environment';
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Setup session management for traditional authentication
-const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
+// Setup session management from environment configuration
+const sessionTtl = config.sessionTtlMs;
 const pgStore = connectPg(session);
 const sessionStore = new pgStore({
   conString: process.env.DATABASE_URL,
   createTableIfMissing: true,
   ttl: sessionTtl,
-  tableName: "sessions",
+  tableName: config.databaseTableName,
 });
 
 app.set("trust proxy", 1);
 app.use(session({
-  secret: (() => {
-    const isProduction = process.env.NODE_ENV === 'production';
-    const prefix = isProduction ? 'PROD_' : 'DEV_';
-    const sessionSecret = process.env[`${prefix}SESSION_SECRET`];
-    
-    if (!sessionSecret) {
-      if (isProduction) {
-        throw new Error('PROD_SESSION_SECRET environment variable must be set in production');
-      }
-      return 'dev-session-secret-not-for-production';
-    }
-    
-    return sessionSecret;
-  })(),
+  secret: config.sessionSecret,
   store: sessionStore,
   resave: false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+    secure: config.cookieSecure, // HTTPS only in production
     maxAge: sessionTtl,
     sameSite: 'lax', // Allow cross-site requests for OAuth
     path: '/', // Ensure cookie works for all paths
@@ -91,14 +79,14 @@ app.use(requestLoggingMiddleware);
   // Other ports are firewalled. Default to 5000 if not specified.
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || '5000', 10);
+  const port = parseInt(process.env.PORT || config.defaultPort.toString(), 10);
   server.listen({
     port,
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
     logger.info('Standards Sherpa server started', {
-      serverPort: port,
+      port: port,
       environment: process.env.NODE_ENV || 'development',
       version: process.env.npm_package_version || '0.7.4'
     });

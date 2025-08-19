@@ -22,9 +22,10 @@ export default function GoogleOAuthLanding() {
       // Clean up URL
       window.history.replaceState({}, document.title, '/');
       // Redirect to dashboard after showing success message
+      const redirectDelay = parseInt(import.meta.env.VITE_STABLE_OAUTH_REDIRECT_DELAY_MS || '2000', 10);
       setTimeout(() => {
         window.location.href = '/dashboard';
-      }, 2000);
+      }, redirectDelay);
     }
   }, []);
 
