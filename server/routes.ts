@@ -513,10 +513,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/documents', async (req: any, res) => {
     try {
       const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+      console.log(`[Documents] Fetching documents for customer: ${customerUuid}`);
       const documents = await storage.getUserDocuments(customerUuid);
+      console.log(`[Documents] Found ${documents.length} documents for customer: ${customerUuid}`);
       res.json(documents);
     } catch (error) {
       console.error("Error fetching documents:", error);
+      console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace');
+      
+      // More specific error handling
+      if ((error as Error).message === 'Authentication required') {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+      if ((error as Error).message === 'User not found') {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
       res.status(500).json({ message: "Failed to fetch documents" });
     }
   });
