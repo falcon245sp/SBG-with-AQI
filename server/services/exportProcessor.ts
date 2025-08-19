@@ -115,7 +115,7 @@ export class ExportProcessor {
   }
 
   /**
-   * Generate a Standards-Based Grading rubric PDF
+   * Generate a Standards-Based Grading rubric PDF in table format
    */
   private async generateRubricPDF(document: any, exportItem: any): Promise<string> {
     console.log(`[ExportProcessor] Generating SBG rubric PDF for document: ${document.fileName}`);
@@ -124,145 +124,136 @@ export class ExportProcessor {
     const questions = await storage.getQuestionsByDocumentId(document.id);
     const questionResults = await storage.getQuestionResultsByDocumentId(document.id);
     
-    const pdf = new jsPDF();
+    const pdf = new jsPDF('portrait', 'mm', 'a4');
     
-    // Header with consistent formatting
-    pdf.setFontSize(20);
+    // Header
+    pdf.setFontSize(18);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('Standards-Based Grading Rubric', 105, 25, { align: 'center' } as any);
+    const title = document.fileName.replace(/\.[^/.]+$/, "");
+    pdf.text(title, 105, 20, { align: 'center' } as any);
+    
+    pdf.setFontSize(14);
+    pdf.text('Rubric', 105, 30, { align: 'center' } as any);
     pdf.setFont('helvetica', 'normal');
     
-    // Horizontal line under title
-    pdf.line(20, 30, 190, 30);
+    let yPosition = 45;
     
-    pdf.setFontSize(12);
+    // Table headers
+    pdf.setFontSize(10);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('Assessment:', 20, 45);
-    pdf.setFont('helvetica', 'normal');
-    pdf.text(document.fileName, 55, 45);
     
-    pdf.setFont('helvetica', 'bold');
-    pdf.text('Student Name:', 20, 60);
-    pdf.setFont('helvetica', 'normal');
-    pdf.text('_________________________________', 65, 60);
+    // Define column positions and widths
+    const cols = {
+      criteria: { x: 10, width: 35 },
+      points: { x: 45, width: 15 },
+      fullCredit: { x: 60, width: 35 },
+      partialCredit: { x: 95, width: 35 },
+      minimalCredit: { x: 130, width: 35 },
+      noCredit: { x: 165, width: 35 }
+    };
     
-    pdf.setFont('helvetica', 'bold');
-    pdf.text('Date:', 120, 60);
-    pdf.setFont('helvetica', 'normal');
-    pdf.text('______________', 135, 60);
+    // Draw header row
+    pdf.rect(cols.criteria.x, yPosition, cols.criteria.width, 8);
+    pdf.rect(cols.points.x, yPosition, cols.points.width, 8);
+    pdf.rect(cols.fullCredit.x, yPosition, cols.fullCredit.width, 8);
+    pdf.rect(cols.partialCredit.x, yPosition, cols.partialCredit.width, 8);
+    pdf.rect(cols.minimalCredit.x, yPosition, cols.minimalCredit.width, 8);
+    pdf.rect(cols.noCredit.x, yPosition, cols.noCredit.width, 8);
     
-    let yPosition = 80;
+    pdf.text('Criteria', cols.criteria.x + 2, yPosition + 5);
+    pdf.text('Points', cols.points.x + 2, yPosition + 5);
+    pdf.text('Full Credit', cols.fullCredit.x + 2, yPosition + 5);
+    pdf.text('Partial Credit', cols.partialCredit.x + 2, yPosition + 5);
+    pdf.text('Minimal Credit', cols.minimalCredit.x + 2, yPosition + 5);
+    pdf.text('No Credit', cols.noCredit.x + 2, yPosition + 5);
     
-    // Add questions with standards-based grading
+    yPosition += 8;
+    
+    // Add questions in table format
     for (let i = 0; i < questions.length; i++) {
       const question = questions[i];
       const result = questionResults.find(r => r.questionNumber === question.questionNumber);
       
-      // Question header
-      pdf.setFontSize(14);
-      pdf.text(`Question ${question.questionNumber}`, 20, yPosition);
-      yPosition += 15;
+      // Calculate row height needed
+      const rowHeight = 20;
       
-      // Standards and Rigor information in a clean box
-      if (result) {
-        pdf.setFontSize(9);
-        pdf.setFont('helvetica', 'bold');
-        pdf.text('Standard:', 25, yPosition);
-        pdf.setFont('helvetica', 'normal');
-        // Handle JSONB consensus_standards field
-        let standardsText = 'Not analyzed';
-        if (result.consensusStandards) {
-          if (typeof result.consensusStandards === 'string') {
-            standardsText = result.consensusStandards;
-          } else if (Array.isArray(result.consensusStandards)) {
-            standardsText = result.consensusStandards.map(s => s.code || s).join(', ');
-          } else if (result.consensusStandards.code) {
-            standardsText = result.consensusStandards.code;
-          }
-        }
-        
-        pdf.text(standardsText, 55, yPosition);
-        
-        pdf.setFont('helvetica', 'bold');
-        pdf.text('Rigor:', 120, yPosition);
-        pdf.setFont('helvetica', 'normal');
-        pdf.text(result.consensusRigorLevel || 'Not analyzed', 140, yPosition);
-        
-        // Light border around standards info
-        pdf.setDrawColor(200, 200, 200);
-        pdf.rect(20, yPosition - 5, 170, 12);
-        pdf.setDrawColor(0, 0, 0);
-        yPosition += 15;
-      }
-      
-      // Question text (wrapped)
-      pdf.setFontSize(10);
-      const questionLines = pdf.splitTextToSize(question.questionText, 170);
-      pdf.text(questionLines, 20, yPosition);
-      yPosition += questionLines.length * 5 + 15;
-      
-      // Standards-Based Grading Scale (4-point) with better formatting
-      pdf.setFontSize(11);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('Mastery Level (check one):', 20, yPosition);
-      pdf.setFont('helvetica', 'normal');
-      yPosition += 12;
-      
-      // Create a bordered section for the grading scale
-      const scaleStartY = yPosition;
-      pdf.setFontSize(9);
-      
-      // Level 4: Demonstrates Full Mastery
-      pdf.rect(25, yPosition, 6, 6);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('4 - Demonstrates Full Mastery', 35, yPosition + 4);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text('(Exceeds expectations, shows deep understanding)', 40, yPosition + 10);
-      yPosition += 16;
-      
-      // Level 3: Demonstrates Mastery with Unrelated Mistakes
-      pdf.rect(25, yPosition, 6, 6);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('3 - Demonstrates Mastery with Unrelated Mistakes', 35, yPosition + 4);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text('(Meets expectations, minor errors don\'t affect understanding)', 40, yPosition + 10);
-      yPosition += 16;
-      
-      // Level 2: Does Not Demonstrate Mastery
-      pdf.rect(25, yPosition, 6, 6);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('2 - Does Not Demonstrate Mastery', 35, yPosition + 4);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text('(Approaching expectations, significant gaps in understanding)', 40, yPosition + 10);
-      yPosition += 16;
-      
-      // Level 1: No Attempt
-      pdf.rect(25, yPosition, 6, 6);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('1 - No Attempt', 35, yPosition + 4);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text('(No evidence of understanding or no response provided)', 40, yPosition + 10);
-      yPosition += 20;
-      
-      // Border around the entire grading scale
-      pdf.setDrawColor(150, 150, 150);
-      pdf.rect(20, scaleStartY - 3, 170, yPosition - scaleStartY + 3);
-      pdf.setDrawColor(0, 0, 0);
-      
-      // Evidence/Notes section
-      pdf.setFontSize(10);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('Evidence/Notes:', 20, yPosition + 8);
-      pdf.setFont('helvetica', 'normal');
-      yPosition += 15;
-      pdf.rect(20, yPosition, 170, 20);
-      yPosition += 30;
-      
-      // Start new page if needed
-      if (yPosition > 220) {
+      // Check if we need a new page
+      if (yPosition + rowHeight > 270) {
         pdf.addPage();
-        yPosition = 30;
+        yPosition = 20;
       }
+      
+      // Get standards text
+      let standardsText = 'Not analyzed';
+      if (result && result.consensusStandards) {
+        if (typeof result.consensusStandards === 'string') {
+          standardsText = result.consensusStandards;
+        } else if (Array.isArray(result.consensusStandards)) {
+          standardsText = result.consensusStandards.map(s => s.code || s).join(', ');
+        } else if (result.consensusStandards.code) {
+          standardsText = result.consensusStandards.code;
+        }
+      }
+      
+      // Get rigor level as chili peppers
+      let rigorDisplay = '🌶️';
+      if (result && result.consensusRigorLevel) {
+        const rigor = result.consensusRigorLevel.toLowerCase();
+        if (rigor === 'mild') rigorDisplay = '🌶️';
+        else if (rigor === 'medium') rigorDisplay = '🌶️🌶️';
+        else if (rigor === 'spicy') rigorDisplay = '🌶️🌶️🌶️';
+      }
+      
+      // Draw row borders
+      pdf.setDrawColor(0, 0, 0);
+      pdf.rect(cols.criteria.x, yPosition, cols.criteria.width, rowHeight);
+      pdf.rect(cols.points.x, yPosition, cols.points.width, rowHeight);
+      pdf.rect(cols.fullCredit.x, yPosition, cols.fullCredit.width, rowHeight);
+      pdf.rect(cols.partialCredit.x, yPosition, cols.partialCredit.width, rowHeight);
+      pdf.rect(cols.minimalCredit.x, yPosition, cols.minimalCredit.width, rowHeight);
+      pdf.rect(cols.noCredit.x, yPosition, cols.noCredit.width, rowHeight);
+      
+      // Fill content
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica', 'normal');
+      
+      // Criteria column
+      const questionTitle = `Q${question.questionNumber}: ${question.questionText.substring(0, 50)}...`;
+      const wrappedQuestion = pdf.splitTextToSize(questionTitle, cols.criteria.width - 4);
+      pdf.text(wrappedQuestion, cols.criteria.x + 2, yPosition + 4);
+      pdf.setFontSize(8);
+      pdf.text(standardsText, cols.criteria.x + 2, yPosition + 16);
+      
+      // Points column (rigor)
+      pdf.setFontSize(12);
+      pdf.text(rigorDisplay, cols.points.x + 5, yPosition + 10);
+      
+      // Full Credit column
+      pdf.setFontSize(8);
+      pdf.text('✓', cols.fullCredit.x + 15, yPosition + 6);
+      pdf.setFontSize(7);
+      pdf.text('Demonstrates complete', cols.fullCredit.x + 2, yPosition + 10);
+      pdf.text('understanding with', cols.fullCredit.x + 2, yPosition + 13);
+      pdf.text('accurate solution.', cols.fullCredit.x + 2, yPosition + 16);
+      
+      // Partial Credit column
+      pdf.text('✓', cols.partialCredit.x + 15, yPosition + 6);
+      pdf.text('Shows understanding', cols.partialCredit.x + 2, yPosition + 10);
+      pdf.text('with minor errors in', cols.partialCredit.x + 2, yPosition + 13);
+      pdf.text('computation.', cols.partialCredit.x + 2, yPosition + 16);
+      
+      // Minimal Credit column
+      pdf.text('✓', cols.minimalCredit.x + 15, yPosition + 6);
+      pdf.text('Attempts solution', cols.minimalCredit.x + 2, yPosition + 10);
+      pdf.text('but with significant', cols.minimalCredit.x + 2, yPosition + 13);
+      pdf.text('errors.', cols.minimalCredit.x + 2, yPosition + 16);
+      
+      // No Credit column
+      pdf.text('✗', cols.noCredit.x + 15, yPosition + 6);
+      pdf.text('No attempt or', cols.noCredit.x + 2, yPosition + 10);
+      pdf.text('entirely incorrect.', cols.noCredit.x + 2, yPosition + 13);
+      
+      yPosition += rowHeight;
     }
     
     // Overall Assessment Summary
