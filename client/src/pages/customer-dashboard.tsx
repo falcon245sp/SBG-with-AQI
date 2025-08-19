@@ -51,7 +51,7 @@ export default function CustomerDashboard() {
     retry: false,
   });
 
-  const isAdmin = user?.email === 'admin@standardssherpa.com';
+  const isAdmin = (user as any)?.email === 'admin@standardssherpa.com';
 
   // Fetch customer statistics
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({

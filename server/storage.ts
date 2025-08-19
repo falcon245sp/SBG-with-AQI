@@ -39,6 +39,7 @@ import {
 import { db } from "./db";
 import { eq, desc, and, inArray, sql, like, or } from "drizzle-orm";
 import { PIIEncryption } from "./utils/encryption";
+import crypto from "crypto";
 
 export interface IStorage {
   // User operations (supports both OAuth and username/password)
@@ -395,9 +396,13 @@ export class DatabaseStorage implements IStorage {
 
       console.log('[Database] No existing user found, creating new user');
       
+      // Generate customerUuid if not provided - userData doesn't have customerUuid field in UpsertUser
+      const customerUuid = crypto.randomUUID();
+      
       // Encrypt PII fields before storing
       const encryptedUserData = {
         ...userData,
+        customerUuid,
         ...PIIEncryption.encryptUserPII({
           email: userData.email,
           firstName: userData.firstName,

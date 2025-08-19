@@ -17,7 +17,7 @@ export class CustomerLookupService {
       return user?.customerUuid || null;
     } catch (error) {
       logger.error('Failed to get customer UUID from session', {
-        sessionUserId,
+        sessionId: sessionUserId,
         component: 'customer-lookup-service',
         operation: 'getCustomerUuidFromSession'
       }, error instanceof Error ? error : new Error(String(error)));
@@ -34,7 +34,7 @@ export class CustomerLookupService {
       return user || null;
     } catch (error) {
       logger.error('Failed to get user from session', {
-        sessionUserId,
+        sessionId: sessionUserId,
         component: 'customer-lookup-service',
         operation: 'getUserFromSession'
       }, error instanceof Error ? error : new Error(String(error)));
@@ -51,7 +51,7 @@ export class CustomerLookupService {
       return user?.customerUuid || null;
     } catch (error) {
       logger.error('Failed to get customer UUID from email', {
-        email,
+        userEmail: email,
         component: 'customer-lookup-service',
         operation: 'getCustomerUuidFromEmail'
       }, error instanceof Error ? error : new Error(String(error)));
@@ -68,7 +68,7 @@ export class CustomerLookupService {
       return user?.customerUuid || null;
     } catch (error) {
       logger.error('Failed to get customer UUID from Google ID', {
-        googleId,
+        userGoogleId: googleId,
         component: 'customer-lookup-service',
         operation: 'getCustomerUuidFromGoogleId'
       }, error instanceof Error ? error : new Error(String(error)));
