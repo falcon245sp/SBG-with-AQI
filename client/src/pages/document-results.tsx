@@ -712,7 +712,10 @@ export default function DocumentResults() {
                   </div>
                   
                   {/* Teacher Review Actions - only show for completed documents needing review */}
-                  {document.status === 'completed' && document.teacherReviewStatus === 'not_reviewed' && (
+                  {(()=> {
+                    console.log('[Render] Document status:', document.status, 'Teacher review status:', document.teacherReviewStatus);
+                    return document.status === 'completed' && document.teacherReviewStatus === 'not_reviewed';
+                  })() && (
                     <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                       <div className="flex items-start justify-between">
                         <div>
@@ -723,7 +726,10 @@ export default function DocumentResults() {
                         </div>
                         <div className="flex space-x-3 ml-4">
                           <Button
-                            onClick={handleAcceptAndProceed}
+                            onClick={() => {
+                              console.log('[Button] Accept & Proceed button clicked');
+                              handleAcceptAndProceed();
+                            }}
                             className="bg-green-600 hover:bg-green-700 text-white"
                             size="sm"
                           >
