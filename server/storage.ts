@@ -688,14 +688,14 @@ export class DatabaseStorage implements IStorage {
 
   // Document operations
   async createDocument(customerUuid: string, document: InsertDocument): Promise<Document> {
-    const [doc] = await db
+    const result = await db
       .insert(documents)
       .values({
         ...document,
         customerUuid,
       })
       .returning();
-    return doc;
+    return result[0] as Document;
   }
 
   async getDocument(id: string): Promise<Document | undefined> {
@@ -1273,14 +1273,7 @@ export class DatabaseStorage implements IStorage {
         eq(exportQueue.exportType, exportType)
       ));
   }
-  
-  async getDocument(documentId: string): Promise<Document | undefined> {
-    const [document] = await db
-      .select()
-      .from(documents)
-      .where(eq(documents.id, documentId));
-    return document;
-  }
+
   
   async getCustomerDocuments(customerUuid: string): Promise<Document[]> {
     return await db
