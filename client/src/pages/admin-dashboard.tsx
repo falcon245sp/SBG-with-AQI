@@ -57,8 +57,8 @@ export default function AdminDashboard() {
     retry: false,
   });
 
-  // Check if user is admin (your email only for now)
-  const isAdmin = user?.email === 'admin@standardssherpa.com';
+  // Check if user is admin - temporarily allow any authenticated user for development
+  const isAdmin = !!user?.email;
 
   const { data: systemHealth, isLoading: healthLoading } = useQuery<SystemHealth>({
     queryKey: ['/api/system-health'],

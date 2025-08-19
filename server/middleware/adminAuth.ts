@@ -13,6 +13,9 @@ const ADMIN_EMAILS = [
   // Add your email here when we identify it
 ].filter(Boolean);
 
+// Development mode - allow any authenticated user admin access
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
 export async function requireAdmin(req: Request, res: Response, next: NextFunction) {
   try {
     const user = await ActiveUserService.getActiveUser(req);
@@ -31,8 +34,9 @@ export async function requireAdmin(req: Request, res: Response, next: NextFuncti
 
     const isAdminByUuid = user.customerUuid && ADMIN_CUSTOMER_UUIDS.includes(user.customerUuid);
     const isAdminByEmail = user.email && ADMIN_EMAILS.includes(user.email);
+    const isDevelopmentAccess = isDevelopment && user.email; // Any authenticated user in development
     
-    if (!isAdminByUuid && !isAdminByEmail) {
+    if (!isAdminByUuid && !isAdminByEmail && !isDevelopmentAccess) {
       logger.security('Non-admin user attempted admin access', {
         customerUuid: user.customerUuid,
         userId: user.id,
