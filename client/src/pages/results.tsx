@@ -34,10 +34,15 @@ export default function ResultsPage() {
     queryKey: ["/api/documents"],
     refetchInterval: (query) => {
       // Poll every 2 seconds if there are any processing documents
-      const hasProcessingDocs = query.state.data?.some((doc: any) => doc.status === 'processing' || doc.status === 'pending');
+      const hasProcessingDocs = query.state.data?.some((doc: any) => 
+        doc.status === 'processing' || 
+        doc.status === 'pending' ||
+        doc.teacherReviewStatus === 'not_reviewed'
+      );
       return hasProcessingDocs ? 2000 : false;
     },
     refetchIntervalInBackground: true,
+    staleTime: 0, // Always refetch to ensure fresh status
   });
 
   // Fetch queue status

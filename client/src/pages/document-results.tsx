@@ -122,11 +122,13 @@ export default function DocumentResults() {
     queryKey: [`/api/documents/${documentId}/results`],
     enabled: !!documentId,
     refetchInterval: (query) => {
-      // Poll every 3 seconds if the document is still processing
+      // Poll every 3 seconds if the document is still processing or needs review
       const docStatus = query.state.data?.document.status;
-      return (docStatus === 'processing' || docStatus === 'pending') ? 3000 : false;
+      const reviewStatus = query.state.data?.document.teacherReviewStatus;
+      return (docStatus === 'processing' || docStatus === 'pending' || reviewStatus === 'not_reviewed') ? 3000 : false;
     },
     refetchIntervalInBackground: true,
+    staleTime: 0, // Always refetch to ensure fresh status
   });
 
   // Handle Accept and Proceed action

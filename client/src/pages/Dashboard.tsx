@@ -13,6 +13,22 @@ export default function Dashboard() {
     retry: false,
   });
 
+  // Fetch documents for status polling
+  const { data: documents } = useQuery({
+    queryKey: ["/api/documents"],
+    enabled: !!user && !error, // Only fetch if authenticated
+    refetchInterval: (query) => {
+      // Poll every 3 seconds if there are any processing documents
+      const hasProcessingDocs = query.state.data?.some((doc: any) => 
+        doc.status === 'processing' || 
+        doc.status === 'pending' ||
+        doc.teacherReviewStatus === 'not_reviewed'
+      );
+      return hasProcessingDocs ? 3000 : false;
+    },
+    refetchIntervalInBackground: true,
+  });
+
   const isAuthenticated = !!user && !error;
 
   // Redirect to login if not authenticated

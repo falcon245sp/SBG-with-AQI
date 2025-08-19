@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,7 @@ import { Upload, FileText, CheckCircle, AlertCircle, Clock } from "lucide-react"
 
 export default function UploadPage() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   // Use authenticated user data
   const { user } = useAuth();
   const customerId = (user as any)?.customerUuid || "";
@@ -26,6 +28,14 @@ export default function UploadPage() {
     status: string;
     estimatedCompletion: string;
   }>>([]);
+
+  // Poll for document status updates to show real-time progress
+  const { data: documents } = useQuery({
+    queryKey: ["/api/documents"],
+    enabled: submittedJobs.length > 0, // Only poll when jobs exist
+    refetchInterval: 2000, // Poll every 2 seconds
+    refetchIntervalInBackground: true,
+  });
 
   const handleFileUpload = async (files: File[]) => {
     console.log('=== FRONTEND UPLOAD DEBUG ===');
@@ -59,25 +69,15 @@ export default function UploadPage() {
         callbackUrl: callbackUrl || undefined
       });
       
-      // Add all jobs to submitted jobs list with initial "queued" status
-      const newJobs = result.jobs.map((job, index) => ({
+      // Add all jobs to submitted jobs list with initial status from API
+      const newJobs = result.jobs.map((job) => ({
         jobId: job.jobId,
         fileName: job.fileName,
-        status: index === 0 ? 'processing' : 'queued', // First file starts processing, others queued
+        status: 'pending', // Initial status, will be updated by polling
         estimatedCompletion: job.estimatedCompletionTime
       }));
       
       setSubmittedJobs(prev => [...newJobs, ...prev]);
-      
-      // Simulate status updates for demo (in real app, this would come from polling)
-      setTimeout(() => {
-        setSubmittedJobs(prev => prev.map((job, index) => {
-          if (index < newJobs.length && job.status === 'queued') {
-            return { ...job, status: 'processing' };
-          }
-          return job;
-        }));
-      }, 2000 * (newJobs.findIndex(j => j.status === 'queued') + 1));
       
       const fileNames = files.map(f => f.name).join(', ');
       const successMessage = result.successfulSubmissions === files.length 
