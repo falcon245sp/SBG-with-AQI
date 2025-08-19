@@ -20,8 +20,32 @@ import FileCabinet from "@/pages/file-cabinet";
 import DocumentInspector from "@/pages/document-inspector";
 import TestingDashboard from "@/pages/testing-dashboard";
 
+// Protected Route wrapper that redirects to landing page if not authenticated
+function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!isAuthenticated) {
+    // Redirect to landing page
+    window.location.href = '/';
+    return null;
+  }
+  
+  return <Component />;
+}
+
 function Router() {
-  const { user, isLoading, isAuthenticated } = useAuth();
+  const { isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -36,32 +60,26 @@ function Router() {
 
   return (
     <Switch>
-      {/* Public routes accessible without authentication */}
+      {/* Public routes - always accessible */}
+      <Route path="/" component={GoogleOAuthLanding} />
+      <Route path="/landing" component={GoogleOAuthLanding} />
+      <Route path="/auth/login" component={TraditionalLogin} />
+      <Route path="/auth/error" component={AuthError} />
       <Route path="/testing-dashboard" component={TestingDashboard} />
       
-      {isLoading || !isAuthenticated ? (
-        <>
-          <Route path="/" component={GoogleOAuthLanding} />
-          <Route path="/landing" component={Landing} />
-          <Route path="/auth/login" component={TraditionalLogin} />
-          <Route path="/auth/error" component={AuthError} />
-          <Route component={NotFound} />
-        </>
-      ) : (
-        <>
-          <Route path="/" component={RoleSelection} />
-          <Route path="/role-selection" component={RoleSelection} />
-          <Route path="/dashboard" component={CustomerDashboard} />
-          <Route path="/admin" component={AdminDashboard} />
-          <Route path="/upload" component={UploadPage} />
-          <Route path="/results" component={ResultsPage} />
-          <Route path="/results/:id" component={DocumentResults} />
-          <Route path="/prompt-config" component={PromptConfig} />
-          <Route path="/file-cabinet" component={FileCabinet} />
-          <Route path="/documents/:documentId/inspect" component={DocumentInspector} />
-          <Route component={NotFound} />
-        </>
-      )}
+      {/* Protected routes - require authentication */}
+      <Route path="/role-selection" component={() => <ProtectedRoute component={RoleSelection} />} />
+      <Route path="/dashboard" component={() => <ProtectedRoute component={CustomerDashboard} />} />
+      <Route path="/admin" component={() => <ProtectedRoute component={AdminDashboard} />} />
+      <Route path="/upload" component={() => <ProtectedRoute component={UploadPage} />} />
+      <Route path="/results" component={() => <ProtectedRoute component={ResultsPage} />} />
+      <Route path="/results/:id" component={() => <ProtectedRoute component={DocumentResults} />} />
+      <Route path="/prompt-config" component={() => <ProtectedRoute component={PromptConfig} />} />
+      <Route path="/file-cabinet" component={() => <ProtectedRoute component={FileCabinet} />} />
+      <Route path="/documents/:documentId/inspect" component={() => <ProtectedRoute component={DocumentInspector} />} />
+      
+      {/* Default catch-all */}
+      <Route component={NotFound} />
     </Switch>
   );
 }

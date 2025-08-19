@@ -8,9 +8,11 @@ export function useAuth() {
     refetchOnWindowFocus: false,
   });
 
+  const isAuthenticated = !!user && !error;
+
   return {
     user,
     isLoading,
-    isAuthenticated: !!user && !error,
+    isAuthenticated,
   };
 }

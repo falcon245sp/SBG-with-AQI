@@ -194,7 +194,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: "Please sign in to upload documents", 
           error: "authentication_required",
           shouldRedirect: true,
-          redirectUrl: "/auth/login",
+          redirectUrl: "/",
           details: "You need to be signed in to upload and process documents. Click 'Sign in with Google' to continue."
         });
       }

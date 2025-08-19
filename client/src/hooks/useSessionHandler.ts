@@ -26,10 +26,10 @@ export function useSessionHandler() {
       variant: "destructive",
     });
 
-    // Redirect to login if needed
-    if (error.shouldRedirect && error.redirectUrl) {
+    // Redirect to landing page for authentication issues
+    if (error.shouldRedirect) {
       setTimeout(() => {
-        setLocation(error.redirectUrl!);
+        setLocation('/'); // Always redirect to landing page for authentication
       }, 2000); // Give user time to read the message
     }
   }, [toast, setLocation]);
