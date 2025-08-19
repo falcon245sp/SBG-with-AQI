@@ -295,7 +295,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(statusCode).json(response);
     } catch (error) {
       console.error("Error uploading document:", error);
-      res.status(500).json({ message: "Failed to upload document" });
+      console.error("Full error stack:", error instanceof Error ? error.stack : error);
+      res.status(500).json({ 
+        message: "Failed to upload document",
+        error: error instanceof Error ? error.message : 'Unknown error',
+        details: error instanceof Error ? error.stack : error
+      });
     }
   });
 

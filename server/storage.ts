@@ -701,7 +701,7 @@ export class DatabaseStorage implements IStorage {
         customerUuid,
       })
       .returning();
-    return result[0] as Document;
+    return result[0];
   }
 
   async getDocument(id: string): Promise<Document | undefined> {
@@ -756,7 +756,7 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(exportQueue)
-      .where(eq(exportQueue.status, 'pending'))
+      .where(eq(exportQueue.status, ProcessingStatus.PENDING as any))
       .orderBy(desc(exportQueue.priority), exportQueue.scheduledFor);
   }
 
@@ -782,7 +782,7 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(exportQueue)
-      .where(eq(exportQueue.status, 'pending'))
+      .where(eq(exportQueue.status, ProcessingStatus.PENDING as any))
       .orderBy(desc(exportQueue.priority), exportQueue.scheduledFor);
   }
 
@@ -1254,7 +1254,7 @@ export class DatabaseStorage implements IStorage {
       .from(documents)
       .where(and(
         eq(documents.parentDocumentId, parentDocumentId),
-        eq(documents.assetType, 'generated')
+        eq(documents.assetType, AssetType.GENERATED as any)
       ))
       .orderBy(documents.createdAt);
   }
@@ -1265,8 +1265,8 @@ export class DatabaseStorage implements IStorage {
       .from(documents)
       .where(and(
         eq(documents.parentDocumentId, parentDocumentId),
-        eq(documents.assetType, 'generated'),
-        eq(documents.exportType, exportType)
+        eq(documents.assetType, AssetType.GENERATED as any),
+        eq(documents.exportType, exportType as any)
       ))
       .orderBy(documents.createdAt);
   }
@@ -1276,7 +1276,7 @@ export class DatabaseStorage implements IStorage {
       .delete(exportQueue)
       .where(and(
         eq(exportQueue.documentId, documentId),
-        eq(exportQueue.exportType, exportType)
+        eq(exportQueue.exportType, exportType as any)
       ));
   }
 
