@@ -1,0 +1,27 @@
+PII decryption failed for user, returning user data: Failed to decrypt PII data
+[CustomerLookupService] Found customer UUID: 8c738868-a29c-4a0e-b904-2af9887ac1e1 for session user: 604b663d-b06f-4600-ae4e-e7c68caf3b72
+2025-08-19T15:08:16.310Z [INFO] API Request | method=GET, path=/api/documents, statusCode=304, duration=228, requestId=568e0fff5035f43a3e6fc2e505b7c1c5, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.81, sessionId=FwxM9jUCdCpZ9rqGGXQNUYzXRHtr1XIk
+2025-08-19T15:08:19.487Z [DEBUG] Request started | requestId=66b0f0be77f91ef94b4ad96ee024b0bd, method=GET, path=/api/documents, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.81, sessionId=FwxM9jUCdCpZ9rqGGXQNUYzXRHtr1XIk
+[CustomerLookupService] Looking up customer UUID for session user: 604b663d-b06f-4600-ae4e-e7c68caf3b72
+Decryption error: Error: Failed to decrypt - invalid key or corrupted data
+    at Function.decrypt (/home/runner/workspace/server/utils/encryption.ts:35:15)
+    at Function.decryptUserPII (/home/runner/workspace/server/utils/encryption.ts:74:32)
+    at DatabaseStorage.getUser (/home/runner/workspace/server/storage.ts:153:26)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Function.getUserFromSession (/home/runner/workspace/server/services/customerLookupService.ts:33:20)
+    at async Function.requireCustomerUuid (/home/runner/workspace/server/services/customerLookupService.ts:116:20)
+    at async Function.requireActiveCustomerUuid (/home/runner/workspace/server/services/activeUserService.ts:56:12)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:474:28)
+PII decryption failed for user, returning user data: Failed to decrypt PII data
+[CustomerLookupService] Found customer UUID: 8c738868-a29c-4a0e-b904-2af9887ac1e1 for session user: 604b663d-b06f-4600-ae4e-e7c68caf3b72
+2025-08-19T15:08:19.722Z [INFO] API Request | method=GET, path=/api/documents, statusCode=304, duration=235, requestId=66b0f0be77f91ef94b4ad96ee024b0bd, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.81, sessionId=FwxM9jUCdCpZ9rqGGXQNUYzXRHtr1XIk
+2025-08-19T15:08:22.914Z [DEBUG] Request started | requestId=9f21edf81e1a575f9549805b14532d9b, method=GET, path=/api/documents, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.81, sessionId=FwxM9jUCdCpZ9rqGGXQNUYzXRHtr1XIk
+[CustomerLookupService] Looking up customer UUID for session user: 604b663d-b06f-4600-ae4e-e7c68caf3b72
+Decryption error: Error: Failed to decrypt - invalid key or corrupted data
+    at Function.decrypt (/home/runner/workspace/server/utils/encryption.ts:35:15)
+    at Function.decryptUserPII (/home/runner/workspace/server/utils/encryption.ts:74:32)
+    at DatabaseStorage.getUser (/home/runner/workspace/server/storage.ts:153:26)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Function.getUserFromSession (/home/runner/workspace/server/services/customerLookupService.ts:33:20)
+    at async Function.requireCustomerUuid (/home/runner/workspace/server/services/customerLookupService.ts:116:20)
+    at async Function.requireActi

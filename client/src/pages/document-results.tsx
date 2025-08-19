@@ -733,15 +733,14 @@ export default function DocumentResults() {
                           console.log('🐛 DEBUG: Accept button clicked - starting handleAcceptAndProceed');
                           try {
                             handleAcceptAndProceed();
-                          } catch (error) {
+                          } catch (error: any) {
                             console.error('🐛 DEBUG: Error in handleAcceptAndProceed:', error);
-                            alert('Error: ' + error.message);
+                            alert('Error: ' + (error?.message || 'Unknown error'));
                           }
                         }}
-                        disabled={acceptMutation.isPending}
-                        className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-6 py-2 rounded-lg font-medium"
+                        className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium"
                       >
-                        {acceptMutation.isPending ? '⏳ Processing...' : '✅ DEBUG Accept & Proceed'}
+                        ✅ DEBUG Accept & Proceed
                       </button>
                     </div>
                   </div>
