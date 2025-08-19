@@ -51,7 +51,15 @@ export default function CustomerDashboard() {
     retry: false,
   });
 
-  const isAdmin = (user as any)?.email === 'admin@standardssherpa.com';
+  // Environment-aware admin email configuration
+  const getAdminEmail = () => {
+    const isProduction = process.env.NODE_ENV === 'production';
+    const prefix = isProduction ? 'VITE_PROD_' : 'VITE_DEV_';
+    
+    return import.meta.env[`${prefix}ADMIN_EMAIL`] || 'admin@standardssherpa.com';
+  };
+  
+  const isAdmin = (user as any)?.email === getAdminEmail();
 
   // Fetch customer statistics
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({

@@ -1,8 +1,18 @@
 // Web Service Client for the standalone document processing service
 
-const WEB_SERVICE_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://your-web-service-url.com'
-  : 'http://localhost:3000';
+// Environment-aware base URL configuration
+const getWebServiceBaseUrl = () => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const prefix = isProduction ? 'VITE_PROD_' : 'VITE_DEV_';
+  
+  return import.meta.env[`${prefix}WEB_SERVICE_BASE_URL`] || 
+    (isProduction 
+      ? 'https://your-production-web-service-url.com'
+      : 'http://localhost:3000'
+    );
+};
+
+const WEB_SERVICE_BASE_URL = getWebServiceBaseUrl();
 
 export interface ProcessDocumentRequest {
   customerId: string;
@@ -32,7 +42,19 @@ export interface ProcessDocumentResponse {
 }
 
 class WebServiceClient {
-  private apiKey = 'dps_demo_key_12345678901234567890'; // Demo API key
+  // Environment-aware API key configuration
+  private getApiKey(): string {
+    const isProduction = process.env.NODE_ENV === 'production';
+    const prefix = isProduction ? 'VITE_PROD_' : 'VITE_DEV_';
+    
+    return import.meta.env[`${prefix}WEB_SERVICE_API_KEY`] || 
+      (isProduction 
+        ? (() => { throw new Error('Production web service API key not configured'); })()
+        : 'dps_demo_key_development_only'
+      );
+  }
+  
+  private apiKey = this.getApiKey();
   
   // Submit documents for processing (supports multiple files)
   async submitDocuments(request: ProcessDocumentRequest): Promise<ProcessDocumentResponse> {

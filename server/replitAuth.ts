@@ -8,10 +8,18 @@ import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
-// Use production domain instead of development domain
-const PRODUCTION_DOMAIN = "docu-proc-serv-jfielder1.replit.app";
+// Environment-aware production domain configuration
+const getProductionDomain = () => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const prefix = isProduction ? 'PROD_' : 'DEV_';
+  
+  return process.env[`${prefix}PRODUCTION_DOMAIN`] || 
+    'docu-proc-serv-jfielder1.replit.app';
+};
+
+const PRODUCTION_DOMAIN = getProductionDomain();
 if (!process.env.REPLIT_DOMAINS) {
-  console.log("REPLIT_DOMAINS not set, using production domain:", PRODUCTION_DOMAIN);
+  console.log("REPLIT_DOMAINS not set, using configured domain:", PRODUCTION_DOMAIN);
 }
 
 const getOidcConfig = memoize(

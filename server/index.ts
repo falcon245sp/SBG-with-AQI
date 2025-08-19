@@ -23,13 +23,26 @@ const sessionStore = new pgStore({
 
 app.set("trust proxy", 1);
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'fallback-secret-key-for-dev',
+  secret: (() => {
+    const isProduction = process.env.NODE_ENV === 'production';
+    const prefix = isProduction ? 'PROD_' : 'DEV_';
+    const sessionSecret = process.env[`${prefix}SESSION_SECRET`];
+    
+    if (!sessionSecret) {
+      if (isProduction) {
+        throw new Error('PROD_SESSION_SECRET environment variable must be set in production');
+      }
+      return 'dev-session-secret-not-for-production';
+    }
+    
+    return sessionSecret;
+  })(),
   store: sessionStore,
   resave: false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: false, // Allow HTTP in development
+    secure: process.env.NODE_ENV === 'production', // HTTPS only in production
     maxAge: sessionTtl,
     sameSite: 'lax', // Allow cross-site requests for OAuth
     path: '/', // Ensure cookie works for all paths
@@ -85,7 +98,7 @@ app.use(requestLoggingMiddleware);
     reusePort: true,
   }, () => {
     logger.info('Standards Sherpa server started', {
-      port: port,
+      serverPort: port,
       environment: process.env.NODE_ENV || 'development',
       version: process.env.npm_package_version || '0.7.4'
     });

@@ -7,6 +7,7 @@ The Document Processing Service, personified as "Standards Sherpa," is a full-st
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
+- **August 19, 2025**: Implemented environment-aware configuration system with DEV_ and PROD_ prefixed environment variables for production-critical settings. Automatically selects appropriate configuration based on NODE_ENV. Moved hardcoded values for web service URLs, API keys, session secrets, admin emails, and domain configuration to environment variables. Cookie security automatically enabled in production (HTTPS-only).
 - **August 19, 2025**: Fixed emoji rendering issue in PDF rubrics by replacing chili pepper emojis with asterisk symbols (* mild, ** medium, *** spicy) for proper PDF display compatibility.
 - **August 19, 2025**: Implemented comprehensive document overwrite system preventing duplicate generated documents. System now automatically deletes existing generated documents before creating new versions, ensuring only one document of each type exists per source document.
 - **August 19, 2025**: Cleaned up duplicate document accumulation - removed 13 duplicate rubric documents and 7 duplicate cover sheet documents, implementing proper one-to-one relationship between source documents and generated outputs.
