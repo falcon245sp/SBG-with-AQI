@@ -126,7 +126,7 @@ export class ExportProcessor {
     
     const pdf = new jsPDF('portrait', 'mm', 'a4');
     
-    // Header
+    // Header with QR code space (upper left) and student name (upper right)
     pdf.setFontSize(18);
     pdf.setFont('helvetica', 'bold');
     const title = document.fileName.replace(/\.[^/.]+$/, "");
@@ -134,8 +134,22 @@ export class ExportProcessor {
     
     pdf.setFontSize(14);
     pdf.text('Rubric', 105, 30, { align: 'center' } as any);
-    pdf.setFont('helvetica', 'normal');
     
+    // QR Code placeholder (upper left)
+    pdf.setDrawColor(150, 150, 150);
+    pdf.rect(10, 10, 25, 25);
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('QR Code', 12, 24);
+    
+    // Student name field (upper right)
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Student Name (Last, First):', 140, 15);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('_________________________________', 140, 25);
+    
+    pdf.setFont('helvetica', 'normal');
     let yPosition = 45;
     
     // Table headers
