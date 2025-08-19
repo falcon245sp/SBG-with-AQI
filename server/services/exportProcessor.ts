@@ -95,6 +95,10 @@ export class ExportProcessor {
 
       console.log(`[ExportProcessor] Generated document created: ${generatedDoc.id}`);
 
+      // Update generated document status to completed
+      await DatabaseWriteService.updateDocumentStatus(generatedDoc.id, 'completed');
+      console.log(`[ExportProcessor] Generated document status updated to completed: ${generatedDoc.id}`);
+
       // Mark export as completed
       await storage.updateExportQueueStatus(exportId, 'completed');
       
@@ -203,7 +207,7 @@ export class ExportProcessor {
         if (typeof result.consensusStandards === 'string') {
           standardsText = result.consensusStandards;
         } else if (Array.isArray(result.consensusStandards)) {
-          standardsText = result.consensusStandards.map(s => s.code || s).join(', ');
+          standardsText = result.consensusStandards.map((s: any) => s.code || s).join(', ');
         } else if (result.consensusStandards.code) {
           standardsText = result.consensusStandards.code;
         }
