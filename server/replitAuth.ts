@@ -41,7 +41,7 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: true,
+      secure: config.cookieSecure, // Use environment-based secure setting
       maxAge: sessionTtl,
     },
   });
@@ -106,8 +106,34 @@ export async function setupAuth(app: Express) {
     passport.use(strategy);
   }
 
-  passport.serializeUser((user: Express.User, cb) => cb(null, user));
-  passport.deserializeUser((user: Express.User, cb) => cb(null, user));
+  passport.serializeUser((user: any, cb) => {
+    console.log('[Auth] Serializing user:', user);
+    cb(null, user);
+  });
+  
+  passport.deserializeUser(async (user: any, cb) => {
+    console.log('[Auth] Deserializing user:', user);
+    try {
+      // If we have user claims, we can reconstruct the session
+      if (user && user.claims && user.claims.sub) {
+        // Verify user exists in database
+        const dbUser = await storage.getUser(user.claims.sub);
+        if (dbUser) {
+          console.log('[Auth] User deserialized successfully:', user.claims.sub);
+          cb(null, user);
+        } else {
+          console.log('[Auth] User not found in database:', user.claims.sub);
+          cb(null, false);
+        }
+      } else {
+        console.log('[Auth] Invalid user session data, forcing re-authentication');
+        cb(null, false);
+      }
+    } catch (error) {
+      console.error('[Auth] Error deserializing user:', error);
+      cb(null, false);
+    }
+  });
 
   app.get("/api/login", (req, res, next) => {
     passport.authenticate(`replitauth:${req.hostname}`, {
