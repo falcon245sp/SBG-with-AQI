@@ -36,6 +36,7 @@ export class DatabaseWriteService {
 
   /**
    * Create a generated document (rubric, cover sheet, etc.) with automatic tagging
+   * Implements overwrite logic: deletes existing generated documents of the same type for the same parent
    */
   static async createGeneratedDocument(
     customerUuid: string, 
@@ -47,6 +48,39 @@ export class DatabaseWriteService {
     console.log(`[DatabaseWriteService] Creating generated document (${exportType}) for customer: ${customerUuid}`);
     
     try {
+      // OVERWRITE LOGIC: Delete existing generated documents of the same type for this parent
+      const existingDocs = await storage.getGeneratedDocumentsByParentAndType(parentDocumentId, exportType);
+      
+      if (existingDocs.length > 0) {
+        console.log(`[DatabaseWriteService] Found ${existingDocs.length} existing ${exportType} documents for parent ${parentDocumentId}, deleting them`);
+        
+        for (const existingDoc of existingDocs) {
+          try {
+            // Delete the physical file if it exists
+            const fs = require('fs');
+            const path = require('path');
+            if (existingDoc.originalPath) {
+              const fullPath = path.join(process.cwd(), 'uploads', existingDoc.originalPath);
+              if (fs.existsSync(fullPath)) {
+                fs.unlinkSync(fullPath);
+                console.log(`[DatabaseWriteService] Deleted physical file: ${existingDoc.originalPath}`);
+              }
+            }
+            
+            // Delete the database record
+            await storage.deleteDocument(existingDoc.id);
+            console.log(`[DatabaseWriteService] Deleted existing document: ${existingDoc.id}`);
+          } catch (deleteError) {
+            console.warn(`[DatabaseWriteService] Failed to delete existing document ${existingDoc.id}:`, deleteError);
+            // Continue with creation even if cleanup fails
+          }
+        }
+        
+        // Also clean up any pending export queue items for this document/type combination
+        await storage.deleteExportQueueByDocumentAndType(parentDocumentId, exportType);
+        console.log(`[DatabaseWriteService] Cleaned up export queue for ${exportType} documents of parent ${parentDocumentId}`);
+      }
+      
       // Generate automatic tags based on export type
       const autoTags = generateDocumentTags(exportType, userTags);
       
@@ -112,20 +146,7 @@ export class DatabaseWriteService {
     }
   }
 
-  /**
-   * Update document processing status
-   */
-  static async updateDocumentStatus(documentId: string, status: string, processingError?: string): Promise<void> {
-    console.log(`[DatabaseWriteService] Updating document ${documentId} status to: ${status}`);
-    
-    try {
-      await storage.updateDocumentStatus(documentId, status, processingError);
-      console.log(`[DatabaseWriteService] Document status updated successfully`);
-    } catch (error) {
-      console.error(`[DatabaseWriteService] Failed to update document status:`, error);
-      throw new Error(`Failed to update document status: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }
+
 
   // ==================== EXPORT QUEUE OPERATIONS ====================
   

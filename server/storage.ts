@@ -1252,6 +1252,27 @@ export class DatabaseStorage implements IStorage {
       ))
       .orderBy(documents.createdAt);
   }
+
+  async getGeneratedDocumentsByParentAndType(parentDocumentId: string, exportType: string): Promise<Document[]> {
+    return await db
+      .select()
+      .from(documents)
+      .where(and(
+        eq(documents.parentDocumentId, parentDocumentId),
+        eq(documents.assetType, 'generated'),
+        eq(documents.exportType, exportType)
+      ))
+      .orderBy(documents.createdAt);
+  }
+
+  async deleteExportQueueByDocumentAndType(documentId: string, exportType: string): Promise<void> {
+    await db
+      .delete(exportQueue)
+      .where(and(
+        eq(exportQueue.documentId, documentId),
+        eq(exportQueue.exportType, exportType)
+      ));
+  }
   
   async getDocument(documentId: string): Promise<Document | undefined> {
     const [document] = await db
