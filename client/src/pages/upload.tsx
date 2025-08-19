@@ -15,7 +15,7 @@ export default function UploadPage() {
   // Use authenticated user data
   const { user } = useAuth();
   const customerId = (user as any)?.customerUuid || "";
-  const jurisdictions = "Common Core"; // Default jurisdiction
+  const [jurisdictions, setJurisdictions] = useState("Common Core");
   const [focusStandards, setFocusStandards] = useState("");
   const [callbackUrl, setCallbackUrl] = useState("");
   const [isUploading, setIsUploading] = useState(false);
@@ -157,15 +157,28 @@ export default function UploadPage() {
                     </div>
                   </div>
 
-                  {/* Testing Configuration */}
+                  {/* User Configuration */}
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                     <div className="flex items-center space-x-2 mb-2">
                       <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span className="text-sm font-medium text-blue-800">Testing Configuration</span>
+                      <span className="text-sm font-medium text-blue-800">Current Configuration</span>
                     </div>
-                    <div className="text-sm text-blue-700">
-                      <p>Customer: 123</p>
-                      <p>Jurisdiction: Common Core</p>
+                    <div className="text-sm text-blue-700 space-y-2">
+                      <p>Customer: {customerId || 'Not authenticated'}</p>
+                      <div className="flex items-center space-x-2">
+                        <span>Jurisdiction:</span>
+                        <select 
+                          value={jurisdictions} 
+                          onChange={(e) => setJurisdictions(e.target.value)}
+                          className="bg-white border border-blue-200 rounded px-2 py-1 text-xs"
+                        >
+                          <option value="Common Core">Common Core</option>
+                          <option value="Texas TEKS">Texas TEKS</option>
+                          <option value="California Standards">California Standards</option>
+                          <option value="NGSS">NGSS</option>
+                          <option value="Custom">Custom</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
                   
