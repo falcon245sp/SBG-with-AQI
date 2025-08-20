@@ -13,6 +13,7 @@ import { jsPDF } from 'jspdf';
 import fs from 'fs';
 import path from 'path';
 import type { ExportType } from '../utils/documentTagging';
+import { config } from '../config/environment';
 
 export class ExportProcessor {
   private isProcessing = false;
@@ -320,7 +321,7 @@ export class ExportProcessor {
     pdf.text('Standards Sherpa - Professional Standards-Based Assessment Tool', 105, yPosition, { align: 'center' } as any);
     
     // Ensure rubrics directory exists
-    const rubricsDir = path.join(process.cwd(), 'appdata', 'generated', 'rubrics');
+    const rubricsDir = path.join(process.cwd(), config.rubricsDir);
     if (!fs.existsSync(rubricsDir)) {
       fs.mkdirSync(rubricsDir, { recursive: true });
     }
@@ -392,7 +393,7 @@ export class ExportProcessor {
     }
     
     // Ensure cover sheets directory exists
-    const coversheetsDir = path.join(process.cwd(), 'appdata', 'generated', 'coversheets');
+    const coversheetsDir = path.join(process.cwd(), config.coversheetsDir);
     if (!fs.existsSync(coversheetsDir)) {
       fs.mkdirSync(coversheetsDir, { recursive: true });
     }

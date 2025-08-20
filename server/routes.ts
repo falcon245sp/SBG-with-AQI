@@ -46,9 +46,11 @@ import { ActiveUserService } from "./services/activeUserService";
 import { requireAdmin } from "./middleware/adminAuth";
 import { sessionErrorHandler, withSessionHandling } from "./middleware/sessionHandler";
 
+import { config } from "./config/environment";
+
 // Configure multer for file uploads
 const upload = multer({
-  dest: 'appdata/uploads/',
+  dest: config.uploadsDir,
   limits: {
     fileSize: 50 * 1024 * 1024, // 50MB limit per file
     files: 10, // Maximum 10 files per request
@@ -332,20 +334,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Document not found' });
       }
       
-      // Determine the file path based on document type
+      // Determine the file path based on document type using environment variables
       let basePath;
       if (document.assetType === 'uploaded') {
-        basePath = path.join(process.cwd(), 'appdata', 'uploads');
+        basePath = path.join(process.cwd(), config.uploadsDir);
       } else if (document.assetType === 'generated') {
         if (document.exportType === 'rubric_pdf') {
-          basePath = path.join(process.cwd(), 'appdata', 'generated', 'rubrics');
+          basePath = path.join(process.cwd(), config.rubricsDir);
         } else if (document.exportType === 'cover_sheet') {
-          basePath = path.join(process.cwd(), 'appdata', 'generated', 'coversheets');
+          basePath = path.join(process.cwd(), config.coversheetsDir);
         } else {
-          basePath = path.join(process.cwd(), 'appdata', 'generated');
+          basePath = path.join(process.cwd(), config.generatedDir);
         }
       } else {
-        basePath = path.join(process.cwd(), 'appdata', 'uploads'); // fallback
+        basePath = path.join(process.cwd(), config.uploadsDir); // fallback
       }
       
       const filePath = path.join(basePath, document.originalPath);

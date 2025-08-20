@@ -3,6 +3,7 @@ import { DatabaseWriteService } from './databaseWriteService.js';
 import jsPDF from 'jspdf';
 import fs from 'fs';
 import path from 'path';
+import { config } from '../config/environment';
 
 /**
  * RubricCollationService - Collates individual graded rubrics into multipage PDFs
@@ -127,7 +128,7 @@ export class RubricCollationService {
       const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-');
       const baseFileName = originalDocument.fileName.replace(/\.[^/.]+$/, ''); // Remove extension
       const fileName = `${baseFileName}_Graded_Submissions_${timestamp}.pdf`;
-      const gradedsDir = path.join(process.cwd(), 'appdata', 'generated', 'graded');
+      const gradedsDir = path.join(process.cwd(), config.gradedDir);
       const filePath = path.join(gradedsDir, fileName);
       
       // Ensure graded submissions directory exists

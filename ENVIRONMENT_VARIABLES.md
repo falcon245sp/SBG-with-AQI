@@ -74,6 +74,17 @@ VITE_PROD_ADMIN_EMAIL=admin@yourproductiondomain.com
 
 ## Environment-Stable Variables (STABLE_)
 
+These variables remain consistent across all environments:
+
+### File Path Configuration
+```bash
+STABLE_UPLOADS_DIR=appdata/uploads
+STABLE_GENERATED_DIR=appdata/generated
+STABLE_RUBRICS_DIR=appdata/generated/rubrics
+STABLE_COVERSHEETS_DIR=appdata/generated/coversheets
+STABLE_GRADED_DIR=appdata/generated/graded
+```
+
 These values remain consistent across environments but can be customized if needed:
 
 ```bash

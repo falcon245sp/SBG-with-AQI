@@ -20,6 +20,13 @@ export interface EnvironmentConfig {
   defaultPort: number;
   databaseTableName: string;
   performanceWarnThresholdMs: number;
+  
+  // File Path Configuration (STABLE_)
+  uploadsDir: string;
+  generatedDir: string;
+  rubricsDir: string;
+  coversheetsDir: string;
+  gradedDir: string;
 }
 
 class EnvironmentManager {
@@ -85,6 +92,13 @@ class EnvironmentManager {
       defaultPort: this.getStableEnvVar('DEFAULT_PORT', 5000) as number,
       databaseTableName: this.getStableEnvVar('DATABASE_TABLE_NAME', 'sessions') as string,
       performanceWarnThresholdMs: this.getStableEnvVar('PERFORMANCE_WARN_THRESHOLD_MS', 5000) as number, // 5 seconds
+      
+      // File Path Configuration (STABLE_)
+      uploadsDir: this.getStableEnvVar('UPLOADS_DIR', 'appdata/uploads') as string,
+      generatedDir: this.getStableEnvVar('GENERATED_DIR', 'appdata/generated') as string,
+      rubricsDir: this.getStableEnvVar('RUBRICS_DIR', 'appdata/generated/rubrics') as string,
+      coversheetsDir: this.getStableEnvVar('COVERSHEETS_DIR', 'appdata/generated/coversheets') as string,
+      gradedDir: this.getStableEnvVar('GRADED_DIR', 'appdata/generated/graded') as string,
     };
   }
 }
