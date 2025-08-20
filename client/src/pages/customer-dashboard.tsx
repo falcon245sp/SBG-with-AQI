@@ -253,6 +253,31 @@ export default function CustomerDashboard() {
             </Link>
           </div>
 
+          {/* Admin Access Section - Only visible to admin users */}
+          {isAdmin && (
+            <div className="mb-8">
+              <Card className="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-900/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-orange-800 dark:text-orange-200">
+                    <Settings className="h-5 w-5" />
+                    Admin Access
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-orange-700 dark:text-orange-300 text-sm mb-4">
+                    You have administrator privileges and can access system diagnostics.
+                  </p>
+                  <Link href="/admin">
+                    <Button variant="outline" className="border-orange-300 text-orange-800 hover:bg-orange-100 dark:border-orange-700 dark:text-orange-200 dark:hover:bg-orange-800/30">
+                      <Settings className="h-4 w-4 mr-2" />
+                      Open Admin Panel
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
           {/* Recent Documents */}
           <Card>
             <CardHeader>
