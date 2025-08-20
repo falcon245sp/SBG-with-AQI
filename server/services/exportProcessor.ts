@@ -388,7 +388,18 @@ export class ExportProcessor {
       const result = questionResults.find(r => r.questionId === question.id);
       
       pdf.text(`${i + 1}`, 20, yPosition);
-      pdf.text(result?.primaryStandard || 'TBD', 40, yPosition);
+      // Get standards text properly formatted
+      let standardsText = 'TBD';
+      if (result && result.consensusStandards) {
+        if (typeof result.consensusStandards === 'string') {
+          standardsText = result.consensusStandards;
+        } else if (Array.isArray(result.consensusStandards)) {
+          standardsText = result.consensusStandards.map((s: any) => s.code || s).join(', ');
+        } else if (result.consensusStandards.code) {
+          standardsText = result.consensusStandards.code;
+        }
+      }
+      pdf.text(standardsText, 40, yPosition);
       pdf.text(result?.topic || 'General', 100, yPosition);
       pdf.text(result?.rigorLevel || 'Medium', 160, yPosition);
       yPosition += 8;
