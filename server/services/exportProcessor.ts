@@ -400,15 +400,19 @@ export class ExportProcessor {
         }
       }
       pdf.text(standardsText, 40, yPosition);
-      // Use standard code as topic for better readability
+      // Use standard description as topic for better readability
       let topicText = 'General';
       if (result && result.consensusStandards) {
-        if (typeof result.consensusStandards === 'string') {
-          topicText = result.consensusStandards;
-        } else if (Array.isArray(result.consensusStandards)) {
-          topicText = result.consensusStandards.map((s: any) => s.code || s).join(', ');
-        } else if (result.consensusStandards.code) {
-          topicText = result.consensusStandards.code;
+        if (Array.isArray(result.consensusStandards) && result.consensusStandards.length > 0) {
+          const firstStandard = result.consensusStandards[0];
+          if (firstStandard.description) {
+            // Get first 50 characters of description for readability
+            topicText = firstStandard.description.substring(0, 50) + (firstStandard.description.length > 50 ? '...' : '');
+          } else if (firstStandard.code) {
+            topicText = firstStandard.code;
+          }
+        } else if (result.consensusStandards.description) {
+          topicText = result.consensusStandards.description.substring(0, 50) + (result.consensusStandards.description.length > 50 ? '...' : '');
         }
       }
       pdf.text(topicText, 100, yPosition);
