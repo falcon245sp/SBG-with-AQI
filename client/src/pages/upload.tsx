@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,7 @@ export default function UploadPage() {
   }>>([]);
 
   // Poll for document status updates to show real-time progress
-  const { data: documents } = useQuery({
+  const { data: documents } = useQuery<any[]>({
     queryKey: ["/api/documents"],
     enabled: submittedJobs.length > 0, // Only poll when jobs exist
     refetchInterval: 2000, // Poll every 2 seconds
@@ -38,6 +38,25 @@ export default function UploadPage() {
     staleTime: 0, // Always treat data as stale
     gcTime: 0, // Disable cache for real-time updates
   });
+
+  // Update job statuses based on polled document data
+  useEffect(() => {
+    if (documents && submittedJobs.length > 0) {
+      setSubmittedJobs(prevJobs => 
+        prevJobs.map(job => {
+          // Find matching document by jobId (which should match document ID)
+          const matchingDoc = documents.find(doc => doc.id === job.jobId);
+          if (matchingDoc) {
+            return {
+              ...job,
+              status: matchingDoc.status
+            };
+          }
+          return job;
+        })
+      );
+    }
+  }, [documents]);
 
   const handleFileUpload = async (files: File[]) => {
     console.log('=== FRONTEND UPLOAD DEBUG ===');
