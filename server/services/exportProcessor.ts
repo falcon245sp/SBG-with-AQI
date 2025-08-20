@@ -172,7 +172,7 @@ export class ExportProcessor {
     // Define column positions and widths
     const cols = {
       criteria: { x: 10, width: 35 },
-      points: { x: 45, width: 15 },
+      rigor: { x: 45, width: 15 },  // Changed from 'points' to 'rigor'
       fullCredit: { x: 60, width: 35 },
       partialCredit: { x: 95, width: 35 },
       minimalCredit: { x: 130, width: 35 },
@@ -181,14 +181,14 @@ export class ExportProcessor {
     
     // Draw header row
     pdf.rect(cols.criteria.x, yPosition, cols.criteria.width, 8);
-    pdf.rect(cols.points.x, yPosition, cols.points.width, 8);
+    pdf.rect(cols.rigor.x, yPosition, cols.rigor.width, 8);
     pdf.rect(cols.fullCredit.x, yPosition, cols.fullCredit.width, 8);
     pdf.rect(cols.partialCredit.x, yPosition, cols.partialCredit.width, 8);
     pdf.rect(cols.minimalCredit.x, yPosition, cols.minimalCredit.width, 8);
     pdf.rect(cols.noCredit.x, yPosition, cols.noCredit.width, 8);
     
     pdf.text('Criteria', cols.criteria.x + 2, yPosition + 5);
-    pdf.text('Points', cols.points.x + 2, yPosition + 5);
+    pdf.text('Rigor', cols.rigor.x + 2, yPosition + 5);
     pdf.text('Full Credit', cols.fullCredit.x + 2, yPosition + 5);
     pdf.text('Partial Credit', cols.partialCredit.x + 2, yPosition + 5);
     pdf.text('Minimal Credit', cols.minimalCredit.x + 2, yPosition + 5);
@@ -234,7 +234,7 @@ export class ExportProcessor {
       // Draw row borders
       pdf.setDrawColor(0, 0, 0);
       pdf.rect(cols.criteria.x, yPosition, cols.criteria.width, rowHeight);
-      pdf.rect(cols.points.x, yPosition, cols.points.width, rowHeight);
+      pdf.rect(cols.rigor.x, yPosition, cols.rigor.width, rowHeight);
       pdf.rect(cols.fullCredit.x, yPosition, cols.fullCredit.width, rowHeight);
       pdf.rect(cols.partialCredit.x, yPosition, cols.partialCredit.width, rowHeight);
       pdf.rect(cols.minimalCredit.x, yPosition, cols.minimalCredit.width, rowHeight);
@@ -253,7 +253,7 @@ export class ExportProcessor {
       
       // Points column (rigor)
       pdf.setFontSize(12);
-      pdf.text(rigorDisplay, cols.points.x + 5, yPosition + 10);
+      pdf.text(rigorDisplay, cols.rigor.x + 5, yPosition + 10);
       
       // Full Credit column
       pdf.setFontSize(8);

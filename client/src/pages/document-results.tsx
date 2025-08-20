@@ -132,16 +132,14 @@ export default function DocumentResults() {
   });
 
   // Handle Accept and Proceed action
-  const handleAcceptAndProceed = async () => {
-    if (!documentId) {
-      console.error('[Accept] No document ID available');
-      return;
-    }
-    
-    console.log(`[Accept] Starting accept process for document: ${documentId}`);
-    
-    try {
-      console.log(`[Accept] Making POST request to: /api/documents/${documentId}/accept`);
+  // Accept and proceed mutation with loading state
+  const acceptAndProceedMutation = useMutation({
+    mutationFn: async () => {
+      if (!documentId) {
+        throw new Error('No document ID available');
+      }
+      
+      console.log(`[Accept] Starting accept process for document: ${documentId}`);
       
       const response = await fetch(`/api/documents/${documentId}/accept`, {
         method: 'POST',
@@ -155,7 +153,6 @@ export default function DocumentResults() {
       console.log(`[Accept] Response received - Status: ${response.status}, OK: ${response.ok}`);
 
       if (!response.ok) {
-        console.error(`[Accept] Response not OK - Status: ${response.status}`);
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
         console.error('[Accept] Error data:', errorData);
         throw new Error(errorData.error || `Server error: ${response.status}`);
@@ -163,7 +160,9 @@ export default function DocumentResults() {
 
       const responseData = await response.json();
       console.log('[Accept] Success response:', responseData);
-
+      return responseData;
+    },
+    onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: [`/api/documents/${documentId}/results`] });
       await queryClient.invalidateQueries({ queryKey: ['/api/file-cabinet'] });
       
@@ -172,14 +171,19 @@ export default function DocumentResults() {
         description: "Cover sheets and rubrics are now being generated and will appear in the File Cabinet.",
         variant: "default",
       });
-    } catch (error: any) {
-      console.error('[Accept] Error in handleAcceptAndProceed:', error);
+    },
+    onError: (error: Error) => {
+      console.error('[Accept] Error in accept mutation:', error);
       toast({
         title: "Error",
         description: error.message || 'Failed to accept analysis',
         variant: "destructive",
       });
-    }
+    },
+  });
+
+  const handleAcceptAndProceed = () => {
+    acceptAndProceedMutation.mutate();
   };
 
   // Mutation for reverting to Sherpa analysis
@@ -730,10 +734,15 @@ export default function DocumentResults() {
                               console.log('[Button] Accept & Proceed button clicked');
                               handleAcceptAndProceed();
                             }}
-                            className="bg-green-600 hover:bg-green-700 text-white"
+                            className={`${
+                              acceptAndProceedMutation.isPending 
+                                ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed' 
+                                : 'bg-green-600 hover:bg-green-700'
+                            } text-white`}
                             size="sm"
+                            disabled={acceptAndProceedMutation.isPending}
                           >
-                            ✅ Accept & Proceed
+                            {acceptAndProceedMutation.isPending ? '⏳ Processing...' : '✅ Accept & Proceed'}
                           </Button>
                         </div>
                       </div>

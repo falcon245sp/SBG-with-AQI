@@ -266,7 +266,7 @@ export default function FileCabinet() {
     },
     refetchIntervalInBackground: true,
     staleTime: 0, // Always treat data as stale for fresh status updates
-    cacheTime: 0, // Disable cache for real-time updates
+    gcTime: 0, // Disable cache for real-time updates (TanStack Query v5)
     retry: (failureCount, error) => {
       // Don't retry session errors
       if (error.message.includes('Session expired') || 
