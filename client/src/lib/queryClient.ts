@@ -31,6 +31,11 @@ export const getQueryFn: <T>(options: {
   async ({ queryKey }) => {
     const res = await fetch(queryKey.join("/") as string, {
       credentials: "include",
+      cache: "no-cache", // Bypass browser cache for fresh status data
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      }
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
@@ -48,6 +53,7 @@ export const queryClient = new QueryClient({
       refetchInterval: false,
       refetchOnWindowFocus: false,
       staleTime: 0, // Enable fresh data for status updates
+      cacheTime: 0, // Disable cache for real-time status updates
       retry: false,
     },
     mutations: {

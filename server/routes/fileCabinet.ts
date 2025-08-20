@@ -159,6 +159,16 @@ fileCabinetRouter.get('/api/file-cabinet', async (req: any, res) => {
     
     console.log(`[FileCabinet] Found ${enhancedDocs.length} documents in ${drawer} drawer`);
     
+    // Set cache control headers to ensure fresh status data
+    res.set({
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
+    
+    // Disable ETag generation to prevent 304 responses
+    res.removeHeader('ETag');
+    
     res.json({
       documents: enhancedDocs,
       totalCount: enhancedDocs.length,

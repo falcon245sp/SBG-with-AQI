@@ -265,6 +265,8 @@ export default function FileCabinet() {
       return hasProcessingDocs ? 2000 : false;
     },
     refetchIntervalInBackground: true,
+    staleTime: 0, // Always treat data as stale for fresh status updates
+    cacheTime: 0, // Disable cache for real-time updates
     retry: (failureCount, error) => {
       // Don't retry session errors
       if (error.message.includes('Session expired') || 
@@ -842,8 +844,7 @@ export default function FileCabinet() {
             {selectedDocument && (
               <div className="p-4">
                 {/* For PDF files, show embedded viewer */}
-                {(selectedDocument.mimeType === 'application/pdf' || 
-                  selectedDocument.originalFilename?.toLowerCase().endsWith('.pdf') ||
+                {(selectedDocument.originalFilename?.toLowerCase().endsWith('.pdf') ||
                   selectedDocument.fileName?.toLowerCase().endsWith('.pdf')) ? (
                   <div className="w-full h-96">
                     <iframe
@@ -861,7 +862,7 @@ export default function FileCabinet() {
                       <div>
                         <h3 className="font-semibold">File Information</h3>
                         <p className="text-sm text-gray-600">Name: {selectedDocument.originalFilename || selectedDocument.fileName}</p>
-                        <p className="text-sm text-gray-600">Type: {selectedDocument.mimeType}</p>
+                        <p className="text-sm text-gray-600">Type: {selectedDocument.fileName?.split('.').pop()?.toUpperCase() || 'Unknown'}</p>
                         <p className="text-sm text-gray-600">Size: {formatFileSize(selectedDocument.fileSize)}</p>
                         <p className="text-sm text-gray-600">Created: {new Date(selectedDocument.createdAt).toLocaleString()}</p>
                       </div>

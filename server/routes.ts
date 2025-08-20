@@ -566,6 +566,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`[Documents] Fetching documents for customer: ${customerUuid}`);
       const documents = await storage.getUserDocuments(customerUuid);
       console.log(`[Documents] Found ${documents.length} documents for customer: ${customerUuid}`);
+      
+      // Set cache control headers to ensure fresh status data for real-time polling
+      res.set({
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      });
+      
+      // Disable ETag generation to prevent 304 responses
+      res.removeHeader('ETag');
+      
       res.json(documents);
     } catch (error) {
       console.error("Error fetching documents:", error);

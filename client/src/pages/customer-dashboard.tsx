@@ -70,11 +70,13 @@ export default function CustomerDashboard() {
   const { data: documents, isLoading: documentsLoading } = useQuery<DocumentResult[]>({
     queryKey: ["/api/documents"],
     refetchInterval: (query) => {
-      // Poll every 3 seconds if there are any processing documents
+      // Poll every 2 seconds if there are any processing documents
       const hasProcessingDocs = query.state.data?.some((doc: any) => doc.status === 'processing' || doc.status === 'pending');
-      return hasProcessingDocs ? 3000 : false;
+      return hasProcessingDocs ? 2000 : false;
     },
     refetchIntervalInBackground: true,
+    staleTime: 0, // Always treat data as stale for fresh status updates
+    cacheTime: 0, // Disable cache for real-time updates
   });
 
   // Export functionality

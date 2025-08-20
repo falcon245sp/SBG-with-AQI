@@ -35,6 +35,8 @@ export default function UploadPage() {
     enabled: submittedJobs.length > 0, // Only poll when jobs exist
     refetchInterval: 2000, // Poll every 2 seconds
     refetchIntervalInBackground: true,
+    staleTime: 0, // Always treat data as stale
+    cacheTime: 0, // Disable cache for real-time updates
   });
 
   const handleFileUpload = async (files: File[]) => {
