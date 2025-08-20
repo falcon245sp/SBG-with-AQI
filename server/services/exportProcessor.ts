@@ -377,9 +377,8 @@ export class ExportProcessor {
     // Table headers
     pdf.setFontSize(10);
     pdf.text('Q#', 20, yPosition);
-    pdf.text('Standard', 40, yPosition);
-    pdf.text('Topic', 100, yPosition);
-    pdf.text('Rigor Level', 160, yPosition);
+    pdf.text('Standard', 50, yPosition);
+    pdf.text('Rigor Level', 150, yPosition);
     yPosition += 10;
     
     // Table content
@@ -399,24 +398,8 @@ export class ExportProcessor {
           standardsText = result.consensusStandards.code;
         }
       }
-      pdf.text(standardsText, 40, yPosition);
-      // Use standard description as topic for better readability
-      let topicText = 'General';
-      if (result && result.consensusStandards) {
-        if (Array.isArray(result.consensusStandards) && result.consensusStandards.length > 0) {
-          const firstStandard = result.consensusStandards[0];
-          if (firstStandard.description) {
-            // Get first 50 characters of description for readability
-            topicText = firstStandard.description.substring(0, 50) + (firstStandard.description.length > 50 ? '...' : '');
-          } else if (firstStandard.code) {
-            topicText = firstStandard.code;
-          }
-        } else if (result.consensusStandards.description) {
-          topicText = result.consensusStandards.description.substring(0, 50) + (result.consensusStandards.description.length > 50 ? '...' : '');
-        }
-      }
-      pdf.text(topicText, 100, yPosition);
-      pdf.text(result?.rigorLevel || 'Medium', 160, yPosition);
+      pdf.text(standardsText, 50, yPosition);
+      pdf.text(result?.rigorLevel || 'Medium', 150, yPosition);
       yPosition += 8;
       
       // Start new page if needed
