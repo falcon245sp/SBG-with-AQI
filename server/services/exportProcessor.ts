@@ -400,7 +400,18 @@ export class ExportProcessor {
         }
       }
       pdf.text(standardsText, 40, yPosition);
-      pdf.text(result?.topic || 'General', 100, yPosition);
+      // Use standard code as topic for better readability
+      let topicText = 'General';
+      if (result && result.consensusStandards) {
+        if (typeof result.consensusStandards === 'string') {
+          topicText = result.consensusStandards;
+        } else if (Array.isArray(result.consensusStandards)) {
+          topicText = result.consensusStandards.map((s: any) => s.code || s).join(', ');
+        } else if (result.consensusStandards.code) {
+          topicText = result.consensusStandards.code;
+        }
+      }
+      pdf.text(topicText, 100, yPosition);
       pdf.text(result?.rigorLevel || 'Medium', 160, yPosition);
       yPosition += 8;
       
