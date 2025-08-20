@@ -48,7 +48,7 @@ import { sessionErrorHandler, withSessionHandling } from "./middleware/sessionHa
 
 // Configure multer for file uploads
 const upload = multer({
-  dest: 'uploads/',
+  dest: 'appdata/uploads/',
   limits: {
     fileSize: 50 * 1024 * 1024, // 50MB limit per file
     files: 10, // Maximum 10 files per request
@@ -332,7 +332,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Document not found' });
       }
       
-      const filePath = path.join(process.cwd(), 'uploads', document.originalPath);
+      // Determine the file path based on document type
+      let basePath;
+      if (document.assetType === 'uploaded') {
+        basePath = path.join(process.cwd(), 'appdata', 'uploads');
+      } else if (document.assetType === 'generated') {
+        if (document.exportType === 'rubric_pdf') {
+          basePath = path.join(process.cwd(), 'appdata', 'generated', 'rubrics');
+        } else if (document.exportType === 'cover_sheet') {
+          basePath = path.join(process.cwd(), 'appdata', 'generated', 'coversheets');
+        } else {
+          basePath = path.join(process.cwd(), 'appdata', 'generated');
+        }
+      } else {
+        basePath = path.join(process.cwd(), 'appdata', 'uploads'); // fallback
+      }
+      
+      const filePath = path.join(basePath, document.originalPath);
       
       // Check if file exists
       if (!fs.existsSync(filePath)) {
@@ -701,8 +717,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Delete the document from the database
       await DatabaseWriteService.deleteDocument(id);
       
-      // Clean up physical file if it exists
-      const filePath = path.join(process.cwd(), 'uploads', document.originalPath);
+      // Clean up physical file if it exists - determine path by document type
+      let basePath;
+      if (document.assetType === 'uploaded') {
+        basePath = path.join(process.cwd(), 'appdata', 'uploads');
+      } else if (document.assetType === 'generated') {
+        if (document.exportType === 'rubric_pdf') {
+          basePath = path.join(process.cwd(), 'appdata', 'generated', 'rubrics');
+        } else if (document.exportType === 'cover_sheet') {
+          basePath = path.join(process.cwd(), 'appdata', 'generated', 'coversheets');
+        } else {
+          basePath = path.join(process.cwd(), 'appdata', 'generated');
+        }
+      } else {
+        basePath = path.join(process.cwd(), 'appdata', 'uploads'); // fallback
+      }
+      
+      const filePath = path.join(basePath, document.originalPath);
       if (fs.existsSync(filePath)) {
         try {
           fs.unlinkSync(filePath);

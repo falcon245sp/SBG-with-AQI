@@ -319,12 +319,18 @@ export class ExportProcessor {
     pdf.setFontSize(8);
     pdf.text('Standards Sherpa - Professional Standards-Based Assessment Tool', 105, yPosition, { align: 'center' } as any);
     
+    // Ensure rubrics directory exists
+    const rubricsDir = path.join(process.cwd(), 'appdata', 'generated', 'rubrics');
+    if (!fs.existsSync(rubricsDir)) {
+      fs.mkdirSync(rubricsDir, { recursive: true });
+    }
+    
     // Save PDF with user-friendly filename
     const baseFileName = document.fileName.replace(/\.[^/.]+$/, ""); // Remove file extension
     const cleanFileName = baseFileName.replace(/[^a-zA-Z0-9\s-_]/g, '').replace(/\s+/g, '-'); // Clean filename
     const timestamp = new Date().toISOString().slice(0, 10); // Use YYYY-MM-DD format
     const fileName = `${cleanFileName}_rubric_${timestamp}.pdf`;
-    const filePath = path.join(process.cwd(), 'uploads', fileName);
+    const filePath = path.join(rubricsDir, fileName);
     
     fs.writeFileSync(filePath, Buffer.from(pdf.output('arraybuffer')));
     
@@ -385,12 +391,18 @@ export class ExportProcessor {
       }
     }
     
+    // Ensure cover sheets directory exists
+    const coversheetsDir = path.join(process.cwd(), 'appdata', 'generated', 'coversheets');
+    if (!fs.existsSync(coversheetsDir)) {
+      fs.mkdirSync(coversheetsDir, { recursive: true });
+    }
+    
     // Save PDF with user-friendly filename
     const baseFileName = document.fileName.replace(/\.[^/.]+$/, ""); // Remove file extension
     const cleanFileName = baseFileName.replace(/[^a-zA-Z0-9\s-_]/g, '').replace(/\s+/g, '-'); // Clean filename
     const timestamp = new Date().toISOString().slice(0, 10); // Use YYYY-MM-DD format
     const fileName = `${cleanFileName}_cover-sheet_${timestamp}.pdf`;
-    const filePath = path.join(process.cwd(), 'uploads', fileName);
+    const filePath = path.join(coversheetsDir, fileName);
     
     fs.writeFileSync(filePath, Buffer.from(pdf.output('arraybuffer')));
     

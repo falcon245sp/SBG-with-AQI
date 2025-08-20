@@ -127,11 +127,12 @@ export class RubricCollationService {
       const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-');
       const baseFileName = originalDocument.fileName.replace(/\.[^/.]+$/, ''); // Remove extension
       const fileName = `${baseFileName}_Graded_Submissions_${timestamp}.pdf`;
-      const filePath = path.join('uploads', fileName);
+      const gradedsDir = path.join(process.cwd(), 'appdata', 'generated', 'graded');
+      const filePath = path.join(gradedsDir, fileName);
       
-      // Ensure uploads directory exists
-      if (!fs.existsSync('uploads')) {
-        fs.mkdirSync('uploads', { recursive: true });
+      // Ensure graded submissions directory exists
+      if (!fs.existsSync(gradedsDir)) {
+        fs.mkdirSync(gradedsDir, { recursive: true });
       }
       
       // Save PDF to file
