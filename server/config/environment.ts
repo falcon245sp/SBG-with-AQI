@@ -105,3 +105,10 @@ class EnvironmentManager {
 
 export const environmentManager = new EnvironmentManager();
 export const config = environmentManager.getConfig();
+
+// Export individual file path constants for easy access
+export const STABLE_UPLOADS_DIR = config.uploadsDir;
+export const STABLE_GENERATED_DIR = config.generatedDir;
+export const STABLE_RUBRICS_DIR = config.rubricsDir;
+export const STABLE_COVERSHEETS_DIR = config.coversheetsDir;
+export const STABLE_GRADED_DIR = config.gradedDir;
