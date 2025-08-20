@@ -712,55 +712,7 @@ export default function DocumentResults() {
                       </div>
                     </div>
                   </div>
-                  
-                  {/* DEBUG SECTION - ALWAYS VISIBLE */}
-                  <div className="mt-6 p-4 bg-red-50 border-2 border-red-300 rounded-lg">
-                    <h3 className="text-lg font-bold text-red-900 mb-2">🐛 DEBUG INFO</h3>
-                    <p className="text-red-700 mb-2"><strong>Document ID:</strong> {document.id}</p>
-                    <p className="text-red-700 mb-2"><strong>Status:</strong> {document.status}</p>
-                    <p className="text-red-700 mb-2"><strong>Teacher Review:</strong> {document.teacherReviewStatus}</p>
-                    <p className="text-red-700 mb-2"><strong>Should show button:</strong> {String(document.status === 'completed' && document.teacherReviewStatus === 'not_reviewed')}</p>
-                    <p className="text-red-700 mb-4"><strong>Document ID available:</strong> {String(!!document.id)}</p>
-                    <div className="flex gap-4">
-                      <button
-                        onClick={() => {
-                          console.log('🐛 DEBUG: Simple test button clicked');
-                          console.log('🐛 DEBUG: Document object:', document);
-                          console.log('🐛 DEBUG: Document ID exists:', !!document.id);
-                          console.log('🐛 DEBUG: Document status:', document.status);
-                          console.log('🐛 DEBUG: Teacher review status:', document.teacherReviewStatus);
-                          alert('✅ TEST BUTTON WORKS! Check browser console (F12) for debug logs.');
-                        }}
-                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
-                      >
-                        🧪 Test Button
-                      </button>
-                      <button
-                        onClick={() => {
-                          console.log('🐛 DEBUG: DEBUG Accept & Proceed button clicked');
-                          console.log('🐛 DEBUG: Document ID:', document.id);
-                          console.log('🐛 DEBUG: About to call handleAcceptAndProceed with document.id:', document.id);
-                          console.log('🐛 DEBUG: typeof document.id:', typeof document.id);
-                          
-                          if (!document.id) {
-                            console.error('🐛 DEBUG: ERROR - No document ID available!');
-                            alert('ERROR: No document ID available!');
-                            return;
-                          }
-                          
-                          try {
-                            handleAcceptAndProceed();
-                          } catch (error: any) {
-                            console.error('🐛 DEBUG: Error in handleAcceptAndProceed:', error);
-                            alert('Error: ' + (error?.message || 'Unknown error'));
-                          }
-                        }}
-                        className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium"
-                      >
-                        ✅ DEBUG Accept & Proceed
-                      </button>
-                    </div>
-                  </div>
+
 
                   {/* Teacher Review Actions - conditional display */}
                   {document.status === 'completed' && document.teacherReviewStatus === 'not_reviewed' && (

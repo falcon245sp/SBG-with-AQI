@@ -75,12 +75,20 @@ export class ExportProcessor {
           throw new Error(`Unsupported export type: ${exportItem.exportType}`);
       }
 
-      // Create generated document record
-      const fullFilePath = path.join(process.cwd(), 'uploads', exportFilePath);
+      // Create generated document record with correct file path
+      let fullFilePath: string;
+      if (exportItem.exportType === 'rubric_pdf') {
+        fullFilePath = path.join(process.cwd(), config.rubricsDir, path.basename(exportFilePath));
+      } else if (exportItem.exportType === 'cover_sheet') {
+        fullFilePath = path.join(process.cwd(), config.coversheetsDir, path.basename(exportFilePath));
+      } else {
+        fullFilePath = path.join(process.cwd(), config.generatedDir, path.basename(exportFilePath));
+      }
+      
       const documentData = {
-        fileName: exportFilePath, // Use the filename as returned by generator
-        originalPath: exportFilePath,
-        filePath: exportFilePath,
+        fileName: path.basename(exportFilePath), // Use just the filename
+        originalPath: path.basename(exportFilePath),
+        filePath: path.basename(exportFilePath),
         fileSize: fs.statSync(fullFilePath).size,
         mimeType: exportMimeType,
         parentDocumentId: document.id
