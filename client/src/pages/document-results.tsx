@@ -828,69 +828,110 @@ export default function DocumentResults() {
                                 </div>
                               </td>
                               <td className="px-6 py-4">
-                                {question.teacherOverride ? (
-                                  <div className="space-y-2">
-                                    {question.teacherOverride.overriddenStandards.map((standard, stdIndex) => (
-                                      <div key={stdIndex} className="text-sm text-slate-900">
-                                        <Badge variant="outline" className="font-mono text-xs mr-2">
-                                          {standard.code}
-                                        </Badge>
-                                        {standard.description}
+                                {(() => {
+                                  // NEW ARCHITECTURE: Use CONFIRMED data first, then fallback to old logic
+                                  const effectiveStandards = question.confirmedData?.finalStandards || 
+                                                            question.teacherOverride?.overriddenStandards || 
+                                                            question.result?.consensusStandards || [];
+                                  
+                                  if (effectiveStandards.length > 0) {
+                                    return (
+                                      <div className="space-y-2">
+                                        {effectiveStandards.map((standard: any, stdIndex: number) => (
+                                          <div key={stdIndex} className="text-sm text-slate-900">
+                                            <Badge variant="outline" className="font-mono text-xs mr-2">
+                                              {standard.code}
+                                            </Badge>
+                                            {standard.description}
+                                          </div>
+                                        ))}
                                       </div>
-                                    ))}
-                                  </div>
-                                ) : question.result?.consensusStandards && question.result.consensusStandards.length > 0 ? (
-                                  <div className="space-y-2">
-                                    {question.result.consensusStandards.map((standard, stdIndex) => (
-                                      <div key={stdIndex} className="text-sm text-slate-900">
-                                        <Badge variant="outline" className="font-mono text-xs mr-2">
-                                          {standard.code}
-                                        </Badge>
-                                        {standard.description}
-                                      </div>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <span className="text-sm text-slate-400">No standards identified</span>
-                                )}
+                                    );
+                                  } else {
+                                    return <span className="text-sm text-slate-400">No standards identified</span>;
+                                  }
+                                })()}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                {question.teacherOverride ? (
-                                  <div className="flex items-center space-x-2">
-                                    <Tooltip>
-                                      <TooltipTrigger>
-                                        <RigorBadge level={question.teacherOverride.overriddenRigorLevel} />
-                                      </TooltipTrigger>
-                                      <TooltipContent className="max-w-sm min-w-48 max-h-64 overflow-y-auto p-4 bg-slate-800 text-white border-slate-700">
-                                        <p className="text-sm leading-6 whitespace-pre-wrap break-words">
-                                          {question.teacherOverride.notes || question.teacherOverride.editReason || 'Teacher override - no justification provided'}
-                                        </p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                    <Badge variant="outline" className="text-xs text-green-600 border-green-300 bg-green-50">
-                                      <Edit3 className="w-3 h-3 mr-1" />
-                                      TEACHER OVERRIDE
-                                    </Badge>
-                                  </div>
-                                ) : question.result ? (
-                                  <div className="flex items-center space-x-2">
-                                    {question.aiResponses && question.aiResponses.length > 0 && question.aiResponses[0].rigorJustification ? (
-                                      <Tooltip>
-                                        <TooltipTrigger>
+                                {(() => {
+                                  // NEW ARCHITECTURE: Use CONFIRMED data first, then fallback to old logic
+                                  if (question.confirmedData) {
+                                    const effectiveRigor = question.confirmedData.finalRigorLevel as 'mild' | 'medium' | 'spicy';
+                                    const hasTeacherOverride = question.confirmedData.hasTeacherOverride;
+                                    const confirmedDataAny = question.confirmedData as any;
+                                    const justification = confirmedDataAny.teacherNotes || 
+                                                        question.aiResponses?.[0]?.rigorJustification || 
+                                                        'No justification available';
+                                    
+                                    return (
+                                      <div className="flex items-center space-x-2">
+                                        <Tooltip>
+                                          <TooltipTrigger>
+                                            <RigorBadge level={effectiveRigor} />
+                                          </TooltipTrigger>
+                                          <TooltipContent className="max-w-sm min-w-48 max-h-64 overflow-y-auto p-4 bg-slate-800 text-white border-slate-700">
+                                            <p className="text-sm leading-6 whitespace-pre-wrap break-words">
+                                              {justification}
+                                            </p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                        <Badge variant="outline" className={`text-xs ${
+                                          hasTeacherOverride 
+                                            ? 'text-green-600 border-green-300 bg-green-50' 
+                                            : 'text-blue-600 border-blue-300'
+                                        }`}>
+                                          {hasTeacherOverride ? (
+                                            <>
+                                              <Edit3 className="w-3 h-3 mr-1" />
+                                              TEACHER (CONFIRMED)
+                                            </>
+                                          ) : (
+                                            'SHERPA (CONFIRMED)'
+                                          )}
+                                        </Badge>
+                                      </div>
+                                    );
+                                  } else if (question.teacherOverride) {
+                                    return (
+                                      <div className="flex items-center space-x-2">
+                                        <Tooltip>
+                                          <TooltipTrigger>
+                                            <RigorBadge level={question.teacherOverride.overriddenRigorLevel} />
+                                          </TooltipTrigger>
+                                          <TooltipContent className="max-w-sm min-w-48 max-h-64 overflow-y-auto p-4 bg-slate-800 text-white border-slate-700">
+                                            <p className="text-sm leading-6 whitespace-pre-wrap break-words">
+                                              {question.teacherOverride.notes || question.teacherOverride.editReason || 'Teacher override - no justification provided'}
+                                            </p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                        <Badge variant="outline" className="text-xs text-green-600 border-green-300 bg-green-50">
+                                          <Edit3 className="w-3 h-3 mr-1" />
+                                          TEACHER OVERRIDE
+                                        </Badge>
+                                      </div>
+                                    );
+                                  } else if (question.result) {
+                                    return (
+                                      <div className="flex items-center space-x-2">
+                                        {question.aiResponses && question.aiResponses.length > 0 && question.aiResponses[0].rigorJustification ? (
+                                          <Tooltip>
+                                            <TooltipTrigger>
+                                              <RigorBadge level={question.result.consensusRigorLevel} />
+                                            </TooltipTrigger>
+                                            <TooltipContent className="max-w-sm min-w-48 max-h-64 overflow-y-auto p-4 bg-slate-800 text-white border-slate-700">
+                                              <p className="text-sm leading-6 whitespace-pre-wrap break-words">{question.aiResponses[0].rigorJustification}</p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        ) : (
                                           <RigorBadge level={question.result.consensusRigorLevel} />
-                                        </TooltipTrigger>
-                                        <TooltipContent className="max-w-sm min-w-48 max-h-64 overflow-y-auto p-4 bg-slate-800 text-white border-slate-700">
-                                          <p className="text-sm leading-6 whitespace-pre-wrap break-words">{question.aiResponses[0].rigorJustification}</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    ) : (
-                                      <RigorBadge level={question.result.consensusRigorLevel} />
-                                    )}
-                                    <Badge variant="outline" className="text-xs text-blue-600 border-blue-300">SHERPA</Badge>
-                                  </div>
-                                ) : (
-                                  <span className="text-sm text-slate-400">Not analyzed</span>
-                                )}
+                                        )}
+                                        <Badge variant="outline" className="text-xs text-blue-600 border-blue-300">SHERPA</Badge>
+                                      </div>
+                                    );
+                                  } else {
+                                    return <span className="text-sm text-slate-400">Not analyzed</span>;
+                                  }
+                                })()}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 {question.result && (
@@ -909,8 +950,14 @@ export default function DocumentResults() {
                                           onClick={() => {
                                             setEditingQuestionId(question.id);
                                             setOpenDialogs(prev => ({ ...prev, [question.id]: true }));
-                                            // Use teacher override data if it exists, otherwise use AI data
-                                            const currentData = question.teacherOverride ? {
+                                            // NEW ARCHITECTURE: Use CONFIRMED data first, then fallback to old logic
+                                            const confirmedDataAny = question.confirmedData as any;
+                                            const currentData = question.confirmedData ? {
+                                              rigorLevel: question.confirmedData.finalRigorLevel as 'mild' | 'medium' | 'spicy',
+                                              standards: question.confirmedData.finalStandards?.map((s: any) => s.code).join(', ') || '',
+                                              justification: confirmedDataAny?.teacherNotes || question.aiResponses?.[0]?.rigorJustification || '',
+                                              confidence: (confirmedDataAny?.teacherConfidenceScore || confirmedDataAny?.aiConfidenceScore || 5) as number
+                                            } : question.teacherOverride ? {
                                               rigorLevel: question.teacherOverride.overriddenRigorLevel,
                                               standards: question.teacherOverride.overriddenStandards?.map(s => s.code).join(', ') || '',
                                               justification: question.teacherOverride.notes || question.teacherOverride.editReason || '',
