@@ -2,7 +2,7 @@ import { storage } from '../storage';
 import { ProcessingStatus, TeacherReviewStatus, AssetType, ExportType, AiEngine, RigorLevel, GradeSubmissionStatus, BusinessDefaults } from "../../shared/businessEnums";
 import { DatabaseWriteService } from './databaseWriteService';
 import { aiService } from './aiService';
-import { rigorAnalyzer } from './rigorAnalyzer';
+// Removed rigorAnalyzer - using direct AI responses now
 import * as fs from 'fs';
 import * as path from 'path';
 import { exec } from 'child_process';
@@ -171,7 +171,7 @@ export class DocumentProcessor {
 
   private async storeAIResultsWithJsonVoting(question: any, aiResults: any): Promise<void> {
     try {
-      console.log(`\n===== RAW AI RESPONSE CAPTURE =====`);
+      console.log(`\n===== DIRECT AI TO DRAFT ANALYSIS =====`);
       console.log(`Processing AI results for question ${question.id} (${question.questionNumber})`);
       console.log(`Question Text: ${question.questionText?.substring(0, 100)}...`);
       console.log('Raw AI results received:', JSON.stringify(aiResults, null, 2));
@@ -187,48 +187,39 @@ export class DocumentProcessor {
         }
       }
       
-      // Validate Grok result exists
-      if (!aiResults.grok) {
-        throw new Error('Missing Grok analysis result');
+      // Validate AI result exists  
+      const aiResult = aiResults.grok || aiResults.claude || aiResults.openai;
+      if (!aiResult) {
+        throw new Error('No AI analysis result found');
       }
       
-      // Use the AI results directly without additional JSON extraction
-      const enhancedResults = {
-        grok: {
-          ...aiResults.grok,
-          aiEngine: AiEngine.GROK
-        }
-      };
+      console.log(`Using AI result from engine: ${aiResult.aiEngine || 'unknown'}`);
+      console.log('Direct AI standards:', JSON.stringify(aiResult.standards));
+      console.log('Direct AI rigor:', JSON.stringify(aiResult.rigor));
       
-      console.log('Enhanced results (no extra parsing):', JSON.stringify(enhancedResults, null, 2));
+      // Store raw AI response for reference (optional - keep for debugging)
+      await this.storeIndividualAIResponses(question, { [aiResult.aiEngine || 'grok']: aiResult });
       
-      // Store individual AI responses (only Grok)
-      await this.storeIndividualAIResponses(question, enhancedResults);
-      
-      // Use single-engine analysis (Grok only)
-      const consensusResult = rigorAnalyzer.analyzeSingleEngineResult(enhancedResults);
-      console.log('Consensus result:', JSON.stringify(consensusResult, null, 2));
+      // NO CONSENSUS - Use AI response directly as DRAFT
+      await DatabaseWriteService.createQuestionResult({
+        questionId: question.id,
+        consensusStandards: aiResult.standards || [],
+        consensusRigorLevel: aiResult.rigor?.level || 'mild',
+        standardsVotes: {}, // No voting needed
+        rigorVotes: {}, // No voting needed  
+        confidenceScore: (aiResult.rigor?.confidence || 0.8).toString(),
+      });
       
       // Extra debug for first 4 questions
       if (parseInt(question.questionNumber) <= 4) {
-        console.log(`\n[MILD CHECK] Question ${question.questionNumber} Final Consensus:`);
-        console.log(`[MILD CHECK] - Final Rigor Level: ${consensusResult.consensusRigorLevel}`);
-        console.log(`[MILD CHECK] - Final Standards: ${JSON.stringify(consensusResult.consensusStandards)}`);
-        console.log(`[MILD CHECK] - Rigor Votes: ${JSON.stringify(consensusResult.rigorVotes)}`);
+        console.log(`\n[MILD CHECK] Question ${question.questionNumber} DRAFT Analysis (Direct from AI):`);
+        console.log(`[MILD CHECK] - Standards: ${JSON.stringify(aiResult.standards)}`);
+        console.log(`[MILD CHECK] - Rigor Level: ${aiResult.rigor?.level}`);
+        console.log(`[MILD CHECK] - Confidence: ${aiResult.rigor?.confidence}`);
       }
-      console.log(`===== END RAW AI CAPTURE =====\n`);
+      console.log(`===== END DIRECT AI TO DRAFT =====\n`);
       
-      // Store consensus result
-      await DatabaseWriteService.createQuestionResult({
-        questionId: question.id,
-        consensusStandards: consensusResult.consensusStandards,
-        consensusRigorLevel: consensusResult.consensusRigorLevel,
-        standardsVotes: consensusResult.standardsVotes,
-        rigorVotes: consensusResult.rigorVotes,
-        confidenceScore: consensusResult.confidenceScore.toString(),
-      });
-      
-      console.log(`Successfully processed question ${question.id} with single-engine analysis`);
+      console.log(`Successfully stored DRAFT analysis for question ${question.id} directly from AI response`);
     } catch (error) {
       console.error(`=== DETAILED ERROR ANALYSIS for question ${question.id} ===`);
       console.error('Error type:', error instanceof Error ? error.constructor.name : typeof error);
@@ -238,86 +229,11 @@ export class DocumentProcessor {
       console.error('Question details:', JSON.stringify(question, null, 2));
       console.error('=== END ERROR ANALYSIS ===');
       
-      // Fallback to original method
-      try {
-        console.log('Attempting fallback storage method...');
-        await this.storeAIResults(question, aiResults);
-        console.log('Fallback storage succeeded');
-      } catch (fallbackError) {
-        console.error('Fallback storage also failed:', fallbackError);
-        throw error; // Re-throw original error
-      }
+      throw error; // No fallback needed - direct AI storage
     }
   }
   
-  private extractJsonFromResponse(aiResult: any, engineName: string): any {
-    try {
-      console.log(`=== JSON EXTRACTION ATTEMPT for ${engineName} ===`);
-      console.log('AI result has keys:', Object.keys(aiResult || {}));
-      
-      // If jsonResponse already exists, use it
-      if (aiResult.jsonResponse) {
-        console.log('Using existing jsonResponse');
-        return aiResult.jsonResponse;
-      }
-      
-      // Try to extract JSON from rawResponse
-      if (aiResult.rawResponse) {
-        let content = '';
-        console.log('Raw response structure:', Object.keys(aiResult.rawResponse));
-        
-        if (engineName === 'grok' && aiResult.rawResponse.choices) {
-          content = aiResult.rawResponse.choices[0]?.message?.content || '';
-          console.log('Extracted content from Grok (first 200 chars):', content.substring(0, 200));
-        }
-        
-        if (content) {
-          try {
-            const parsed = JSON.parse(content);
-            console.log(`Successfully extracted JSON from ${engineName}`);
-            return parsed;
-          } catch (parseError) {
-            console.error(`=== JSON PARSE ERROR for ${engineName} ===`);
-            console.error('Parse error:', parseError);
-            console.error('Content length:', content.length);
-            console.error('Content sample:', content.substring(0, 500));
-            console.error('=== END PARSE ERROR ===');
-            throw parseError;
-          }
-        } else {
-          console.warn(`No content found in ${engineName} rawResponse`);
-        }
-      } else {
-        console.warn(`No rawResponse found for ${engineName}`);
-      }
-      
-      // Fallback: construct from existing structured data
-      console.log('Using fallback JSON construction');
-      const fallback = {
-        standards: aiResult.standards || [],
-        rigor: aiResult.rigor || { level: 'mild', dokLevel: 'DOK 1', justification: 'No data available', confidence: 0.1 }
-      };
-      console.log('Fallback result:', fallback);
-      return fallback;
-    } catch (error) {
-      console.error(`=== JSON EXTRACTION FAILED for ${engineName} ===`);
-      console.error('Error type:', error instanceof Error ? error.constructor.name : typeof error);
-      console.error('Error message:', error instanceof Error ? error.message : String(error));
-      console.error('AI result structure:', JSON.stringify(aiResult, (key, value) => {
-        if (typeof value === 'string' && value.length > 100) {
-          return value.substring(0, 100) + '...[truncated]';
-        }
-        return value;
-      }, 2));
-      console.error('=== END JSON EXTRACTION FAILURE ===');
-      
-      return {
-        error: `Failed to parse JSON response: ${error instanceof Error ? error.message : String(error)}`,
-        standards: aiResult.standards || [],
-        rigor: aiResult.rigor || { level: 'mild', dokLevel: 'DOK 1', justification: 'Parse error', confidence: 0.1 }
-      };
-    }
-  }
+
   
   private async storeIndividualAIResponses(question: any, enhancedResults: any): Promise<void> {
     try {
@@ -355,67 +271,7 @@ export class DocumentProcessor {
     }
   }
 
-  private async storeAIResults(question: any, aiResults: any): Promise<void> {
-    try {
-      console.log('Storing AI results (Grok only)');
-      
-      if (!aiResults.grok) {
-        throw new Error('Missing Grok analysis result');
-      }
-      
-      const grokResult = aiResults.grok;
-      console.log('Storing Grok result with details:', {
-        hasStandards: !!grokResult.standards,
-        standardsCount: grokResult.standards?.length || 0,
-        rigorLevel: grokResult.rigor?.level,
-        confidence: grokResult.rigor?.confidence
-      });
-      
-      // Store Grok AI response
-      await DatabaseWriteService.createAIResponse({
-        questionId: question.id,
-        aiEngine: 'grok',
-        standardsIdentified: grokResult.standards || [],
-        rigorLevel: grokResult.rigor?.level || 'mild',
-        rigorJustification: grokResult.rigor?.justification || 'No justification provided',
-        confidence: (grokResult.rigor?.confidence || 0.5).toString(),
-        rawResponse: grokResult.rawResponse || {},
-        processingTime: grokResult.processingTime || 0,
-      });
-      
-      console.log('Successfully stored Grok AI result');
 
-      // Only store Claude response if it exists
-      if (aiResults.claude) {
-        await DatabaseWriteService.createAIResponse({
-          questionId: question.id,
-          aiEngine: 'claude',
-          standardsIdentified: aiResults.claude.standards || [],
-          rigorLevel: aiResults.claude.rigor?.level || 'mild',
-          rigorJustification: aiResults.claude.rigor?.justification || 'No justification provided',
-          confidence: (aiResults.claude.rigor?.confidence || 0.5).toString(),
-          rawResponse: aiResults.claude.rawResponse || {},
-          processingTime: aiResults.claude.processingTime || 0,
-        });
-      }
-
-      // Use single-engine analysis (Grok only)
-      const consensusResult = rigorAnalyzer.analyzeSingleEngineResult(aiResults);
-
-      // Store consensus result
-      await DatabaseWriteService.createQuestionResult({
-        questionId: question.id,
-        consensusStandards: consensusResult.consensusStandards,
-        consensusRigorLevel: consensusResult.consensusRigorLevel,
-        standardsVotes: consensusResult.standardsVotes,
-        rigorVotes: consensusResult.rigorVotes,
-        confidenceScore: consensusResult.confidenceScore.toString(),
-      });
-    } catch (error) {
-      console.error(`Error storing AI results for question ${question.id}:`, error);
-      throw error;
-    }
-  }
 
 
   private async extractTextFromDocument(filePath: string, mimeType: string): Promise<string> {
