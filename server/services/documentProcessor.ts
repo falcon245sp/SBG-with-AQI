@@ -171,8 +171,21 @@ export class DocumentProcessor {
 
   private async storeAIResultsWithJsonVoting(question: any, aiResults: any): Promise<void> {
     try {
-      console.log(`Processing AI results for question ${question.id} (Grok only)`);
+      console.log(`\n===== RAW AI RESPONSE CAPTURE =====`);
+      console.log(`Processing AI results for question ${question.id} (${question.questionNumber})`);
+      console.log(`Question Text: ${question.questionText?.substring(0, 100)}...`);
       console.log('Raw AI results received:', JSON.stringify(aiResults, null, 2));
+      
+      // Extra debug for first 4 questions (should be MILD)
+      if (parseInt(question.questionNumber) <= 4) {
+        console.log(`\n[MILD CHECK] Question ${question.questionNumber} Raw AI Data:`);
+        if (aiResults.grok?.rigor) {
+          console.log(`[MILD CHECK] - Grok Rigor Raw: ${JSON.stringify(aiResults.grok.rigor)}`);
+        }
+        if (aiResults.claude?.rigor) {
+          console.log(`[MILD CHECK] - Claude Rigor Raw: ${JSON.stringify(aiResults.claude.rigor)}`);
+        }
+      }
       
       // Validate Grok result exists
       if (!aiResults.grok) {
@@ -196,6 +209,15 @@ export class DocumentProcessor {
       // Use single-engine analysis (Grok only)
       const consensusResult = rigorAnalyzer.analyzeSingleEngineResult(enhancedResults);
       console.log('Consensus result:', JSON.stringify(consensusResult, null, 2));
+      
+      // Extra debug for first 4 questions
+      if (parseInt(question.questionNumber) <= 4) {
+        console.log(`\n[MILD CHECK] Question ${question.questionNumber} Final Consensus:`);
+        console.log(`[MILD CHECK] - Final Rigor Level: ${consensusResult.consensusRigorLevel}`);
+        console.log(`[MILD CHECK] - Final Standards: ${JSON.stringify(consensusResult.consensusStandards)}`);
+        console.log(`[MILD CHECK] - Rigor Votes: ${JSON.stringify(consensusResult.rigorVotes)}`);
+      }
+      console.log(`===== END RAW AI CAPTURE =====\n`);
       
       // Store consensus result
       await DatabaseWriteService.createQuestionResult({
