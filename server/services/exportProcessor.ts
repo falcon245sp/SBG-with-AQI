@@ -298,7 +298,6 @@ export class ExportProcessor {
       
       // Get rigor level from CONFIRMED analysis
       let rigorDisplay = '*';
-      let rigorSource = questionAnalysis.hasTeacherOverride ? ' (Teacher)' : ' (AI)';
       if (questionAnalysis.finalRigorLevel) {
         const rigor = questionAnalysis.finalRigorLevel.toLowerCase();
         if (rigor === 'mild') rigorDisplay = '*';
@@ -326,11 +325,9 @@ export class ExportProcessor {
       pdf.setFontSize(8);
       pdf.text(standardsText, cols.criteria.x + 2, yPosition + 16);
       
-      // Rigor column with source indicator
+      // Rigor column (no source indicator)
       pdf.setFontSize(12);
       pdf.text(rigorDisplay, cols.rigor.x + 5, yPosition + 10);
-      pdf.setFontSize(6);
-      pdf.text(rigorSource, cols.rigor.x + 1, yPosition + 17);
       
       // Full Credit column
       pdf.setFontSize(8);
@@ -486,11 +483,10 @@ export class ExportProcessor {
       
       // Get rigor level from CONFIRMED analysis
       let rigorText = 'Medium';
-      let rigorSource = questionAnalysis.hasTeacherOverride ? ' (Teacher)' : ' (AI)';
       if (questionAnalysis.finalRigorLevel) {
         rigorText = questionAnalysis.finalRigorLevel.charAt(0).toUpperCase() + questionAnalysis.finalRigorLevel.slice(1);
       }
-      pdf.text(rigorText + rigorSource, 150, yPosition);
+      pdf.text(rigorText, 150, yPosition);
       yPosition += 8;
       
       // Start new page if needed

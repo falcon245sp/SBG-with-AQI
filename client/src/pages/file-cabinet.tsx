@@ -141,6 +141,7 @@ export default function FileCabinet() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteDocumentId, setDeleteDocumentId] = useState<string | null>(null);
   const [deletionImpact, setDeletionImpact] = useState<any>(null);
+  const [deletingDocumentId, setDeletingDocumentId] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -209,6 +210,7 @@ export default function FileCabinet() {
       return response.json();
     },
     onSuccess: () => {
+      setDeletingDocumentId(null); // Clear deletion state
       queryClient.invalidateQueries({ queryKey: ['file-cabinet'] });
       toast({
         title: "Document Deleted",
@@ -216,6 +218,7 @@ export default function FileCabinet() {
       });
     },
     onError: (error) => {
+      setDeletingDocumentId(null); // Clear deletion state on error
       toast({
         title: "Deletion Failed",
         description: error.message,
@@ -259,6 +262,7 @@ export default function FileCabinet() {
 
   const confirmDelete = () => {
     if (deleteDocumentId) {
+      setDeletingDocumentId(deleteDocumentId); // Set specific document being deleted
       deleteMutation.mutate(deleteDocumentId);
       setDeleteConfirmOpen(false);
       setDeleteDocumentId(null);
@@ -831,7 +835,7 @@ export default function FileCabinet() {
                                 }
                               >
                                 {hasPendingExports(doc.parentDocument?.id || doc.id) ? (
-                                  <div className="w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full animate-spin" />
+                                  <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                                 ) : (
                                   <FileText className="h-4 w-4" />
                                 )}
@@ -877,7 +881,7 @@ export default function FileCabinet() {
                                 }
                               >
                                 {hasPendingExports(doc.parentDocument?.id || doc.id) ? (
-                                  <div className="w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full animate-spin" />
+                                  <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                                 ) : (
                                   <Eye className="h-4 w-4" />
                                 )}
@@ -888,10 +892,10 @@ export default function FileCabinet() {
                               variant="outline" 
                               title="Delete document"
                               onClick={() => handleDeleteDocument(doc.id, doc.originalFilename || doc.fileName)}
-                              disabled={deleteMutation.isPending}
+                              disabled={deletingDocumentId === doc.id}
                               className="text-red-600 hover:text-red-700"
                             >
-                              {deleteMutation.isPending ? (
+                              {deletingDocumentId === doc.id ? (
                                 <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
                               ) : (
                                 <Trash2 className="h-4 w-4" />
