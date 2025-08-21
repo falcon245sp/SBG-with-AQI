@@ -266,14 +266,14 @@ export default function FileCabinet() {
       return response.json();
     },
     refetchInterval: (query) => {
-      // Poll every 2 seconds if there are any processing documents or export queue items
+      // Poll every 10 seconds if there are any processing documents or export queue items
       const data = query.state.data;
       const hasProcessingDocs = data?.documents?.some(doc => 
         doc.status === 'processing' || 
         doc.status === 'pending' || 
         doc.teacherReviewStatus === 'not_reviewed'
       );
-      return hasProcessingDocs ? 2000 : false;
+      return hasProcessingDocs ? 10000 : false;
     },
     refetchIntervalInBackground: true,
     staleTime: 0, // Always treat data as stale for fresh status updates
