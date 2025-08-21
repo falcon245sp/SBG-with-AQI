@@ -262,7 +262,11 @@ export class DatabaseWriteService {
       console.log(`[DatabaseWriteService] Deleting questions for document: ${documentId}`);
       await storage.deleteQuestionsByDocumentId(documentId);
       
-      // 4. Finally, delete the document record
+      // 4. Delete CONFIRMED analysis records for this document (CRITICAL: Must be done before document deletion)
+      console.log(`[DatabaseWriteService] Deleting CONFIRMED analysis for document: ${documentId}`);
+      await storage.deleteConfirmedAnalysisByDocumentId(documentId);
+      
+      // 5. Finally, delete the document record
       await storage.deleteDocument(documentId);
       console.log(`[DatabaseWriteService] Document deleted successfully: ${documentId}`);
     } catch (error) {

@@ -1627,6 +1627,24 @@ export class DatabaseStorage implements IStorage {
       .from(documents)
       .where(eq(documents.parentDocumentId, parentDocumentId));
   }
+
+  /**
+   * Delete CONFIRMED analysis records by document ID (CRITICAL for document deletion)
+   */
+  async deleteConfirmedAnalysisByDocumentId(documentId: string): Promise<void> {
+    console.log(`[Storage] Deleting CONFIRMED analysis records for document: ${documentId}`);
+    
+    // Import the confirmedAnalysis table from schema
+    const { confirmedAnalysis } = await import('../shared/schema');
+    
+    // Delete all CONFIRMED analysis records for this document
+    const deletedRecords = await db
+      .delete(confirmedAnalysis)
+      .where(eq(confirmedAnalysis.documentId, documentId))
+      .returning();
+    
+    console.log(`[Storage] Deleted ${deletedRecords.length} CONFIRMED analysis records for document: ${documentId}`);
+  }
 }
 
 export const storage = new DatabaseStorage();
