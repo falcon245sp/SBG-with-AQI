@@ -176,14 +176,18 @@ export async function syncClassroomData(req: Request, res: Response) {
     // Sync classrooms from Google Classroom API using getClassrooms method
     const googleClassrooms = await googleAuth.getClassrooms(user.googleAccessToken, user.googleRefreshToken || undefined);
     
+    // Import the classifier at the top level
+    const { ClassroomClassifier } = await import('../services/classroomClassifier.js');
+    
     // Classify and save/update classrooms in database with subject area detection
     const classifiedClassrooms = googleClassrooms.map((classroom: any) => {
-      const { ClassroomClassifier } = require('../services/classroomClassifier');
       const classification = ClassroomClassifier.classifyClassroom({
         name: classroom.name,
         section: classroom.section,
         description: classroom.description
       });
+      
+      console.log(`[OAuth] Classifying "${classroom.name}":`, classification);
       
       return {
         ...classroom,
