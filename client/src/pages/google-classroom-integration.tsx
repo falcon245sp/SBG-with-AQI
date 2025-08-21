@@ -326,7 +326,7 @@ export default function GoogleClassroomIntegration() {
       } else {
         toast({
           title: "Standards Configuration Saved",
-          description: "Successfully configured classroom standards.",
+          description: "Successfully configured classroom standards and enabled Standards-Based Grading.",
         });
       }
       
@@ -848,7 +848,7 @@ export default function GoogleClassroomIntegration() {
                 
                 toast({
                   title: "Bulk Configuration Complete",
-                  description: `Successfully configured standards for ${totalClassrooms} classroom(s) in this course group.`,
+                  description: `Successfully configured standards and enabled SBG for ${totalClassrooms} classroom(s) in this course group.`,
                   duration: 6000,
                 });
                 

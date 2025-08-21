@@ -156,7 +156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/classrooms/:classroomId/standards-configuration', async (req, res) => {
     try {
       const { classroomId } = req.params;
-      const { jurisdictionId, standardSetId, selectedStandards, courseTitle } = req.body;
+      const { jurisdictionId, standardSetId, selectedStandards, courseTitle, autoEnableSBG = true } = req.body;
       
       if (!classroomId) {
         return res.status(400).json({ error: 'Classroom ID is required' });
@@ -210,6 +210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         standardsJurisdiction: jurisdictionId,
         courseTitle: courseTitle,
         enabledStandards: enabledStandardIds,
+        sbgEnabled: autoEnableSBG, // Auto-enable SBG when configuring standards
         updatedAt: new Date()
       };
 
