@@ -102,11 +102,12 @@ export default function GoogleClassroomIntegration() {
   const [selectedClassroom, setSelectedClassroom] = useState<string | null>(null);
   const [editingClassification, setEditingClassification] = useState<string | null>(null);
   
-  // New state for jurisdiction-based course selection
+  // State for CSP standards configuration workflow
+  const [configuringClassroom, setConfiguringClassroom] = useState<string | null>(null);
+  const [configurationStep, setConfigurationStep] = useState<'jurisdiction' | 'standardSet' | 'standards'>('jurisdiction');
   const [selectedJurisdiction, setSelectedJurisdiction] = useState<string | null>(null);
-  const [selectedGradeBand, setSelectedGradeBand] = useState<string | null>(null);
-  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [selectedStandardSetId, setSelectedStandardSetId] = useState<string | null>(null);
+  const [selectedStandardsMap, setSelectedStandardsMap] = useState<Record<string, boolean>>({});
   
   const queryClient = useQueryClient();
   
@@ -176,6 +177,9 @@ export default function GoogleClassroomIntegration() {
   });
 
   const cspStandards = cspStandardsData?.standards || [];
+
+  // Get selected classroom for standards configuration
+  const configuringClassroomData = classrooms.find(c => c.id === configuringClassroom);
 
   // Fetch assignments for selected classroom
   const { data: assignments = [] } = useQuery<Assignment[]>({
@@ -752,7 +756,11 @@ export default function GoogleClassroomIntegration() {
                                   <button 
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      setEditingClassification(classroom.id);
+                                      setConfiguringClassroom(classroom.id);
+                                      setConfigurationStep('jurisdiction');
+                                      setSelectedJurisdiction(null);
+                                      setSelectedStandardSetId(null);
+                                      setSelectedStandardsMap({});
                                     }}
                                     className="text-xs text-green-700 hover:text-green-900 underline"
                                   >
@@ -926,6 +934,41 @@ export default function GoogleClassroomIntegration() {
           isLoading={updateClassificationMutation.isPending}
         />
       )}
+
+      {/* CSP Standards Configuration Dialog */}
+      {configuringClassroom && configuringClassroomData && (
+        <StandardsConfigurationDialog
+          classroom={configuringClassroomData}
+          step={configurationStep}
+          jurisdictions={jurisdictions}
+          selectedJurisdiction={selectedJurisdiction}
+          gradeBandCourses={gradeBandCourses}
+          selectedStandardSetId={selectedStandardSetId}
+          cspStandards={cspStandards}
+          selectedStandardsMap={selectedStandardsMap}
+          onStepChange={setConfigurationStep}
+          onJurisdictionSelect={setSelectedJurisdiction}
+          onStandardSetSelect={setSelectedStandardSetId}
+          onStandardsChange={setSelectedStandardsMap}
+          onClose={() => {
+            setConfiguringClassroom(null);
+            setConfigurationStep('jurisdiction');
+            setSelectedJurisdiction(null);
+            setSelectedStandardSetId(null);
+            setSelectedStandardsMap({});
+          }}
+          onSave={() => {
+            // TODO: Save selected standards to classroom
+            console.log('Saving standards configuration:', {
+              classroomId: configuringClassroom,
+              jurisdictionId: selectedJurisdiction,
+              standardSetId: selectedStandardSetId,
+              selectedStandards: Object.keys(selectedStandardsMap).filter(id => selectedStandardsMap[id])
+            });
+            setConfiguringClassroom(null);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -1057,6 +1100,254 @@ function ClassificationEditDialog({
           >
             {isLoading ? 'Saving...' : 'Save Settings'}
           </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Standards Configuration Dialog Component - CSP Workflow
+function StandardsConfigurationDialog({
+  classroom,
+  step,
+  jurisdictions,
+  selectedJurisdiction,
+  gradeBandCourses,
+  selectedStandardSetId,
+  cspStandards,
+  selectedStandardsMap,
+  onStepChange,
+  onJurisdictionSelect,
+  onStandardSetSelect,
+  onStandardsChange,
+  onClose,
+  onSave
+}: {
+  classroom: Classroom;
+  step: 'jurisdiction' | 'standardSet' | 'standards';
+  jurisdictions: CSPJurisdiction[];
+  selectedJurisdiction: string | null;
+  gradeBandCourses: CSPGradeBandCourses[];
+  selectedStandardSetId: string | null;
+  cspStandards: CSPStandard[];
+  selectedStandardsMap: Record<string, boolean>;
+  onStepChange: (step: 'jurisdiction' | 'standardSet' | 'standards') => void;
+  onJurisdictionSelect: (jurisdictionId: string) => void;
+  onStandardSetSelect: (standardSetId: string) => void;
+  onStandardsChange: (standardsMap: Record<string, boolean>) => void;
+  onClose: () => void;
+  onSave: () => void;
+}) {
+  
+  // Auto-advance workflow steps
+  const handleJurisdictionSelect = (jurisdictionId: string) => {
+    onJurisdictionSelect(jurisdictionId);
+    onStepChange('standardSet');
+  };
+
+  const handleStandardSetSelect = (standardSetId: string) => {
+    onStandardSetSelect(standardSetId);
+    onStepChange('standards');
+    
+    // Default all standards to "on" when moving to standards step
+    const defaultStandardsMap: Record<string, boolean> = {};
+    cspStandards.forEach(standard => {
+      defaultStandardsMap[standard.id] = true;
+    });
+    onStandardsChange(defaultStandardsMap);
+  };
+
+  const toggleStandard = (standardId: string) => {
+    const newMap = { ...selectedStandardsMap };
+    newMap[standardId] = !newMap[standardId];
+    onStandardsChange(newMap);
+  };
+
+  const selectedJurisdictionData = jurisdictions.find(j => j.id === selectedJurisdiction);
+  const selectedStandardSet = gradeBandCourses
+    .flatMap(gb => gb.courses)
+    .find(course => course.id === selectedStandardSetId);
+
+  return (
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Globe className="w-5 h-5 text-blue-600" />
+            Standards Configuration: {classroom.name}
+          </DialogTitle>
+          <DialogDescription>
+            Configure educational standards for Standards-Based Grading
+          </DialogDescription>
+        </DialogHeader>
+
+        {/* Progress Indicator */}
+        <div className="flex items-center justify-between mb-6 p-3 bg-gray-50 rounded-lg">
+          <div className={`flex items-center gap-2 ${step === 'jurisdiction' ? 'text-blue-600 font-semibold' : step === 'standardSet' || step === 'standards' ? 'text-green-600' : 'text-gray-400'}`}>
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${step === 'jurisdiction' ? 'bg-blue-600 text-white' : step === 'standardSet' || step === 'standards' ? 'bg-green-600 text-white' : 'bg-gray-300'}`}>1</div>
+            <span className="text-sm">Select Jurisdiction</span>
+          </div>
+          <ChevronRight className="w-4 h-4 text-gray-400" />
+          <div className={`flex items-center gap-2 ${step === 'standardSet' ? 'text-blue-600 font-semibold' : step === 'standards' ? 'text-green-600' : 'text-gray-400'}`}>
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${step === 'standardSet' ? 'bg-blue-600 text-white' : step === 'standards' ? 'bg-green-600 text-white' : 'bg-gray-300'}`}>2</div>
+            <span className="text-sm">Select Standard Set</span>
+          </div>
+          <ChevronRight className="w-4 h-4 text-gray-400" />
+          <div className={`flex items-center gap-2 ${step === 'standards' ? 'text-blue-600 font-semibold' : 'text-gray-400'}`}>
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${step === 'standards' ? 'bg-blue-600 text-white' : 'bg-gray-300'}`}>3</div>
+            <span className="text-sm">Select Standards</span>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          {/* Step 1: Jurisdiction Selection */}
+          {step === 'jurisdiction' && (
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Step 1: Select Educational Jurisdiction</h3>
+                <p className="text-sm text-gray-600 mb-4">Choose your state or educational organization to access their official standards.</p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Educational Jurisdiction</Label>
+                <Select value={selectedJurisdiction || ''} onValueChange={handleJurisdictionSelect}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select your state or organization..." />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60">
+                    {jurisdictions.map((jurisdiction) => (
+                      <SelectItem key={jurisdiction.id} value={jurisdiction.id}>
+                        {jurisdiction.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {selectedJurisdictionData && (
+                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-sm text-blue-800">
+                    <strong>Selected:</strong> {selectedJurisdictionData.title}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 2: Standard Set Selection */}
+          {step === 'standardSet' && selectedJurisdictionData && (
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Step 2: Select Standard Set</h3>
+                <p className="text-sm text-gray-600 mb-2">Choose the specific course or grade level that applies to this classroom.</p>
+                <p className="text-xs text-gray-500">Jurisdiction: <strong>{selectedJurisdictionData.title}</strong></p>
+              </div>
+              
+              {gradeBandCourses.map((gradeBand) => (
+                <div key={gradeBand.gradeBand} className="space-y-2">
+                  <h4 className="font-medium text-gray-900">{gradeBand.gradeBand}</h4>
+                  <div className="grid gap-2">
+                    {gradeBand.courses.map((course) => (
+                      <button
+                        key={course.id}
+                        onClick={() => handleStandardSetSelect(course.id)}
+                        className="p-3 text-left border rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                      >
+                        <div className="font-medium">{course.title}</div>
+                        <div className="text-sm text-gray-600">{course.subject}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Step 3: Standards Selection */}
+          {step === 'standards' && selectedStandardSet && (
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Step 3: Select Essential Standards</h3>
+                <p className="text-sm text-gray-600 mb-2">All standards are enabled by default. Turn off any that are not essential for your classroom.</p>
+                <p className="text-xs text-gray-500">
+                  Course: <strong>{selectedStandardSet.title}</strong> | 
+                  Jurisdiction: <strong>{selectedJurisdictionData?.title}</strong>
+                </p>
+              </div>
+              
+              <div className="max-h-96 overflow-y-auto border rounded-lg">
+                <div className="space-y-1">
+                  {cspStandards.map((standard) => (
+                    <div
+                      key={standard.id}
+                      className={`p-3 border-b last:border-b-0 ${selectedStandardsMap[standard.id] ? 'bg-green-50' : 'bg-gray-50'}`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <Switch
+                          checked={selectedStandardsMap[standard.id] || false}
+                          onCheckedChange={() => toggleStandard(standard.id)}
+                          className="data-[state=checked]:bg-green-600 mt-1"
+                        />
+                        <div className="flex-1">
+                          <div className="font-medium text-sm">
+                            {standard.code && <span className="text-blue-600">{standard.code}: </span>}
+                            {standard.title}
+                          </div>
+                          <div className="text-xs text-gray-600 mt-1">
+                            {standard.description}
+                          </div>
+                          {standard.gradeLevel && (
+                            <div className="text-xs text-gray-500 mt-1">
+                              Grade: {standard.gradeLevel}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                <p className="text-sm text-green-800">
+                  <strong>{Object.values(selectedStandardsMap).filter(Boolean).length}</strong> of {cspStandards.length} standards selected
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Dialog Actions */}
+        <div className="flex justify-between pt-6 border-t">
+          <div className="flex gap-2">
+            {step !== 'jurisdiction' && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (step === 'standardSet') {
+                    onStepChange('jurisdiction');
+                    onStandardSetSelect('');
+                  } else if (step === 'standards') {
+                    onStepChange('standardSet');
+                    onStandardsChange({});
+                  }
+                }}
+              >
+                ← Back
+              </Button>
+            )}
+          </div>
+          
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            {step === 'standards' && (
+              <Button onClick={onSave} disabled={Object.values(selectedStandardsMap).filter(Boolean).length === 0}>
+                Save Configuration
+              </Button>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
