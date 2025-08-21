@@ -98,6 +98,44 @@ interface CSPStandard {
   cluster: string;
 }
 
+// Helper function to extract core course name for grouping
+const extractCoreCourseName = (classroomName: string): string => {
+  const cleaned = classroomName
+    .replace(/\s*-\s*(period|pd|per|p)\s*\d+.*$/i, '') // "- Period 1", "- Pd 2"
+    .replace(/\s*\((period|pd|per|p)?\s*\d+[^)]*\)/i, '') // "(Period 1)", "(Pd 2)"
+    .replace(/\s+(period|pd|per|p)\s*\d+.*$/i, '') // "Period 1", "Pd 2"  
+    .replace(/\s*-\s*section\s*[a-z0-9]+.*$/i, '') // "- Section A"
+    .replace(/\s*\(section\s*[a-z0-9]+[^)]*\)/i, '') // "(Section A)"
+    .replace(/\s+section\s*[a-z0-9]+.*$/i, '') // "Section A"
+    .replace(/\s*-\s*[a-z0-9]+$/i, '') // Generic "- A", "- 1" at end
+    .replace(/\s*\([a-z0-9]+\)$/i, '') // Generic "(A)", "(1)" at end
+    .replace(/\s*-\s*[^-]+\s*-\s*\d+$/i, '') // "- Fielder - 01" pattern
+    .trim();
+  
+  return cleaned || classroomName; // Fallback to original name
+};
+
+// Helper function to group classrooms by core course name
+const groupClassrooms = (classrooms: Classroom[]): Array<{
+  coreCourseName: string;
+  classrooms: Classroom[];
+}> => {
+  const groups = new Map<string, Classroom[]>();
+  
+  classrooms.forEach(classroom => {
+    const coreCourseName = extractCoreCourseName(classroom.name);
+    if (!groups.has(coreCourseName)) {
+      groups.set(coreCourseName, []);
+    }
+    groups.get(coreCourseName)!.push(classroom);
+  });
+  
+  return Array.from(groups.entries()).map(([coreCourseName, classrooms]) => ({
+    coreCourseName,
+    classrooms
+  }));
+};
+
 export default function GoogleClassroomIntegration() {
   const [currentStep, setCurrentStep] = useState<'auth' | 'connecting' | 'connected'>('auth');
   const [selectedClassroom, setSelectedClassroom] = useState<string | null>(null);
@@ -518,12 +556,73 @@ export default function GoogleClassroomIntegration() {
                   ) : classrooms.length === 0 ? (
                     <p className="text-gray-500 text-center py-4">No classes found</p>
                   ) : (
-                    <div className="space-y-2">
-                      {classrooms.map((classroom) => (
-                        <div
-                          key={classroom.id}
-                          className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                            selectedClassroom === classroom.id
+                    <div className="space-y-4">
+                      {/* Grouped Classroom Display */}
+                      {groupClassrooms(classrooms).map((group) => (
+                        <div key={group.coreCourseName} className="border rounded-lg bg-white shadow-sm">
+                          {/* Group Header */}
+                          <div className="bg-slate-50 px-4 py-3 rounded-t-lg border-b">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <h3 className="font-semibold text-gray-900">{group.coreCourseName}</h3>
+                                <p className="text-sm text-gray-600">
+                                  {group.classrooms.length} section{group.classrooms.length === 1 ? '' : 's'}
+                                  {group.classrooms.some(c => c.sbgEnabled) && (
+                                    <Badge variant="default" className="ml-2 text-xs bg-green-600 text-white">
+                                      SBG Enabled
+                                    </Badge>
+                                  )}
+                                  {group.classrooms.some(c => c.enabledStandards && c.enabledStandards.length > 0) && (
+                                    <Badge variant="outline" className="ml-2 text-xs">
+                                      Standards Configured
+                                    </Badge>
+                                  )}
+                                </p>
+                              </div>
+                              {group.classrooms.length > 1 && (
+                                <div className="text-sm text-gray-500">
+                                  Similar Course Group
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Group Sections */}
+                          <div className="p-4 space-y-3">
+                            {group.classrooms.map((classroom) => (
+                              <div
+                                key={classroom.id}
+                                className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                                  selectedClassroom === classroom.id
+                                    ? 'border-blue-500 bg-blue-50'
+                                    : classroom.sbgEnabled
+                                    ? 'border-green-300 bg-green-50 hover:border-green-400'
+                                    : 'border-gray-200 hover:border-gray-300'
+                                }`}
+                                onClick={() => setSelectedClassroom(classroom.id)}
+                              >
+                                <h4 className="font-medium text-gray-900">{classroom.name}</h4>
+                                <div className="flex items-center gap-2 mt-2">
+                                  <Badge variant="secondary" className="text-xs">
+                                    {classroom.courseState}
+                                  </Badge>
+                                  {classroom.sbgEnabled && (
+                                    <Badge variant="default" className="text-xs bg-green-600 text-white">
+                                      SBG Active
+                                    </Badge>
+                                  )}
+                                  {classroom.enabledStandards && classroom.enabledStandards.length > 0 && (
+                                    <Badge variant="outline" className="text-xs">
+                                      {classroom.enabledStandards.length} Standards
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                               ? 'border-blue-500 bg-blue-50'
                               : classroom.sbgEnabled
                               ? 'border-green-300 bg-green-50 hover:border-green-400'
