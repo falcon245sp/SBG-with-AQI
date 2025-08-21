@@ -750,17 +750,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete document
   app.delete('/api/documents/:id', async (req: any, res) => {
     try {
+      console.log(`[DELETE] Starting deletion for document: ${req.params.id}`);
       const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
       const { id } = req.params;
+      console.log(`[DELETE] Customer UUID: ${customerUuid}, Document ID: ${id}`);
       
       // Get document and verify ownership
       const document = await storage.getDocument(id);
+      console.log(`[DELETE] Retrieved document:`, document ? `ID: ${document.id}, Customer: ${document.customerUuid}, AssetType: ${document.assetType}` : 'null');
+      
       if (!document || document.customerUuid !== customerUuid) {
+        console.warn(`[DELETE] Document not found or unauthorized access. Document exists: ${!!document}, Customer match: ${document?.customerUuid === customerUuid}`);
         return res.status(404).json({ message: 'Document not found' });
       }
       
       // Delete the document from the database
+      console.log(`[DELETE] Calling DatabaseWriteService.deleteDocument for ID: ${id}`);
       await DatabaseWriteService.deleteDocument(id);
+      console.log(`[DELETE] Database deletion successful for ID: ${id}`);
       
       // Clean up physical file if it exists - determine path by document type
       let basePath;
@@ -796,8 +803,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         documentId: id
       });
     } catch (error) {
-      console.error('[Documents] Error deleting document:', error);
-      res.status(500).json({ message: 'Failed to delete document' });
+      console.error('[DELETE] Error deleting document:', error);
+      console.error('[DELETE] Error stack:', error instanceof Error ? error.stack : 'No stack available');
+      console.error('[DELETE] Error message:', error instanceof Error ? error.message : error);
+      res.status(500).json({ 
+        message: 'Failed to delete document',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        documentId: req.params.id
+      });
     }
   });
 

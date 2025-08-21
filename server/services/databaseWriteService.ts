@@ -154,7 +154,7 @@ export class DatabaseWriteService {
   /**
    * Add document to export generation queue
    */
-  static async queueDocumentExport(documentId: string, exportType: ExportType, priority: number = 0): Promise<any> {
+  static async queueDocumentExport(documentId: string, exportType: BusinessExportType, priority: number = 0): Promise<any> {
     console.log(`[DatabaseWriteService] Queuing ${exportType} export for document: ${documentId}`);
     
     try {
