@@ -193,6 +193,22 @@ export class ExportProcessor {
     const analysisData = confirmedAnalysis.analysisData as any;
     console.log(`[ExportProcessor] Using CONFIRMED analysis with ${confirmedAnalysis.overrideCount} teacher overrides out of ${analysisData.totalQuestions} questions`);
     
+    // DEBUG: Log the actual CONFIRMED analysis data being used for PDF generation
+    console.log(`[DEBUG] CONFIRMED Analysis Data Summary:`);
+    console.log(`[DEBUG] - Document ID: ${document.id}`);
+    console.log(`[DEBUG] - Total Questions: ${analysisData.totalQuestions}`);
+    console.log(`[DEBUG] - Override Count: ${confirmedAnalysis.overrideCount}`);
+    console.log(`[DEBUG] - Has Teacher Overrides: ${confirmedAnalysis.hasTeacherOverrides}`);
+    if (analysisData.questions && analysisData.questions.length > 0) {
+      const firstQuestion = analysisData.questions[0];
+      console.log(`[DEBUG] - First Question Sample:`);
+      console.log(`[DEBUG]   - Question ID: ${firstQuestion.questionId}`);
+      console.log(`[DEBUG]   - Question Number: ${firstQuestion.questionNumber}`);
+      console.log(`[DEBUG]   - Final Standards: ${JSON.stringify(firstQuestion.finalStandards)}`);
+      console.log(`[DEBUG]   - Final Rigor Level: ${firstQuestion.finalRigorLevel}`);
+      console.log(`[DEBUG]   - Has Teacher Override: ${firstQuestion.hasTeacherOverride}`);
+    }
+    
     const pdf = new jsPDF('portrait', 'mm', 'a4');
     
     // Header with QR code space (upper left) and student name (upper right)
