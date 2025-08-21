@@ -967,6 +967,11 @@ export class DatabaseStorage implements IStorage {
       console.log(`[getDocumentResults] Using CONFIRMED analysis for document: ${documentId}`);
       const analysisData = confirmedAnalysis.analysisData as any;
       if (analysisData.questions) {
+        console.log(`[UI DEBUG] CONFIRMED analysis has ${analysisData.questions.length} questions:`);
+        for (let i = 0; i < Math.min(3, analysisData.questions.length); i++) {
+          const q = analysisData.questions[i];
+          console.log(`[UI DEBUG] Q${q.questionNumber}: Standards=${JSON.stringify(q.finalStandards)}, Rigor=${q.finalRigorLevel}, HasOverride=${q.hasTeacherOverride}`);
+        }
         for (const q of analysisData.questions) {
           confirmedQuestionsMap.set(q.questionId, q);
         }
