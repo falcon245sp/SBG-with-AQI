@@ -155,30 +155,47 @@ export default function GoogleClassroomIntegration() {
       standardsJurisdiction?: string;
       sbgEnabled?: boolean;
     }) => {
-      console.log('Making API call to update classroom:', { classroomId, settings });
-      const response = await fetch(`/api/classrooms/${classroomId}/classification`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
-      });
+      console.log('🚀 STARTING API CALL:', { classroomId, settings, url: `/api/classrooms/${classroomId}/classification` });
       
-      console.log('API response status:', response.status);
-      const data = await response.json();
-      console.log('API response data:', data);
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to update classroom');
+      try {
+        const response = await fetch(`/api/classrooms/${classroomId}/classification`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(settings),
+        });
+        
+        console.log('📡 API RESPONSE STATUS:', response.status, response.statusText);
+        
+        let data;
+        try {
+          data = await response.json();
+          console.log('📦 API RESPONSE DATA:', data);
+        } catch (parseError) {
+          console.error('❌ Failed to parse response JSON:', parseError);
+          throw new Error('Invalid response format');
+        }
+        
+        if (!response.ok) {
+          console.error('❌ API ERROR:', { status: response.status, error: data.error });
+          throw new Error(data.error || `HTTP ${response.status}: Failed to update classroom`);
+        }
+        
+        console.log('✅ API SUCCESS:', data);
+        return data;
+        
+      } catch (fetchError) {
+        console.error('❌ FETCH ERROR:', fetchError);
+        throw fetchError;
       }
-      
-      return data;
     },
     onSuccess: (data) => {
-      console.log('Mutation successful:', data);
+      console.log('🎉 MUTATION SUCCESS - Invalidating queries');
       queryClient.invalidateQueries({ queryKey: ['/api/classrooms'] });
       setEditingClassification(null);
     },
     onError: (error) => {
-      console.error('Mutation failed:', error);
+      console.error('💥 MUTATION FAILED:', error);
+      alert(`❌ SBG Toggle Failed: ${error instanceof Error ? error.message : String(error)}`);
     },
   });
 
@@ -382,20 +399,27 @@ export default function GoogleClassroomIntegration() {
                             <Switch
                               checked={classroom.sbgEnabled || false}
                               onCheckedChange={(checked) => {
-                                console.log('🔥 SBG TOGGLE CLICKED!', { classroomId: classroom.id, checked, currentValue: classroom.sbgEnabled });
-                                try {
-                                  updateClassificationMutation.mutate({
-                                    classroomId: classroom.id,
-                                    sbgEnabled: checked
-                                  });
-                                } catch (error) {
-                                  console.error('❌ Error in toggle handler:', error);
-                                  alert('❌ Error: ' + (error instanceof Error ? error.message : String(error)));
+                                console.log('🔥 SBG TOGGLE CLICKED!', { 
+                                  classroomId: classroom.id, 
+                                  classroomName: classroom.name,
+                                  checked, 
+                                  currentValue: classroom.sbgEnabled,
+                                  mutationPending: updateClassificationMutation.isPending
+                                });
+                                
+                                if (updateClassificationMutation.isPending) {
+                                  console.log('⏳ Mutation already pending, skipping...');
+                                  return;
                                 }
+                                
+                                console.log('📤 Calling mutation...');
+                                updateClassificationMutation.mutate({
+                                  classroomId: classroom.id,
+                                  sbgEnabled: checked
+                                });
                               }}
                               disabled={updateClassificationMutation.isPending}
                               className="data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-gray-300"
-                              onClick={() => console.log('🎯 Switch clicked!')}
                             />
                             <Target className="w-4 h-4 text-emerald-600" />
                             <span className="text-sm font-medium text-gray-900">
