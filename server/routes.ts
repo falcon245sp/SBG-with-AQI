@@ -636,6 +636,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get pending export status for documents
+  app.get('/api/documents/export-status', async (req: any, res) => {
+    try {
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+      
+      // Get all pending exports for this customer's documents
+      const pendingExports = await storage.getPendingExports();
+      
+      // Get customer's documents to filter relevant exports
+      const documents = await storage.getUserDocuments(customerUuid);
+      const documentIds = new Set(documents.map(doc => doc.id));
+      
+      // Filter exports that belong to this customer and group by document ID
+      const customerExports = pendingExports.filter(exp => documentIds.has(exp.documentId));
+      const exportsByDocument: Record<string, Array<{ exportType: string; scheduledFor: string; attempts: number }>> = {};
+      
+      for (const exportItem of customerExports) {
+        if (!exportsByDocument[exportItem.documentId]) {
+          exportsByDocument[exportItem.documentId] = [];
+        }
+        exportsByDocument[exportItem.documentId].push({
+          exportType: exportItem.exportType,
+          scheduledFor: exportItem.scheduledFor,
+          attempts: exportItem.attempts || 0
+        });
+      }
+      
+      res.json({
+        pendingExports: exportsByDocument,
+        totalPending: customerExports.length
+      });
+    } catch (error) {
+      console.error('[Export Status] Failed to get export status:', error);
+      res.status(500).json({ 
+        error: 'Failed to get export status',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Get user documents
   app.get('/api/documents', async (req: any, res) => {
     try {

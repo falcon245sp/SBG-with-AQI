@@ -356,6 +356,28 @@ export default function FileCabinet() {
 
   const { fetchWithSessionHandling } = useSessionHandler();
 
+  // Fetch export status to track pending regenerations
+  const { data: exportStatus } = useQuery({
+    queryKey: ['export-status'],
+    queryFn: async () => {
+      const response = await fetchWithSessionHandling('/api/documents/export-status');
+      if (!response || !response.ok) return { pendingExports: {}, totalPending: 0 };
+      return response.json();
+    },
+    refetchInterval: 3000, // Poll every 3 seconds for export status
+    staleTime: 0
+  });
+
+  // Helper function to check if document has pending exports
+  const hasPendingExports = (documentId: string) => {
+    return exportStatus?.pendingExports?.[documentId] && exportStatus.pendingExports[documentId].length > 0;
+  };
+
+  // Helper function to get pending export types for a document  
+  const getPendingExportTypes = (documentId: string): string[] => {
+    return exportStatus?.pendingExports?.[documentId]?.map((exp: any) => exp.exportType) || [];
+  };
+
   // Fetch File Cabinet data with real-time polling for processing documents
   const { data: fileCabinetData, isLoading } = useQuery({
     queryKey: ['file-cabinet', currentDrawer, sortBy, sortOrder, tagFilter, exportTypeFilter],
@@ -795,13 +817,24 @@ export default function FileCabinet() {
                               <Button 
                                 size="sm" 
                                 variant="outline" 
-                                title="View document"
+                                title={hasPendingExports(doc.parentDocument?.id || doc.id) ? 
+                                  "Document is being regenerated - view disabled" : 
+                                  "View document"
+                                }
                                 onClick={() => {
                                   setSelectedDocument(doc);
                                   setViewerOpen(true);
                                 }}
+                                disabled={hasPendingExports(doc.parentDocument?.id || doc.id)}
+                                className={hasPendingExports(doc.parentDocument?.id || doc.id) ? 
+                                  "opacity-50 cursor-not-allowed" : ""
+                                }
                               >
-                                <FileText className="h-4 w-4" />
+                                {hasPendingExports(doc.parentDocument?.id || doc.id) ? (
+                                  <div className="w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  <FileText className="h-4 w-4" />
+                                )}
                               </Button>
                             )}
 
@@ -831,8 +864,23 @@ export default function FileCabinet() {
                             )}
 
                             <Link href={`/documents/${doc.id}/inspect`}>
-                              <Button size="sm" variant="outline" title="Inspect document relationships and details">
-                                <Eye className="h-4 w-4" />
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                title={hasPendingExports(doc.parentDocument?.id || doc.id) ? 
+                                  "Document is being regenerated - inspect disabled" : 
+                                  "Inspect document relationships and details"
+                                }
+                                disabled={hasPendingExports(doc.parentDocument?.id || doc.id)}
+                                className={hasPendingExports(doc.parentDocument?.id || doc.id) ? 
+                                  "opacity-50 cursor-not-allowed pointer-events-none" : ""
+                                }
+                              >
+                                {hasPendingExports(doc.parentDocument?.id || doc.id) ? (
+                                  <div className="w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
                               </Button>
                             </Link>
                             <Button 
