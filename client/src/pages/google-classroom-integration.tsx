@@ -7,10 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
-import { AlertCircle, CheckCircle, Users, BookOpen, GraduationCap, Calendar, Clock, ExternalLink, Settings, Lightbulb, Target } from 'lucide-react';
+import { AlertCircle, CheckCircle, Users, BookOpen, GraduationCap, Calendar, Clock, ExternalLink, Settings, Lightbulb, Target, FileText } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 
 interface GoogleUser {
@@ -34,12 +35,23 @@ interface Classroom {
   detectedSubjectArea?: string;
   standardsJurisdiction?: string;
   sbgEnabled?: boolean;
+  courseTitle?: string;
+  enabledStandards?: string[];
   _classificationData?: {
     subjectArea: string;
     confidence: number;
     suggestedJurisdiction: string;
     detectedKeywords: string[];
   };
+}
+
+interface CommonCoreStandard {
+  code: string;
+  title: string;
+  gradeLevel: string;
+  majorDomain: string;
+  cluster?: string;
+  subjectArea?: string;
 }
 
 interface Student {
@@ -67,6 +79,11 @@ export default function GoogleClassroomIntegration() {
   const [selectedClassroom, setSelectedClassroom] = useState<string | null>(null);
   const [editingClassification, setEditingClassification] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  
+  // States for course configuration
+  const [selectedClassroomForStandards, setSelectedClassroomForStandards] = useState<string | null>(null);
+  const [courseTitleInput, setCourseTitleInput] = useState('');
+  const [selectedStandards, setSelectedStandards] = useState<string[]>([]);
 
   // Subject areas and jurisdictions
   const subjectAreas = [
@@ -119,6 +136,40 @@ export default function GoogleClassroomIntegration() {
     queryKey: ['/api/classrooms', selectedClassroom, 'students'],
     enabled: !!selectedClassroom,
   });
+  
+  // Get classroom standards
+  const classroomStandardsQuery = useQuery({
+    queryKey: ['/api/classrooms', selectedClassroomForStandards, 'standards'],
+    queryFn: async () => {
+      if (!selectedClassroomForStandards) return null;
+      const response = await fetch(`/api/classrooms/${selectedClassroomForStandards}/standards`);
+      if (!response.ok) throw new Error('Failed to fetch classroom standards');
+      return response.json();
+    },
+    enabled: !!selectedClassroomForStandards,
+  });
+  
+  // Get standards for course title
+  const courseStandardsQuery = useQuery({
+    queryKey: ['/api/standards/course-standards', courseTitleInput, selectedClassroomForStandards],
+    queryFn: async () => {
+      if (!courseTitleInput.trim()) return { standards: [], defaultEnabled: [] };
+      
+      const classroom = classrooms.find(c => c.id === selectedClassroomForStandards);
+      if (!classroom) return { standards: [], defaultEnabled: [] };
+      
+      const params = new URLSearchParams({
+        courseTitle: courseTitleInput,
+        jurisdiction: classroom.standardsJurisdiction || 'Common Core',
+        subjectArea: classroom.subjectArea || '',
+      });
+      
+      const response = await fetch(`/api/standards/course-standards?${params}`);
+      if (!response.ok) throw new Error('Failed to fetch course standards');
+      return response.json();
+    },
+    enabled: !!courseTitleInput.trim() && !!selectedClassroomForStandards,
+  });
 
   // Sync classrooms mutation
   const syncClassroomsMutation = useMutation({
@@ -154,6 +205,8 @@ export default function GoogleClassroomIntegration() {
       subjectArea?: string;
       standardsJurisdiction?: string;
       sbgEnabled?: boolean;
+      courseTitle?: string;
+      enabledStandards?: string[];
     }) => {
       const response = await fetch(`/api/classrooms/${classroomId}/classification`, {
         method: 'PATCH',
@@ -177,6 +230,31 @@ export default function GoogleClassroomIntegration() {
       console.error('SBG toggle update failed:', error);
     },
   });
+
+  // Course configuration handlers
+  const handleCourseConfigurationSave = async (classroomId: string) => {
+    try {
+      await updateClassificationMutation.mutateAsync({
+        classroomId,
+        courseTitle: courseTitleInput,
+        enabledStandards: selectedStandards
+      });
+      
+      // Reset states and close dialog
+      setSelectedClassroomForStandards(null);
+      setCourseTitleInput('');
+      setSelectedStandards([]);
+    } catch (error) {
+      console.error('Failed to save course configuration:', error);
+    }
+  };
+
+  // Initialize course configuration when classroom is selected
+  const initializeCourseConfiguration = (classroom: Classroom) => {
+    setSelectedClassroomForStandards(classroom.id);
+    setCourseTitleInput(classroom.courseTitle || '');
+    setSelectedStandards(classroom.enabledStandards || []);
+  };
 
   // Check authentication status and set current step
   useEffect(() => {
@@ -392,6 +470,158 @@ export default function GoogleClassroomIntegration() {
                                 SBG Active
                               </Badge>
                             )}
+                          </div>
+                          
+                          {/* Course Configuration */}
+                          <div className="mt-2 flex items-center gap-2 p-2 bg-blue-50 rounded border">
+                            <FileText className="w-4 h-4 text-blue-600" />
+                            <span className="text-sm font-medium text-gray-900">
+                              Course Configuration
+                            </span>
+                            {classroom.courseTitle && (
+                              <Badge variant="outline" className="text-xs">
+                                {classroom.courseTitle}
+                              </Badge>
+                            )}
+                            {classroom.enabledStandards && classroom.enabledStandards.length > 0 && (
+                              <Badge variant="default" className="text-xs bg-blue-600 text-white">
+                                {classroom.enabledStandards.length} Standards
+                              </Badge>
+                            )}
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="ml-auto"
+                                  onClick={() => initializeCourseConfiguration(classroom)}
+                                >
+                                  Configure
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+                                <DialogHeader>
+                                  <DialogTitle>Course Configuration - {classroom.name}</DialogTitle>
+                                  <DialogDescription>
+                                    Set your course title and select which standards to include in assessments.
+                                  </DialogDescription>
+                                </DialogHeader>
+                                
+                                <div className="flex-1 overflow-y-auto space-y-6">
+                                  {/* Course Title Input */}
+                                  <div className="space-y-2">
+                                    <Label htmlFor="course-title">Course Title</Label>
+                                    <Input
+                                      id="course-title"
+                                      placeholder="e.g., Algebra I, 7th Grade Math, English 9"
+                                      value={courseTitleInput}
+                                      onChange={(e) => setCourseTitleInput(e.target.value)}
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                      Enter your course title to automatically match relevant standards
+                                    </p>
+                                  </div>
+
+                                  {/* Standards Selection */}
+                                  {courseStandardsQuery.data && courseStandardsQuery.data.standards.length > 0 && (
+                                    <div className="space-y-4">
+                                      <div>
+                                        <h4 className="text-sm font-medium mb-2">Available Standards</h4>
+                                        <p className="text-xs text-muted-foreground mb-4">
+                                          Select which standards to include in your assessments. All are enabled by default.
+                                        </p>
+                                      </div>
+                                      
+                                      <div className="max-h-64 overflow-y-auto border rounded-lg p-4">
+                                        <div className="space-y-3">
+                                          {courseStandardsQuery.data.standards.map((standard: CommonCoreStandard) => (
+                                            <div key={standard.code} className="flex items-start space-x-3">
+                                              <Switch
+                                                id={`standard-${standard.code}`}
+                                                checked={selectedStandards.includes(standard.code)}
+                                                onCheckedChange={(checked) => {
+                                                  if (checked) {
+                                                    setSelectedStandards(prev => [...prev, standard.code]);
+                                                  } else {
+                                                    setSelectedStandards(prev => prev.filter(code => code !== standard.code));
+                                                  }
+                                                }}
+                                              />
+                                              <div className="flex-1 min-w-0">
+                                                <div className="flex items-center space-x-2">
+                                                  <Badge variant="secondary" className="text-xs">
+                                                    {standard.code}
+                                                  </Badge>
+                                                  <Badge variant="outline" className="text-xs">
+                                                    Grade {standard.gradeLevel}
+                                                  </Badge>
+                                                </div>
+                                                <p className="text-sm mt-1">{standard.title}</p>
+                                                {standard.majorDomain && (
+                                                  <p className="text-xs text-muted-foreground mt-1">
+                                                    {standard.majorDomain}
+                                                  </p>
+                                                )}
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                      
+                                      <div className="flex items-center justify-between text-sm">
+                                        <span>{selectedStandards.length} of {courseStandardsQuery.data.standards.length} standards selected</span>
+                                        <div className="space-x-2">
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setSelectedStandards([])}
+                                          >
+                                            Select None
+                                          </Button>
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setSelectedStandards(courseStandardsQuery.data.standards.map((s: CommonCoreStandard) => s.code))}
+                                          >
+                                            Select All
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                  
+                                  {courseTitleInput && !courseStandardsQuery.isLoading && (!courseStandardsQuery.data || courseStandardsQuery.data.standards.length === 0) && (
+                                    <Alert>
+                                      <AlertCircle className="h-4 w-4" />
+                                      <AlertDescription>
+                                        No standards found for "{courseTitleInput}". Try a more specific course title like "Algebra I" or "7th Grade Math".
+                                      </AlertDescription>
+                                    </Alert>
+                                  )}
+                                  
+                                  {courseStandardsQuery.isLoading && courseTitleInput && (
+                                    <div className="flex items-center justify-center py-8">
+                                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                                      <span className="ml-2 text-sm text-muted-foreground">Finding standards...</span>
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                <div className="flex justify-end space-x-2 pt-4 border-t">
+                                  <DialogTrigger asChild>
+                                    <Button variant="outline">Cancel</Button>
+                                  </DialogTrigger>
+                                  <DialogTrigger asChild>
+                                    <Button 
+                                      onClick={() => handleCourseConfigurationSave(classroom.id)}
+                                      disabled={!courseTitleInput.trim() || updateClassificationMutation.isPending}
+                                    >
+                                      {updateClassificationMutation.isPending ? 'Saving...' : 'Save Configuration'}
+                                    </Button>
+                                  </DialogTrigger>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
                           </div>
 
                           {/* Subject Area Classification */}

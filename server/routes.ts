@@ -16,6 +16,11 @@ import {
   getClassroomStudents,
   updateClassroomClassification
 } from "./routes/googleAuth";
+import { 
+  getStandardsForCourseTitle,
+  getSuggestedCourses,
+  getClassroomStandards
+} from "./routes/standards";
 import { checkAuthStatus } from "./routes/auth";
 import { documentProcessor, queueProcessor } from "./services/documentProcessor";
 import { exportProcessor } from "./services/exportProcessor";
@@ -135,6 +140,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Classroom classification routes
   app.patch('/api/classrooms/:classroomId/classification', updateClassroomClassification);
+  
+  // Standards configuration routes
+  app.get('/api/standards/course-standards', getStandardsForCourseTitle);
+  app.get('/api/standards/course-suggestions', getSuggestedCourses);
+  app.get('/api/classrooms/:classroomId/standards', getClassroomStandards);
 
   // Document upload with standards focus endpoint
   app.post('/api/documents/upload-with-standards', upload.single('document'), async (req: any, res) => {

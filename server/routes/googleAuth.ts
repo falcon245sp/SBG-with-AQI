@@ -460,7 +460,7 @@ export async function getClassroomStudents(req: Request, res: Response) {
 export async function updateClassroomClassification(req: Request, res: Response) {
   try {
     const { classroomId } = req.params;
-    const { subjectArea, standardsJurisdiction, sbgEnabled } = req.body;
+    const { subjectArea, standardsJurisdiction, sbgEnabled, courseTitle, enabledStandards } = req.body;
     
     if (!classroomId) {
       return res.status(400).json({ error: 'Classroom ID is required' });
@@ -490,6 +490,8 @@ export async function updateClassroomClassification(req: Request, res: Response)
     if (subjectArea !== undefined) updates.subjectArea = subjectArea;
     if (standardsJurisdiction !== undefined) updates.standardsJurisdiction = standardsJurisdiction;
     if (sbgEnabled !== undefined) updates.sbgEnabled = sbgEnabled;
+    if (courseTitle !== undefined) updates.courseTitle = courseTitle;
+    if (enabledStandards !== undefined) updates.enabledStandards = enabledStandards;
 
     // Update the classroom
     const updatedClassroom = await storage.updateClassroom(classroomId, updates);
