@@ -192,16 +192,15 @@ export class DocumentProcessor {
         throw new Error('Missing Grok analysis result');
       }
       
-      // Ensure Grok result has required properties and extract JSON
+      // Use the AI results directly without additional JSON extraction
       const enhancedResults = {
         grok: {
           ...aiResults.grok,
-          jsonResponse: this.extractJsonFromResponse(aiResults.grok, 'grok'),
           aiEngine: AiEngine.GROK
         }
       };
       
-      console.log('Enhanced results:', JSON.stringify(enhancedResults, null, 2));
+      console.log('Enhanced results (no extra parsing):', JSON.stringify(enhancedResults, null, 2));
       
       // Store individual AI responses (only Grok)
       await this.storeIndividualAIResponses(question, enhancedResults);
