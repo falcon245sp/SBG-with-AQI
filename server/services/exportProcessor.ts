@@ -183,18 +183,14 @@ export class ExportProcessor {
   private async generateRubricPDF(document: any, exportItem: any): Promise<string> {
     console.log(`[ExportProcessor] Generating SBG rubric PDF for document: ${document.fileName}`);
 
-    // Get questions and AI results for the document
-    const questions = await storage.getQuestionsByDocumentId(document.id);
-    const questionResults = await storage.getQuestionResultsByDocumentId(document.id);
+    // NEW ARCHITECTURE: Use CONFIRMED analysis as single source of truth
+    const confirmedAnalysis = await storage.getConfirmedAnalysis(document.id);
     
-    // Get teacher overrides for each question to respect teacher corrections
-    const teacherOverrides = new Map<string, any>();
-    for (const question of questions) {
-      const override = await storage.getQuestionOverride(question.id, document.customerUuid);
-      if (override) {
-        teacherOverrides.set(question.id, override);
-      }
+    if (!confirmedAnalysis) {
+      throw new Error(`No CONFIRMED analysis found for document: ${document.id}. Cannot generate rubric without confirmed analysis.`);
     }
+
+    console.log(`[ExportProcessor] Using CONFIRMED analysis with ${confirmedAnalysis.overrideCount} teacher overrides out of ${confirmedAnalysis.analysisData.totalQuestions} questions`);
     
     const pdf = new jsPDF('portrait', 'mm', 'a4');
     

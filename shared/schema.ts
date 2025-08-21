@@ -198,6 +198,18 @@ export const teacherOverrides = pgTable("teacher_overrides", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// CONFIRMED analysis documents - single source of truth for all generated documents
+export const confirmedAnalysis = pgTable("confirmed_analysis", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  documentId: varchar("document_id").notNull().references(() => documents.id),
+  customerUuid: varchar("customer_uuid").notNull().references(() => users.customerUuid),
+  analysisData: jsonb("analysis_data").notNull(), // Complete question analysis with final standards and rigor
+  hasTeacherOverrides: boolean("has_teacher_overrides").notNull().default(false), // Track if teacher made changes
+  overrideCount: integer("override_count").notNull().default(0), // Number of questions with overrides
+  confirmedAt: timestamp("confirmed_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // API keys for users
 export const apiKeys = pgTable("api_keys", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -380,6 +392,13 @@ export const insertTeacherOverrideSchema = createInsertSchema(teacherOverrides).
   editReason: true,
 });
 
+export const insertConfirmedAnalysisSchema = createInsertSchema(confirmedAnalysis).pick({
+  documentId: true,
+  analysisData: true,
+  hasTeacherOverrides: true,
+  overrideCount: true,
+});
+
 export const insertExportQueueSchema = createInsertSchema(exportQueue).pick({
   documentId: true,
   exportType: true,
@@ -442,6 +461,7 @@ export type ProcessingQueue = typeof processingQueue.$inferSelect;
 export type ExportQueue = typeof exportQueue.$inferSelect;
 export type DeadLetterQueue = typeof deadLetterQueue.$inferSelect;
 export type TeacherOverride = typeof teacherOverrides.$inferSelect;
+export type ConfirmedAnalysis = typeof confirmedAnalysis.$inferSelect;
 export type QrSequenceNumber = typeof qrSequenceNumbers.$inferSelect;
 export type GradeSubmission = typeof gradeSubmissions.$inferSelect;
 
@@ -453,5 +473,6 @@ export type InsertQuestion = z.infer<typeof insertQuestionSchema>;
 export type InsertAiResponse = z.infer<typeof insertAiResponseSchema>;
 export type InsertApiKey = z.infer<typeof insertApiKeySchema>;
 export type InsertTeacherOverride = z.infer<typeof insertTeacherOverrideSchema>;
+export type InsertConfirmedAnalysis = z.infer<typeof insertConfirmedAnalysisSchema>;
 export type InsertQrSequenceNumber = z.infer<typeof insertQrSequenceNumberSchema>;
 export type InsertGradeSubmission = z.infer<typeof insertGradeSubmissionSchema>;

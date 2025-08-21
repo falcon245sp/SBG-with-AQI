@@ -9,6 +9,7 @@ import {
   apiKeys,
   processingQueue,
   teacherOverrides,
+  confirmedAnalysis,
   exportQueue,
   deadLetterQueue,
   qrSequenceNumbers,
@@ -26,6 +27,7 @@ import {
   type ExportQueue,
   type DeadLetterQueue,
   type TeacherOverride,
+  type ConfirmedAnalysis,
   type QrSequenceNumber,
   type GradeSubmission,
   type InsertUser,
@@ -36,6 +38,7 @@ import {
   type InsertAiResponse,
   type InsertApiKey,
   type InsertTeacherOverride,
+  type InsertConfirmedAnalysis,
   type InsertQrSequenceNumber,
   type InsertGradeSubmission,
 } from "@shared/schema";
@@ -105,6 +108,11 @@ export interface IStorage {
   getQuestionOverride(questionId: string, customerUuid?: string): Promise<TeacherOverride | undefined>;
   updateTeacherOverride(overrideId: string, updates: Partial<InsertTeacherOverride>): Promise<void>;
   getQuestionWithOverrides(questionId: string): Promise<Array<Question & { override?: TeacherOverride; result?: QuestionResult; aiResponses: AiResponse[] }>>;
+  
+  // CONFIRMED analysis operations - single source of truth for generated documents
+  createConfirmedAnalysis(customerUuid: string, analysis: InsertConfirmedAnalysis): Promise<ConfirmedAnalysis>;
+  getConfirmedAnalysis(documentId: string): Promise<ConfirmedAnalysis | undefined>;
+  updateConfirmedAnalysis(documentId: string, updates: Partial<InsertConfirmedAnalysis>): Promise<void>;
   
   // Analytics operations
   getProcessingStats(customerUuid?: string): Promise<{
@@ -893,13 +901,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(exportQueue.priority), exportQueue.scheduledFor);
   }
 
-  async getQuestionsByDocumentId(documentId: string): Promise<any[]> {
-    return await db
-      .select()
-      .from(questions)
-      .where(eq(questions.documentId, documentId))
-      .orderBy(questions.questionNumber);
-  }
+
 
   async getQuestionResultsByDocumentId(documentId: string): Promise<any[]> {
     return await db
@@ -1287,6 +1289,50 @@ export class DatabaseStorage implements IStorage {
       aiResponses: aiResponsesData,
     }];
   }
+
+  // ==================== CONFIRMED ANALYSIS OPERATIONS ====================
+  
+  /**
+   * Create a CONFIRMED analysis document - single source of truth for generated documents
+   */
+  async createConfirmedAnalysis(customerUuid: string, analysis: InsertConfirmedAnalysis): Promise<ConfirmedAnalysis> {
+    console.log(`[DatabaseStorage] Creating confirmed analysis for document: ${analysis.documentId}`);
+    
+    const [confirmedAnalysisDoc] = await db
+      .insert(confirmedAnalysis)
+      .values({
+        ...analysis,
+        customerUuid,
+      })
+      .returning();
+    
+    console.log(`[DatabaseStorage] Confirmed analysis created: ${confirmedAnalysisDoc.id}`);
+    return confirmedAnalysisDoc;
+  }
+
+  /**
+   * Get CONFIRMED analysis document for a document
+   */
+  async getConfirmedAnalysis(documentId: string): Promise<ConfirmedAnalysis | undefined> {
+    const [analysis] = await db
+      .select()
+      .from(confirmedAnalysis)
+      .where(eq(confirmedAnalysis.documentId, documentId))
+      .orderBy(desc(confirmedAnalysis.confirmedAt))
+      .limit(1);
+    
+    return analysis;
+  }
+
+  /**
+   * Update CONFIRMED analysis document
+   */
+  async updateConfirmedAnalysis(documentId: string, updates: Partial<InsertConfirmedAnalysis>): Promise<void> {
+    await db
+      .update(confirmedAnalysis)
+      .set(updates)
+      .where(eq(confirmedAnalysis.documentId, documentId));
+  }
   
   // QR Anti-fraud operations
   async createQrSequenceNumber(qrData: InsertQrSequenceNumber): Promise<QrSequenceNumber> {
@@ -1396,13 +1442,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(documents.createdAt));
   }
 
-  async getChildDocuments(parentDocumentId: string): Promise<Document[]> {
-    return await db
-      .select()
-      .from(documents)
-      .where(eq(documents.parentDocumentId, parentDocumentId))
-      .orderBy(desc(documents.createdAt));
-  }
+
   
   async getStudent(studentId: string): Promise<Student | undefined> {
     const [student] = await db
@@ -1517,7 +1557,8 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(questions)
-      .where(eq(questions.documentId, documentId));
+      .where(eq(questions.documentId, documentId))
+      .orderBy(questions.questionNumber);
   }
 
   /**

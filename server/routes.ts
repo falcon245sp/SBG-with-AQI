@@ -537,9 +537,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         TeacherReviewStatus.REVIEWED_AND_ACCEPTED
       );
 
-      console.log(`[Accept] Status updated, queueing exports for document: ${documentId}`);
+      console.log(`[Accept] Creating CONFIRMED analysis document for: ${documentId}`);
 
-      // Trigger document generation (cover sheets, rubrics)
+      // Create CONFIRMED analysis document (DRAFT → CONFIRMED workflow)
+      await DatabaseWriteService.createConfirmedAnalysisDocument(documentId, customerUuid);
+
+      console.log(`[Accept] CONFIRMED analysis created, queueing exports for document: ${documentId}`);
+
+      // Trigger document generation (cover sheets, rubrics) from CONFIRMED source
       await DatabaseWriteService.queueDocumentExports(documentId, customerUuid);
 
       console.log(`[Accept] Exports queued successfully for document: ${documentId}`);

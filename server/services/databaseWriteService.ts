@@ -700,6 +700,72 @@ export class DatabaseWriteService {
   }
 
   /**
+   * Create CONFIRMED analysis document from DRAFT AI analysis with teacher overrides
+   * This becomes the single source of truth for all generated documents
+   */
+  static async createConfirmedAnalysisDocument(documentId: string, customerUuid: string): Promise<void> {
+    console.log(`[DatabaseWriteService] Creating CONFIRMED analysis document for: ${documentId}`);
+    
+    try {
+      // Get all questions for the document
+      const questions = await storage.getQuestionsByDocumentId(documentId);
+      const questionResults = await storage.getQuestionResultsByDocumentId(documentId);
+      
+      // Build confirmed analysis by merging AI consensus with teacher overrides
+      const confirmedQuestions = [];
+      let overrideCount = 0;
+      let hasTeacherOverrides = false;
+      
+      for (const question of questions) {
+        const aiResult = questionResults.find(r => r.questionNumber === question.questionNumber);
+        const teacherOverride = await storage.getQuestionOverride(question.id, customerUuid);
+        
+        // Create final analysis for this question
+        const finalAnalysis = {
+          questionId: question.id,
+          questionNumber: question.questionNumber,
+          questionText: question.questionText,
+          
+          // Use teacher override if available, otherwise use AI consensus
+          finalStandards: teacherOverride?.overriddenStandards || aiResult?.consensusStandards,
+          finalRigorLevel: teacherOverride?.overriddenRigorLevel || aiResult?.consensusRigorLevel,
+          
+          // Source tracking
+          hasTeacherOverride: !!teacherOverride,
+          teacherNotes: teacherOverride?.notes,
+          aiConfidenceScore: aiResult?.confidenceScore,
+          teacherConfidenceScore: teacherOverride?.confidenceScore,
+        };
+        
+        if (teacherOverride) {
+          overrideCount++;
+          hasTeacherOverrides = true;
+        }
+        
+        confirmedQuestions.push(finalAnalysis);
+      }
+      
+      // Create the confirmed analysis document
+      await storage.createConfirmedAnalysis(customerUuid, {
+        documentId,
+        analysisData: {
+          questions: confirmedQuestions,
+          totalQuestions: questions.length,
+          confirmedAt: new Date().toISOString(),
+        },
+        hasTeacherOverrides,
+        overrideCount,
+      });
+      
+      console.log(`[DatabaseWriteService] CONFIRMED analysis created with ${overrideCount} overrides out of ${questions.length} questions`);
+      
+    } catch (error) {
+      console.error(`[DatabaseWriteService] Failed to create confirmed analysis:`, error);
+      throw new Error(`Failed to create confirmed analysis: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
    * Queue document exports (cover sheets, rubrics) for generation
    */
   static async queueDocumentExports(documentId: string, customerUuid: string): Promise<void> {
