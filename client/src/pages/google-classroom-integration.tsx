@@ -13,6 +13,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Switch } from '@/components/ui/switch';
 import { AlertCircle, CheckCircle, Users, BookOpen, GraduationCap, Calendar, Clock, ExternalLink, Settings, Lightbulb, Target, FileText } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
+import { GRADE_BANDS, getCoursesByGradeBand } from '@shared/standardsMatching';
+import type { CommonCoreStandard } from '@shared/commonCoreStandards';
 
 interface GoogleUser {
   id: string;
@@ -45,14 +47,6 @@ interface Classroom {
   };
 }
 
-interface CommonCoreStandard {
-  code: string;
-  title: string;
-  gradeLevel: string;
-  majorDomain: string;
-  cluster?: string;
-  subjectArea?: string;
-}
 
 interface Student {
   id: string;
@@ -82,6 +76,8 @@ export default function GoogleClassroomIntegration() {
   
   // States for course configuration
   const [selectedClassroomForStandards, setSelectedClassroomForStandards] = useState<string | null>(null);
+  const [selectedGradeBand, setSelectedGradeBand] = useState('');
+  const [selectedCourse, setSelectedCourse] = useState('');
   const [courseTitleInput, setCourseTitleInput] = useState('');
   const [selectedStandards, setSelectedStandards] = useState<string[]>([]);
 
@@ -150,16 +146,19 @@ export default function GoogleClassroomIntegration() {
   });
   
   // Get standards for course title
+  // Get available courses for selected grade band
+  const availableCourses = selectedGradeBand ? getCoursesByGradeBand(selectedGradeBand) : [];
+
   const courseStandardsQuery = useQuery({
-    queryKey: ['/api/standards/course-standards', courseTitleInput, selectedClassroomForStandards],
+    queryKey: ['/api/standards/course-standards', selectedCourse, selectedClassroomForStandards],
     queryFn: async () => {
-      if (!courseTitleInput.trim()) return { standards: [], defaultEnabled: [] };
+      if (!selectedCourse) return { standards: [], defaultEnabled: [] };
       
       const classroom = classrooms.find(c => c.id === selectedClassroomForStandards);
       if (!classroom) return { standards: [], defaultEnabled: [] };
       
       const params = new URLSearchParams({
-        courseTitle: courseTitleInput,
+        courseTitle: selectedCourse,
         jurisdiction: classroom.standardsJurisdiction || 'Common Core',
         subjectArea: classroom.subjectArea || '',
       });
@@ -168,7 +167,7 @@ export default function GoogleClassroomIntegration() {
       if (!response.ok) throw new Error('Failed to fetch course standards');
       return response.json();
     },
-    enabled: !!courseTitleInput.trim() && !!selectedClassroomForStandards,
+    enabled: !!selectedCourse && !!selectedClassroomForStandards,
   });
 
   // Sync classrooms mutation
@@ -236,7 +235,7 @@ export default function GoogleClassroomIntegration() {
     try {
       await updateClassificationMutation.mutateAsync({
         classroomId,
-        courseTitle: courseTitleInput,
+        courseTitle: selectedCourse || courseTitleInput,
         enabledStandards: selectedStandards
       });
       
@@ -244,6 +243,8 @@ export default function GoogleClassroomIntegration() {
       setSelectedClassroomForStandards(null);
       setCourseTitleInput('');
       setSelectedStandards([]);
+      setSelectedGradeBand('');
+      setSelectedCourse('');
     } catch (error) {
       console.error('Failed to save course configuration:', error);
     }
@@ -254,6 +255,9 @@ export default function GoogleClassroomIntegration() {
     setSelectedClassroomForStandards(classroom.id);
     setCourseTitleInput(classroom.courseTitle || '');
     setSelectedStandards(classroom.enabledStandards || []);
+    // Reset dropdown selections
+    setSelectedGradeBand('');
+    setSelectedCourse('');
   };
 
   // Check authentication status and set current step
@@ -509,18 +513,54 @@ export default function GoogleClassroomIntegration() {
                                 
                                 <div className="flex-1 overflow-y-auto space-y-6">
                                   {/* Course Title Input */}
+                                  {/* Grade Band Selection */}
                                   <div className="space-y-2">
-                                    <Label htmlFor="course-title">Course Title</Label>
-                                    <Input
-                                      id="course-title"
-                                      placeholder="e.g., Algebra I, 7th Grade Math, English 9"
-                                      value={courseTitleInput}
-                                      onChange={(e) => setCourseTitleInput(e.target.value)}
-                                    />
+                                    <Label htmlFor="grade-band">Grade Band</Label>
+                                    <Select value={selectedGradeBand} onValueChange={(value) => {
+                                      setSelectedGradeBand(value);
+                                      setSelectedCourse(''); // Reset course selection
+                                      setSelectedStandards([]); // Reset standards
+                                    }}>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select grade band" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {GRADE_BANDS.map((band) => (
+                                          <SelectItem key={band.id} value={band.id}>
+                                            {band.label}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
                                     <p className="text-xs text-muted-foreground">
-                                      Enter your course title to automatically match relevant standards
+                                      Choose the appropriate grade level range
                                     </p>
                                   </div>
+
+                                  {/* Course Selection */}
+                                  {selectedGradeBand && (
+                                    <div className="space-y-2">
+                                      <Label htmlFor="course">Course</Label>
+                                      <Select value={selectedCourse} onValueChange={(value) => {
+                                        setSelectedCourse(value);
+                                        setSelectedStandards([]); // Reset standards when course changes
+                                      }}>
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="Select course" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {availableCourses.map((course) => (
+                                            <SelectItem key={course} value={course}>
+                                              {course}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                      <p className="text-xs text-muted-foreground">
+                                        Select your specific course to load relevant standards
+                                      </p>
+                                    </div>
+                                  )}
 
                                   {/* Standards Selection */}
                                   {courseStandardsQuery.data && courseStandardsQuery.data.standards.length > 0 && (
@@ -556,7 +596,7 @@ export default function GoogleClassroomIntegration() {
                                                     Grade {standard.gradeLevel}
                                                   </Badge>
                                                 </div>
-                                                <p className="text-sm mt-1">{standard.title}</p>
+                                                <p className="text-sm mt-1">{standard.description}</p>
                                                 {standard.majorDomain && (
                                                   <p className="text-xs text-muted-foreground mt-1">
                                                     {standard.majorDomain}
@@ -590,16 +630,16 @@ export default function GoogleClassroomIntegration() {
                                     </div>
                                   )}
                                   
-                                  {courseTitleInput && !courseStandardsQuery.isLoading && (!courseStandardsQuery.data || courseStandardsQuery.data.standards.length === 0) && (
+                                  {selectedCourse && !courseStandardsQuery.isLoading && (!courseStandardsQuery.data || courseStandardsQuery.data.standards.length === 0) && (
                                     <Alert>
                                       <AlertCircle className="h-4 w-4" />
                                       <AlertDescription>
-                                        No standards found for "{courseTitleInput}". Try a more specific course title like "Algebra I" or "7th Grade Math".
+                                        No standards found for "{selectedCourse}". Try selecting a different course.
                                       </AlertDescription>
                                     </Alert>
                                   )}
                                   
-                                  {courseStandardsQuery.isLoading && courseTitleInput && (
+                                  {courseStandardsQuery.isLoading && selectedCourse && (
                                     <div className="flex items-center justify-center py-8">
                                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                                       <span className="ml-2 text-sm text-muted-foreground">Finding standards...</span>
@@ -614,7 +654,7 @@ export default function GoogleClassroomIntegration() {
                                   <DialogTrigger asChild>
                                     <Button 
                                       onClick={() => handleCourseConfigurationSave(classroom.id)}
-                                      disabled={!courseTitleInput.trim() || updateClassificationMutation.isPending}
+                                      disabled={!selectedCourse || updateClassificationMutation.isPending}
                                     >
                                       {updateClassificationMutation.isPending ? 'Saving...' : 'Save Configuration'}
                                     </Button>

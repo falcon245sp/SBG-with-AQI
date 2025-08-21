@@ -106,6 +106,53 @@ export function getStandardsForCourse(
   return filteredStandards;
 }
 
+// Grade band definitions for hierarchical course selection
+export interface GradeBand {
+  id: string;
+  label: string;
+  description: string;
+}
+
+export const GRADE_BANDS: GradeBand[] = [
+  { id: 'K-5', label: 'Elementary (K-5)', description: 'Kindergarten through 5th Grade' },
+  { id: '6-8', label: 'Middle School (6-8)', description: '6th through 8th Grade' },
+  { id: '9-12', label: 'High School (9-12)', description: '9th through 12th Grade' },
+];
+
+// Get courses for a specific grade band
+export function getCoursesByGradeBand(gradeBandId: string, subject?: 'Math' | 'ELA'): string[] {
+  let patterns = COURSE_PATTERNS;
+  
+  // Filter by subject if specified
+  if (subject) {
+    patterns = patterns.filter(pattern => pattern.subject === subject);
+  }
+  
+  // Filter by grade band
+  const relevantPatterns = patterns.filter(pattern => {
+    const gradeLevel = pattern.gradeLevel;
+    
+    switch (gradeBandId) {
+      case 'K-5':
+        return ['K', '1', '2', '3', '4', '5'].includes(gradeLevel || '');
+      case '6-8':
+        return ['6', '7', '8'].includes(gradeLevel || '');
+      case '9-12':
+        return gradeLevel === '9-12';
+      default:
+        return false;
+    }
+  });
+
+  // Return the first (most descriptive) pattern for each course type
+  return relevantPatterns.map(pattern => {
+    // Use the most descriptive pattern (usually the first one)
+    const bestPattern = pattern.patterns[0];
+    // Convert to title case
+    return bestPattern.replace(/\b\w/g, l => l.toUpperCase());
+  });
+}
+
 // Get suggested course titles based on subject area and jurisdiction
 export function getSuggestedCourseTitles(
   subjectArea: SubjectArea,
