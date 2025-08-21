@@ -968,7 +968,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async refreshDocumentRelationships(): Promise<void> {
-    await db.execute(sql`SELECT refresh_document_relationships()`);
+    await db.execute(sql`SELECT refresh_document_relationships_manual()`);
   }
 
   async getQuestionResultsByDocumentId(documentId: string): Promise<any[]> {
