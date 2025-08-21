@@ -149,19 +149,36 @@ export default function GoogleClassroomIntegration() {
 
   // Update classroom settings mutation
   const updateClassificationMutation = useMutation({
-    mutationFn: ({ classroomId, ...settings }: {
+    mutationFn: async ({ classroomId, ...settings }: {
       classroomId: string;
       subjectArea?: string;
       standardsJurisdiction?: string;
       sbgEnabled?: boolean;
-    }) => fetch(`/api/classrooms/${classroomId}/classification`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(settings),
-    }).then(res => res.json()),
-    onSuccess: () => {
+    }) => {
+      console.log('Making API call to update classroom:', { classroomId, settings });
+      const response = await fetch(`/api/classrooms/${classroomId}/classification`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+      
+      console.log('API response status:', response.status);
+      const data = await response.json();
+      console.log('API response data:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update classroom');
+      }
+      
+      return data;
+    },
+    onSuccess: (data) => {
+      console.log('Mutation successful:', data);
       queryClient.invalidateQueries({ queryKey: ['/api/classrooms'] });
       setEditingClassification(null);
+    },
+    onError: (error) => {
+      console.error('Mutation failed:', error);
     },
   });
 
@@ -362,12 +379,13 @@ export default function GoogleClassroomIntegration() {
                             <Switch
                               checked={classroom.sbgEnabled || false}
                               onCheckedChange={(checked) => {
-                                console.log('SBG toggle changed:', { classroomId: classroom.id, checked });
+                                console.log('SBG toggle changed:', { classroomId: classroom.id, checked, currentValue: classroom.sbgEnabled });
                                 updateClassificationMutation.mutate({
                                   classroomId: classroom.id,
                                   sbgEnabled: checked
                                 });
                               }}
+                              disabled={updateClassificationMutation.isPending}
                               className="data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-gray-300"
                             />
                             <Target className="w-4 h-4 text-emerald-600" />
