@@ -194,20 +194,22 @@ export class ExportProcessor {
     console.log(`[ExportProcessor] Using CONFIRMED analysis with ${confirmedAnalysis.overrideCount} teacher overrides out of ${analysisData.totalQuestions} questions`);
     
     // DEBUG: Log the actual CONFIRMED analysis data being used for PDF generation
-    console.log(`[DEBUG] CONFIRMED Analysis Data Summary:`);
-    console.log(`[DEBUG] - Document ID: ${document.id}`);
-    console.log(`[DEBUG] - Total Questions: ${analysisData.totalQuestions}`);
-    console.log(`[DEBUG] - Override Count: ${confirmedAnalysis.overrideCount}`);
-    console.log(`[DEBUG] - Has Teacher Overrides: ${confirmedAnalysis.hasTeacherOverrides}`);
+    console.log(`\n========== PDF GENERATION DEBUG ==========`);
+    console.log(`[PDF DEBUG] CONFIRMED Analysis Data Summary:`);
+    console.log(`[PDF DEBUG] - Document ID: ${document.id}`);
+    console.log(`[PDF DEBUG] - Document Name: ${document.fileName}`);
+    console.log(`[PDF DEBUG] - Total Questions: ${analysisData.totalQuestions}`);
+    console.log(`[PDF DEBUG] - Override Count: ${confirmedAnalysis.overrideCount}`);
+    console.log(`[PDF DEBUG] - Has Teacher Overrides: ${confirmedAnalysis.hasTeacherOverrides}`);
+    
     if (analysisData.questions && analysisData.questions.length > 0) {
-      const firstQuestion = analysisData.questions[0];
-      console.log(`[DEBUG] - First Question Sample:`);
-      console.log(`[DEBUG]   - Question ID: ${firstQuestion.questionId}`);
-      console.log(`[DEBUG]   - Question Number: ${firstQuestion.questionNumber}`);
-      console.log(`[DEBUG]   - Final Standards: ${JSON.stringify(firstQuestion.finalStandards)}`);
-      console.log(`[DEBUG]   - Final Rigor Level: ${firstQuestion.finalRigorLevel}`);
-      console.log(`[DEBUG]   - Has Teacher Override: ${firstQuestion.hasTeacherOverride}`);
+      console.log(`[PDF DEBUG] - All Questions Data:`);
+      for (let i = 0; i < Math.min(3, analysisData.questions.length); i++) {
+        const q = analysisData.questions[i];
+        console.log(`[PDF DEBUG]   Q${q.questionNumber}: Standards=${JSON.stringify(q.finalStandards)}, Rigor=${q.finalRigorLevel}, HasOverride=${q.hasTeacherOverride}`);
+      }
     }
+    console.log(`========== END PDF DEBUG ==========\n`);
     
     const pdf = new jsPDF('portrait', 'mm', 'a4');
     

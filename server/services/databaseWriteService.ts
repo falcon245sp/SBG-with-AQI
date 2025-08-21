@@ -725,6 +725,11 @@ export class DatabaseWriteService {
         const aiResult = questionResults.find(r => r.questionNumber === question.questionNumber);
         const teacherOverride = await storage.getQuestionOverride(question.id, customerUuid);
         
+        // DEBUG: Log what data is being used for each question
+        console.log(`[DEBUG] Question ${question.questionNumber} (${question.id}) data sources:`);
+        console.log(`[DEBUG] - AI Result: Standards=${JSON.stringify(aiResult?.consensusStandards)}, Rigor=${aiResult?.consensusRigorLevel}`);
+        console.log(`[DEBUG] - Teacher Override: ${teacherOverride ? `Standards=${JSON.stringify(teacherOverride.overriddenStandards)}, Rigor=${teacherOverride.overriddenRigorLevel}` : 'NONE'}`);
+        
         // Create final analysis for this question
         const finalAnalysis = {
           questionId: question.id,
@@ -741,6 +746,8 @@ export class DatabaseWriteService {
           aiConfidenceScore: aiResult?.confidenceScore,
           teacherConfidenceScore: teacherOverride?.confidenceScore,
         };
+        
+        console.log(`[DEBUG] - Final Analysis: Standards=${JSON.stringify(finalAnalysis.finalStandards)}, Rigor=${finalAnalysis.finalRigorLevel}, HasOverride=${finalAnalysis.hasTeacherOverride}`);
         
         if (teacherOverride) {
           overrideCount++;
