@@ -1,0 +1,148 @@
+2025-08-18 02:45:12.04
+25d34b6f
+User
+_queue: [],
+2025-08-18 02:45:12.04
+25d34b6f
+User
+_state: 0,
+2025-08-18 02:45:12.04
+25d34b6f
+User
+onerror: [Function: senderOnError],
+2025-08-18 02:45:12.04
+25d34b6f
+User
+[Symbol(websocket)]: [Circular *1]
+2025-08-18 02:45:12.04
+25d34b6f
+User
+},
+2025-08-18 02:45:12.04
+25d34b6f
+User
+_socket: TLSSocket {
+2025-08-18 02:45:12.04
+25d34b6f
+User
+_tlsOptions: [Object],
+2025-08-18 02:45:12.04
+25d34b6f
+User
+_secureEstablished: true,
+2025-08-18 02:45:12.04
+25d34b6f
+User
+_securePending: false,
+2025-08-18 02:45:12.04
+25d34b6f
+User
+_newSessionPending: false,
+2025-08-18 02:45:12.04
+25d34b6f
+User
+_controlReleased: true,
+2025-08-18 02:45:12.04
+25d34b6f
+User
+secureConnecting: false,
+2025-08-18 02:45:12.04
+25d34b6f
+User
+_SNICallback: null,
+2025-08-18 02:45:12.04
+25d34b6f
+User
+servername: 'ep-weathered-sound-afqegogk.c-2.us-west-2.aws.neon.tech',
+2025-08-18 02:45:12.04
+25d34b6f
+User
+alpnProtocol: false,
+2025-08-18 02:45:12.04
+25d34b6f
+User
+authorized: true,
+2025-08-18 02:45:12.04
+25d34b6f
+User
+authorizationError: null,
+2025-08-18 02:45:12.04
+25d34b6f
+User
+encrypted: true,
+2025-08-18 02:45:12.04
+25d34b6f
+User
+_events: [Object: null prototype],
+2025-08-18 02:45:12.04
+25d34b6f
+User
+_eventsCount: 6,
+2025-08-18 02:45:12.04
+25d34b6f
+User
+connecting: false,
+2025-08-18 02:45:12.04
+25d34b6f
+User
+_hadError: false,
+2025-08-18 02:45:12.04
+25d34b6f
+User
+_parent: null,
+2025-08-18 02:45:12.04
+25d34b6f
+User
+_host: 'ep-weathered-sound-afqegogk.c-2.us-west-2.aws.neon.tech',
+2025-08-18 02:45:12.04
+25d34b6f
+User
+_closeAfterHandlingError: false,
+2025-08-18 02:45:12.04
+25d34b6f
+User
+_readableState: [ReadableState],
+2025-08-18 02:45:12.04
+25d34b6f
+User
+_writableState: [WritableState],
+2025-08-18 02:45:12.04
+25d34b6f
+User
+allowHalfOpen: false,
+2025-08-18 02:45:12.04
+25d34b6f
+User
+_maxListeners: undefined,
+2025-08-18 02:45:12.04
+25d34b6f
+User
+ssl: [TLSWrap],
+2025-08-18 02:45:12.04
+25d34b6f
+User
+_httpMessage: null,
+2025-08-18 02:45:12.04
+25d34b6f
+User
+autoSelectFamilyAttemptedAddresses: [Array],
+2025-08-18 02:45:12.04
+25d34b6f
+User
+[Symbol(verified)]: true,
+2025-08-18 02:45:12.04
+25d34b6f
+User
+[Symbol(kBufferCb)]: null,
+2025-08-18 02:45:12.04
+25d34b6f
+User
+[Symbol(kSetNoDelay)]: true,
+2025-08-18 02:45:12.04
+25d34b6f
+User
+[Symbol(websocket)]: [Circular *1]
+2025-08-18 02:45:12.04
+25d34b6f
+User
+_bufferedAmount: 0,
