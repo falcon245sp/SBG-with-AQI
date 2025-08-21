@@ -203,3 +203,31 @@ export const BusinessEnumUtils = {
     return displayNames[level] || level;
   }
 } as const;
+
+// Subject Area - Course classification for standards mapping
+export enum SubjectArea {
+  MATHEMATICS = 'mathematics',
+  ENGLISH_LANGUAGE_ARTS = 'english_language_arts',
+  SCIENCE = 'science',
+  SOCIAL_STUDIES = 'social_studies',
+  COMPUTER_SCIENCE = 'computer_science',
+  FOREIGN_LANGUAGE = 'foreign_language',
+  HEALTH_PHYSICAL_EDUCATION = 'health_physical_education',
+  ARTS = 'arts',
+  CAREER_TECHNICAL_EDUCATION = 'career_technical_education',
+  OTHER = 'other'
+}
+
+// Standards Jurisdiction - Standards framework for course alignment
+export enum StandardsJurisdiction {
+  COMMON_CORE_MATH = 'common_core_math',
+  COMMON_CORE_ELA = 'common_core_ela', 
+  NGSS = 'ngss', // Next Generation Science Standards
+  STATE_SPECIFIC = 'state_specific',
+  AP_STANDARDS = 'ap_standards',
+  IB_STANDARDS = 'ib_standards',
+  CUSTOM = 'custom'
+}
+
+export type SubjectAreaValue = `${SubjectArea}`;
+export type StandardsJurisdictionValue = `${StandardsJurisdiction}`;

@@ -56,6 +56,9 @@ export const classrooms = pgTable("classrooms", {
   description: text("description"),
   room: text("room"),
   courseState: varchar("course_state"), // ACTIVE, ARCHIVED, etc.
+  subjectArea: varchar("subject_area"), // Subject classification for standards mapping
+  detectedSubjectArea: varchar("detected_subject_area"), // AI-detected subject area
+  standardsJurisdiction: varchar("standards_jurisdiction"), // Which standards framework to use
   creationTime: timestamp("creation_time"),
   updateTime: timestamp("update_time"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -361,6 +364,9 @@ export const insertClassroomSchema = createInsertSchema(classrooms).pick({
   description: true,
   room: true,
   courseState: true,
+  subjectArea: true,
+  detectedSubjectArea: true,
+  standardsJurisdiction: true,
   creationTime: true,
   updateTime: true,
 });

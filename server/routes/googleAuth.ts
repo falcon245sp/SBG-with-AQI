@@ -176,13 +176,32 @@ export async function syncClassroomData(req: Request, res: Response) {
     // Sync classrooms from Google Classroom API using getClassrooms method
     const googleClassrooms = await googleAuth.getClassrooms(user.googleAccessToken, user.googleRefreshToken || undefined);
     
-    // Save/update classrooms in database using existing storage method
-    const savedClassrooms = await storage.syncClassrooms(customerUuid, googleClassrooms);
+    // Classify and save/update classrooms in database with subject area detection
+    const classifiedClassrooms = googleClassrooms.map((classroom: any) => {
+      const { ClassroomClassifier } = require('../services/classroomClassifier');
+      const classification = ClassroomClassifier.classifyClassroom({
+        name: classroom.name,
+        section: classroom.section,
+        description: classroom.description
+      });
+      
+      return {
+        ...classroom,
+        detectedSubjectArea: classification.subjectArea,
+        standardsJurisdiction: classification.suggestedJurisdiction,
+        _classificationData: classification // Include for debugging/frontend display
+      };
+    });
+    
+    const savedClassrooms = await storage.syncClassrooms(customerUuid, classifiedClassrooms);
     
     res.json({
       success: true,
       message: `Synced ${savedClassrooms.length} classrooms`,
-      classrooms: savedClassrooms
+      classrooms: savedClassrooms.map((classroom: any) => ({
+        ...classroom,
+        _classificationData: classifiedClassrooms.find((c: any) => c.id === classroom.googleClassId)?._classificationData
+      }))
     });
   } catch (error) {
     console.error('[OAuth] Error syncing classroom data:', error);
@@ -430,5 +449,52 @@ export async function getClassroomStudents(req: Request, res: Response) {
   } catch (error) {
     console.error('[OAuth] Error fetching classroom students:', error);
     res.status(500).json({ error: 'Failed to fetch students' });
+  }
+}
+
+// Update classroom subject area and standards jurisdiction
+export async function updateClassroomClassification(req: Request, res: Response) {
+  try {
+    const { classroomId } = req.params;
+    const { subjectArea, standardsJurisdiction } = req.body;
+    
+    if (!classroomId) {
+      return res.status(400).json({ error: 'Classroom ID is required' });
+    }
+
+    // Validate subject area and jurisdiction if provided
+    const { SubjectArea, StandardsJurisdiction } = require('../../shared/businessEnums');
+    
+    if (subjectArea && !Object.values(SubjectArea).includes(subjectArea)) {
+      return res.status(400).json({ error: 'Invalid subject area' });
+    }
+    
+    if (standardsJurisdiction && !Object.values(StandardsJurisdiction).includes(standardsJurisdiction)) {
+      return res.status(400).json({ error: 'Invalid standards jurisdiction' });
+    }
+
+    // Get user and verify ownership
+    const { user, customerUuid } = await ActiveUserService.requireActiveUserAndCustomerUuid(req);
+    const classroom = await storage.getClassroomById(classroomId);
+    
+    if (!classroom || classroom.customerUuid !== customerUuid) {
+      return res.status(404).json({ error: 'Classroom not found' });
+    }
+
+    // Update the classroom classification
+    const updatedClassroom = await storage.updateClassroom(classroomId, {
+      subjectArea,
+      standardsJurisdiction,
+      updatedAt: new Date()
+    });
+
+    res.json({
+      success: true,
+      message: 'Classroom classification updated successfully',
+      classroom: updatedClassroom
+    });
+  } catch (error) {
+    console.error('[OAuth] Error updating classroom classification:', error);
+    res.status(500).json({ error: 'Failed to update classroom classification' });
   }
 }

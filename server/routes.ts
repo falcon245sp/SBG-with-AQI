@@ -13,7 +13,8 @@ import {
   getClassroomAssignments,
   syncAssignments,
   getAssignmentDetails,
-  getClassroomStudents
+  getClassroomStudents,
+  updateClassroomClassification
 } from "./routes/googleAuth";
 import { checkAuthStatus } from "./routes/auth";
 import { documentProcessor, queueProcessor } from "./services/documentProcessor";
@@ -131,6 +132,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Student routes
   app.get('/api/classrooms/:classroomId/students', getClassroomStudents);
+  
+  // Classroom classification routes
+  app.patch('/api/classrooms/:classroomId/classification', updateClassroomClassification);
 
   // Document upload with standards focus endpoint
   app.post('/api/documents/upload-with-standards', upload.single('document'), async (req: any, res) => {

@@ -67,6 +67,7 @@ export interface IStorage {
   
   // Classroom operations
   createClassroom(classroom: InsertClassroom): Promise<Classroom>;
+  updateClassroom(classroomId: string, updates: Partial<Classroom>): Promise<Classroom>;
   getTeacherClassrooms(teacherId: string): Promise<Classroom[]>;
   getClassroomById(classroomId: string): Promise<Classroom | undefined>;
   getClassroomByGoogleId(googleClassId: string): Promise<Classroom | undefined>;
@@ -555,6 +556,15 @@ export class DatabaseStorage implements IStorage {
     return classroom;
   }
 
+  async updateClassroom(classroomId: string, updates: Partial<Classroom>): Promise<Classroom> {
+    const [classroom] = await db
+      .update(classrooms)
+      .set(updates)
+      .where(eq(classrooms.id, classroomId))
+      .returning();
+    return classroom;
+  }
+
   async getTeacherClassrooms(customerUuid: string): Promise<Classroom[]> {
     return await db
       .select()
@@ -596,6 +606,8 @@ export class DatabaseStorage implements IStorage {
             description: classData.description,
             room: classData.room,
             courseState: classData.courseState,
+            detectedSubjectArea: classData.detectedSubjectArea,
+            standardsJurisdiction: classData.standardsJurisdiction,
             updateTime: classData.updateTime ? new Date(classData.updateTime) : undefined,
             updatedAt: new Date(),
           })
@@ -612,6 +624,8 @@ export class DatabaseStorage implements IStorage {
           description: classData.description,
           room: classData.room,
           courseState: classData.courseState,
+          detectedSubjectArea: classData.detectedSubjectArea,
+          standardsJurisdiction: classData.standardsJurisdiction,
           creationTime: classData.creationTime ? new Date(classData.creationTime) : undefined,
           updateTime: classData.updateTime ? new Date(classData.updateTime) : undefined,
         });
