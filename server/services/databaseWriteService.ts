@@ -138,7 +138,11 @@ export class DatabaseWriteService {
     console.log(`[DatabaseWriteService] Deleting document: ${documentId}`);
     
     try {
-      // Delete the document record (this should cascade to related data)
+      // First, clean up export queue entries for this document
+      console.log(`[DatabaseWriteService] Cleaning up export queue for document: ${documentId}`);
+      await storage.deleteExportQueueByDocumentId(documentId);
+      
+      // Then delete the document record (this should cascade to other related data)
       await storage.deleteDocument(documentId);
       console.log(`[DatabaseWriteService] Document deleted successfully: ${documentId}`);
     } catch (error) {

@@ -701,7 +701,7 @@ export class DatabaseStorage implements IStorage {
         customerUuid,
       })
       .returning();
-    return result[0];
+    return result[0] as Document;
   }
 
   async getDocument(id: string): Promise<Document | undefined> {
@@ -776,6 +776,12 @@ export class DatabaseStorage implements IStorage {
         completedAt: status === 'completed' || status === 'failed' ? new Date() : undefined
       })
       .where(eq(exportQueue.id, id));
+  }
+
+  async deleteExportQueueByDocumentId(documentId: string): Promise<void> {
+    await db
+      .delete(exportQueue)
+      .where(eq(exportQueue.documentId, documentId));
   }
 
   async getPendingExports(): Promise<any[]> {
