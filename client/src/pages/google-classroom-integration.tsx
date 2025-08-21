@@ -382,7 +382,6 @@ export default function GoogleClassroomIntegration() {
                             <Switch
                               checked={classroom.sbgEnabled || false}
                               onCheckedChange={(checked) => {
-                                alert(`🔥 SBG Toggle: ${checked ? 'ON' : 'OFF'} for ${classroom.name}`);
                                 console.log('🔥 SBG TOGGLE CLICKED!', { classroomId: classroom.id, checked, currentValue: classroom.sbgEnabled });
                                 try {
                                   updateClassificationMutation.mutate({

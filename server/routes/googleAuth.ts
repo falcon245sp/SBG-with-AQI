@@ -467,7 +467,7 @@ export async function updateClassroomClassification(req: Request, res: Response)
     }
 
     // Validate subject area and jurisdiction if provided
-    const { SubjectArea, StandardsJurisdiction } = require('../../shared/businessEnums');
+    const { SubjectArea, StandardsJurisdiction } = await import('../../shared/businessEnums.js');
     
     if (subjectArea && !Object.values(SubjectArea).includes(subjectArea)) {
       return res.status(400).json({ error: 'Invalid subject area' });
