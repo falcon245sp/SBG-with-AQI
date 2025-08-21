@@ -922,7 +922,7 @@ export class DatabaseStorage implements IStorage {
       .from(questionResults)
       .innerJoin(questions, eq(questionResults.questionId, questions.id))
       .where(eq(questions.documentId, documentId))
-      .orderBy(questions.questionNumber);
+      .orderBy(sql`CAST(${questions.questionNumber} AS INTEGER)`);
   }
 
   // Question operations
@@ -936,7 +936,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(questions)
       .where(eq(questions.documentId, documentId))
-      .orderBy(questions.questionNumber);
+      .orderBy(sql`CAST(${questions.questionNumber} AS INTEGER)`);
   }
 
   // AI Response operations
@@ -984,7 +984,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(questions)
       .where(eq(questions.documentId, documentId))
-      .orderBy(questions.questionNumber);
+      .orderBy(sql`CAST(${questions.questionNumber} AS INTEGER)`);
 
     const results = [];
     for (const question of questionsData) {
@@ -1584,7 +1584,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(questions)
       .where(eq(questions.documentId, documentId))
-      .orderBy(questions.questionNumber);
+      .orderBy(sql`CAST(${questions.questionNumber} AS INTEGER)`);
   }
 
   /**
