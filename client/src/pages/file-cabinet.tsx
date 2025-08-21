@@ -800,21 +800,7 @@ export default function FileCabinet() {
                               </Link>
                             )}
                             
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              title="Download document"
-                              onClick={() => {
-                                const link = document.createElement('a');
-                                link.href = `/api/documents/${doc.id}/download`;
-                                link.download = doc.originalFilename || doc.fileName;
-                                document.body.appendChild(link);
-                                link.click();
-                                document.body.removeChild(link);
-                              }}
-                            >
-                              <Download className="h-4 w-4" />
-                            </Button>
+
                             {/* Only show view button for non-docx files */}
                             {!doc.originalFilename?.toLowerCase().endsWith('.docx') && 
                              !doc.fileName?.toLowerCase().endsWith('.docx') && (
@@ -856,16 +842,7 @@ export default function FileCabinet() {
                               </Button>
                             )}
 
-                            {doc.assetType === 'uploaded' && (
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                title="Collate graded submissions into a single PDF"
-                                onClick={() => handleCollateSubmissions(doc.id)}
-                              >
-                                📋
-                              </Button>
-                            )}
+
 
                             <Link href={`/documents/${doc.id}/inspect`}>
                               <Button 
