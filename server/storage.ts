@@ -1547,6 +1547,16 @@ export class DatabaseStorage implements IStorage {
       .delete(teacherOverrides)
       .where(eq(teacherOverrides.questionId, questionId));
   }
+
+  /**
+   * Get all child documents (generated from a source document)
+   */
+  async getChildDocuments(parentDocumentId: string): Promise<any[]> {
+    return await db
+      .select()
+      .from(documents)
+      .where(eq(documents.parentDocumentId, parentDocumentId));
+  }
 }
 
 export const storage = new DatabaseStorage();

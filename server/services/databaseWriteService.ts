@@ -132,10 +132,104 @@ export class DatabaseWriteService {
   }
 
   /**
-   * Delete document and all related data
+   * Get document deletion impact - what will be deleted with this document
+   */
+  static async getDocumentDeletionImpact(documentId: string): Promise<{
+    document: any;
+    isSourceDocument: boolean;
+    childDocuments: any[];
+    totalDocumentsToDelete: number;
+    impactSummary: string;
+  }> {
+    console.log(`[DatabaseWriteService] Analyzing deletion impact for document: ${documentId}`);
+    
+    try {
+      // Get the target document
+      const document = await storage.getDocument(documentId);
+      if (!document) {
+        throw new Error('Document not found');
+      }
+      
+      const isSourceDocument = document.assetType === 'uploaded';
+      let childDocuments: any[] = [];
+      
+      if (isSourceDocument) {
+        // If this is a source document, find all generated documents that depend on it
+        childDocuments = await storage.getChildDocuments(documentId);
+      }
+      
+      const totalDocumentsToDelete = 1 + childDocuments.length;
+      
+      // Create impact summary
+      let impactSummary = `This will delete "${document.fileName}"`;
+      if (childDocuments.length > 0) {
+        const childTypes = childDocuments.map(doc => {
+          if (doc.exportType === 'rubric_pdf') return 'rubric';
+          if (doc.exportType === 'cover_sheet') return 'cover sheet';
+          return doc.exportType || 'generated document';
+        });
+        const uniqueTypes = Array.from(new Set(childTypes));
+        impactSummary += ` and ${childDocuments.length} generated document${childDocuments.length > 1 ? 's' : ''} (${uniqueTypes.join(', ')})`;
+      }
+      impactSummary += '.';
+      
+      return {
+        document,
+        isSourceDocument,
+        childDocuments,
+        totalDocumentsToDelete,
+        impactSummary
+      };
+    } catch (error) {
+      console.error(`[DatabaseWriteService] Failed to analyze deletion impact:`, error);
+      throw new Error(`Failed to analyze deletion impact: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Delete document and all related data (with cardinality awareness)
    */
   static async deleteDocument(documentId: string): Promise<void> {
     console.log(`[DatabaseWriteService] Deleting document: ${documentId}`);
+    
+    try {
+      // Get the document and check if it's a source document with children
+      const document = await storage.getDocument(documentId);
+      if (!document) {
+        throw new Error('Document not found');
+      }
+      
+      const isSourceDocument = document.assetType === 'uploaded';
+      let documentsToDelete = [documentId];
+      
+      if (isSourceDocument) {
+        // Get all child documents (generated from this source)
+        const childDocuments = await storage.getChildDocuments(documentId);
+        console.log(`[DatabaseWriteService] Source document has ${childDocuments.length} generated children`);
+        
+        // Add child document IDs to deletion list
+        documentsToDelete = [...documentsToDelete, ...childDocuments.map(child => child.id)];
+      }
+      
+      console.log(`[DatabaseWriteService] Will delete ${documentsToDelete.length} total documents`);
+      
+      // Delete each document and its related data
+      for (const docId of documentsToDelete) {
+        await this.deleteSingleDocumentAndData(docId);
+      }
+      
+      console.log(`[DatabaseWriteService] Successfully deleted ${documentsToDelete.length} documents`);
+    } catch (error) {
+      console.error(`[DatabaseWriteService] Failed to delete document:`, error);
+      throw new Error(`Failed to delete document: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Delete a single document and all its related data (questions, responses, etc.)
+   */
+  private static async deleteSingleDocumentAndData(documentId: string): Promise<void> {
+    console.log(`[DatabaseWriteService] Deleting single document and data: ${documentId}`);
     
     try {
       // 1. Clean up export queue entries for this document
@@ -171,8 +265,8 @@ export class DatabaseWriteService {
       await storage.deleteDocument(documentId);
       console.log(`[DatabaseWriteService] Document deleted successfully: ${documentId}`);
     } catch (error) {
-      console.error(`[DatabaseWriteService] Failed to delete document:`, error);
-      throw new Error(`Failed to delete document: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error(`[DatabaseWriteService] Failed to delete single document:`, error);
+      throw new Error(`Failed to delete single document: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -546,7 +640,10 @@ export class DatabaseWriteService {
     try {
       const submission = await storage.createGradeSubmission({
         ...gradeData,
-        originalDocumentId: gradeData.originalDocumentId || gradeData.documentId
+        originalDocumentId: gradeData.originalDocumentId || gradeData.documentId,
+        totalScore: gradeData.totalScore ? String(gradeData.totalScore) : undefined,
+        maxPossibleScore: gradeData.maxPossibleScore ? String(gradeData.maxPossibleScore) : undefined,
+        percentageScore: gradeData.percentageScore ? String(gradeData.percentageScore) : undefined
       });
       console.log(`[DatabaseWriteService] Grade submission created: ${submission.id}`);
       

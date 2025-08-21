@@ -138,6 +138,9 @@ export default function FileCabinet() {
   const [newTags, setNewTags] = useState<Record<string, string>>({});
   const [viewerOpen, setViewerOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteDocumentId, setDeleteDocumentId] = useState<string | null>(null);
+  const [deletionImpact, setDeletionImpact] = useState<any>(null);
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -190,10 +193,10 @@ export default function FileCabinet() {
     }
   });
 
-  // Delete document
+  // Delete document with confirmation
   const deleteMutation = useMutation({
     mutationFn: async (documentId: string) => {
-      const response = await fetch(`/api/documents/${documentId}`, {
+      const response = await fetch(`/api/documents/${documentId}?confirmed=true`, {
         method: 'DELETE',
         credentials: 'include'
       });
@@ -227,10 +230,46 @@ export default function FileCabinet() {
     }
   };
 
-  const handleDeleteDocument = (documentId: string, fileName: string) => {
-    if (confirm(`Are you sure you want to delete "${fileName}"? This action cannot be undone.`)) {
-      deleteMutation.mutate(documentId);
+  // Get deletion impact analysis
+  const getDeletionImpact = async (documentId: string) => {
+    const response = await fetch(`/api/documents/${documentId}/deletion-impact`, {
+      credentials: 'include'
+    });
+    if (!response.ok) throw new Error('Failed to get deletion impact');
+    return response.json();
+  };
+
+  const handleDeleteDocument = async (documentId: string, fileName: string) => {
+    try {
+      // Get deletion impact analysis
+      const impact = await getDeletionImpact(documentId);
+      
+      // Set state for confirmation dialog
+      setDeleteDocumentId(documentId);
+      setDeletionImpact(impact);
+      setDeleteConfirmOpen(true);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to analyze deletion impact. Please try again.",
+        variant: "destructive",
+      });
     }
+  };
+
+  const confirmDelete = () => {
+    if (deleteDocumentId) {
+      deleteMutation.mutate(deleteDocumentId);
+      setDeleteConfirmOpen(false);
+      setDeleteDocumentId(null);
+      setDeletionImpact(null);
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirmOpen(false);
+    setDeleteDocumentId(null);
+    setDeletionImpact(null);
   };
 
   // Accept AI analysis and proceed to document generation
@@ -900,6 +939,81 @@ export default function FileCabinet() {
           </CardContent>
         </Card>
       )}
+
+      {/* Deletion Confirmation Dialog */}
+      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <Trash2 className="h-5 w-5" />
+              Confirm Deletion
+            </DialogTitle>
+          </DialogHeader>
+          
+          {deletionImpact && (
+            <div className="space-y-4">
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <p className="text-sm text-yellow-800 font-medium">
+                  ⚠️ Deletion Impact Analysis
+                </p>
+                <p className="text-sm text-yellow-700 mt-2">
+                  {deletionImpact.impactSummary}
+                </p>
+              </div>
+              
+              {deletionImpact.childDocuments && deletionImpact.childDocuments.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">The following generated documents will also be deleted:</p>
+                  <div className="max-h-32 overflow-y-auto border rounded p-2 bg-gray-50">
+                    {deletionImpact.childDocuments.map((child: any, index: number) => (
+                      <div key={index} className="text-xs text-gray-600 py-1">
+                        • {child.fileName} ({child.exportType || 'generated'})
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-sm text-red-800 font-medium">
+                  ⚠️ This action cannot be undone
+                </p>
+                <p className="text-sm text-red-700 mt-1">
+                  All associated files, analysis data, and generated documents will be permanently removed.
+                </p>
+              </div>
+              
+              <div className="flex gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={cancelDelete}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={confirmDelete}
+                  disabled={deleteMutation.isPending}
+                  className="flex-1"
+                >
+                  {deleteMutation.isPending ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Permanently
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Document Viewer Modal */}
       <Dialog open={viewerOpen} onOpenChange={setViewerOpen}>

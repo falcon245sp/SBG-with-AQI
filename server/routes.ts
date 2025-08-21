@@ -747,6 +747,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get document deletion impact (for confirmation dialog)
+  app.get('/api/documents/:id/deletion-impact', async (req: any, res) => {
+    try {
+      console.log(`[DELETION_IMPACT] Analyzing deletion impact for document: ${req.params.id}`);
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+      const { id } = req.params;
+      
+      // Get document and verify ownership
+      const document = await storage.getDocument(id);
+      
+      if (!document || document.customerUuid !== customerUuid) {
+        console.warn(`[DELETION_IMPACT] Document not found or unauthorized access`);
+        return res.status(404).json({ message: 'Document not found' });
+      }
+      
+      // Get deletion impact analysis
+      const impact = await DatabaseWriteService.getDocumentDeletionImpact(id);
+      console.log(`[DELETION_IMPACT] Impact: ${impact.totalDocumentsToDelete} documents will be deleted`);
+      
+      res.json(impact);
+    } catch (error) {
+      console.error('[DELETION_IMPACT] Error analyzing deletion impact:', error);
+      res.status(500).json({ 
+        message: 'Failed to analyze deletion impact',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Delete document
   app.delete('/api/documents/:id', async (req: any, res) => {
     try {
