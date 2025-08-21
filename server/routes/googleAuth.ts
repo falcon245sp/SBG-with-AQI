@@ -459,49 +459,29 @@ export async function getClassroomStudents(req: Request, res: Response) {
 // Update classroom classification and SBG settings
 export async function updateClassroomClassification(req: Request, res: Response) {
   try {
-    console.log('[OAuth] updateClassroomClassification called');
-    console.log('[OAuth] Request params:', req.params);
-    console.log('[OAuth] Request body:', req.body);
-    console.log('[OAuth] Session:', req.session?.id ? 'Present' : 'Missing');
-    console.log('[OAuth] User in session:', req.user ? 'Present' : 'Missing');
-    
     const { classroomId } = req.params;
     const { subjectArea, standardsJurisdiction, sbgEnabled } = req.body;
     
     if (!classroomId) {
-      console.log('[OAuth] Missing classroom ID');
       return res.status(400).json({ error: 'Classroom ID is required' });
     }
 
-    // Skip validation for now to focus on the core issue
-    console.log('[OAuth] Skipping enum validation temporarily');
+    // Validate subject area and jurisdiction if provided
+    const { SubjectArea, StandardsJurisdiction } = await import('../../shared/businessEnums.js');
     
+    if (subjectArea && !Object.values(SubjectArea).includes(subjectArea)) {
+      return res.status(400).json({ error: 'Invalid subject area' });
+    }
+    
+    if (standardsJurisdiction && !Object.values(StandardsJurisdiction).includes(standardsJurisdiction)) {
+      return res.status(400).json({ error: 'Invalid standards jurisdiction' });
+    }
 
     // Get user and verify ownership
-    console.log('[OAuth] Getting user and customer UUID...');
-    let user, customerUuid;
-    try {
-      const result = await ActiveUserService.requireActiveUserAndCustomerUuid(req);
-      user = result.user;
-      customerUuid = result.customerUuid;
-      console.log('[OAuth] User and customer UUID obtained:', { userId: user.id, customerUuid });
-    } catch (authError) {
-      console.error('[OAuth] Authentication failed:', authError);
-      return res.status(401).json({ error: 'Authentication required' });
-    }
-    console.log('[OAuth] Getting classroom by ID:', classroomId);
+    const { user, customerUuid } = await ActiveUserService.requireActiveUserAndCustomerUuid(req);
     const classroom = await storage.getClassroomById(classroomId);
     
-    if (!classroom) {
-      console.log('[OAuth] Classroom not found in database');
-      return res.status(404).json({ error: 'Classroom not found' });
-    }
-    
-    if (classroom.customerUuid !== customerUuid) {
-      console.log('[OAuth] Classroom ownership mismatch:', { 
-        classroomCustomerUuid: classroom.customerUuid, 
-        userCustomerUuid: customerUuid 
-      });
+    if (!classroom || classroom.customerUuid !== customerUuid) {
       return res.status(404).json({ error: 'Classroom not found' });
     }
 
@@ -511,12 +491,8 @@ export async function updateClassroomClassification(req: Request, res: Response)
     if (standardsJurisdiction !== undefined) updates.standardsJurisdiction = standardsJurisdiction;
     if (sbgEnabled !== undefined) updates.sbgEnabled = sbgEnabled;
 
-    console.log('[OAuth] Updating classroom with data:', { classroomId, updates });
-
     // Update the classroom
     const updatedClassroom = await storage.updateClassroom(classroomId, updates);
-    
-    console.log('[OAuth] Classroom updated successfully:', updatedClassroom);
 
     res.json({
       success: true,
