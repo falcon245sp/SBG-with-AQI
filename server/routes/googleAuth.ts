@@ -491,8 +491,12 @@ export async function updateClassroomClassification(req: Request, res: Response)
     if (standardsJurisdiction !== undefined) updates.standardsJurisdiction = standardsJurisdiction;
     if (sbgEnabled !== undefined) updates.sbgEnabled = sbgEnabled;
 
+    console.log('[OAuth] Updating classroom with data:', { classroomId, updates });
+
     // Update the classroom
     const updatedClassroom = await storage.updateClassroom(classroomId, updates);
+    
+    console.log('[OAuth] Classroom updated successfully:', updatedClassroom);
 
     res.json({
       success: true,

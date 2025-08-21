@@ -382,6 +382,7 @@ export default function GoogleClassroomIntegration() {
                             <Switch
                               checked={classroom.sbgEnabled || false}
                               onCheckedChange={(checked) => {
+                                alert(`🔥 SBG Toggle: ${checked ? 'ON' : 'OFF'} for ${classroom.name}`);
                                 console.log('🔥 SBG TOGGLE CLICKED!', { classroomId: classroom.id, checked, currentValue: classroom.sbgEnabled });
                                 try {
                                   updateClassificationMutation.mutate({
@@ -390,6 +391,7 @@ export default function GoogleClassroomIntegration() {
                                   });
                                 } catch (error) {
                                   console.error('❌ Error in toggle handler:', error);
+                                  alert('❌ Error: ' + (error instanceof Error ? error.message : String(error)));
                                 }
                               }}
                               disabled={updateClassificationMutation.isPending}
