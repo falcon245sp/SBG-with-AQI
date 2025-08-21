@@ -437,7 +437,8 @@ export const insertQrSequenceNumberSchema = createInsertSchema(qrSequenceNumbers
 
 export const insertGradeSubmissionSchema = createInsertSchema(gradeSubmissions).pick({
   sequenceNumberId: true,
-  documentId: true,
+  rubricDocumentId: true,
+  originalDocumentId: true,
   studentId: true,
   questionGrades: true,
   totalScore: true,
