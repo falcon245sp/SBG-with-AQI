@@ -1089,7 +1089,7 @@ function StandardsConfigurationDialog({
               
               <div className="p-3 bg-green-50 rounded-lg border border-green-200">
                 <p className="text-sm text-green-800">
-                  <strong>{Object.values(selectedStandardsMap).filter(Boolean).length}</strong> of {cspStandards.length} standards selected
+                  <strong>{cspStandards.filter(standard => selectedStandardsMap[standard.id] ?? true).length}</strong> of {cspStandards.length} standards selected
                 </p>
               </div>
             </div>
@@ -1122,7 +1122,7 @@ function StandardsConfigurationDialog({
               Cancel
             </Button>
             {step === 'standards' && (
-              <Button onClick={onSave} disabled={Object.values(selectedStandardsMap).filter(Boolean).length === 0}>
+              <Button onClick={onSave} disabled={cspStandards.filter(standard => selectedStandardsMap[standard.id] ?? true).length === 0}>
                 Save Configuration
               </Button>
             )}
