@@ -48,15 +48,57 @@ export default function DocumentInspector() {
 
   if (isLoading) {
     return (
-      <div className="p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+      <div className="p-6 max-w-6xl mx-auto">
+        <div className="flex items-center gap-2 mb-6">
+          <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          <h1 className="text-2xl font-bold text-gray-700">Loading Document Inspector...</h1>
+        </div>
+        
+        <div className="space-y-6">
+          {/* Stats cards skeleton */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-24 bg-gray-200 rounded"></div>
+              <div key={i} className="border rounded-lg p-4">
+                <div className="animate-pulse space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+                </div>
+              </div>
             ))}
           </div>
-          <div className="h-64 bg-gray-200 rounded"></div>
+          
+          {/* Document Lineage skeleton */}
+          <div className="border rounded-lg p-6">
+            <div className="animate-pulse space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 bg-gray-200 rounded"></div>
+                <div className="h-6 bg-gray-200 rounded w-40"></div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 p-2">
+                  <div className="w-4 h-4 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded flex-1"></div>
+                  <div className="h-4 bg-gray-200 rounded w-16"></div>
+                </div>
+                <div className="flex items-center gap-2 p-2">
+                  <div className="w-4 h-4 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded flex-1"></div>
+                  <div className="h-4 bg-gray-200 rounded w-20"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Additional content skeleton */}
+          <div className="border rounded-lg p-6">
+            <div className="animate-pulse space-y-4">
+              <div className="h-6 bg-gray-200 rounded w-48"></div>
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded"></div>
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -185,19 +227,23 @@ export default function DocumentInspector() {
         {/* Document Lineage */}
         <Card>
           <CardHeader>
-            <CardTitle>Document Lineage</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <TreePine className="w-5 h-5 text-blue-600" />
+              Document Lineage
+            </CardTitle>
             <CardDescription>Ancestry path from root document</CardDescription>
           </CardHeader>
           <CardContent>
             {typedInspection.lineage.length > 0 ? (
               <div className="space-y-2">
                 {typedInspection.lineage.map((doc, index) => (
-                  <div key={doc.id} className="flex items-center space-x-2">
-                    <span className="text-sm font-medium text-gray-500">
+                  <div key={doc.id} className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-50 transition-colors">
+                    <span className="text-sm font-medium text-gray-500 min-w-[20px]">
                       {index + 1}.
                     </span>
+                    <FileText className="w-4 h-4 text-gray-400" />
                     <Link href={`/documents/${doc.id}/inspect`}>
-                      <Button variant="link" className="p-0 h-auto text-left">
+                      <Button variant="link" className="p-0 h-auto text-left font-medium text-blue-600 hover:text-blue-800">
                         {doc.fileName}
                       </Button>
                     </Link>
@@ -208,7 +254,10 @@ export default function DocumentInspector() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-500">This is a root document</p>
+              <div className="flex items-center space-x-2 text-sm text-gray-500 p-4 bg-gray-50 rounded-md">
+                <Target className="w-4 h-4" />
+                <span>This is a root document (no parent documents)</span>
+              </div>
             )}
           </CardContent>
         </Card>

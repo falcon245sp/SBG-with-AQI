@@ -903,6 +903,8 @@ export class DatabaseStorage implements IStorage {
 
 
 
+
+
   async getQuestionResultsByDocumentId(documentId: string): Promise<any[]> {
     return await db
       .select({

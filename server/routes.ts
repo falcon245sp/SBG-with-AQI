@@ -781,20 +781,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         documentType = 'generated';
       }
 
-      // Get all user documents to build relationships
-      const allDocuments = await storage.getUserDocuments(customerUuid);
-      
-      // Build document lineage (parents)
+      // Build document lineage (parents) with targeted queries instead of fetching all documents
       const lineage = [];
       if (document.parentDocumentId) {
-        const parent = allDocuments.find(d => d.id === document.parentDocumentId);
-        if (parent) {
+        const parent = await storage.getDocument(document.parentDocumentId);
+        if (parent && parent.customerUuid === customerUuid) {
           lineage.push(parent);
         }
       }
 
-      // Find children (documents generated from this one)
-      const children = allDocuments.filter(d => d.parentDocumentId === id);
+      // Find children (documents generated from this one) with targeted query
+      const children = await storage.getGeneratedDocuments(id);
 
       // Get grade submissions related to this document
       const gradeSubmissions = await storage.getCustomerGradeSubmissions(customerUuid);
