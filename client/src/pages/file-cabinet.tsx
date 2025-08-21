@@ -158,12 +158,23 @@ export default function FileCabinet() {
   // Delete document
   const deleteMutation = useMutation({
     mutationFn: async (documentId: string) => {
+      console.log(`[Delete] Attempting to delete document: ${documentId}`);
       const response = await fetch(`/api/documents/${documentId}`, {
         method: 'DELETE',
         credentials: 'include'
       });
-      if (!response.ok) throw new Error('Failed to delete document');
-      return response.json();
+      
+      console.log(`[Delete] Response status: ${response.status}`);
+      
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error(`[Delete] Server error:`, errorData);
+        throw new Error(`Failed to delete document: ${response.status} ${errorData}`);
+      }
+      
+      const result = await response.json();
+      console.log(`[Delete] Success response:`, result);
+      return result;
     },
     onSuccess: (data, documentId) => {
       queryClient.invalidateQueries({ queryKey: ['file-cabinet'] });
@@ -172,13 +183,13 @@ export default function FileCabinet() {
         title: "Document Deleted",
         description: "The document has been successfully removed from your File Cabinet.",
       });
-      console.log(`Document ${documentId} deleted:`, data);
+      console.log(`Document ${documentId} deleted successfully:`, data);
     },
     onError: (error) => {
       console.error('Failed to delete document:', error);
       toast({
         title: "Deletion Failed",
-        description: "Unable to delete the document. Please try again.",
+        description: `Unable to delete the document: ${error.message}`,
         variant: "destructive",
       });
     }
