@@ -3,6 +3,13 @@
 ## Overview
 The Document Processing Service, "Standards Sherpa," is a full-stack web application for AI-powered analysis of educational documents (PDFs, Word docs, Google Docs). Its core purpose is to automatically identify standards alignment and cognitive rigor levels using multiple AI engines. It aims to provide educators and EdTech companies with efficient tools for analyzing and aligning educational content, thereby enhancing curriculum development and assessment. Key capabilities include automated document processing, rubric collation, anti-fraud grading, and comprehensive document management. The business vision is to improve educational content quality and efficiency through advanced AI integration.
 
+## Recent Updates (August 2025)
+- **Critical Bug Fixed**: Resolved alphabetical vs numerical question sorting causing rigor level misalignment
+- **Document Inspector**: Fixed 404 errors in "View All Questions" navigation links
+- **Database Performance**: Implemented materialized views with automatic PostgreSQL trigger-based refresh
+- **UI Enhancements**: Streamlined Document Library interface, improved loading states with proper blue processing indicators
+- **Teacher Workflow**: Enhanced override system with automatic rubric regeneration on teacher corrections
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
@@ -63,6 +70,7 @@ Preferred communication style: Simple, everyday language.
 - **Error Boundaries**: Comprehensive error handling with full stack traces and correlation IDs.
 - **Status Tracking**: Real-time polling system for processing documents, teacher review status, and export queue monitoring.
 - **Performance Monitoring**: Automatic performance logging with warnings for slow operations.
+- **Database Optimization**: Materialized views with automatic trigger-based refresh for document relationship queries.
 
 ### Feature Specifications
 - **Student Facing Test Cover Sheet**: PDF export with four-column layout (Question, Standard, Topic, Rigor Level).
