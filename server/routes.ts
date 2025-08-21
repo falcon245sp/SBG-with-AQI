@@ -185,6 +185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Document upload endpoint - uses session-based auth
   app.post('/api/documents/upload', upload.any(), async (req: any, res) => {
     try {
+      console.log(`🔥 UPLOAD REQUEST RECEIVED - Starting processing...`);
       // Get authenticated user's customer UUID
       let customerUuid;
       try {
