@@ -784,6 +784,32 @@ export class DatabaseStorage implements IStorage {
       .where(eq(exportQueue.documentId, documentId));
   }
 
+  async deleteExportQueueItem(exportId: string): Promise<void> {
+    await db
+      .delete(exportQueue)
+      .where(eq(exportQueue.id, exportId));
+  }
+
+  async incrementExportAttempts(exportId: string, attempts: number): Promise<void> {
+    await db
+      .update(exportQueue)
+      .set({ 
+        attempts,
+        status: 'pending' as any // Reset to pending for retry
+      })
+      .where(eq(exportQueue.id, exportId));
+  }
+
+  async rescheduleExport(exportId: string, scheduleTime: Date): Promise<void> {
+    await db
+      .update(exportQueue)
+      .set({ 
+        scheduledFor: scheduleTime,
+        startedAt: null // Clear previous start time
+      })
+      .where(eq(exportQueue.id, exportId));
+  }
+
   async getPendingExports(): Promise<any[]> {
     return await db
       .select()

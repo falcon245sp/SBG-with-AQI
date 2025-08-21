@@ -111,16 +111,52 @@ export class ExportProcessor {
       // Mark export as completed
       await storage.updateExportQueueStatus(exportId, 'completed');
       
+      // Schedule cleanup after 60 minutes (TTL for successful exports)
+      setTimeout(async () => {
+        try {
+          await storage.deleteExportQueueItem(exportId);
+          console.log(`[ExportProcessor] TTL cleanup: Removed completed export ${exportId} after 60 minutes`);
+        } catch (error) {
+          console.error(`[ExportProcessor] TTL cleanup failed for export ${exportId}:`, error);
+        }
+      }, 60 * 60 * 1000); // 60 minutes
+      
       console.log(`[ExportProcessor] Export completed successfully: ${exportItem.exportType} for document ${exportItem.documentId}`);
 
     } catch (error) {
       console.error(`[ExportProcessor] Export processing failed:`, error);
       
-      // Mark export as failed
+      // Implement retry logic
       try {
-        await storage.updateExportQueueStatus(exportId, 'failed');
+        const currentAttempts = exportItem.attempts + 1;
+        
+        if (currentAttempts < exportItem.maxAttempts) {
+          // Retry: Increment attempts and reschedule
+          await storage.incrementExportAttempts(exportId, currentAttempts);
+          
+          // Exponential backoff: 1min, 4min, 16min
+          const delayMinutes = Math.pow(4, currentAttempts - 1);
+          const scheduleTime = new Date(Date.now() + delayMinutes * 60 * 1000);
+          await storage.rescheduleExport(exportId, scheduleTime);
+          
+          console.log(`[ExportProcessor] Retry ${currentAttempts}/${exportItem.maxAttempts} scheduled for export ${exportId} in ${delayMinutes} minutes`);
+        } else {
+          // Max attempts reached: Mark as permanently failed
+          await storage.updateExportQueueStatus(exportId, 'failed');
+          console.log(`[ExportProcessor] Export ${exportId} failed permanently after ${exportItem.maxAttempts} attempts`);
+          
+          // Schedule cleanup for failed exports after 24 hours
+          setTimeout(async () => {
+            try {
+              await storage.deleteExportQueueItem(exportId);
+              console.log(`[ExportProcessor] Cleanup: Removed failed export ${exportId} after 24 hours`);
+            } catch (error) {
+              console.error(`[ExportProcessor] Failed export cleanup error for ${exportId}:`, error);
+            }
+          }, 24 * 60 * 60 * 1000); // 24 hours
+        }
       } catch (updateError) {
-        console.error(`[ExportProcessor] Failed to update export status:`, updateError);
+        console.error(`[ExportProcessor] Failed to update export retry status:`, updateError);
       }
     } finally {
       this.isProcessing = false;
