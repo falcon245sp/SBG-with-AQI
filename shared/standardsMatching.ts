@@ -25,16 +25,16 @@ export const COURSE_PATTERNS: CoursePattern[] = [
   { patterns: ['pre-algebra', 'pre algebra', 'prealgebra'], gradeLevel: '8', subject: 'Math', majorDomain: 'Algebra' },
 
   // High School Math
-  { patterns: ['algebra i', 'algebra 1', 'algebra one'], gradeLevel: '9', subject: 'Math', majorDomain: 'Algebra' },
-  { patterns: ['geometry'], gradeLevel: '10', subject: 'Math', majorDomain: 'Geometry' },
-  { patterns: ['algebra ii', 'algebra 2', 'algebra two'], gradeLevel: '11', subject: 'Math', majorDomain: 'Algebra' },
-  { patterns: ['precalculus', 'pre-calculus', 'pre calculus'], gradeLevel: '12', subject: 'Math', majorDomain: 'Functions' },
-  { patterns: ['calculus', 'ap calculus', 'calculus ab', 'calculus bc'], gradeLevel: '12', subject: 'Math', majorDomain: 'Functions' },
-  { patterns: ['statistics', 'stats', 'ap statistics', 'ap stats'], gradeLevel: '12', subject: 'Math', majorDomain: 'Statistics' },
+  { patterns: ['algebra i', 'algebra 1', 'algebra one'], gradeLevel: '9-12', subject: 'Math', majorDomain: 'Algebra' },
+  { patterns: ['geometry'], gradeLevel: '9-12', subject: 'Math', majorDomain: 'Geometry' },
+  { patterns: ['algebra ii', 'algebra 2', 'algebra two'], gradeLevel: '9-12', subject: 'Math', majorDomain: 'Algebra' },
+  { patterns: ['precalculus', 'pre-calculus', 'pre calculus'], gradeLevel: '9-12', subject: 'Math', majorDomain: 'Functions' },
+  { patterns: ['calculus', 'ap calculus', 'calculus ab', 'calculus bc'], gradeLevel: '9-12', subject: 'Math', majorDomain: 'Functions' },
+  { patterns: ['statistics', 'stats', 'ap statistics', 'ap stats'], gradeLevel: '9-12', subject: 'Math', majorDomain: 'Statistics' },
 
   // Advanced Math Topics
-  { patterns: ['math topics', 'advanced math', 'math analysis'], gradeLevel: '11', subject: 'Math' },
-  { patterns: ['trigonometry', 'trig'], gradeLevel: '11', subject: 'Math', majorDomain: 'Functions' },
+  { patterns: ['math topics', 'advanced math', 'math analysis'], gradeLevel: '9-12', subject: 'Math' },
+  { patterns: ['trigonometry', 'trig'], gradeLevel: '9-12', subject: 'Math', majorDomain: 'Functions' },
 
   // Elementary ELA
   { patterns: ['kindergarten ela', 'k ela', 'kindergarten english'], gradeLevel: 'K', subject: 'ELA' },
@@ -48,11 +48,11 @@ export const COURSE_PATTERNS: CoursePattern[] = [
   { patterns: ['english 6', 'sixth grade english'], gradeLevel: '6', subject: 'ELA' },
   { patterns: ['english 7', 'seventh grade english'], gradeLevel: '7', subject: 'ELA' },
   { patterns: ['english 8', 'eighth grade english'], gradeLevel: '8', subject: 'ELA' },
-  { patterns: ['english i', 'english 1', 'english 9'], gradeLevel: '9', subject: 'ELA' },
-  { patterns: ['english ii', 'english 2', 'english 10'], gradeLevel: '10', subject: 'ELA' },
-  { patterns: ['english iii', 'english 3', 'english 11'], gradeLevel: '11', subject: 'ELA' },
-  { patterns: ['english iv', 'english 4', 'english 12'], gradeLevel: '12', subject: 'ELA' },
-  { patterns: ['ap english', 'ap literature', 'ap lang'], gradeLevel: '12', subject: 'ELA' },
+  { patterns: ['english i', 'english 1', 'english 9'], gradeLevel: '9-12', subject: 'ELA' },
+  { patterns: ['english ii', 'english 2', 'english 10'], gradeLevel: '9-12', subject: 'ELA' },
+  { patterns: ['english iii', 'english 3', 'english 11'], gradeLevel: '9-12', subject: 'ELA' },
+  { patterns: ['english iv', 'english 4', 'english 12'], gradeLevel: '9-12', subject: 'ELA' },
+  { patterns: ['ap english', 'ap literature', 'ap lang'], gradeLevel: '9-12', subject: 'ELA' },
 ];
 
 // Match course title to appropriate standards
