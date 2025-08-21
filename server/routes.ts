@@ -534,7 +534,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/documents/:documentId/accept', async (req: any, res) => {
     try {
       const { documentId } = req.params;
-      console.log(`[Accept] Processing accept request for document: ${documentId}`);
+      console.log(`\n🔥 ACCEPT & PROCEED TRIGGERED for document: ${documentId}`);
       
       const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
       
