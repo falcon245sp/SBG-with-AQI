@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertCircle, CheckCircle, Users, BookOpen, GraduationCap, Calendar, Clock, ExternalLink, Settings, Lightbulb } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 
@@ -28,6 +29,15 @@ interface Classroom {
   ownerId: string;
   courseState: string;
   studentCount?: number;
+  subjectArea?: string;
+  detectedSubjectArea?: string;
+  standardsJurisdiction?: string;
+  _classificationData?: {
+    subjectArea: string;
+    confidence: number;
+    suggestedJurisdiction: string;
+    detectedKeywords: string[];
+  };
 }
 
 interface Student {
@@ -53,7 +63,32 @@ interface Assignment {
 export default function GoogleClassroomIntegration() {
   const [currentStep, setCurrentStep] = useState<'auth' | 'connecting' | 'connected'>('auth');
   const [selectedClassroom, setSelectedClassroom] = useState<string | null>(null);
+  const [editingClassification, setEditingClassification] = useState<string | null>(null);
   const queryClient = useQueryClient();
+
+  // Subject areas and jurisdictions
+  const subjectAreas = [
+    { value: 'mathematics', label: 'Mathematics' },
+    { value: 'english_language_arts', label: 'English Language Arts' },
+    { value: 'science', label: 'Science' },
+    { value: 'social_studies', label: 'Social Studies' },
+    { value: 'computer_science', label: 'Computer Science' },
+    { value: 'foreign_language', label: 'Foreign Language' },
+    { value: 'health_physical_education', label: 'Health & Physical Education' },
+    { value: 'arts', label: 'Arts' },
+    { value: 'career_technical_education', label: 'Career & Technical Education' },
+    { value: 'other', label: 'Other' }
+  ];
+
+  const standardsJurisdictions = [
+    { value: 'common_core_math', label: 'Common Core Mathematics' },
+    { value: 'common_core_ela', label: 'Common Core English Language Arts' },
+    { value: 'ngss', label: 'Next Generation Science Standards (NGSS)' },
+    { value: 'state_specific', label: 'State-Specific Standards' },
+    { value: 'ap_standards', label: 'Advanced Placement (AP) Standards' },
+    { value: 'ib_standards', label: 'International Baccalaureate (IB) Standards' },
+    { value: 'custom', label: 'Custom Standards' }
+  ];
 
   // Check current user authentication status
   const { data: user, isLoading: userLoading } = useQuery<GoogleUser>({
@@ -107,6 +142,23 @@ export default function GoogleClassroomIntegration() {
     }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/classrooms'] });
+    },
+  });
+
+  // Update classroom classification mutation
+  const updateClassificationMutation = useMutation({
+    mutationFn: ({ classroomId, subjectArea, standardsJurisdiction }: {
+      classroomId: string;
+      subjectArea: string;
+      standardsJurisdiction: string;
+    }) => fetch(`/api/classrooms/${classroomId}/classification`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subjectArea, standardsJurisdiction }),
+    }).then(res => res.json()),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/classrooms'] });
+      setEditingClassification(null);
     },
   });
 
@@ -299,7 +351,43 @@ export default function GoogleClassroomIntegration() {
                           {classroom.section && (
                             <p className="text-sm text-gray-600">{classroom.section}</p>
                           )}
-                          <div className="flex items-center gap-2 mt-1">
+                          
+                          {/* Subject Area Classification */}
+                          <div className="mt-2 space-y-1">
+                            <div className="flex items-center gap-2">
+                              <Lightbulb className="w-3 h-3 text-blue-500" />
+                              <span className="text-xs font-medium text-gray-700">
+                                Subject: {subjectAreas.find(s => s.value === (classroom.subjectArea || classroom.detectedSubjectArea))?.label || 'Not classified'}
+                              </span>
+                              {classroom._classificationData && (
+                                <Badge variant="outline" className="text-xs">
+                                  {Math.round(classroom._classificationData.confidence * 100)}% confidence
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            {(classroom.standardsJurisdiction || classroom._classificationData?.suggestedJurisdiction) && (
+                              <div className="flex items-center gap-2">
+                                <GraduationCap className="w-3 h-3 text-green-500" />
+                                <span className="text-xs text-gray-600">
+                                  Standards: {standardsJurisdictions.find(j => j.value === (classroom.standardsJurisdiction || classroom._classificationData?.suggestedJurisdiction))?.label || 'Not set'}
+                                </span>
+                              </div>
+                            )}
+                            
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingClassification(classroom.id);
+                              }}
+                              className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 mt-1"
+                            >
+                              <Settings className="w-3 h-3" />
+                              Edit Classification
+                            </button>
+                          </div>
+                          
+                          <div className="flex items-center gap-2 mt-2">
                             <Badge variant="secondary" className="text-xs">
                               {classroom.courseState}
                             </Badge>
@@ -430,6 +518,133 @@ export default function GoogleClassroomIntegration() {
           </div>
         </>
       )}
+
+      {/* Classification Edit Dialog */}
+      {editingClassification && (
+        <ClassificationEditDialog
+          classroom={classrooms.find(c => c.id === editingClassification)!}
+          subjectAreas={subjectAreas}
+          standardsJurisdictions={standardsJurisdictions}
+          onSave={(subjectArea, standardsJurisdiction) => {
+            updateClassificationMutation.mutate({
+              classroomId: editingClassification,
+              subjectArea,
+              standardsJurisdiction
+            });
+          }}
+          onCancel={() => setEditingClassification(null)}
+          isLoading={updateClassificationMutation.isPending}
+        />
+      )}
     </div>
+  );
+}
+
+// Classification Edit Dialog Component
+function ClassificationEditDialog({
+  classroom,
+  subjectAreas,
+  standardsJurisdictions,
+  onSave,
+  onCancel,
+  isLoading
+}: {
+  classroom: Classroom;
+  subjectAreas: Array<{value: string; label: string}>;
+  standardsJurisdictions: Array<{value: string; label: string}>;
+  onSave: (subjectArea: string, standardsJurisdiction: string) => void;
+  onCancel: () => void;
+  isLoading: boolean;
+}) {
+  const [selectedSubject, setSelectedSubject] = useState(
+    classroom.subjectArea || classroom.detectedSubjectArea || ''
+  );
+  const [selectedJurisdiction, setSelectedJurisdiction] = useState(
+    classroom.standardsJurisdiction || classroom._classificationData?.suggestedJurisdiction || ''
+  );
+
+  const handleSave = () => {
+    if (selectedSubject && selectedJurisdiction) {
+      onSave(selectedSubject, selectedJurisdiction);
+    }
+  };
+
+  return (
+    <Dialog open={true} onOpenChange={() => onCancel()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Edit Classroom Classification</DialogTitle>
+          <DialogDescription>
+            Update the subject area and standards jurisdiction for "{classroom.name}"
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-4 py-4">
+          {/* Current AI Detection Info */}
+          {classroom._classificationData && (
+            <Alert>
+              <Lightbulb className="h-4 w-4" />
+              <AlertDescription>
+                <strong>AI Detection:</strong> {subjectAreas.find(s => s.value === classroom._classificationData?.subjectArea)?.label} 
+                ({Math.round(classroom._classificationData.confidence * 100)}% confidence)
+                {classroom._classificationData.detectedKeywords.length > 0 && (
+                  <div className="mt-1 text-xs">
+                    Keywords: {classroom._classificationData.detectedKeywords.join(', ')}
+                  </div>
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="subject-area">Subject Area</Label>
+            <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select subject area" />
+              </SelectTrigger>
+              <SelectContent>
+                {subjectAreas.map((subject) => (
+                  <SelectItem key={subject.value} value={subject.value}>
+                    {subject.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="standards-jurisdiction">Standards Jurisdiction</Label>
+            <Select value={selectedJurisdiction} onValueChange={setSelectedJurisdiction}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select standards jurisdiction" />
+              </SelectTrigger>
+              <SelectContent>
+                {standardsJurisdictions.map((jurisdiction) => (
+                  <SelectItem key={jurisdiction.value} value={jurisdiction.value}>
+                    {jurisdiction.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="flex justify-end space-x-2">
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={!selectedSubject || !selectedJurisdiction || isLoading}
+          >
+            {isLoading ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
