@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Switch } from '@/components/ui/switch';
 import { AlertCircle, CheckCircle, Users, BookOpen, GraduationCap, Calendar, Clock, ExternalLink, Settings, Lightbulb, Target, FileText, Globe, ChevronDown, X, Plus, ChevronRight } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
-import { GRADE_BANDS, getCoursesByGradeBand } from '@shared/standardsMatching';
+// Legacy hardcoded standards imports removed - now using CSP API
 import type { CommonCoreStandard } from '@shared/commonCoreStandards';
 
 interface GoogleUser {
@@ -205,30 +205,7 @@ export default function GoogleClassroomIntegration() {
     enabled: !!selectedClassroomForStandards,
   });
   
-  // Get standards for course title
-  // Get available courses for selected grade band
-  const availableCourses = selectedGradeBand ? getCoursesByGradeBand(selectedGradeBand) : [];
-
-  const courseStandardsQuery = useQuery({
-    queryKey: ['/api/standards/course-standards', selectedCourse, selectedClassroomForStandards],
-    queryFn: async () => {
-      if (!selectedCourse) return { standards: [], defaultEnabled: [] };
-      
-      const classroom = classrooms.find(c => c.id === selectedClassroomForStandards);
-      if (!classroom) return { standards: [], defaultEnabled: [] };
-      
-      const params = new URLSearchParams({
-        courseTitle: selectedCourse,
-        jurisdiction: classroom.standardsJurisdiction || 'Common Core',
-        subjectArea: classroom.subjectArea || '',
-      });
-      
-      const response = await fetch(`/api/standards/course-standards?${params}`);
-      if (!response.ok) throw new Error('Failed to fetch course standards');
-      return response.json();
-    },
-    enabled: !!selectedCourse && !!selectedClassroomForStandards,
-  });
+  // Legacy hardcoded standards system removed - now using CSP workflow
 
   // Sync classrooms mutation
   const syncClassroomsMutation = useMutation({
@@ -290,35 +267,7 @@ export default function GoogleClassroomIntegration() {
     },
   });
 
-  // Course configuration handlers
-  const handleCourseConfigurationSave = async (classroomId: string) => {
-    try {
-      await updateClassificationMutation.mutateAsync({
-        classroomId,
-        courseTitle: selectedCourse || courseTitleInput,
-        enabledStandards: selectedStandards
-      });
-      
-      // Reset states and close dialog
-      setSelectedClassroomForStandards(null);
-      setCourseTitleInput('');
-      setSelectedStandards([]);
-      setSelectedGradeBand('');
-      setSelectedCourse('');
-    } catch (error) {
-      console.error('Failed to save course configuration:', error);
-    }
-  };
-
-  // Initialize course configuration when classroom is selected
-  const initializeCourseConfiguration = (classroom: Classroom) => {
-    setSelectedClassroomForStandards(classroom.id);
-    setCourseTitleInput(classroom.courseTitle || '');
-    setSelectedStandards(classroom.enabledStandards || []);
-    // Reset dropdown selections
-    setSelectedGradeBand('');
-    setSelectedCourse('');
-  };
+  // Legacy course configuration handlers removed - now using CSP workflow
 
   // Check authentication status and set current step
   useEffect(() => {
@@ -552,176 +501,6 @@ export default function GoogleClassroomIntegration() {
                                 {classroom.enabledStandards.length} Standards
                               </Badge>
                             )}
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
-                                  className="ml-auto"
-                                  onClick={() => initializeCourseConfiguration(classroom)}
-                                >
-                                  Configure
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
-                                <DialogHeader>
-                                  <DialogTitle>Course Configuration - {classroom.name}</DialogTitle>
-                                  <DialogDescription>
-                                    Set your course title and select which standards to include in assessments.
-                                  </DialogDescription>
-                                </DialogHeader>
-                                
-                                <div className="flex-1 overflow-y-auto space-y-6">
-                                  {/* Course Title Input */}
-                                  {/* Grade Band Selection */}
-                                  <div className="space-y-2">
-                                    <Label htmlFor="grade-band">Grade Band</Label>
-                                    <Select value={selectedGradeBand} onValueChange={(value) => {
-                                      setSelectedGradeBand(value);
-                                      setSelectedCourse(''); // Reset course selection
-                                      setSelectedStandards([]); // Reset standards
-                                    }}>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select grade band" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {GRADE_BANDS.map((band) => (
-                                          <SelectItem key={band.id} value={band.id}>
-                                            {band.label}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                    <p className="text-xs text-muted-foreground">
-                                      Choose the appropriate grade level range
-                                    </p>
-                                  </div>
-
-                                  {/* Course Selection */}
-                                  {selectedGradeBand && (
-                                    <div className="space-y-2">
-                                      <Label htmlFor="course">Course</Label>
-                                      <Select value={selectedCourse} onValueChange={(value) => {
-                                        setSelectedCourse(value);
-                                        setSelectedStandards([]); // Reset standards when course changes
-                                      }}>
-                                        <SelectTrigger>
-                                          <SelectValue placeholder="Select course" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          {availableCourses.map((course) => (
-                                            <SelectItem key={course} value={course}>
-                                              {course}
-                                            </SelectItem>
-                                          ))}
-                                        </SelectContent>
-                                      </Select>
-                                      <p className="text-xs text-muted-foreground">
-                                        Select your specific course to load relevant standards
-                                      </p>
-                                    </div>
-                                  )}
-
-                                  {/* Standards Selection */}
-                                  {courseStandardsQuery.data && courseStandardsQuery.data.standards.length > 0 && (
-                                    <div className="space-y-4">
-                                      <div>
-                                        <h4 className="text-sm font-medium mb-2">Available Standards</h4>
-                                        <p className="text-xs text-muted-foreground mb-4">
-                                          Select which standards to include in your assessments. All are enabled by default.
-                                        </p>
-                                      </div>
-                                      
-                                      <div className="max-h-64 overflow-y-auto border rounded-lg p-4">
-                                        <div className="space-y-3">
-                                          {courseStandardsQuery.data.standards.map((standard: CommonCoreStandard) => (
-                                            <div key={standard.code} className="flex items-start space-x-3">
-                                              <Switch
-                                                id={`standard-${standard.code}`}
-                                                checked={selectedStandards.includes(standard.code)}
-                                                onCheckedChange={(checked) => {
-                                                  if (checked) {
-                                                    setSelectedStandards(prev => [...prev, standard.code]);
-                                                  } else {
-                                                    setSelectedStandards(prev => prev.filter(code => code !== standard.code));
-                                                  }
-                                                }}
-                                              />
-                                              <div className="flex-1 min-w-0">
-                                                <div className="flex items-center space-x-2">
-                                                  <Badge variant="secondary" className="text-xs">
-                                                    {standard.code}
-                                                  </Badge>
-                                                  <Badge variant="outline" className="text-xs">
-                                                    Grade {standard.gradeLevel}
-                                                  </Badge>
-                                                </div>
-                                                <p className="text-sm mt-1">{standard.description}</p>
-                                                {standard.majorDomain && (
-                                                  <p className="text-xs text-muted-foreground mt-1">
-                                                    {standard.majorDomain}
-                                                  </p>
-                                                )}
-                                              </div>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      </div>
-                                      
-                                      <div className="flex items-center justify-between text-sm">
-                                        <span>{selectedStandards.length} of {courseStandardsQuery.data.standards.length} standards selected</span>
-                                        <div className="space-x-2">
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => setSelectedStandards([])}
-                                          >
-                                            Select None
-                                          </Button>
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => setSelectedStandards(courseStandardsQuery.data.standards.map((s: CommonCoreStandard) => s.code))}
-                                          >
-                                            Select All
-                                          </Button>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
-                                  
-                                  {selectedCourse && !courseStandardsQuery.isLoading && (!courseStandardsQuery.data || courseStandardsQuery.data.standards.length === 0) && (
-                                    <Alert>
-                                      <AlertCircle className="h-4 w-4" />
-                                      <AlertDescription>
-                                        No standards found for "{selectedCourse}". Try selecting a different course.
-                                      </AlertDescription>
-                                    </Alert>
-                                  )}
-                                  
-                                  {courseStandardsQuery.isLoading && selectedCourse && (
-                                    <div className="flex items-center justify-center py-8">
-                                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                                      <span className="ml-2 text-sm text-muted-foreground">Finding standards...</span>
-                                    </div>
-                                  )}
-                                </div>
-                                
-                                <div className="flex justify-end space-x-2 pt-4 border-t">
-                                  <DialogTrigger asChild>
-                                    <Button variant="outline">Cancel</Button>
-                                  </DialogTrigger>
-                                  <DialogTrigger asChild>
-                                    <Button 
-                                      onClick={() => handleCourseConfigurationSave(classroom.id)}
-                                      disabled={!selectedCourse || updateClassificationMutation.isPending}
-                                    >
-                                      {updateClassificationMutation.isPending ? 'Saving...' : 'Save Configuration'}
-                                    </Button>
-                                  </DialogTrigger>
-                                </div>
-                              </DialogContent>
-                            </Dialog>
                           </div>
 
                           {/* Subject Area Classification */}
