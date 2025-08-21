@@ -15,6 +15,9 @@ import {
   deadLetterQueue,
   qrSequenceNumbers,
   gradeSubmissions,
+  cachedJurisdictions,
+  cachedStandardSets,
+  cachedStandards,
   type User,
   type UpsertUser,
   type Classroom,
@@ -161,6 +164,14 @@ export interface IStorage {
   // Generated document cleanup operations
   deleteGeneratedDocumentsForSource(sourceDocumentId: string): Promise<void>;
   clearExportQueueForDocument(documentId: string): Promise<void>;
+
+  // Common Standards Project cache methods
+  getCachedJurisdictions(): Promise<any[]>;
+  cacheJurisdictions(jurisdictions: any[]): Promise<void>;
+  getCachedStandardSetsForJurisdiction(jurisdictionId: string): Promise<any[]>;
+  cacheStandardSetsForJurisdiction(jurisdictionId: string, standardSets: any[]): Promise<void>;
+  getCachedStandardsForSet(standardSetId: string): Promise<any | null>;
+  cacheStandardsForSet(standardSetId: string, standardsData: any): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1818,6 +1829,82 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     console.log(`[Storage] Deleted ${deletedRecords.length} CONFIRMED analysis records for document: ${documentId}`);
+  }
+
+  // Common Standards Project cache methods
+  async getCachedJurisdictions() {
+    return await db.select().from(cachedJurisdictions);
+  }
+
+  async cacheJurisdictions(jurisdictions: any[]) {
+    // Clear existing cache
+    await db.delete(cachedJurisdictions);
+    
+    // Insert fresh data
+    for (const jurisdiction of jurisdictions) {
+      await db.insert(cachedJurisdictions).values({
+        id: jurisdiction.id,
+        title: jurisdiction.title,
+        type: jurisdiction.type,
+        data: jurisdiction
+      }).onConflictDoUpdate({
+        target: cachedJurisdictions.id,
+        set: {
+          title: jurisdiction.title,
+          type: jurisdiction.type,
+          data: jurisdiction,
+          updatedAt: new Date()
+        }
+      });
+    }
+  }
+
+  async getCachedStandardSetsForJurisdiction(jurisdictionId: string) {
+    return await db.select().from(cachedStandardSets).where(eq(cachedStandardSets.jurisdictionId, jurisdictionId));
+  }
+
+  async cacheStandardSetsForJurisdiction(jurisdictionId: string, standardSets: any[]) {
+    // Clear existing cache for this jurisdiction
+    await db.delete(cachedStandardSets).where(eq(cachedStandardSets.jurisdictionId, jurisdictionId));
+    
+    // Insert fresh data
+    for (const standardSet of standardSets) {
+      await db.insert(cachedStandardSets).values({
+        id: standardSet.id,
+        jurisdictionId,
+        title: standardSet.title,
+        subject: standardSet.subject,
+        educationLevels: standardSet.educationLevels,
+        data: standardSet
+      }).onConflictDoUpdate({
+        target: cachedStandardSets.id,
+        set: {
+          title: standardSet.title,
+          subject: standardSet.subject,
+          educationLevels: standardSet.educationLevels,
+          data: standardSet,
+          updatedAt: new Date()
+        }
+      });
+    }
+  }
+
+  async getCachedStandardsForSet(standardSetId: string) {
+    const result = await db.select().from(cachedStandards).where(eq(cachedStandards.standardSetId, standardSetId)).limit(1);
+    return result[0] || null;
+  }
+
+  async cacheStandardsForSet(standardSetId: string, standardsData: any) {
+    await db.insert(cachedStandards).values({
+      standardSetId,
+      standardsData
+    }).onConflictDoUpdate({
+      target: cachedStandards.standardSetId,
+      set: {
+        standardsData,
+        updatedAt: new Date()
+      }
+    });
   }
 }
 

@@ -21,6 +21,12 @@ import {
   getSuggestedCourses,
   getClassroomStandards
 } from "./routes/standards";
+import {
+  getJurisdictions,
+  getCoursesForJurisdiction,
+  getStandardsForCourse,
+  searchStandards
+} from "./routes/commonStandardsProject";
 import { checkAuthStatus } from "./routes/auth";
 import { documentProcessor, queueProcessor } from "./services/documentProcessor";
 import { exportProcessor } from "./services/exportProcessor";
@@ -141,10 +147,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Classroom classification routes
   app.patch('/api/classrooms/:classroomId/classification', updateClassroomClassification);
   
-  // Standards configuration routes
+  // Standards configuration routes (legacy - using hardcoded patterns)
   app.get('/api/standards/course-standards', getStandardsForCourseTitle);
   app.get('/api/standards/course-suggestions', getSuggestedCourses);
   app.get('/api/classrooms/:classroomId/standards', getClassroomStandards);
+
+  // Common Standards Project routes (new - dynamic API-based)
+  app.get('/api/csp/jurisdictions', getJurisdictions);
+  app.get('/api/csp/jurisdictions/:jurisdictionId/courses', getCoursesForJurisdiction);
+  app.get('/api/csp/courses/:standardSetId/standards', getStandardsForCourse);
+  app.get('/api/csp/search', searchStandards);
 
   // Document upload with standards focus endpoint
   app.post('/api/documents/upload-with-standards', upload.single('document'), async (req: any, res) => {

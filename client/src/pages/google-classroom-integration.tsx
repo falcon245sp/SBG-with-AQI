@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
-import { AlertCircle, CheckCircle, Users, BookOpen, GraduationCap, Calendar, Clock, ExternalLink, Settings, Lightbulb, Target, FileText } from 'lucide-react';
+import { AlertCircle, CheckCircle, Users, BookOpen, GraduationCap, Calendar, Clock, ExternalLink, Settings, Lightbulb, Target, FileText, Globe, ChevronDown, X, Plus, ChevronRight } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { GRADE_BANDS, getCoursesByGradeBand } from '@shared/standardsMatching';
 import type { CommonCoreStandard } from '@shared/commonCoreStandards';
@@ -68,16 +68,50 @@ interface Assignment {
   updateTime?: string;
 }
 
+// New interfaces for Common Standards Project integration
+interface CSPJurisdiction {
+  id: string;
+  title: string;
+  type?: string;
+}
+
+interface CSPCourse {
+  id: string;
+  title: string;
+  subject: string;
+}
+
+interface CSPGradeBandCourses {
+  gradeBand: string;
+  gradeLevels: string[];
+  courses: CSPCourse[];
+}
+
+interface CSPStandard {
+  id: string;
+  code: string;
+  title: string;
+  description: string;
+  gradeLevel: string;
+  majorDomain: string;
+  cluster: string;
+}
+
 export default function GoogleClassroomIntegration() {
   const [currentStep, setCurrentStep] = useState<'auth' | 'connecting' | 'connected'>('auth');
   const [selectedClassroom, setSelectedClassroom] = useState<string | null>(null);
   const [editingClassification, setEditingClassification] = useState<string | null>(null);
+  
+  // New state for jurisdiction-based course selection
+  const [selectedJurisdiction, setSelectedJurisdiction] = useState<string | null>(null);
+  const [selectedGradeBand, setSelectedGradeBand] = useState<string | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+  const [selectedStandardSetId, setSelectedStandardSetId] = useState<string | null>(null);
+  
   const queryClient = useQueryClient();
   
   // States for course configuration
   const [selectedClassroomForStandards, setSelectedClassroomForStandards] = useState<string | null>(null);
-  const [selectedGradeBand, setSelectedGradeBand] = useState('');
-  const [selectedCourse, setSelectedCourse] = useState('');
   const [courseTitleInput, setCourseTitleInput] = useState('');
   const [selectedStandards, setSelectedStandards] = useState<string[]>([]);
 
@@ -120,6 +154,28 @@ export default function GoogleClassroomIntegration() {
     queryKey: ['/api/classrooms'],
     enabled: !!user?.googleAccessToken,
   });
+
+  // New queries for Common Standards Project integration
+  const { data: jurisdictionsData } = useQuery<{jurisdictions: CSPJurisdiction[]}>({
+    queryKey: ['/api/csp/jurisdictions'],
+    enabled: !!user?.googleAccessToken,
+  });
+
+  const jurisdictions = jurisdictionsData?.jurisdictions || [];
+
+  const { data: coursesData } = useQuery<{gradeBandCourses: CSPGradeBandCourses[]}>({
+    queryKey: ['/api/csp/jurisdictions', selectedJurisdiction, 'courses'],
+    enabled: !!selectedJurisdiction,
+  });
+
+  const gradeBandCourses = coursesData?.gradeBandCourses || [];
+
+  const { data: cspStandardsData } = useQuery<{standards: CSPStandard[]}>({
+    queryKey: ['/api/csp/courses', selectedStandardSetId, 'standards'],
+    enabled: !!selectedStandardSetId,
+  });
+
+  const cspStandards = cspStandardsData?.standards || [];
 
   // Fetch assignments for selected classroom
   const { data: assignments = [] } = useQuery<Assignment[]>({

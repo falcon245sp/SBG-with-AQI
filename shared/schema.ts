@@ -111,6 +111,34 @@ export const assignments = pgTable("assignments", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Common Standards Project cache tables
+export const cachedJurisdictions = pgTable("cached_jurisdictions", {
+  id: varchar("id").primaryKey(), // Common Standards Project jurisdiction ID
+  title: text("title").notNull(),
+  type: varchar("type"), // "state", "organization", etc.
+  data: jsonb("data").notNull(), // Full jurisdiction data from API
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const cachedStandardSets = pgTable("cached_standard_sets", {
+  id: varchar("id").primaryKey(), // Common Standards Project standard set ID
+  jurisdictionId: varchar("jurisdiction_id").notNull().references(() => cachedJurisdictions.id),
+  title: text("title").notNull(),
+  subject: text("subject").notNull(),
+  educationLevels: jsonb("education_levels").notNull(), // Array of grade levels
+  data: jsonb("data").notNull(), // Full standard set data from API
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const cachedStandards = pgTable("cached_standards", {
+  standardSetId: varchar("standard_set_id").primaryKey().references(() => cachedStandardSets.id),
+  standardsData: jsonb("standards_data").notNull(), // All standards for this set
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Processing status enum - using business enum values
 export const processingStatusEnum = pgEnum('processing_status', [
   ProcessingStatus.PENDING, ProcessingStatus.PROCESSING, ProcessingStatus.COMPLETED, ProcessingStatus.FAILED
