@@ -193,7 +193,7 @@ export const teacherOverrides = pgTable("teacher_overrides", {
   notes: text("notes"), // Teacher's notes
   editReason: varchar("edit_reason"), // Reason for the edit
   isActive: boolean("is_active").notNull().default(BusinessDefaults.DEFAULT_IS_ACTIVE), // Flag to track current active override
-  isRevertedToAi: boolean("is_reverted_to_ai").notNull().default(BusinessDefaults.DEFAULT_IS_REVERTED_TO_AI), // Flag for AI reversion
+  isRevertedToAi: boolean("is_reverted_to_ai").notNull().default(false), // Flag for AI reversion
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -229,11 +229,40 @@ export const exportQueue = pgTable("export_queue", {
   priority: integer("priority").notNull().default(0),
   attempts: integer("attempts").notNull().default(0),
   maxAttempts: integer("max_attempts").notNull().default(3),
-  status: processingStatusEnum("status").notNull().default('pending'),
+  status: processingStatusEnum("status").notNull().default(sql`'pending'`),
   errorMessage: text("error_message"),
   scheduledFor: timestamp("scheduled_for").defaultNow(),
   startedAt: timestamp("started_at"),
   completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Dead Letter Queue for permanently failed exports - Admin visibility only
+export const deadLetterQueue = pgTable("dead_letter_queue", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  originalExportId: varchar("original_export_id").notNull(),
+  documentId: varchar("document_id").notNull().references(() => documents.id),
+  customerUuid: varchar("customer_uuid").notNull().references(() => users.customerUuid),
+  sessionUserId: varchar("session_user_id"),
+  exportType: exportTypeEnum("export_type").notNull(),
+  priority: integer("priority").notNull(),
+  finalAttempts: integer("final_attempts").notNull(),
+  maxAttempts: integer("max_attempts").notNull(),
+  finalErrorMessage: text("final_error_message"),
+  finalErrorStack: text("final_error_stack"),
+  originalScheduledFor: timestamp("original_scheduled_for"),
+  firstAttemptAt: timestamp("first_attempt_at"),
+  finalFailureAt: timestamp("final_failure_at").notNull().defaultNow(),
+  // Debugging context
+  documentFileName: varchar("document_file_name"),
+  documentFileSize: integer("document_file_size"),
+  documentMimeType: varchar("document_mime_type"),
+  documentStatus: varchar("document_status"),
+  // System state at failure
+  serverVersion: varchar("server_version"),
+  nodeEnv: varchar("node_env"),
+  requestId: varchar("request_id"),
+  userAgent: text("user_agent"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -261,7 +290,7 @@ export const gradeSubmissions = pgTable("grade_submissions", {
   totalScore: decimal("total_score", { precision: 5, scale: 2 }),
   maxPossibleScore: decimal("max_possible_score", { precision: 5, scale: 2 }),
   percentageScore: decimal("percentage_score", { precision: 5, scale: 2 }),
-  status: gradeSubmissionStatusEnum("status").notNull().default('pending'),
+  status: gradeSubmissionStatusEnum("status").notNull().default(sql`'pending'`),
   scannerNotes: text("scanner_notes"), // Optional notes from scanning process
   processedBy: varchar("processed_by"), // Teacher who scanned
   scannedAt: timestamp("scanned_at").defaultNow(),
@@ -357,6 +386,29 @@ export const insertExportQueueSchema = createInsertSchema(exportQueue).pick({
   priority: true,
 });
 
+export const insertDeadLetterQueueSchema = createInsertSchema(deadLetterQueue).pick({
+  originalExportId: true,
+  documentId: true,
+  customerUuid: true,
+  sessionUserId: true,
+  exportType: true,
+  priority: true,
+  finalAttempts: true,
+  maxAttempts: true,
+  finalErrorMessage: true,
+  finalErrorStack: true,
+  originalScheduledFor: true,
+  firstAttemptAt: true,
+  documentFileName: true,
+  documentFileSize: true,
+  documentMimeType: true,
+  documentStatus: true,
+  serverVersion: true,
+  nodeEnv: true,
+  requestId: true,
+  userAgent: true,
+});
+
 export const insertQrSequenceNumberSchema = createInsertSchema(qrSequenceNumbers).pick({
   documentId: true,
   studentId: true,
@@ -386,6 +438,8 @@ export type AiResponse = typeof aiResponses.$inferSelect;
 export type QuestionResult = typeof questionResults.$inferSelect;
 export type ApiKey = typeof apiKeys.$inferSelect;
 export type ProcessingQueue = typeof processingQueue.$inferSelect;
+export type ExportQueue = typeof exportQueue.$inferSelect;
+export type DeadLetterQueue = typeof deadLetterQueue.$inferSelect;
 export type TeacherOverride = typeof teacherOverrides.$inferSelect;
 export type QrSequenceNumber = typeof qrSequenceNumbers.$inferSelect;
 export type GradeSubmission = typeof gradeSubmissions.$inferSelect;

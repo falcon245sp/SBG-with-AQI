@@ -13,6 +13,7 @@ import {
   FileText, 
   Users, 
   AlertCircle, 
+  AlertTriangle,
   CheckCircle, 
   Clock,
   Settings,
@@ -52,6 +53,38 @@ interface UXTestResponse {
   executionTime: number;
 }
 
+interface DeadLetterQueueItem {
+  id: string;
+  originalExportId: string;
+  documentId: string;
+  customerUuid: string;
+  sessionUserId?: string;
+  exportType: string;
+  priority: number;
+  finalAttempts: number;
+  maxAttempts: number;
+  finalErrorMessage?: string;
+  finalErrorStack?: string;
+  originalScheduledFor?: string;
+  firstAttemptAt?: string;
+  finalFailureAt: string;
+  documentFileName?: string;
+  documentFileSize?: number;
+  documentMimeType?: string;
+  documentStatus?: string;
+  serverVersion?: string;
+  nodeEnv?: string;
+  requestId?: string;
+  userAgent?: string;
+  createdAt: string;
+}
+
+interface DeadLetterQueueResponse {
+  items: DeadLetterQueueItem[];
+  count: number;
+  timestamp: string;
+}
+
 export default function AdminDashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -73,6 +106,11 @@ export default function AdminDashboard() {
   const { data: uxTests, isLoading: testsLoading, refetch: refetchTests } = useQuery<UXTestResponse>({
     queryKey: ['/api/admin/run-ux-tests'],
     refetchInterval: 60000, // Refresh every minute
+  });
+
+  const { data: deadLetterQueue, isLoading: dlqLoading, refetch: refetchDLQ } = useQuery<DeadLetterQueueResponse>({
+    queryKey: ['/api/admin/dead-letter-queue'],
+    refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   // Data truncation mutation
@@ -200,7 +238,7 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <Monitor className="h-4 w-4" />
               Overview
@@ -212,6 +250,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="ux-tests" className="flex items-center gap-2">
               <Bug className="h-4 w-4" />
               UX Tests
+            </TabsTrigger>
+            <TabsTrigger value="dead-letter-queue" className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" />
+              Failed Exports
             </TabsTrigger>
             <TabsTrigger value="dev-tools" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
@@ -438,6 +480,119 @@ export default function AdminDashboard() {
                     </div>
                   ) : (
                     <p className="text-center py-8 text-gray-500">Failed to load test results</p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="dead-letter-queue">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-orange-500" />
+                    Dead Letter Queue - Failed Exports
+                  </CardTitle>
+                  <p className="text-sm text-gray-600">
+                    Export jobs that failed permanently after {" "}
+                    <Badge variant="outline">3 attempts</Badge> are stored here for debugging
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  {dlqLoading ? (
+                    <div className="text-center py-8">Loading failed exports...</div>
+                  ) : deadLetterQueue && deadLetterQueue.items.length > 0 ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-sm text-gray-600">
+                            {deadLetterQueue.count} failed exports requiring admin attention
+                          </span>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => refetchDLQ()}
+                        >
+                          Refresh
+                        </Button>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {deadLetterQueue.items.map((item) => (
+                          <div key={item.id} className="border rounded-lg p-4 bg-red-50 border-red-200">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="destructive" className="text-xs">
+                                    {item.exportType}
+                                  </Badge>
+                                  <span className="text-sm font-medium">
+                                    {item.documentFileName || 'Unknown Document'}
+                                  </span>
+                                </div>
+                                
+                                <div className="space-y-1 text-xs text-gray-600">
+                                  <div>Document ID: <code className="bg-gray-100 px-1 rounded">{item.documentId}</code></div>
+                                  <div>Customer: <code className="bg-gray-100 px-1 rounded">{item.customerUuid}</code></div>
+                                  <div>Failed: {new Date(item.finalFailureAt).toLocaleString()}</div>
+                                  <div>Attempts: {item.finalAttempts}/{item.maxAttempts}</div>
+                                </div>
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <div className="text-xs">
+                                  <span className="font-medium text-red-700">Error:</span>
+                                  <div className="mt-1 p-2 bg-red-100 rounded text-red-800 font-mono text-xs max-h-20 overflow-y-auto">
+                                    {item.finalErrorMessage || 'No error message available'}
+                                  </div>
+                                </div>
+                                
+                                <div className="flex gap-2">
+                                  <Badge variant="outline" className="text-xs">
+                                    {item.nodeEnv}
+                                  </Badge>
+                                  {item.serverVersion && (
+                                    <Badge variant="outline" className="text-xs">
+                                      v{item.serverVersion}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {item.finalErrorStack && (
+                              <details className="mt-3">
+                                <summary className="text-xs text-gray-600 cursor-pointer hover:text-gray-800">
+                                  Full Stack Trace
+                                </summary>
+                                <pre className="mt-2 p-2 bg-gray-100 rounded text-xs font-mono overflow-x-auto max-h-40 overflow-y-auto">
+                                  {item.finalErrorStack}
+                                </pre>
+                              </details>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <Alert>
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertDescription>
+                          These failed exports contain comprehensive debugging information including error messages, 
+                          stack traces, customer context, and system state at time of failure. 
+                          Use this data to identify and fix recurring export issues.
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-500 mb-2">No failed exports</p>
+                      <p className="text-sm text-gray-400">
+                        When export jobs fail permanently, they'll appear here for debugging
+                      </p>
+                    </div>
                   )}
                 </CardContent>
               </Card>

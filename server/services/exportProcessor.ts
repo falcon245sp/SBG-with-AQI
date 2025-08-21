@@ -141,19 +141,32 @@ export class ExportProcessor {
           
           console.log(`[ExportProcessor] Retry ${currentAttempts}/${exportItem.maxAttempts} scheduled for export ${exportId} in ${delayMinutes} minutes`);
         } else {
-          // Max attempts reached: Mark as permanently failed
-          await storage.updateExportQueueStatus(exportId, 'failed');
-          console.log(`[ExportProcessor] Export ${exportId} failed permanently after ${exportItem.maxAttempts} attempts`);
-          
-          // Schedule cleanup for failed exports after 24 hours
-          setTimeout(async () => {
-            try {
-              await storage.deleteExportQueueItem(exportId);
-              console.log(`[ExportProcessor] Cleanup: Removed failed export ${exportId} after 24 hours`);
-            } catch (error) {
-              console.error(`[ExportProcessor] Failed export cleanup error for ${exportId}:`, error);
-            }
-          }, 24 * 60 * 60 * 1000); // 24 hours
+          // Max attempts reached: Move to Dead Letter Queue for admin debugging
+          try {
+            // Get document and customer context for debugging
+            const document = await storage.getDocument(exportItem.documentId);
+            const customerUuid = document?.customerUuid;
+            
+            // Get request context if available (would come from middleware in real implementation)
+            const requestId = `export-failure-${Date.now()}`;
+            const userAgent = 'ExportProcessor-ServerSide';
+            
+            await storage.moveToDeadLetterQueue(
+              exportId,
+              customerUuid || 'unknown-customer',
+              null, // No session user for server-side processing
+              error as Error,
+              requestId,
+              userAgent
+            );
+            
+            console.log(`[ExportProcessor] Export ${exportId} moved to Dead Letter Queue after ${exportItem.maxAttempts} failed attempts`);
+            console.log(`[ExportProcessor] Dead Letter Queue entry created for admin debugging: documentId=${exportItem.documentId}, customerUuid=${customerUuid}`);
+          } catch (dlqError) {
+            console.error(`[ExportProcessor] Failed to move export ${exportId} to Dead Letter Queue:`, dlqError);
+            // Fallback: Mark as failed in original queue
+            await storage.updateExportQueueStatus(exportId, 'failed');
+          }
         }
       } catch (updateError) {
         console.error(`[ExportProcessor] Failed to update export retry status:`, updateError);

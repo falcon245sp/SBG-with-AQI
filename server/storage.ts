@@ -10,6 +10,7 @@ import {
   processingQueue,
   teacherOverrides,
   exportQueue,
+  deadLetterQueue,
   qrSequenceNumbers,
   gradeSubmissions,
   type User,
@@ -22,6 +23,8 @@ import {
   type QuestionResult,
   type ApiKey,
   type ProcessingQueue,
+  type ExportQueue,
+  type DeadLetterQueue,
   type TeacherOverride,
   type QrSequenceNumber,
   type GradeSubmission,
@@ -808,6 +811,78 @@ export class DatabaseStorage implements IStorage {
         startedAt: null // Clear previous start time
       })
       .where(eq(exportQueue.id, exportId));
+  }
+
+  // Dead Letter Queue methods
+  async moveToDeadLetterQueue(
+    exportId: string,
+    customerUuid: string,
+    sessionUserId: string | null,
+    finalError: Error,
+    requestId?: string,
+    userAgent?: string
+  ): Promise<void> {
+    const exportItem = await this.getExportQueueItem(exportId);
+    if (!exportItem) {
+      throw new Error(`Export item not found: ${exportId}`);
+    }
+
+    const document = await this.getDocument(exportItem.documentId);
+    if (!document) {
+      throw new Error(`Document not found: ${exportItem.documentId}`);
+    }
+
+    // Create dead letter queue entry with comprehensive debugging info
+    await db.insert(deadLetterQueue).values({
+      originalExportId: exportId,
+      documentId: exportItem.documentId,
+      customerUuid,
+      sessionUserId,
+      exportType: exportItem.exportType,
+      priority: exportItem.priority,
+      finalAttempts: exportItem.attempts,
+      maxAttempts: exportItem.maxAttempts,
+      finalErrorMessage: finalError.message,
+      finalErrorStack: finalError.stack || '',
+      originalScheduledFor: exportItem.scheduledFor,
+      firstAttemptAt: exportItem.startedAt,
+      // Document debugging context
+      documentFileName: document.fileName,
+      documentFileSize: document.fileSize,
+      documentMimeType: document.mimeType,
+      documentStatus: document.status,
+      // System debugging context
+      serverVersion: process.env.npm_package_version || '1.0.0',
+      nodeEnv: process.env.NODE_ENV || 'unknown',
+      requestId,
+      userAgent,
+    });
+
+    // Remove from export queue
+    await this.deleteExportQueueItem(exportId);
+  }
+
+  async getDeadLetterQueueItems(): Promise<DeadLetterQueue[]> {
+    return await db
+      .select()
+      .from(deadLetterQueue)
+      .orderBy(desc(deadLetterQueue.finalFailureAt));
+  }
+
+  async getDeadLetterQueueItem(id: string): Promise<DeadLetterQueue | null> {
+    const result = await db
+      .select()
+      .from(deadLetterQueue)
+      .where(eq(deadLetterQueue.id, id))
+      .limit(1);
+    
+    return result[0] || null;
+  }
+
+  async deleteDeadLetterQueueItem(id: string): Promise<void> {
+    await db
+      .delete(deadLetterQueue)
+      .where(eq(deadLetterQueue.id, id));
   }
 
   async getPendingExports(): Promise<any[]> {

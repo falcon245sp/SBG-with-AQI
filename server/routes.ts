@@ -1231,6 +1231,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Dead Letter Queue endpoints (Admin only)
+  app.get('/api/admin/dead-letter-queue', async (req: any, res) => {
+    try {
+      ActiveUserService.requireSessionUserId(req);
+      
+      const deadLetterItems = await storage.getDeadLetterQueueItems();
+      res.json({
+        items: deadLetterItems,
+        count: deadLetterItems.length,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Error fetching dead letter queue:", error);
+      res.status(500).json({ message: "Failed to fetch dead letter queue" });
+    }
+  });
+
+  app.get('/api/admin/dead-letter-queue/:id', async (req: any, res) => {
+    try {
+      ActiveUserService.requireSessionUserId(req);
+      
+      const { id } = req.params;
+      const item = await storage.getDeadLetterQueueItem(id);
+      
+      if (!item) {
+        return res.status(404).json({ message: 'Dead letter queue item not found' });
+      }
+      
+      res.json(item);
+    } catch (error) {
+      console.error("Error fetching dead letter queue item:", error);
+      res.status(500).json({ message: "Failed to fetch dead letter queue item" });
+    }
+  });
+
+  app.delete('/api/admin/dead-letter-queue/:id', async (req: any, res) => {
+    try {
+      ActiveUserService.requireSessionUserId(req);
+      
+      const { id } = req.params;
+      await storage.deleteDeadLetterQueueItem(id);
+      
+      res.json({ 
+        message: 'Dead letter queue item deleted successfully',
+        deletedId: id
+      });
+    } catch (error) {
+      console.error("Error deleting dead letter queue item:", error);
+      res.status(500).json({ message: "Failed to delete dead letter queue item" });
+    }
+  });
+
   // Register File Cabinet router
   const { fileCabinetRouter } = await import('./routes/fileCabinet');
   console.log('[Routes] Registering File Cabinet router');
