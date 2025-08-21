@@ -168,10 +168,19 @@ export default function FileCabinet() {
     onSuccess: (data, documentId) => {
       queryClient.invalidateQueries({ queryKey: ['file-cabinet'] });
       queryClient.invalidateQueries({ queryKey: ['/api/documents'] });
+      toast({
+        title: "Document Deleted",
+        description: "The document has been successfully removed from your File Cabinet.",
+      });
       console.log(`Document ${documentId} deleted:`, data);
     },
     onError: (error) => {
       console.error('Failed to delete document:', error);
+      toast({
+        title: "Deletion Failed",
+        description: "Unable to delete the document. Please try again.",
+        variant: "destructive",
+      });
     }
   });
 
