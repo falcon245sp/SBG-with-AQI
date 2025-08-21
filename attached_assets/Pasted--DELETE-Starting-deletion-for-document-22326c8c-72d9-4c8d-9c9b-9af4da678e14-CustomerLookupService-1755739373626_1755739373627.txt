@@ -1,0 +1,41 @@
+[DELETE] Starting deletion for document: 22326c8c-72d9-4c8d-9c9b-9af4da678e14
+[CustomerLookupService] Looking up customer UUID for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+[CustomerLookupService] Found customer UUID: e9e41d64-44f6-4c77-b626-40487868c72d for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+[DELETE] Customer UUID: e9e41d64-44f6-4c77-b626-40487868c72d, Document ID: 22326c8c-72d9-4c8d-9c9b-9af4da678e14
+[DELETE] Retrieved document: ID: 22326c8c-72d9-4c8d-9c9b-9af4da678e14, Customer: e9e41d64-44f6-4c77-b626-40487868c72d, AssetType: uploaded
+[DELETE] Calling DatabaseWriteService.deleteDocument for ID: 22326c8c-72d9-4c8d-9c9b-9af4da678e14
+[DatabaseWriteService] Deleting document: 22326c8c-72d9-4c8d-9c9b-9af4da678e14
+[DatabaseWriteService] Failed to delete document: error: update or delete on table "documents" violates foreign key constraint "export_queue_document_id_documents_id_fk" on table "export_queue"
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async DatabaseStorage.deleteDocument (/home/runner/workspace/server/storage.ts:744:5)
+    at async Function.deleteDocument (/home/runner/workspace/server/services/databaseWriteService.ts:142:7)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:769:7) {
+  length: 365,
+  severity: 'ERROR',
+  code: '23503',
+  detail: 'Key (id)=(22326c8c-72d9-4c8d-9c9b-9af4da678e14) is still referenced from table "export_queue".',
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: 'public',
+  table: 'export_queue',
+  column: undefined,
+  dataType: undefined,
+  constraint: 'export_queue_document_id_documents_id_fk',
+  file: 'ri_triggers.c',
+  line: '2621',
+  routine: 'ri_ReportViolation'
+}
+[DELETE] Error deleting document: Error: Failed to delete document: update or delete on table "documents" violates foreign key constraint "export_queue_document_id_documents_id_fk" on table "export_queue"
+    at Function.deleteDocument (/home/runner/workspace/server/services/databaseWriteService.ts:146:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:769:7)
+[DELETE] Error stack: Error: Failed to delete document: update or delete on table "documents" violates foreign key constraint "export_queue_document_id_documents_id_fk" on table "export_queue"
+    at Function.deleteDocument (/home/runner/workspace/server/services/databaseWriteService.ts:146:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:769:7)
+[DELETE] Error message: Failed to delete document: update or delete on table "documents" violates foreign key constraint "export_queue_document_id_documents_id_fk" on table "export_queue"
+2025-08-21T01:22:38.075Z [INFO] API Request | method=DELETE, path=/api/documents/22326c8c-72d9-4c8d-9c9b-9af4da678e14, statusCode=500, duration=286, requestId=7b3a0c186e7de7e45e483ff33fd9df70, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.0.114, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
