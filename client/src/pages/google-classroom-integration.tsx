@@ -358,23 +358,24 @@ export default function GoogleClassroomIntegration() {
                           )}
                           
                           {/* SBG Toggle */}
-                          <div className="mt-2 flex items-center gap-2">
+                          <div className="mt-2 flex items-center gap-2 p-2 bg-gray-50 rounded border">
                             <Switch
                               checked={classroom.sbgEnabled || false}
                               onCheckedChange={(checked) => {
+                                console.log('SBG toggle changed:', { classroomId: classroom.id, checked });
                                 updateClassificationMutation.mutate({
                                   classroomId: classroom.id,
                                   sbgEnabled: checked
                                 });
                               }}
-                              className="scale-75"
+                              className="data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-gray-300"
                             />
-                            <Target className="w-3 h-3 text-emerald-600" />
-                            <span className="text-xs font-medium text-gray-700">
+                            <Target className="w-4 h-4 text-emerald-600" />
+                            <span className="text-sm font-medium text-gray-900">
                               Standards-Based Grading
                             </span>
                             {classroom.sbgEnabled && (
-                              <Badge variant="default" className="text-xs bg-green-600">
+                              <Badge variant="default" className="text-xs bg-green-600 text-white">
                                 SBG Active
                               </Badge>
                             )}
@@ -680,13 +681,14 @@ function ClassificationEditDialog({
           </div>
 
           <div className="space-y-2 pt-4 border-t">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded border">
               <Switch
                 id="sbg-enabled"
                 checked={sbgEnabled}
                 onCheckedChange={setSbgEnabled}
+                className="data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-gray-300"
               />
-              <Label htmlFor="sbg-enabled" className="flex items-center gap-2">
+              <Label htmlFor="sbg-enabled" className="flex items-center gap-2 text-gray-900 font-medium">
                 <Target className="w-4 h-4 text-emerald-600" />
                 Enable Standards-Based Grading
               </Label>
