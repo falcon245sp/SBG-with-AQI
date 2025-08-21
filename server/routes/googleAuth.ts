@@ -84,6 +84,19 @@ export async function initiateGoogleAuth(req: Request, res: Response) {
   }
 }
 
+// Initiate Google authentication with full integration (Drive + Classroom)
+export async function initiateFullIntegration(req: Request, res: Response) {
+  try {
+    console.log('[OAuth] Initiating Google authentication with Full Integration scopes (Drive + Classroom)');
+    const authUrl = googleAuth.getFullAuthUrl('full_integration');
+    console.log('[OAuth] Redirecting to:', authUrl);
+    res.redirect(authUrl);
+  } catch (error) {
+    console.error('[OAuth] Error initiating Full Integration auth:', error);
+    res.status(500).json({ error: 'Failed to initiate Google Full Integration authentication' });
+  }
+}
+
 // Initiate Google authentication with Classroom scopes
 export async function initiateClassroomAuth(req: Request, res: Response) {
   try {
@@ -277,7 +290,7 @@ export async function syncAssignments(req: Request, res: Response) {
             materials: assignment.materials || null,
             workType: assignment.workType || 'ASSIGNMENT',
             state: assignment.state || 'PUBLISHED',
-            maxPoints: assignment.maxPoints ? parseFloat(assignment.maxPoints) : null,
+            maxPoints: assignment.maxPoints ? assignment.maxPoints.toString() : null,
             dueDate: assignment.dueDate ? new Date(assignment.dueDate.year, assignment.dueDate.month - 1, assignment.dueDate.day) : null,
             creationTime: assignment.creationTime ? new Date(assignment.creationTime) : null,
             updateTime: assignment.updateTime ? new Date(assignment.updateTime) : null,

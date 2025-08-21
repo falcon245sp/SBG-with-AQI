@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import bcrypt from "bcryptjs";
 import { 
   initiateGoogleAuth, 
+  initiateFullIntegration,
   initiateClassroomAuth,
   handleGoogleCallback, 
   syncClassroomData,
@@ -116,6 +117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('[DEBUG] /api/auth/google route hit');
     next();
   }, initiateGoogleAuth);
+  app.get('/api/auth/google/full-integration', initiateFullIntegration);
   app.get('/api/auth/google/classroom', initiateClassroomAuth);
   app.get('/api/auth/google/callback', handleGoogleCallback);
   app.post('/api/auth/sync-classroom', syncClassroomData);

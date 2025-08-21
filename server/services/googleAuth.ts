@@ -31,12 +31,20 @@ const BASIC_SCOPES = [
   'https://www.googleapis.com/auth/userinfo.email'
 ];
 
+// Additional scopes for Google Drive access (limited to files we create)
+const DRIVE_SCOPES = [
+  'https://www.googleapis.com/auth/drive.file' // Only access files created by our app
+];
+
 // Additional scopes for classroom access
 const CLASSROOM_SCOPES = [
   'https://www.googleapis.com/auth/classroom.courses.readonly',
   'https://www.googleapis.com/auth/classroom.rosters.readonly',
   'https://www.googleapis.com/auth/classroom.coursework.students.readonly'
 ];
+
+// Combined scopes for full integration
+const FULL_SCOPES = [...BASIC_SCOPES, ...DRIVE_SCOPES, ...CLASSROOM_SCOPES];
 
 export class GoogleAuthService {
   private oauth2Client: OAuth2Client;
@@ -74,6 +82,21 @@ export class GoogleAuthService {
     console.log('[GoogleAuth] Generated OAuth URL with renamed env vars:', authUrl);
     console.log('[GoogleAuth] Redirect URI from renamed env var:', GOOGLE_REDIRECT_URI);
     
+    return authUrl;
+  }
+
+  // Generate authorization URL for full integration (Drive + Classroom)
+  getFullAuthUrl(state?: string): string {
+    console.log('[GoogleAuth] Generating FULL integration authorization URL with scopes:', FULL_SCOPES);
+    console.log('[GoogleAuth] Using renamed env var redirect URI:', GOOGLE_REDIRECT_URI);
+    
+    const authUrl = this.oauth2Client.generateAuthUrl({
+      access_type: 'offline',
+      scope: FULL_SCOPES,
+      prompt: 'consent', // Force consent screen to get refresh token
+      state: state || 'full_integration' // Mark this as full integration flow
+    });
+    console.log('[GoogleAuth] Generated full integration authorization URL:', authUrl);
     return authUrl;
   }
 
@@ -145,7 +168,7 @@ export class GoogleAuthService {
     }
   }
 
-  // Get Google Classroom courses
+  // Get Google Classroom courses with pagination
   async getClassrooms(accessToken: string, refreshToken?: string) {
     this.oauth2Client.setCredentials({ 
       access_token: accessToken,
@@ -155,12 +178,27 @@ export class GoogleAuthService {
     const classroom = google.classroom({ version: 'v1', auth: this.oauth2Client });
     
     try {
-      const response = await classroom.courses.list({
-        courseStates: ['ACTIVE'],
-        teacherId: 'me' // Only courses where user is teacher
-      });
+      // Use pagination to ensure we get ALL classrooms
+      let allClassrooms: any[] = [];
+      let pageToken: string | undefined;
       
-      return response.data.courses || [];
+      do {
+        const response = await classroom.courses.list({
+          courseStates: ['ACTIVE'],
+          teacherId: 'me', // Only courses where user is teacher
+          pageSize: 100, // Maximum page size
+          pageToken: pageToken
+        });
+        
+        const classrooms = response.data.courses || [];
+        allClassrooms = allClassrooms.concat(classrooms);
+        pageToken = response.data.nextPageToken || undefined;
+        
+        console.log(`Retrieved ${classrooms.length} classrooms (page token: ${pageToken ? 'more pages' : 'last page'})`);
+      } while (pageToken);
+      
+      console.log(`Total classrooms retrieved: ${allClassrooms.length}`);
+      return allClassrooms;
     } catch (error) {
       console.error('Error fetching classrooms:', error);
       throw error;

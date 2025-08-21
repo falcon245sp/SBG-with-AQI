@@ -19,6 +19,7 @@ import PromptConfig from "@/pages/prompt-config";
 import FileCabinet from "@/pages/file-cabinet";
 import DocumentInspector from "@/pages/document-inspector";
 import TestingDashboard from "@/pages/testing-dashboard";
+import GoogleClassroomIntegration from "@/pages/google-classroom-integration";
 
 // Protected Route wrapper that redirects to landing page if not authenticated
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
@@ -77,6 +78,7 @@ function Router() {
       <Route path="/prompt-config" component={() => <ProtectedRoute component={PromptConfig} />} />
       <Route path="/file-cabinet" component={() => <ProtectedRoute component={FileCabinet} />} />
       <Route path="/documents/:documentId/inspect" component={() => <ProtectedRoute component={DocumentInspector} />} />
+      <Route path="/google-classroom" component={() => <ProtectedRoute component={GoogleClassroomIntegration} />} />
       
       {/* Default catch-all */}
       <Route component={NotFound} />
