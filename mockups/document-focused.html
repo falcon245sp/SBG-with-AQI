@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Standards Sherpa - Document-Focused UX Mockup</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #fafafa; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+        
+        /* Header */
+        .header { 
+            background: white; 
+            border-radius: 8px; 
+            padding: 1.5rem 2rem; 
+            margin-bottom: 2rem; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+        }
+        .header h1 { font-size: 1.5rem; color: #1f2937; }
+        .header-actions { display: flex; gap: 1rem; align-items: center; }
+        
+        /* Filters */
+        .filters { 
+            background: white; 
+            border-radius: 8px; 
+            padding: 1rem 1.5rem; 
+            margin-bottom: 1.5rem; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex; 
+            gap: 1.5rem; 
+            align-items: center; 
+            flex-wrap: wrap;
+        }
+        .filter-group { display: flex; align-items: center; gap: 0.5rem; }
+        .filter-label { font-size: 0.875rem; color: #6b7280; font-weight: 500; }
+        .filter-select { 
+            padding: 0.375rem 0.75rem; 
+            border: 1px solid #d1d5db; 
+            border-radius: 6px; 
+            font-size: 0.875rem;
+        }
+        .filter-pills { display: flex; gap: 0.5rem; }
+        .filter-pill { 
+            padding: 0.25rem 0.75rem; 
+            background: #f3f4f6; 
+            border-radius: 9999px; 
+            font-size: 0.75rem; 
+            cursor: pointer; 
+            transition: background 0.2s;
+        }
+        .filter-pill.active, .filter-pill:hover { background: #3b82f6; color: white; }
+        
+        /* Document Grid */
+        .document-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); 
+            gap: 1.5rem; 
+        }
+        .document-card { 
+            background: white; 
+            border-radius: 8px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+        .document-card:hover { 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+            transform: translateY(-2px); 
+        }
+        
+        /* Document Header */
+        .doc-header { 
+            padding: 1.5rem 1.5rem 0; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: start; 
+        }
+        .doc-title { 
+            font-weight: 600; 
+            color: #1f2937; 
+            font-size: 1.125rem; 
+            line-height: 1.4; 
+            flex: 1; 
+            margin-right: 1rem;
+        }
+        .doc-menu { 
+            color: #6b7280; 
+            cursor: pointer; 
+            padding: 0.25rem; 
+        }
+        
+        /* Document Stats */
+        .doc-stats { 
+            padding: 0 1.5rem; 
+            margin: 1rem 0; 
+            display: flex; 
+            gap: 1.5rem; 
+        }
+        .stat-item { text-align: center; }
+        .stat-number { 
+            font-size: 1.25rem; 
+            font-weight: 700; 
+            color: #1f2937; 
+            display: block; 
+        }
+        .stat-label { 
+            font-size: 0.75rem; 
+            color: #6b7280; 
+            text-transform: uppercase; 
+            letter-spacing: 0.05em; 
+        }
+        
+        /* Progress Section */
+        .doc-progress { padding: 0 1.5rem; margin-bottom: 1rem; }
+        .progress-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 0.5rem; 
+        }
+        .progress-label { font-size: 0.875rem; color: #6b7280; }
+        .progress-percentage { font-size: 0.875rem; font-weight: 600; color: #1f2937; }
+        .progress-bar { 
+            width: 100%; 
+            height: 6px; 
+            background: #f3f4f6; 
+            border-radius: 3px; 
+            overflow: hidden; 
+        }
+        .progress-fill { 
+            height: 100%; 
+            background: linear-gradient(90deg, #3b82f6, #1e40af); 
+            transition: width 0.3s ease; 
+        }
+        
+        /* Status & Meta */
+        .doc-meta { 
+            padding: 0 1.5rem; 
+            margin-bottom: 1rem; 
+            font-size: 0.875rem; 
+            color: #6b7280; 
+            line-height: 1.5;
+        }
+        
+        .doc-status-section { 
+            padding: 0 1.5rem; 
+            margin-bottom: 1rem; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .status-badge { 
+            padding: 0.375rem 0.75rem; 
+            border-radius: 6px; 
+            font-size: 0.75rem; 
+            font-weight: 600; 
+            text-transform: uppercase; 
+            letter-spacing: 0.05em;
+        }
+        .status-processing { background: #dbeafe; color: #1e40af; }
+        .status-review { background: #fef3c7; color: #92400e; }
+        .status-approved { background: #d1fae5; color: #047857; }
+        .status-complete { background: #f3e8ff; color: #7c3aed; }
+        
+        .urgency { 
+            font-size: 0.75rem; 
+            padding: 0.25rem 0.5rem; 
+            border-radius: 4px; 
+        }
+        .urgency-high { background: #fee2e2; color: #dc2626; }
+        .urgency-medium { background: #fef3c7; color: #d97706; }
+        .urgency-low { background: #e0f2fe; color: #0369a1; }
+        
+        /* Actions */
+        .doc-actions { 
+            padding: 1rem 1.5rem; 
+            background: #f9fafb; 
+            display: flex; 
+            gap: 0.5rem; 
+            border-top: 1px solid #f3f4f6;
+        }
+        
+        /* Standards Preview */
+        .standards-preview { 
+            padding: 0 1.5rem; 
+            margin-bottom: 1rem; 
+        }
+        .standards-label { 
+            font-size: 0.75rem; 
+            color: #6b7280; 
+            text-transform: uppercase; 
+            letter-spacing: 0.05em; 
+            margin-bottom: 0.5rem; 
+        }
+        .standards-list { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 0.25rem; 
+        }
+        .standard-tag { 
+            padding: 0.125rem 0.5rem; 
+            background: #f3f4f6; 
+            border-radius: 4px; 
+            font-size: 0.75rem; 
+            color: #374151; 
+        }
+        
+        /* Buttons */
+        .btn { 
+            padding: 0.5rem 0.875rem; 
+            border: 1px solid #d1d5db; 
+            border-radius: 6px; 
+            background: white; 
+            cursor: pointer; 
+            font-size: 0.75rem; 
+            font-weight: 500; 
+            text-decoration: none; 
+            color: #374151;
+            transition: all 0.2s;
+            flex: 1;
+            text-align: center;
+        }
+        .btn:hover { background: #f9fafb; }
+        .btn-primary { background: #3b82f6; color: white; border-color: #3b82f6; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-success { background: #10b981; color: white; border-color: #10b981; }
+        .btn-warning { background: #f59e0b; color: white; border-color: #f59e0b; }
+        
+        /* Upload Card */
+        .upload-card { 
+            border: 2px dashed #d1d5db; 
+            background: #fafafa; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 3rem 2rem; 
+            text-align: center; 
+            cursor: pointer; 
+            transition: all 0.2s;
+        }
+        .upload-card:hover { border-color: #3b82f6; background: white; }
+        .upload-icon { font-size: 3rem; color: #9ca3af; margin-bottom: 1rem; }
+        .upload-text { color: #6b7280; margin-bottom: 1rem; }
+        
+        /* Rigor Indicators */
+        .rigor-indicators { 
+            padding: 0 1.5rem; 
+            margin-bottom: 1rem; 
+        }
+        .rigor-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr 1fr; 
+            gap: 0.5rem; 
+            font-size: 0.75rem; 
+        }
+        .rigor-item { 
+            text-align: center; 
+            padding: 0.25rem; 
+            border-radius: 4px; 
+        }
+        .rigor-mild { background: #f0fdf4; color: #15803d; }
+        .rigor-medium { background: #fefce8; color: #ca8a04; }
+        .rigor-spicy { background: #fef2f2; color: #dc2626; }
+        .rigor-count { font-weight: 600; display: block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📚 Standards Sherpa - My Documents</h1>
+            <div class="header-actions">
+                <span style="font-size: 0.875rem; color: #6b7280;">24 documents total</span>
+                <button class="btn btn-primary">Upload Documents</button>
+            </div>
+        </div>
+        
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-group">
+                <span class="filter-label">Status:</span>
+                <div class="filter-pills">
+                    <div class="filter-pill active">All</div>
+                    <div class="filter-pill">Processing</div>
+                    <div class="filter-pill">Review Needed</div>
+                    <div class="filter-pill">Ready to Generate</div>
+                    <div class="filter-pill">Complete</div>
+                </div>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Subject:</span>
+                <select class="filter-select">
+                    <option>All Subjects</option>
+                    <option>Mathematics</option>
+                    <option>Science</option>
+                    <option>English</option>
+                    <option>Social Studies</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Grade:</span>
+                <select class="filter-select">
+                    <option>All Grades</option>
+                    <option>Elementary (K-5)</option>
+                    <option>Middle (6-8)</option>
+                    <option>High School (9-12)</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Document Grid -->
+        <div class="document-grid">
+            <!-- Upload Card -->
+            <div class="document-card upload-card">
+                <div class="upload-icon">📤</div>
+                <div class="upload-text">Drop files here or click to upload</div>
+                <button class="btn btn-primary">Choose Files</button>
+            </div>
+            
+            <!-- Document Card 1 -->
+            <div class="document-card">
+                <div class="doc-header">
+                    <div class="doc-title">Algebra 1 Quiz - Quadratic Functions</div>
+                    <div class="doc-menu">⋯</div>
+                </div>
+                
+                <div class="doc-stats">
+                    <div class="stat-item">
+                        <span class="stat-number">15</span>
+                        <span class="stat-label">Questions</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">Grade 9</span>
+                        <span class="stat-label">Level</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">2h ago</span>
+                        <span class="stat-label">Uploaded</span>
+                    </div>
+                </div>
+                
+                <div class="doc-progress">
+                    <div class="progress-header">
+                        <span class="progress-label">AI Analysis</span>
+                        <span class="progress-percentage">100%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 100%"></div>
+                    </div>
+                </div>
+                
+                <div class="standards-preview">
+                    <div class="standards-label">Standards Found</div>
+                    <div class="standards-list">
+                        <span class="standard-tag">A-APR.A.1</span>
+                        <span class="standard-tag">A-REI.B.4</span>
+                        <span class="standard-tag">F-IF.C.8</span>
+                        <span class="standard-tag">+2 more</span>
+                    </div>
+                </div>
+                
+                <div class="rigor-indicators">
+                    <div class="rigor-grid">
+                        <div class="rigor-item rigor-mild">
+                            <span class="rigor-count">5</span>
+                            Mild
+                        </div>
+                        <div class="rigor-item rigor-medium">
+                            <span class="rigor-count">8</span>
+                            Medium
+                        </div>
+                        <div class="rigor-item rigor-spicy">
+                            <span class="rigor-count">2</span>
+                            Spicy
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="doc-status-section">
+                    <div class="status-badge status-review">Review Needed</div>
+                    <div class="urgency urgency-high">High Priority</div>
+                </div>
+                
+                <div class="doc-actions">
+                    <button class="btn btn-primary">Review Analysis</button>
+                    <button class="btn">Preview</button>
+                </div>
+            </div>
+            
+            <!-- Document Card 2 -->
+            <div class="document-card">
+                <div class="doc-header">
+                    <div class="doc-title">Geometry Test - Circles and Arcs</div>
+                    <div class="doc-menu">⋯</div>
+                </div>
+                
+                <div class="doc-stats">
+                    <div class="stat-item">
+                        <span class="stat-number">22</span>
+                        <span class="stat-label">Questions</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">Grade 10</span>
+                        <span class="stat-label">Level</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">1d ago</span>
+                        <span class="stat-label">Uploaded</span>
+                    </div>
+                </div>
+                
+                <div class="doc-progress">
+                    <div class="progress-header">
+                        <span class="progress-label">AI Analysis</span>
+                        <span class="progress-percentage">65%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 65%"></div>
+                    </div>
+                </div>
+                
+                <div class="doc-meta">
+                    Common Core Mathematics<br>
+                    Processing with Claude AI...
+                </div>
+                
+                <div class="doc-status-section">
+                    <div class="status-badge status-processing">Processing</div>
+                    <div class="urgency urgency-medium">Medium Priority</div>
+                </div>
+                
+                <div class="doc-actions">
+                    <button class="btn" disabled>Processing...</button>
+                    <button class="btn">View Details</button>
+                </div>
+            </div>
+            
+            <!-- Document Card 3 -->
+            <div class="document-card">
+                <div class="doc-header">
+                    <div class="doc-title">Pre-Calculus Worksheet - Limits</div>
+                    <div class="doc-menu">⋯</div>
+                </div>
+                
+                <div class="doc-stats">
+                    <div class="stat-item">
+                        <span class="stat-number">8</span>
+                        <span class="stat-label">Questions</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">Grade 11</span>
+                        <span class="stat-label">Level</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">2d ago</span>
+                        <span class="stat-label">Uploaded</span>
+                    </div>
+                </div>
+                
+                <div class="standards-preview">
+                    <div class="standards-label">Standards Aligned</div>
+                    <div class="standards-list">
+                        <span class="standard-tag">F-IF.A.2</span>
+                        <span class="standard-tag">A-APR.B.2</span>
+                        <span class="standard-tag">F-BF.A.1</span>
+                    </div>
+                </div>
+                
+                <div class="rigor-indicators">
+                    <div class="rigor-grid">
+                        <div class="rigor-item rigor-mild">
+                            <span class="rigor-count">2</span>
+                            Mild
+                        </div>
+                        <div class="rigor-item rigor-medium">
+                            <span class="rigor-count">4</span>
+                            Medium
+                        </div>
+                        <div class="rigor-item rigor-spicy">
+                            <span class="rigor-count">2</span>
+                            Spicy
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="doc-status-section">
+                    <div class="status-badge status-approved">Approved</div>
+                    <div class="urgency urgency-low">Ready to Generate</div>
+                </div>
+                
+                <div class="doc-actions">
+                    <button class="btn btn-success">Generate Materials</button>
+                    <button class="btn">View Analysis</button>
+                </div>
+            </div>
+            
+            <!-- Document Card 4 -->
+            <div class="document-card">
+                <div class="doc-header">
+                    <div class="doc-title">Chemistry Lab - Stoichiometry</div>
+                    <div class="doc-menu">⋯</div>
+                </div>
+                
+                <div class="doc-stats">
+                    <div class="stat-item">
+                        <span class="stat-number">12</span>
+                        <span class="stat-label">Questions</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">Grade 11</span>
+                        <span class="stat-label">Level</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">3d ago</span>
+                        <span class="stat-label">Uploaded</span>
+                    </div>
+                </div>
+                
+                <div class="standards-preview">
+                    <div class="standards-label">Generated Materials</div>
+                    <div class="standards-list">
+                        <span class="standard-tag">Cover Sheet ✓</span>
+                        <span class="standard-tag">Rubric ✓</span>
+                    </div>
+                </div>
+                
+                <div class="rigor-indicators">
+                    <div class="rigor-grid">
+                        <div class="rigor-item rigor-mild">
+                            <span class="rigor-count">3</span>
+                            Mild
+                        </div>
+                        <div class="rigor-item rigor-medium">
+                            <span class="rigor-count">7</span>
+                            Medium
+                        </div>
+                        <div class="rigor-item rigor-spicy">
+                            <span class="rigor-count">2</span>
+                            Spicy
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="doc-status-section">
+                    <div class="status-badge status-complete">Complete</div>
+                </div>
+                
+                <div class="doc-actions">
+                    <button class="btn btn-primary">Download Materials</button>
+                    <button class="btn">View Details</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

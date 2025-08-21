@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Standards Sherpa - Task-Oriented UX Mockup</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #ffffff; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
+        
+        /* Header */
+        .header { 
+            text-align: center; 
+            margin-bottom: 3rem; 
+            padding-bottom: 2rem; 
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .header h1 { 
+            font-size: 2.5rem; 
+            color: #1f2937; 
+            margin-bottom: 0.5rem; 
+            font-weight: 700;
+        }
+        .header p { 
+            color: #6b7280; 
+            font-size: 1.125rem; 
+            max-width: 600px; 
+            margin: 0 auto;
+        }
+        
+        /* Task Sections */
+        .task-section { 
+            margin-bottom: 3rem; 
+            background: #f9fafb; 
+            border-radius: 12px; 
+            padding: 2rem;
+            border: 1px solid #e5e7eb;
+        }
+        .task-header { 
+            display: flex; 
+            align-items: center; 
+            gap: 1rem; 
+            margin-bottom: 2rem;
+        }
+        .task-icon { 
+            width: 48px; 
+            height: 48px; 
+            background: #3b82f6; 
+            color: white; 
+            border-radius: 12px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 1.5rem;
+        }
+        .task-icon.review { background: #f59e0b; }
+        .task-icon.complete { background: #10b981; }
+        .task-icon.generate { background: #8b5cf6; }
+        
+        .task-content h2 { 
+            font-size: 1.5rem; 
+            color: #1f2937; 
+            margin-bottom: 0.5rem; 
+        }
+        .task-content p { 
+            color: #6b7280; 
+            line-height: 1.6;
+        }
+        
+        /* Priority Badge */
+        .priority { 
+            display: inline-block; 
+            padding: 0.25rem 0.75rem; 
+            border-radius: 9999px; 
+            font-size: 0.75rem; 
+            font-weight: 600; 
+            margin-left: auto;
+        }
+        .priority.high { background: #fee2e2; color: #dc2626; }
+        .priority.medium { background: #fef3c7; color: #d97706; }
+        .priority.low { background: #e0f2fe; color: #0369a1; }
+        
+        /* Action Cards */
+        .action-cards { 
+            display: grid; 
+            gap: 1rem; 
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+        .action-card { 
+            background: white; 
+            border-radius: 8px; 
+            padding: 1.5rem; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s;
+        }
+        .action-card:hover { 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+            transform: translateY(-1px);
+        }
+        
+        .card-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: start; 
+            margin-bottom: 1rem;
+        }
+        .card-title { 
+            font-weight: 600; 
+            color: #1f2937; 
+            font-size: 1.125rem;
+        }
+        .card-meta { 
+            color: #6b7280; 
+            font-size: 0.875rem; 
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+        .card-actions { 
+            display: flex; 
+            gap: 0.5rem; 
+            margin-top: 1rem;
+        }
+        
+        /* Progress Indicators */
+        .progress-bar { 
+            width: 100%; 
+            height: 6px; 
+            background: #e5e7eb; 
+            border-radius: 3px; 
+            overflow: hidden; 
+            margin-bottom: 1rem;
+        }
+        .progress-fill { 
+            height: 100%; 
+            background: #3b82f6; 
+            transition: width 0.3s ease;
+        }
+        .progress-text { 
+            font-size: 0.875rem; 
+            color: #6b7280; 
+            text-align: center;
+        }
+        
+        /* Status Badges */
+        .status { 
+            padding: 0.25rem 0.75rem; 
+            border-radius: 9999px; 
+            font-size: 0.75rem; 
+            font-weight: 500;
+        }
+        .status-waiting { background: #fef3c7; color: #92400e; }
+        .status-processing { background: #dbeafe; color: #1e40af; }
+        .status-ready { background: #d1fae5; color: #047857; }
+        .status-error { background: #fee2e2; color: #dc2626; }
+        
+        /* Buttons */
+        .btn { 
+            padding: 0.5rem 1rem; 
+            border: 1px solid #d1d5db; 
+            border-radius: 6px; 
+            background: white; 
+            cursor: pointer; 
+            font-size: 0.875rem;
+            text-decoration: none;
+            color: #374151;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn:hover { background: #f9fafb; }
+        .btn-primary { background: #3b82f6; color: white; border-color: #3b82f6; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-success { background: #10b981; color: white; border-color: #10b981; }
+        .btn-success:hover { background: #059669; }
+        
+        /* Empty States */
+        .empty-state { 
+            text-align: center; 
+            padding: 3rem; 
+            color: #6b7280;
+        }
+        .empty-icon { 
+            font-size: 3rem; 
+            margin-bottom: 1rem; 
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Standards Sherpa</h1>
+            <p>Your AI-powered teaching assistant for standards alignment and cognitive rigor analysis</p>
+        </div>
+        
+        <!-- Task 1: Documents Need Review -->
+        <div class="task-section">
+            <div class="task-header">
+                <div class="task-icon review">⚠️</div>
+                <div class="task-content">
+                    <h2>Documents Awaiting Your Review</h2>
+                    <p>8 documents have completed AI analysis and need your approval before generating materials.</p>
+                </div>
+                <div class="priority high">High Priority</div>
+            </div>
+            
+            <div class="action-cards">
+                <div class="action-card">
+                    <div class="card-header">
+                        <div class="card-title">Algebra 1 Quiz - Chapter 7</div>
+                        <div class="status status-ready">Ready for Review</div>
+                    </div>
+                    <div class="card-meta">
+                        15 questions analyzed<br>
+                        Common Core Math • Grade 9<br>
+                        Uploaded 2 hours ago
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 100%"></div>
+                    </div>
+                    <div class="progress-text">AI Analysis Complete</div>
+                    <div class="card-actions">
+                        <button class="btn btn-primary">Review & Approve</button>
+                        <button class="btn">Quick Preview</button>
+                    </div>
+                </div>
+                
+                <div class="action-card">
+                    <div class="card-header">
+                        <div class="card-title">Geometry Test - Circles & Arcs</div>
+                        <div class="status status-ready">Ready for Review</div>
+                    </div>
+                    <div class="card-meta">
+                        22 questions analyzed<br>
+                        Common Core Math • Grade 10<br>
+                        Uploaded 4 hours ago
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 100%"></div>
+                    </div>
+                    <div class="progress-text">AI Analysis Complete</div>
+                    <div class="card-actions">
+                        <button class="btn btn-primary">Review & Approve</button>
+                        <button class="btn">Quick Preview</button>
+                    </div>
+                </div>
+                
+                <div class="action-card">
+                    <div class="card-header">
+                        <div class="card-title">Chemistry Lab - Stoichiometry</div>
+                        <div class="status status-processing">Processing</div>
+                    </div>
+                    <div class="card-meta">
+                        12 questions • NGSS Science<br>
+                        Grade 11 • Uploaded 30 minutes ago
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 65%"></div>
+                    </div>
+                    <div class="progress-text">AI Analysis in Progress (65%)</div>
+                    <div class="card-actions">
+                        <button class="btn" disabled>Processing...</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Task 2: Ready to Generate -->
+        <div class="task-section">
+            <div class="task-header">
+                <div class="task-icon generate">📋</div>
+                <div class="task-content">
+                    <h2>Ready to Generate Materials</h2>
+                    <p>4 documents are approved and ready for cover sheet and rubric generation.</p>
+                </div>
+                <div class="priority medium">Medium Priority</div>
+            </div>
+            
+            <div class="action-cards">
+                <div class="action-card">
+                    <div class="card-header">
+                        <div class="card-title">Pre-Calculus Worksheet</div>
+                        <div class="status status-ready">Approved</div>
+                    </div>
+                    <div class="card-meta">
+                        8 questions • Common Core Math<br>
+                        Grade 11 • Reviewed yesterday
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn btn-success">Generate Materials</button>
+                        <button class="btn">View Analysis</button>
+                    </div>
+                </div>
+                
+                <div class="action-card">
+                    <div class="card-header">
+                        <div class="card-title">Biology Quiz - Cell Division</div>
+                        <div class="status status-ready">Approved</div>
+                    </div>
+                    <div class="card-meta">
+                        18 questions • NGSS Science<br>
+                        Grade 10 • Reviewed 2 days ago
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn btn-success">Generate Materials</button>
+                        <button class="btn">View Analysis</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Task 3: Upload New Documents -->
+        <div class="task-section">
+            <div class="task-header">
+                <div class="task-icon">📤</div>
+                <div class="task-content">
+                    <h2>Upload New Documents</h2>
+                    <p>Upload assessments, worksheets, or other educational materials for AI analysis.</p>
+                </div>
+                <div class="priority low">Low Priority</div>
+            </div>
+            
+            <div style="text-align: center; padding: 2rem; border: 2px dashed #d1d5db; border-radius: 8px; background: white;">
+                <div style="font-size: 3rem; margin-bottom: 1rem; color: #9ca3af;">📄</div>
+                <p style="color: #6b7280; margin-bottom: 1rem;">Drag and drop files here or click to browse</p>
+                <button class="btn btn-primary">Choose Files</button>
+            </div>
+        </div>
+        
+        <!-- Task 4: Completed Documents -->
+        <div class="task-section">
+            <div class="task-header">
+                <div class="task-icon complete">✅</div>
+                <div class="task-content">
+                    <h2>Recently Completed</h2>
+                    <p>Documents that have been fully processed and materials generated.</p>
+                </div>
+            </div>
+            
+            <div class="action-cards">
+                <div class="action-card">
+                    <div class="card-header">
+                        <div class="card-title">Trigonometry Test</div>
+                        <div class="status status-ready">Complete</div>
+                    </div>
+                    <div class="card-meta">
+                        20 questions • Materials generated<br>
+                        Completed this morning
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn btn-primary">Download Materials</button>
+                        <button class="btn">View Details</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

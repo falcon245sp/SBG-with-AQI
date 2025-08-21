@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Standards Sherpa - Workflow-Focused UX Mockup</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8f9fa; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        
+        /* Header */
+        .header { background: #2563eb; color: white; padding: 1rem 2rem; margin-bottom: 2rem; border-radius: 8px; }
+        .header h1 { font-size: 1.5rem; font-weight: 600; }
+        .header p { opacity: 0.9; margin-top: 0.5rem; }
+        
+        /* Workflow Steps */
+        .workflow-steps { display: flex; gap: 1rem; margin-bottom: 2rem; overflow-x: auto; }
+        .step { 
+            background: white; 
+            border-radius: 8px; 
+            padding: 1.5rem; 
+            min-width: 280px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-left: 4px solid #e5e7eb;
+        }
+        .step.active { border-left-color: #2563eb; }
+        .step.completed { border-left-color: #10b981; }
+        .step-number { 
+            background: #e5e7eb; 
+            color: #6b7280; 
+            width: 24px; 
+            height: 24px; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 0.875rem; 
+            margin-bottom: 1rem;
+        }
+        .step.active .step-number { background: #2563eb; color: white; }
+        .step.completed .step-number { background: #10b981; color: white; }
+        .step h3 { font-size: 1.125rem; margin-bottom: 0.5rem; }
+        .step p { color: #6b7280; font-size: 0.875rem; line-height: 1.5; }
+        
+        /* Current Task Area */
+        .current-task { 
+            background: white; 
+            border-radius: 8px; 
+            padding: 2rem; 
+            margin-bottom: 2rem; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .current-task h2 { margin-bottom: 1rem; color: #1f2937; }
+        
+        /* Upload Zone */
+        .upload-zone { 
+            border: 2px dashed #d1d5db; 
+            border-radius: 8px; 
+            padding: 3rem; 
+            text-align: center; 
+            margin-bottom: 2rem;
+            transition: border-color 0.2s;
+        }
+        .upload-zone:hover { border-color: #2563eb; }
+        .upload-icon { font-size: 3rem; color: #9ca3af; margin-bottom: 1rem; }
+        .upload-text { color: #6b7280; margin-bottom: 1rem; }
+        .upload-button { 
+            background: #2563eb; 
+            color: white; 
+            padding: 0.75rem 1.5rem; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: 500;
+        }
+        
+        /* Document Cards */
+        .document-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+        .document-card { 
+            background: white; 
+            border-radius: 8px; 
+            padding: 1.5rem; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .doc-header { display: flex; justify-content: between; align-items: start; margin-bottom: 1rem; }
+        .doc-title { font-weight: 600; flex: 1; }
+        .doc-status { 
+            padding: 0.25rem 0.75rem; 
+            border-radius: 9999px; 
+            font-size: 0.75rem; 
+            font-weight: 500;
+        }
+        .status-processing { background: #fef3c7; color: #d97706; }
+        .status-review { background: #dbeafe; color: #2563eb; }
+        .status-complete { background: #d1fae5; color: #059669; }
+        
+        .doc-meta { color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem; }
+        .doc-actions { display: flex; gap: 0.5rem; }
+        .btn { 
+            padding: 0.5rem 1rem; 
+            border: 1px solid #d1d5db; 
+            border-radius: 6px; 
+            background: white; 
+            cursor: pointer; 
+            font-size: 0.875rem;
+            text-decoration: none;
+            color: inherit;
+        }
+        .btn-primary { background: #2563eb; color: white; border-color: #2563eb; }
+        
+        /* Quick Stats */
+        .stats { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 1rem; 
+            margin-bottom: 2rem; 
+        }
+        .stat-card { 
+            background: white; 
+            padding: 1.5rem; 
+            border-radius: 8px; 
+            text-align: center; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .stat-number { font-size: 2rem; font-weight: 700; color: #1f2937; }
+        .stat-label { color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Standards Sherpa</h1>
+            <p>AI-powered standards alignment and cognitive rigor analysis</p>
+        </div>
+        
+        <!-- Workflow Progress -->
+        <div class="workflow-steps">
+            <div class="step completed">
+                <div class="step-number">1</div>
+                <h3>Upload Documents</h3>
+                <p>Upload your assessments, worksheets, or educational materials</p>
+            </div>
+            <div class="step active">
+                <div class="step-number">2</div>
+                <h3>AI Analysis</h3>
+                <p>Our AI engines analyze standards alignment and cognitive rigor</p>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3>Teacher Review</h3>
+                <p>Review and approve AI analysis results</p>
+            </div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <h3>Generate Materials</h3>
+                <p>Create cover sheets, rubrics, and assessment tools</p>
+            </div>
+        </div>
+        
+        <!-- Quick Stats -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number">12</div>
+                <div class="stat-label">Documents Uploaded</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">8</div>
+                <div class="stat-label">Awaiting Review</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">4</div>
+                <div class="stat-label">Ready to Generate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">156</div>
+                <div class="stat-label">Questions Analyzed</div>
+            </div>
+        </div>
+        
+        <!-- Current Task -->
+        <div class="current-task">
+            <h2>Documents Awaiting Your Review</h2>
+            <p style="color: #6b7280; margin-bottom: 2rem;">Review AI analysis results and make any necessary corrections before generating materials.</p>
+            
+            <div class="document-grid">
+                <div class="document-card">
+                    <div class="doc-header">
+                        <div class="doc-title">Algebra 1 Quiz - Chapter 7</div>
+                        <div class="doc-status status-review">Ready for Review</div>
+                    </div>
+                    <div class="doc-meta">
+                        15 questions • Uploaded 2 hours ago<br>
+                        Common Core Math • Grade 9
+                    </div>
+                    <div class="doc-actions">
+                        <a href="#" class="btn btn-primary">Review Analysis</a>
+                        <a href="#" class="btn">Quick Preview</a>
+                    </div>
+                </div>
+                
+                <div class="document-card">
+                    <div class="doc-header">
+                        <div class="doc-title">Geometry Test - Circles</div>
+                        <div class="doc-status status-processing">AI Processing</div>
+                    </div>
+                    <div class="doc-meta">
+                        22 questions • Uploaded 1 hour ago<br>
+                        Common Core Math • Grade 10
+                    </div>
+                    <div class="doc-actions">
+                        <a href="#" class="btn" disabled>Processing...</a>
+                    </div>
+                </div>
+                
+                <div class="document-card">
+                    <div class="doc-header">
+                        <div class="doc-title">Pre-Calc Worksheet</div>
+                        <div class="doc-status status-complete">Complete</div>
+                    </div>
+                    <div class="doc-meta">
+                        8 questions • Completed yesterday<br>
+                        Common Core Math • Grade 11
+                    </div>
+                    <div class="doc-actions">
+                        <a href="#" class="btn btn-primary">Download Materials</a>
+                        <a href="#" class="btn">View Results</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Upload New Documents -->
+        <div class="current-task">
+            <h2>Upload New Documents</h2>
+            <div class="upload-zone">
+                <div class="upload-icon">📄</div>
+                <div class="upload-text">Drag and drop your documents here, or click to browse</div>
+                <button class="upload-button">Choose Files</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

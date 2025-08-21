@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Standards Sherpa - Dashboard-Centric UX Mockup</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f1f5f9; }
+        
+        /* Layout */
+        .layout { display: grid; grid-template-columns: 250px 1fr; min-height: 100vh; }
+        
+        /* Sidebar */
+        .sidebar { 
+            background: #1e293b; 
+            color: white; 
+            padding: 1.5rem 0;
+        }
+        .logo { 
+            padding: 0 1.5rem; 
+            margin-bottom: 2rem; 
+            font-size: 1.25rem; 
+            font-weight: 600;
+        }
+        .nav-item { 
+            padding: 0.75rem 1.5rem; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            gap: 0.75rem;
+            transition: background 0.2s;
+        }
+        .nav-item:hover, .nav-item.active { background: #334155; }
+        .nav-icon { width: 20px; }
+        
+        /* Main Content */
+        .main-content { padding: 2rem; }
+        .page-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 2rem;
+        }
+        .page-title { font-size: 1.75rem; font-weight: 600; color: #1e293b; }
+        .header-actions { display: flex; gap: 1rem; }
+        
+        /* Cards */
+        .card { 
+            background: white; 
+            border-radius: 8px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .card-title { font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem; color: #1e293b; }
+        
+        /* Metrics Grid */
+        .metrics { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 1.5rem; 
+            margin-bottom: 2rem; 
+        }
+        .metric-card { 
+            background: white; 
+            border-radius: 8px; 
+            padding: 1.5rem; 
+            text-align: center; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-left: 4px solid #e2e8f0;
+        }
+        .metric-card.blue { border-left-color: #3b82f6; }
+        .metric-card.green { border-left-color: #10b981; }
+        .metric-card.yellow { border-left-color: #f59e0b; }
+        .metric-card.purple { border-left-color: #8b5cf6; }
+        
+        .metric-value { font-size: 2rem; font-weight: 700; color: #1e293b; }
+        .metric-label { color: #64748b; font-size: 0.875rem; margin-top: 0.5rem; }
+        .metric-change { 
+            font-size: 0.75rem; 
+            margin-top: 0.25rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 12px;
+        }
+        .metric-change.up { background: #dcfce7; color: #16a34a; }
+        .metric-change.down { background: #fef2f2; color: #dc2626; }
+        
+        /* Recent Activity */
+        .activity-list { max-height: 400px; overflow-y: auto; }
+        .activity-item { 
+            display: flex; 
+            align-items: center; 
+            gap: 1rem; 
+            padding: 1rem 0; 
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .activity-item:last-child { border-bottom: none; }
+        .activity-icon { 
+            width: 36px; 
+            height: 36px; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 0.875rem;
+        }
+        .activity-icon.upload { background: #dbeafe; color: #2563eb; }
+        .activity-icon.review { background: #fef3c7; color: #d97706; }
+        .activity-icon.complete { background: #d1fae5; color: #059669; }
+        .activity-content { flex: 1; }
+        .activity-title { font-weight: 500; color: #1e293b; }
+        .activity-meta { color: #64748b; font-size: 0.875rem; margin-top: 0.25rem; }
+        .activity-time { color: #64748b; font-size: 0.75rem; }
+        
+        /* Quick Actions */
+        .quick-actions { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+            gap: 1rem; 
+        }
+        .action-card { 
+            background: white; 
+            border: 2px dashed #e2e8f0; 
+            border-radius: 8px; 
+            padding: 2rem; 
+            text-align: center; 
+            cursor: pointer; 
+            transition: all 0.2s;
+        }
+        .action-card:hover { border-color: #3b82f6; background: #f8fafc; }
+        .action-icon { font-size: 2rem; margin-bottom: 1rem; }
+        .action-title { font-weight: 600; color: #1e293b; margin-bottom: 0.5rem; }
+        .action-desc { color: #64748b; font-size: 0.875rem; }
+        
+        /* Buttons */
+        .btn { 
+            padding: 0.5rem 1rem; 
+            border: 1px solid #d1d5db; 
+            border-radius: 6px; 
+            background: white; 
+            cursor: pointer; 
+            font-size: 0.875rem;
+            text-decoration: none;
+            color: #374151;
+        }
+        .btn-primary { background: #3b82f6; color: white; border-color: #3b82f6; }
+        
+        /* Status Indicators */
+        .status { 
+            padding: 0.25rem 0.75rem; 
+            border-radius: 9999px; 
+            font-size: 0.75rem; 
+            font-weight: 500;
+        }
+        .status-pending { background: #fef3c7; color: #d97706; }
+        .status-processing { background: #dbeafe; color: #2563eb; }
+        .status-complete { background: #d1fae5; color: #059669; }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">📚 Standards Sherpa</div>
+            <div class="nav-item active">
+                <div class="nav-icon">🏠</div>
+                Dashboard
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon">📄</div>
+                Documents
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon">✅</div>
+                Review Queue
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon">📊</div>
+                Analytics
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon">⚙️</div>
+                Settings
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">Dashboard</h1>
+                <div class="header-actions">
+                    <button class="btn btn-primary">Upload Documents</button>
+                </div>
+            </div>
+            
+            <!-- Metrics -->
+            <div class="metrics">
+                <div class="metric-card blue">
+                    <div class="metric-value">24</div>
+                    <div class="metric-label">Total Documents</div>
+                    <div class="metric-change up">+3 this week</div>
+                </div>
+                <div class="metric-card yellow">
+                    <div class="metric-value">8</div>
+                    <div class="metric-label">Awaiting Review</div>
+                    <div class="metric-change up">+2 today</div>
+                </div>
+                <div class="metric-card green">
+                    <div class="metric-value">16</div>
+                    <div class="metric-label">Completed</div>
+                    <div class="metric-change up">+5 this week</div>
+                </div>
+                <div class="metric-card purple">
+                    <div class="metric-value">342</div>
+                    <div class="metric-label">Questions Analyzed</div>
+                    <div class="metric-change up">+47 today</div>
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 400px; gap: 2rem;">
+                <!-- Quick Actions -->
+                <div class="card">
+                    <h2 class="card-title">Quick Actions</h2>
+                    <div class="quick-actions">
+                        <div class="action-card">
+                            <div class="action-icon">📤</div>
+                            <div class="action-title">Upload Documents</div>
+                            <div class="action-desc">Upload new assessments for AI analysis</div>
+                        </div>
+                        <div class="action-card">
+                            <div class="action-icon">👁️</div>
+                            <div class="action-title">Review Analysis</div>
+                            <div class="action-desc">8 documents need your review</div>
+                        </div>
+                        <div class="action-card">
+                            <div class="action-icon">📋</div>
+                            <div class="action-title">Generate Materials</div>
+                            <div class="action-desc">Create rubrics and cover sheets</div>
+                        </div>
+                        <div class="action-card">
+                            <div class="action-icon">📈</div>
+                            <div class="action-title">View Analytics</div>
+                            <div class="action-desc">See standards coverage and trends</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Activity -->
+                <div class="card">
+                    <h2 class="card-title">Recent Activity</h2>
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <div class="activity-icon complete">✓</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Algebra Quiz analyzed</div>
+                                <div class="activity-meta">15 questions • Common Core Math</div>
+                            </div>
+                            <div class="activity-time">2m ago</div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon upload">↑</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Geometry Test uploaded</div>
+                                <div class="activity-meta">22 questions • Grade 10</div>
+                            </div>
+                            <div class="activity-time">15m ago</div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon review">👁️</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Pre-Calc review completed</div>
+                                <div class="activity-meta">Materials generated</div>
+                            </div>
+                            <div class="activity-time">1h ago</div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon complete">✓</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Chemistry Lab analyzed</div>
+                                <div class="activity-meta">12 questions • NGSS Science</div>
+                            </div>
+                            <div class="activity-time">3h ago</div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon upload">↑</div>
+                            <div class="activity-content">
+                                <div class="activity-title">History Essay uploaded</div>
+                                <div class="activity-meta">8 questions • Grade 11</div>
+                            </div>
+                            <div class="activity-time">1d ago</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
