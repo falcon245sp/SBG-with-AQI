@@ -14,7 +14,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-import { ProcessingStatus, TeacherReviewStatus, AssetType, ExportType, AiEngine, RigorLevel, GradeSubmissionStatus, BusinessDefaults } from "./businessEnums";
+import { ProcessingStatus, TeacherReviewStatus, AssetType, ExportType, AiEngine, RigorLevel, GradeSubmissionStatus, AssignmentWorkType, AssignmentState, BusinessDefaults } from "./businessEnums";
 
 // Session storage table for Replit Auth
 export const sessions = pgTable(
@@ -71,6 +71,36 @@ export const students = pgTable("students", {
   lastName: text("last_name").notNull(),
   email: varchar("email"),
   photoUrl: text("photo_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Assignment work type enum - using business enum values
+export const assignmentWorkTypeEnum = pgEnum('assignment_work_type', [
+  AssignmentWorkType.ASSIGNMENT, AssignmentWorkType.SHORT_ANSWER_QUESTION,
+  AssignmentWorkType.MULTIPLE_CHOICE_QUESTION, AssignmentWorkType.QUIZ_ASSIGNMENT
+]);
+
+// Assignment state enum - using business enum values
+export const assignmentStateEnum = pgEnum('assignment_state', [
+  AssignmentState.PUBLISHED, AssignmentState.DRAFT, AssignmentState.DELETED
+]);
+
+// Google Classroom assignments
+export const assignments = pgTable("assignments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  googleCourseWorkId: varchar("google_coursework_id").notNull(), // Google Classroom coursework ID
+  classroomId: varchar("classroom_id").notNull().references(() => classrooms.id),
+  customerUuid: varchar("customer_uuid").notNull().references(() => users.customerUuid),
+  title: text("title").notNull(),
+  description: text("description"),
+  materials: jsonb("materials"), // Array of assignment materials (links, files, etc.)
+  workType: assignmentWorkTypeEnum("work_type").notNull(),
+  state: assignmentStateEnum("state").notNull(),
+  maxPoints: decimal("max_points", { precision: 5, scale: 2 }),
+  dueDate: timestamp("due_date"),
+  creationTime: timestamp("creation_time"),
+  updateTime: timestamp("update_time"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -344,6 +374,21 @@ export const insertStudentSchema = createInsertSchema(students).pick({
   photoUrl: true,
 });
 
+export const insertAssignmentSchema = createInsertSchema(assignments).pick({
+  googleCourseWorkId: true,
+  classroomId: true,
+  customerUuid: true,
+  title: true,
+  description: true,
+  materials: true,
+  workType: true,
+  state: true,
+  maxPoints: true,
+  dueDate: true,
+  creationTime: true,
+  updateTime: true,
+});
+
 export const insertDocumentSchema = createInsertSchema(documents).pick({
   fileName: true,
   originalPath: true,
@@ -453,6 +498,7 @@ export type UpsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Classroom = typeof classrooms.$inferSelect;
 export type Student = typeof students.$inferSelect;
+export type Assignment = typeof assignments.$inferSelect;
 export type Document = typeof documents.$inferSelect;
 export type Question = typeof questions.$inferSelect;
 export type AiResponse = typeof aiResponses.$inferSelect;
@@ -469,6 +515,7 @@ export type GradeSubmission = typeof gradeSubmissions.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertClassroom = z.infer<typeof insertClassroomSchema>;
 export type InsertStudent = z.infer<typeof insertStudentSchema>;
+export type InsertAssignment = z.infer<typeof insertAssignmentSchema>;
 export type InsertDocument = z.infer<typeof insertDocumentSchema>;
 export type InsertQuestion = z.infer<typeof insertQuestionSchema>;
 export type InsertAiResponse = z.infer<typeof insertAiResponseSchema>;

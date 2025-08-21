@@ -2,6 +2,7 @@ import {
   users,
   classrooms,
   students,
+  assignments,
   documents,
   questions,
   aiResponses,
@@ -18,6 +19,7 @@ import {
   type UpsertUser,
   type Classroom,
   type Student,
+  type Assignment,
   type Document,
   type Question,
   type AiResponse,
@@ -33,6 +35,7 @@ import {
   type InsertUser,
   type InsertClassroom,
   type InsertStudent,
+  type InsertAssignment,
   type InsertDocument,
   type InsertQuestion,
   type InsertAiResponse,
@@ -65,6 +68,7 @@ export interface IStorage {
   // Classroom operations
   createClassroom(classroom: InsertClassroom): Promise<Classroom>;
   getTeacherClassrooms(teacherId: string): Promise<Classroom[]>;
+  getClassroomById(classroomId: string): Promise<Classroom | undefined>;
   getClassroomByGoogleId(googleClassId: string): Promise<Classroom | undefined>;
   syncClassrooms(teacherId: string, classroomData: any[]): Promise<Classroom[]>;
   
@@ -72,6 +76,11 @@ export interface IStorage {
   createStudent(student: InsertStudent): Promise<Student>;
   getClassroomStudents(classroomId: string): Promise<Student[]>;
   syncStudents(classroomId: string, studentData: any[]): Promise<Student[]>;
+  
+  // Assignment operations
+  upsertAssignment(assignment: InsertAssignment): Promise<Assignment>;
+  getAssignmentById(assignmentId: string): Promise<Assignment | undefined>;
+  getClassroomAssignments(classroomId: string): Promise<Assignment[]>;
   
   // Document operations
   createDocument(customerUuid: string, document: InsertDocument): Promise<Document>;
@@ -562,6 +571,14 @@ export class DatabaseStorage implements IStorage {
     return classroom;
   }
 
+  async getClassroomById(classroomId: string): Promise<Classroom | undefined> {
+    const [classroom] = await db
+      .select()
+      .from(classrooms)
+      .where(eq(classrooms.id, classroomId));
+    return classroom;
+  }
+
   async syncClassrooms(customerUuid: string, classroomData: any[]): Promise<Classroom[]> {
     const syncedClassrooms: Classroom[] = [];
     
@@ -701,6 +718,51 @@ export class DatabaseStorage implements IStorage {
     }
     
     return syncedStudents;
+  }
+
+  // Assignment operations
+  async upsertAssignment(assignmentData: InsertAssignment): Promise<Assignment> {
+    // Check if assignment already exists by Google CourseWork ID
+    const [existing] = await db
+      .select()
+      .from(assignments)
+      .where(eq(assignments.googleCourseWorkId, assignmentData.googleCourseWorkId));
+
+    if (existing) {
+      // Update existing assignment
+      const [updated] = await db
+        .update(assignments)
+        .set({
+          ...assignmentData,
+          updatedAt: new Date(),
+        })
+        .where(eq(assignments.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      // Create new assignment
+      const [created] = await db
+        .insert(assignments)
+        .values(assignmentData)
+        .returning();
+      return created;
+    }
+  }
+
+  async getAssignmentById(assignmentId: string): Promise<Assignment | undefined> {
+    const [assignment] = await db
+      .select()
+      .from(assignments)
+      .where(eq(assignments.id, assignmentId));
+    return assignment;
+  }
+
+  async getClassroomAssignments(classroomId: string): Promise<Assignment[]> {
+    return await db
+      .select()
+      .from(assignments)
+      .where(eq(assignments.classroomId, classroomId))
+      .orderBy(assignments.createdAt);
   }
 
   // Document operations

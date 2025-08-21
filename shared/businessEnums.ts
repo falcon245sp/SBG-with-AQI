@@ -69,6 +69,21 @@ export enum CourseState {
   SUSPENDED = 'SUSPENDED'
 }
 
+// Assignment Work Type - Google Classroom assignment types
+export enum AssignmentWorkType {
+  ASSIGNMENT = 'ASSIGNMENT',
+  SHORT_ANSWER_QUESTION = 'SHORT_ANSWER_QUESTION',
+  MULTIPLE_CHOICE_QUESTION = 'MULTIPLE_CHOICE_QUESTION',
+  QUIZ_ASSIGNMENT = 'QUIZ_ASSIGNMENT'
+}
+
+// Assignment State - Google Classroom assignment states
+export enum AssignmentState {
+  PUBLISHED = 'PUBLISHED',
+  DRAFT = 'DRAFT',
+  DELETED = 'DELETED'
+}
+
 // Default Values - Common defaults used across the application
 export const BusinessDefaults = {
   // Document defaults
@@ -107,6 +122,8 @@ export type AiEngineValue = `${AiEngine}`;
 export type RigorLevelValue = `${RigorLevel}`;
 export type GradeSubmissionStatusValue = `${GradeSubmissionStatus}`;
 export type CourseStateValue = `${CourseState}`;
+export type AssignmentWorkTypeValue = `${AssignmentWorkType}`;
+export type AssignmentStateValue = `${AssignmentState}`;
 
 // Utility functions for enum validation and conversion
 export const BusinessEnumUtils = {

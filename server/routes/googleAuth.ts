@@ -202,3 +202,173 @@ export async function getCurrentUser(req: Request, res: Response) {
     res.status(500).json({ error: 'Failed to fetch user' });
   }
 }
+
+// Get assignments for a specific classroom
+export async function getClassroomAssignments(req: Request, res: Response) {
+  try {
+    const user = await ActiveUserService.requireActiveUser(req);
+    if (!user?.googleAccessToken) {
+      return res.status(400).json({ error: 'Google access token not found' });
+    }
+
+    const { classroomId } = req.params;
+    if (!classroomId) {
+      return res.status(400).json({ error: 'Classroom ID is required' });
+    }
+
+    // Get the classroom to find the Google Class ID
+    const { customerUuid } = await ActiveUserService.requireActiveUserAndCustomerUuid(req);
+    const classroom = await storage.getClassroomById(classroomId);
+    if (!classroom || classroom.customerUuid !== customerUuid) {
+      return res.status(404).json({ error: 'Classroom not found' });
+    }
+
+    // Fetch assignments from Google Classroom API
+    const assignments = await googleAuth.getAssignments(
+      classroom.googleClassId, 
+      user.googleAccessToken, 
+      user.googleRefreshToken || undefined
+    );
+    
+    res.json({
+      success: true,
+      assignments,
+      count: assignments.length
+    });
+  } catch (error) {
+    console.error('[OAuth] Error fetching classroom assignments:', error);
+    res.status(500).json({ error: 'Failed to fetch assignments' });
+  }
+}
+
+// Sync assignments for all user's classrooms
+export async function syncAssignments(req: Request, res: Response) {
+  try {
+    const user = await ActiveUserService.requireActiveUser(req);
+    if (!user?.googleAccessToken) {
+      return res.status(400).json({ error: 'Google access token not found' });
+    }
+
+    const { customerUuid } = await ActiveUserService.requireActiveUserAndCustomerUuid(req);
+    
+    // Get all user's classrooms
+    const classrooms = await storage.getTeacherClassrooms(customerUuid);
+    
+    let totalAssignments = 0;
+    const syncResults = [];
+
+    for (const classroom of classrooms) {
+      try {
+        // Fetch assignments from Google Classroom API
+        const googleAssignments = await googleAuth.getAssignments(
+          classroom.googleClassId, 
+          user.googleAccessToken, 
+          user.googleRefreshToken || undefined
+        );
+
+        // Store/update assignments in database
+        for (const assignment of googleAssignments) {
+          const assignmentData = {
+            googleCourseWorkId: assignment.id,
+            classroomId: classroom.id,
+            customerUuid: customerUuid,
+            title: assignment.title,
+            description: assignment.description || null,
+            materials: assignment.materials || null,
+            workType: assignment.workType || 'ASSIGNMENT',
+            state: assignment.state || 'PUBLISHED',
+            maxPoints: assignment.maxPoints ? parseFloat(assignment.maxPoints) : null,
+            dueDate: assignment.dueDate ? new Date(assignment.dueDate.year, assignment.dueDate.month - 1, assignment.dueDate.day) : null,
+            creationTime: assignment.creationTime ? new Date(assignment.creationTime) : null,
+            updateTime: assignment.updateTime ? new Date(assignment.updateTime) : null,
+          };
+
+          await storage.upsertAssignment(assignmentData);
+          totalAssignments++;
+        }
+
+        syncResults.push({
+          classroomId: classroom.id,
+          classroomName: classroom.name,
+          assignmentCount: googleAssignments.length
+        });
+
+      } catch (classroomError) {
+        console.error(`Error syncing assignments for classroom ${classroom.id}:`, classroomError);
+        syncResults.push({
+          classroomId: classroom.id,
+          classroomName: classroom.name,
+          error: 'Failed to sync assignments'
+        });
+      }
+    }
+    
+    res.json({
+      success: true,
+      message: `Synced ${totalAssignments} assignments across ${classrooms.length} classrooms`,
+      totalAssignments,
+      classrooms: syncResults
+    });
+  } catch (error) {
+    console.error('[OAuth] Error syncing assignments:', error);
+    res.status(500).json({ error: 'Failed to sync assignments' });
+  }
+}
+
+// Get specific assignment details
+export async function getAssignmentDetails(req: Request, res: Response) {
+  try {
+    const user = await ActiveUserService.requireActiveUser(req);
+    if (!user?.googleAccessToken) {
+      return res.status(400).json({ error: 'Google access token not found' });
+    }
+
+    const { classroomId, assignmentId } = req.params;
+    if (!classroomId || !assignmentId) {
+      return res.status(400).json({ error: 'Classroom ID and Assignment ID are required' });
+    }
+
+    // Get the assignment from database
+    const { customerUuid } = await ActiveUserService.requireActiveUserAndCustomerUuid(req);
+    const assignment = await storage.getAssignmentById(assignmentId);
+    
+    if (!assignment || assignment.customerUuid !== customerUuid) {
+      return res.status(404).json({ error: 'Assignment not found' });
+    }
+
+    // Get fresh data from Google Classroom API if needed
+    const classroom = await storage.getClassroomById(classroomId);
+    if (classroom) {
+      try {
+        const googleAssignment = await googleAuth.getAssignment(
+          classroom.googleClassId,
+          assignment.googleCourseWorkId,
+          user.googleAccessToken,
+          user.googleRefreshToken || undefined
+        );
+        
+        res.json({
+          success: true,
+          assignment: {
+            ...assignment,
+            googleData: googleAssignment
+          }
+        });
+      } catch (googleError) {
+        // Fall back to database data if Google API fails
+        res.json({
+          success: true,
+          assignment
+        });
+      }
+    } else {
+      res.json({
+        success: true,
+        assignment
+      });
+    }
+  } catch (error) {
+    console.error('[OAuth] Error fetching assignment details:', error);
+    res.status(500).json({ error: 'Failed to fetch assignment details' });
+  }
+}

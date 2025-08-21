@@ -34,7 +34,8 @@ const BASIC_SCOPES = [
 // Additional scopes for classroom access
 const CLASSROOM_SCOPES = [
   'https://www.googleapis.com/auth/classroom.courses.readonly',
-  'https://www.googleapis.com/auth/classroom.rosters.readonly'
+  'https://www.googleapis.com/auth/classroom.rosters.readonly',
+  'https://www.googleapis.com/auth/classroom.coursework.students.readonly'
 ];
 
 export class GoogleAuthService {
@@ -198,6 +199,66 @@ export class GoogleAuthService {
       return allStudents;
     } catch (error) {
       console.error('Error fetching students:', error);
+      throw error;
+    }
+  }
+
+  // Get assignments (coursework) for a specific classroom
+  async getAssignments(courseId: string, accessToken: string, refreshToken?: string) {
+    this.oauth2Client.setCredentials({ 
+      access_token: accessToken,
+      refresh_token: refreshToken 
+    });
+
+    const classroom = google.classroom({ version: 'v1', auth: this.oauth2Client });
+    
+    try {
+      // Use pagination to ensure we get ALL assignments
+      let allAssignments: any[] = [];
+      let pageToken: string | undefined;
+      
+      do {
+        const response = await classroom.courses.courseWork.list({
+          courseId: courseId,
+          pageSize: 100, // Maximum page size
+          pageToken: pageToken,
+          courseWorkStates: ['PUBLISHED'] // Only get published assignments
+        });
+        
+        const assignments = response.data.courseWork || [];
+        allAssignments = allAssignments.concat(assignments);
+        pageToken = response.data.nextPageToken || undefined;
+        
+        console.log(`Retrieved ${assignments.length} assignments (page token: ${pageToken ? 'more pages' : 'last page'}) for course ${courseId}`);
+      } while (pageToken);
+      
+      console.log(`Total assignments retrieved for course ${courseId}: ${allAssignments.length}`);
+      return allAssignments;
+    } catch (error) {
+      console.error('Error fetching assignments:', error);
+      throw error;
+    }
+  }
+
+  // Get a specific assignment by ID
+  async getAssignment(courseId: string, courseWorkId: string, accessToken: string, refreshToken?: string) {
+    this.oauth2Client.setCredentials({ 
+      access_token: accessToken,
+      refresh_token: refreshToken 
+    });
+
+    const classroom = google.classroom({ version: 'v1', auth: this.oauth2Client });
+    
+    try {
+      const response = await classroom.courses.courseWork.get({
+        courseId: courseId,
+        id: courseWorkId
+      });
+      
+      console.log(`Retrieved assignment ${courseWorkId} for course ${courseId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching assignment:', error);
       throw error;
     }
   }

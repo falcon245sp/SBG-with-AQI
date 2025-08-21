@@ -8,7 +8,10 @@ import {
   handleGoogleCallback, 
   syncClassroomData,
   getUserClassrooms,
-  getCurrentUser 
+  getCurrentUser,
+  getClassroomAssignments,
+  syncAssignments,
+  getAssignmentDetails
 } from "./routes/googleAuth";
 import { checkAuthStatus } from "./routes/auth";
 import { documentProcessor, queueProcessor } from "./services/documentProcessor";
@@ -117,6 +120,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/auth/google/callback', handleGoogleCallback);
   app.post('/api/auth/sync-classroom', syncClassroomData);
   app.get('/api/classrooms', getUserClassrooms);
+  
+  // Assignment routes
+  app.get('/api/classrooms/:classroomId/assignments', getClassroomAssignments);
+  app.post('/api/assignments/sync', syncAssignments);
+  app.get('/api/classrooms/:classroomId/assignments/:assignmentId', getAssignmentDetails);
 
   // Document upload with standards focus endpoint
   app.post('/api/documents/upload-with-standards', upload.single('document'), async (req: any, res) => {
