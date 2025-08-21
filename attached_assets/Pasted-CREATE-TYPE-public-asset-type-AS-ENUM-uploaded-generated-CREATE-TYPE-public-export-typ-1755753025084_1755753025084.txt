@@ -1,0 +1,172 @@
+CREATE TYPE "public"."asset_type" AS ENUM('uploaded', 'generated');
+CREATE TYPE "public"."export_type" AS ENUM('rubric_pdf', 'cover_sheet', 'processing_report', 'standards_summary', 'question_analysis', 'teacher_guide', 'collated_graded_submissions');
+CREATE TYPE "public"."grade_submission_status" AS ENUM('pending', 'processed', 'duplicate_rejected', 'invalid_qr');
+CREATE TYPE "public"."teacher_review_status" AS ENUM('not_reviewed', 'reviewed_and_accepted', 'reviewed_and_overridden');
+CREATE TABLE "grade_submissions" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"sequence_number_id" varchar NOT NULL,
+	"rubric_document_id" varchar NOT NULL,
+	"original_document_id" varchar NOT NULL,
+	"student_id" varchar NOT NULL,
+	"question_grades" jsonb NOT NULL,
+	"total_score" numeric(5, 2),
+	"max_possible_score" numeric(5, 2),
+	"percentage_score" numeric(5, 2),
+	"status" "grade_submission_status" DEFAULT 'pending' NOT NULL,
+	"scanner_notes" text,
+	"processed_by" varchar,
+	"scanned_at" timestamp DEFAULT now(),
+	"processed_at" timestamp,
+	"created_at" timestamp DEFAULT now()
+);
+CREATE TABLE "export_queue" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"document_id" varchar NOT NULL,
+	"export_type" "export_type" NOT NULL,
+	"priority" integer DEFAULT 0 NOT NULL,
+	"attempts" integer DEFAULT 0 NOT NULL,
+	"max_attempts" integer DEFAULT 3 NOT NULL,
+	"status" "processing_status" DEFAULT 'pending' NOT NULL,
+	"error_message" text,
+	"scheduled_for" timestamp DEFAULT now(),
+	"started_at" timestamp,
+	"completed_at" timestamp,
+	"created_at" timestamp DEFAULT now()
+);
+CREATE TABLE "dead_letter_queue" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"original_export_id" varchar NOT NULL,
+	"document_id" varchar NOT NULL,
+	"customer_uuid" varchar NOT NULL,
+	"session_user_id" varchar,
+	"export_type" "export_type" NOT NULL,
+	"priority" integer NOT NULL,
+	"final_attempts" integer NOT NULL,
+	"max_attempts" integer NOT NULL,
+	"final_error_message" text,
+	"final_error_stack" text,
+	"original_scheduled_for" timestamp,
+	"first_attempt_at" timestamp,
+	"final_failure_at" timestamp DEFAULT now() NOT NULL,
+	"document_file_name" varchar,
+	"document_file_size" integer,
+	"document_mime_type" varchar,
+	"document_status" varchar,
+	"server_version" varchar,
+	"node_env" varchar,
+	"request_id" varchar,
+	"user_agent" text,
+	"created_at" timestamp DEFAULT now()
+);
+CREATE TABLE "qr_sequence_numbers" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"document_id" varchar NOT NULL,
+	"student_id" varchar NOT NULL,
+	"sequence_number" varchar NOT NULL,
+	"is_used" boolean DEFAULT false NOT NULL,
+	"qr_code_generated" timestamp DEFAULT now(),
+	"used_at" timestamp,
+	"used_by_teacher" varchar,
+	"created_at" timestamp DEFAULT now(),
+	CONSTRAINT "qr_sequence_numbers_sequence_number_unique" UNIQUE("sequence_number")
+);
+CREATE TABLE "confirmed_analysis" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"document_id" varchar NOT NULL,
+	"customer_uuid" varchar NOT NULL,
+	"analysis_data" jsonb NOT NULL,
+	"has_teacher_overrides" boolean DEFAULT false NOT NULL,
+	"override_count" integer DEFAULT 0 NOT NULL,
+	"confirmed_at" timestamp DEFAULT now(),
+	"created_at" timestamp DEFAULT now()
+);
+ALTER TABLE "classrooms" RENAME COLUMN "google_classroom_id" TO "google_class_id";
+ALTER TABLE "classrooms" DROP CONSTRAINT "classrooms_google_classroom_id_key";
+ALTER TABLE "users" DROP CONSTRAINT "users_customer_uuid_key";
+ALTER TABLE "api_keys" DROP CONSTRAINT "api_keys_key_hash_key";
+ALTER TABLE "questions" DROP CONSTRAINT "questions_document_id_fkey";
+ALTER TABLE "students" DROP CONSTRAINT "students_classroom_id_fkey";
+ALTER TABLE "processing_queue" DROP CONSTRAINT "processing_queue_document_id_fkey";
+ALTER TABLE "ai_responses" DROP CONSTRAINT "ai_responses_question_id_fkey";
+ALTER TABLE "teacher_overrides" DROP CONSTRAINT "teacher_overrides_question_id_fkey";
+ALTER TABLE "question_results" DROP CONSTRAINT "question_results_question_id_fkey";
+ALTER TABLE "classrooms" ALTER COLUMN "name" SET DATA TYPE text;
+ALTER TABLE "questions" ALTER COLUMN "document_id" SET NOT NULL;
+ALTER TABLE "questions" ALTER COLUMN "question_number" SET NOT NULL;
+ALTER TABLE "students" ALTER COLUMN "classroom_id" SET NOT NULL;
+ALTER TABLE "processing_queue" ALTER COLUMN "document_id" SET NOT NULL;
+ALTER TABLE "processing_queue" ALTER COLUMN "priority" SET NOT NULL;
+ALTER TABLE "processing_queue" ALTER COLUMN "attempts" SET NOT NULL;
+ALTER TABLE "processing_queue" ALTER COLUMN "max_attempts" SET NOT NULL;
+ALTER TABLE "processing_queue" ALTER COLUMN "scheduled_for" SET DEFAULT now();
+ALTER TABLE "documents" ALTER COLUMN "file_name" SET DATA TYPE text;
+ALTER TABLE "documents" ALTER COLUMN "original_path" SET DATA TYPE text;
+ALTER TABLE "documents" ALTER COLUMN "original_path" SET NOT NULL;
+ALTER TABLE "documents" ALTER COLUMN "mime_type" SET DATA TYPE text;
+ALTER TABLE "documents" ALTER COLUMN "mime_type" SET NOT NULL;
+ALTER TABLE "documents" ALTER COLUMN "file_size" SET NOT NULL;
+ALTER TABLE "documents" ALTER COLUMN "jurisdictions" SET DATA TYPE text[];
+ALTER TABLE "documents" ALTER COLUMN "status" SET DEFAULT 'pending'::"public"."processing_status";
+ALTER TABLE "documents" ALTER COLUMN "status" SET DATA TYPE "public"."processing_status" USING "status"::"public"."processing_status";
+ALTER TABLE "documents" ALTER COLUMN "status" SET NOT NULL;
+ALTER TABLE "ai_responses" ALTER COLUMN "question_id" SET NOT NULL;
+ALTER TABLE "ai_responses" ALTER COLUMN "ai_engine" SET DATA TYPE "public"."ai_engine" USING "ai_engine"::"public"."ai_engine";
+ALTER TABLE "ai_responses" ALTER COLUMN "raw_response" SET NOT NULL;
+ALTER TABLE "ai_responses" ALTER COLUMN "rigor_level" SET DATA TYPE "public"."rigor_level" USING "rigor_level"::"public"."rigor_level";
+ALTER TABLE "ai_responses" ALTER COLUMN "confidence" SET DATA TYPE numeric(3, 2);
+ALTER TABLE "ai_responses" ALTER COLUMN "standards_identified" DROP DEFAULT;
+ALTER TABLE "teacher_overrides" ALTER COLUMN "question_id" SET NOT NULL;
+ALTER TABLE "teacher_overrides" ALTER COLUMN "overridden_standards" SET NOT NULL;
+ALTER TABLE "teacher_overrides" ALTER COLUMN "overridden_rigor_level" SET DATA TYPE "public"."rigor_level" USING "overridden_rigor_level"::"public"."rigor_level";
+ALTER TABLE "teacher_overrides" ALTER COLUMN "is_active" SET NOT NULL;
+ALTER TABLE "teacher_overrides" ALTER COLUMN "is_reverted_to_ai" SET NOT NULL;
+ALTER TABLE "question_results" ALTER COLUMN "question_id" SET NOT NULL;
+ALTER TABLE "question_results" ALTER COLUMN "consensus_standards" SET NOT NULL;
+ALTER TABLE "question_results" ALTER COLUMN "consensus_rigor_level" SET DATA TYPE "public"."rigor_level" USING "consensus_rigor_level"::"public"."rigor_level";
+ALTER TABLE "question_results" ALTER COLUMN "confidence_score" SET DATA TYPE numeric(3, 2);
+ALTER TABLE "question_results" ALTER COLUMN "standards_votes" DROP DEFAULT;
+ALTER TABLE "question_results" ALTER COLUMN "rigor_votes" DROP DEFAULT;
+ALTER TABLE "api_keys" ALTER COLUMN "key_name" SET DATA TYPE text;
+ALTER TABLE "api_keys" ALTER COLUMN "key_hash" SET DATA TYPE text;
+ALTER TABLE "api_keys" ALTER COLUMN "is_active" SET NOT NULL;
+ALTER TABLE "api_keys" ALTER COLUMN "usage_count" SET NOT NULL;
+ALTER TABLE "classrooms" ADD COLUMN "section" text;
+ALTER TABLE "classrooms" ADD COLUMN "room" text;
+ALTER TABLE "classrooms" ADD COLUMN "course_state" varchar;
+ALTER TABLE "classrooms" ADD COLUMN "creation_time" timestamp;
+ALTER TABLE "classrooms" ADD COLUMN "update_time" timestamp;
+ALTER TABLE "students" ADD COLUMN "first_name" text NOT NULL;
+ALTER TABLE "students" ADD COLUMN "last_name" text NOT NULL;
+ALTER TABLE "students" ADD COLUMN "photo_url" text;
+ALTER TABLE "documents" ADD COLUMN "teacher_review_status" "teacher_review_status" DEFAULT 'not_reviewed' NOT NULL;
+ALTER TABLE "documents" ADD COLUMN "asset_type" "asset_type" DEFAULT 'uploaded' NOT NULL;
+ALTER TABLE "documents" ADD COLUMN "parent_document_id" varchar;
+ALTER TABLE "documents" ADD COLUMN "export_type" "export_type";
+ALTER TABLE "documents" ADD COLUMN "tags" text[] DEFAULT '{}';
+ALTER TABLE "documents" ADD COLUMN "original_filename" text;
+ALTER TABLE "documents" ADD COLUMN "retention_date" timestamp;
+ALTER TABLE "grade_submissions" ADD CONSTRAINT "grade_submissions_sequence_number_id_qr_sequence_numbers_id_fk" FOREIGN KEY ("sequence_number_id") REFERENCES "public"."qr_sequence_numbers"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "grade_submissions" ADD CONSTRAINT "grade_submissions_rubric_document_id_documents_id_fk" FOREIGN KEY ("rubric_document_id") REFERENCES "public"."documents"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "grade_submissions" ADD CONSTRAINT "grade_submissions_original_document_id_documents_id_fk" FOREIGN KEY ("original_document_id") REFERENCES "public"."documents"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "grade_submissions" ADD CONSTRAINT "grade_submissions_student_id_students_id_fk" FOREIGN KEY ("student_id") REFERENCES "public"."students"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "export_queue" ADD CONSTRAINT "export_queue_document_id_documents_id_fk" FOREIGN KEY ("document_id") REFERENCES "public"."documents"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "dead_letter_queue" ADD CONSTRAINT "dead_letter_queue_document_id_documents_id_fk" FOREIGN KEY ("document_id") REFERENCES "public"."documents"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "dead_letter_queue" ADD CONSTRAINT "dead_letter_queue_customer_uuid_users_customer_uuid_fk" FOREIGN KEY ("customer_uuid") REFERENCES "public"."users"("customer_uuid") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "qr_sequence_numbers" ADD CONSTRAINT "qr_sequence_numbers_document_id_documents_id_fk" FOREIGN KEY ("document_id") REFERENCES "public"."documents"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "qr_sequence_numbers" ADD CONSTRAINT "qr_sequence_numbers_student_id_students_id_fk" FOREIGN KEY ("student_id") REFERENCES "public"."students"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "confirmed_analysis" ADD CONSTRAINT "confirmed_analysis_document_id_documents_id_fk" FOREIGN KEY ("document_id") REFERENCES "public"."documents"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "confirmed_analysis" ADD CONSTRAINT "confirmed_analysis_customer_uuid_users_customer_uuid_fk" FOREIGN KEY ("customer_uuid") REFERENCES "public"."users"("customer_uuid") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "classrooms" ADD CONSTRAINT "classrooms_customer_uuid_users_customer_uuid_fk" FOREIGN KEY ("customer_uuid") REFERENCES "public"."users"("customer_uuid") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "questions" ADD CONSTRAINT "questions_document_id_documents_id_fk" FOREIGN KEY ("document_id") REFERENCES "public"."documents"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "students" ADD CONSTRAINT "students_classroom_id_classrooms_id_fk" FOREIGN KEY ("classroom_id") REFERENCES "public"."classrooms"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "processing_queue" ADD CONSTRAINT "processing_queue_document_id_documents_id_fk" FOREIGN KEY ("document_id") REFERENCES "public"."documents"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "documents" ADD CONSTRAINT "documents_customer_uuid_users_customer_uuid_fk" FOREIGN KEY ("customer_uuid") REFERENCES "public"."users"("customer_uuid") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "ai_responses" ADD CONSTRAINT "ai_responses_question_id_questions_id_fk" FOREIGN KEY ("question_id") REFERENCES "public"."questions"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "teacher_overrides" ADD CONSTRAINT "teacher_overrides_question_id_questions_id_fk" FOREIGN KEY ("question_id") REFERENCES "public"."questions"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "teacher_overrides" ADD CONSTRAINT "teacher_overrides_customer_uuid_users_customer_uuid_fk" FOREIGN KEY ("customer_uuid") REFERENCES "public"."users"("customer_uuid") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "question_results" ADD CONSTRAINT "question_results_question_id_questions_id_fk" FOREIGN KEY ("question_id") REFERENCES "public"."questions"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "api_keys" ADD CONSTRAINT "api_keys_customer_uuid_users_customer_uuid_fk" FOREIGN KEY ("customer_uuid") REFERENCES "public"."users"("customer_uuid") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "students" DROP COLUMN "name";
+ALTER TABLE "processing_queue" DROP COLUMN "status";
+ALTER TABLE "users" ADD CONSTRAINT "users_customer_uuid_unique" UNIQUE("customer_uuid");
+CREATE MATERIALIZED VIEW "public"."document_relationships" AS (WITH RECURSIVE document_lineage AS ( SELECT d.id, d.customer_uuid, d.file_name, d.asset_type, d.parent_document_id, d.created_at, 0 AS depth, ARRAY[d.id] AS lineage_path, d.id AS root_document_id FROM documents d WHERE d.parent_document_id IS NULL UNION ALL SELECT d.id, d.customer_uuid, d.file_name, d.asset_type, d.parent_document_id, d.created_at, dl_1.depth + 1, dl_1.lineage_path || d.id, dl_1.root_document_id FROM documents d JOIN document_lineage dl_1 ON d.parent_document_id::text = dl_1.id::text ), document_stats AS ( SELECT d.id AS document_id, count(DISTINCT children.id) AS child_count, count(DISTINCT q.id) AS question_count, count(DISTINCT gs.id) AS submission_count FROM documents d LEFT JOIN documents children ON children.parent_document_id::text = d.id::text LEFT JOIN questions q ON q.document_id::text = d.id::text LEFT JOIN grade_submissions gs ON gs.original_document_id::text = d.id::text OR gs.rubric_document_id::text = d.id::text GROUP BY d.id ) SELECT dl.id, dl.customer_uuid, dl.file_name, dl.asset_type, dl.parent_document_id, dl.created_at, dl.depth, dl.lineage_path, dl.root_document_id, ds.child_count, ds.question_count, ds.submission_count, parent_doc.file_name AS parent_file_name, parent_doc.asset_type AS parent_asset_type FROM document_lineage dl LEFT JOIN document_stats ds ON ds.document_id::text = dl.id::text LEFT JOIN documents parent_doc ON parent_doc.id::text = dl.parent_document_id::text);
