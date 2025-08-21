@@ -1499,6 +1499,54 @@ export class DatabaseStorage implements IStorage {
       status: BusinessDefaults.INITIAL_PROCESSING_STATUS
     });
   }
+
+  // ==================== CASCADE DELETE METHODS ====================
+  
+  /**
+   * Get all questions for a document
+   */
+  async getQuestionsByDocumentId(documentId: string): Promise<any[]> {
+    return await db
+      .select()
+      .from(questions)
+      .where(eq(questions.documentId, documentId));
+  }
+
+  /**
+   * Delete all questions for a document
+   */
+  async deleteQuestionsByDocumentId(documentId: string): Promise<void> {
+    await db
+      .delete(questions)
+      .where(eq(questions.documentId, documentId));
+  }
+
+  /**
+   * Delete question results by question ID
+   */
+  async deleteQuestionResultsByQuestionId(questionId: string): Promise<void> {
+    await db
+      .delete(questionResults)
+      .where(eq(questionResults.questionId, questionId));
+  }
+
+  /**
+   * Delete AI responses by question ID
+   */
+  async deleteAiResponsesByQuestionId(questionId: string): Promise<void> {
+    await db
+      .delete(aiResponses)
+      .where(eq(aiResponses.questionId, questionId));
+  }
+
+  /**
+   * Delete teacher overrides by question ID
+   */
+  async deleteTeacherOverridesByQuestionId(questionId: string): Promise<void> {
+    await db
+      .delete(teacherOverrides)
+      .where(eq(teacherOverrides.questionId, questionId));
+  }
 }
 
 export const storage = new DatabaseStorage();

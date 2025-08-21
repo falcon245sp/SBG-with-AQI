@@ -138,11 +138,36 @@ export class DatabaseWriteService {
     console.log(`[DatabaseWriteService] Deleting document: ${documentId}`);
     
     try {
-      // First, clean up export queue entries for this document
+      // 1. Clean up export queue entries for this document
       console.log(`[DatabaseWriteService] Cleaning up export queue for document: ${documentId}`);
       await storage.deleteExportQueueByDocumentId(documentId);
       
-      // Then delete the document record (this should cascade to other related data)
+      // 2. Delete all question-related data for this document
+      console.log(`[DatabaseWriteService] Cleaning up question-related data for document: ${documentId}`);
+      
+      // Get all questions for this document
+      const questions = await storage.getQuestionsByDocumentId(documentId);
+      console.log(`[DatabaseWriteService] Found ${questions.length} questions to clean up`);
+      
+      // Delete question results and AI responses for each question
+      for (const question of questions) {
+        console.log(`[DatabaseWriteService] Deleting data for question: ${question.id}`);
+        
+        // Delete question results
+        await storage.deleteQuestionResultsByQuestionId(question.id);
+        
+        // Delete AI responses
+        await storage.deleteAiResponsesByQuestionId(question.id);
+        
+        // Delete teacher overrides
+        await storage.deleteTeacherOverridesByQuestionId(question.id);
+      }
+      
+      // 3. Delete all questions for this document
+      console.log(`[DatabaseWriteService] Deleting questions for document: ${documentId}`);
+      await storage.deleteQuestionsByDocumentId(documentId);
+      
+      // 4. Finally, delete the document record
       await storage.deleteDocument(documentId);
       console.log(`[DatabaseWriteService] Document deleted successfully: ${documentId}`);
     } catch (error) {
@@ -519,7 +544,10 @@ export class DatabaseWriteService {
     console.log(`[DatabaseWriteService] Creating grade submission for student ${gradeData.studentId}`);
     
     try {
-      const submission = await storage.createGradeSubmission(gradeData);
+      const submission = await storage.createGradeSubmission({
+        ...gradeData,
+        originalDocumentId: gradeData.originalDocumentId || gradeData.documentId
+      });
       console.log(`[DatabaseWriteService] Grade submission created: ${submission.id}`);
       
       // Trigger automatic collation for this document
