@@ -199,13 +199,64 @@ export async function syncClassroomData(req: Request, res: Response) {
     
     const savedClassrooms = await storage.syncClassrooms(customerUuid, classifiedClassrooms);
     
+    // Helper function to extract core course name for similarity matching
+    const extractCoreCourseName = (classroomName: string): string | null => {
+      // Common patterns: "Course Name - Period X", "Course Name (Period X)", "Course Name Pd X", etc.
+      // Remove periods, sections, parentheses content, and common suffixes
+      const cleaned = classroomName
+        .replace(/\s*-\s*(period|pd|per|p)\s*\d+.*$/i, '') // "- Period 1", "- Pd 2"
+        .replace(/\s*\((period|pd|per|p)?\s*\d+[^)]*\)/i, '') // "(Period 1)", "(Pd 2)"
+        .replace(/\s+(period|pd|per|p)\s*\d+.*$/i, '') // "Period 1", "Pd 2"  
+        .replace(/\s*-\s*section\s*[a-z0-9]+.*$/i, '') // "- Section A"
+        .replace(/\s*\(section\s*[a-z0-9]+[^)]*\)/i, '') // "(Section A)"
+        .replace(/\s+section\s*[a-z0-9]+.*$/i, '') // "Section A"
+        .replace(/\s*-\s*[a-z0-9]+$/i, '') // Generic "- A", "- 1" at end
+        .replace(/\s*\([a-z0-9]+\)$/i, '') // Generic "(A)", "(1)" at end
+        .trim();
+      
+      // Return null if name is too short (likely just a section identifier)
+      return cleaned.length >= 3 ? cleaned : null;
+    };
+
+    // Group similar classrooms for bulk configuration suggestion
+    const similarGroups: Record<string, any[]> = {};
+    const classroomsWithClassification = savedClassrooms.map((classroom: any) => ({
+      ...classroom,
+      _classificationData: classifiedClassrooms.find((c: any) => c.id === classroom.googleClassId)?._classificationData
+    }));
+
+    // Group classrooms by similar core names
+    for (const classroom of classroomsWithClassification) {
+      const coreCourseName = extractCoreCourseName(classroom.name);
+      if (coreCourseName) {
+        const key = coreCourseName.toLowerCase();
+        if (!similarGroups[key]) {
+          similarGroups[key] = [];
+        }
+        similarGroups[key].push(classroom);
+      }
+    }
+
+    // Identify groups with 2+ classrooms for bulk configuration suggestion  
+    const bulkConfigurationSuggestions = Object.entries(similarGroups)
+      .filter(([_, classrooms]) => classrooms.length >= 2)
+      .map(([coreCourseName, classrooms]) => ({
+        coreCourseName: classrooms[0] ? extractCoreCourseName(classrooms[0].name) : coreCourseName,
+        classrooms: classrooms.map(c => ({
+          id: c.id,
+          name: c.name,
+          section: c.section
+        })),
+        count: classrooms.length
+      }));
+
+    console.log(`[OAuth] Found ${bulkConfigurationSuggestions.length} similar course groups for bulk configuration`);
+
     res.json({
       success: true,
       message: `Synced ${savedClassrooms.length} classrooms`,
-      classrooms: savedClassrooms.map((classroom: any) => ({
-        ...classroom,
-        _classificationData: classifiedClassrooms.find((c: any) => c.id === classroom.googleClassId)?._classificationData
-      }))
+      classrooms: classroomsWithClassification,
+      bulkConfigurationSuggestions // New field for similar course groupings
     });
   } catch (error) {
     console.error('[OAuth] Error syncing classroom data:', error);

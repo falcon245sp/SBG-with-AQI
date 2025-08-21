@@ -110,6 +110,11 @@ export default function GoogleClassroomIntegration() {
   const [selectedStandardSetId, setSelectedStandardSetId] = useState<string | null>(null);
   const [selectedStandardsMap, setSelectedStandardsMap] = useState<Record<string, boolean>>({});
   
+  // State for bulk configuration suggestions
+  const [bulkConfigSuggestions, setBulkConfigSuggestions] = useState<any[]>([]);
+  const [showBulkConfigDialog, setShowBulkConfigDialog] = useState(false);
+  const [bulkConfiguringClassrooms, setBulkConfiguringClassrooms] = useState<string[]>([]);
+  
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
@@ -217,9 +222,22 @@ export default function GoogleClassroomIntegration() {
         'Content-Type': 'application/json',
       },
     }).then(res => res.json()),
-    onSuccess: () => {
+    onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ['/api/classrooms'] });
       setCurrentStep('connected');
+      
+      // Handle bulk configuration suggestions
+      if (response.bulkConfigurationSuggestions && response.bulkConfigurationSuggestions.length > 0) {
+        setBulkConfigSuggestions(response.bulkConfigurationSuggestions);
+        setShowBulkConfigDialog(true);
+        
+        // Show toast notification about similar courses found
+        toast({
+          title: "Similar Courses Detected",
+          description: `Found ${response.bulkConfigurationSuggestions.length} group(s) of similar courses. Configure them all at once!`,
+          duration: 5000,
+        });
+      }
     },
   });
 
@@ -782,12 +800,15 @@ export default function GoogleClassroomIntegration() {
           selectedStandardSetId={selectedStandardSetId}
           cspStandards={cspStandards}
           selectedStandardsMap={selectedStandardsMap}
+          isBulkConfiguration={bulkConfiguringClassrooms.length > 0}
+          bulkClassroomCount={bulkConfiguringClassrooms.length}
           onStepChange={setConfigurationStep}
           onJurisdictionSelect={setSelectedJurisdiction}
           onStandardSetSelect={setSelectedStandardSetId}
           onStandardsChange={setSelectedStandardsMap}
           onClose={() => {
             setConfiguringClassroom(null);
+            setBulkConfiguringClassrooms([]);
             setConfigurationStep('jurisdiction');
             setSelectedJurisdiction(null);
             setSelectedStandardSetId(null);
@@ -806,14 +827,50 @@ export default function GoogleClassroomIntegration() {
               .filter(standard => selectedStandardsMap[standard.id] ?? true)
               .map(standard => standard.id);
             
-            // Save configuration with similarity matching
-            saveStandardsConfigMutation.mutate({
-              classroomId: configuringClassroom,
-              jurisdictionId: selectedJurisdiction,
-              standardSetId: selectedStandardSetId,
-              selectedStandards: enabledStandards,
-              courseTitle: selectedStandardSet?.title || 'Unknown Course'
-            });
+            // If this is bulk configuration, handle all classrooms in the group
+            if (bulkConfiguringClassrooms.length > 0) {
+              // Save configuration for all classrooms in the bulk group
+              Promise.all(
+                bulkConfiguringClassrooms.map(classroomId =>
+                  saveStandardsConfigMutation.mutateAsync({
+                    classroomId,
+                    jurisdictionId: selectedJurisdiction,
+                    standardSetId: selectedStandardSetId,
+                    selectedStandards: enabledStandards,
+                    courseTitle: selectedStandardSet?.title || 'Unknown Course'
+                  })
+                )
+              ).then((responses) => {
+                // Show special success message for bulk configuration
+                const totalClassrooms = responses.reduce((sum, response) => {
+                  return sum + 1 + (response.similarClassroomsUpdated?.length || 0);
+                }, 0);
+                
+                toast({
+                  title: "Bulk Configuration Complete",
+                  description: `Successfully configured standards for ${totalClassrooms} classroom(s) in this course group.`,
+                  duration: 6000,
+                });
+                
+                // Reset bulk configuration state
+                setBulkConfiguringClassrooms([]);
+              }).catch((error) => {
+                toast({
+                  title: "Bulk Configuration Failed", 
+                  description: error.message || "Failed to save bulk standards configuration",
+                  variant: "destructive",
+                });
+              });
+            } else {
+              // Regular single classroom configuration
+              saveStandardsConfigMutation.mutate({
+                classroomId: configuringClassroom,
+                jurisdictionId: selectedJurisdiction,
+                standardSetId: selectedStandardSetId,
+                selectedStandards: enabledStandards,
+                courseTitle: selectedStandardSet?.title || 'Unknown Course'
+              });
+            }
             
             // Close dialog
             setConfiguringClassroom(null);
@@ -823,6 +880,73 @@ export default function GoogleClassroomIntegration() {
             setSelectedStandardsMap({});
           }}
         />
+      )}
+      
+      {/* Bulk Configuration Suggestions Dialog */}
+      {showBulkConfigDialog && bulkConfigSuggestions.length > 0 && (
+        <Dialog open={showBulkConfigDialog} onOpenChange={setShowBulkConfigDialog}>
+          <DialogContent className="sm:max-w-3xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-blue-600" />
+                Similar Courses Detected
+              </DialogTitle>
+              <DialogDescription>
+                We found courses with similar names. Configure them all at the same time to save time!
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              {bulkConfigSuggestions.map((suggestion, index) => (
+                <div key={index} className="border rounded-lg p-4 bg-blue-50">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-gray-900 text-lg">
+                      {suggestion.coreCourseName}
+                    </h3>
+                    <Badge variant="secondary" className="text-sm">
+                      {suggestion.count} sections
+                    </Badge>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
+                    {suggestion.classrooms.map((classroom: any) => (
+                      <div key={classroom.id} className="flex items-center gap-2 text-sm">
+                        <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                        <span className="font-medium">{classroom.name}</span>
+                        {classroom.section && (
+                          <span className="text-gray-600">({classroom.section})</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <Button
+                    onClick={() => {
+                      // Set up bulk configuration for this group
+                      setBulkConfiguringClassrooms(suggestion.classrooms.map((c: any) => c.id));
+                      setConfiguringClassroom(suggestion.classrooms[0].id); // Use first classroom as primary
+                      setShowBulkConfigDialog(false);
+                      setConfigurationStep('jurisdiction');
+                      setSelectedJurisdiction(null);
+                      setSelectedStandardSetId(null);
+                      setSelectedStandardsMap({});
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    Configure All {suggestion.count} Sections
+                  </Button>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-end pt-4 border-t">
+              <Button variant="outline" onClick={() => setShowBulkConfigDialog(false)}>
+                Configure Later
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
@@ -971,6 +1095,8 @@ function StandardsConfigurationDialog({
   selectedStandardSetId,
   cspStandards,
   selectedStandardsMap,
+  isBulkConfiguration = false,
+  bulkClassroomCount = 0,
   onStepChange,
   onJurisdictionSelect,
   onStandardSetSelect,
@@ -986,6 +1112,8 @@ function StandardsConfigurationDialog({
   selectedStandardSetId: string | null;
   cspStandards: CSPStandard[];
   selectedStandardsMap: Record<string, boolean>;
+  isBulkConfiguration?: boolean;
+  bulkClassroomCount?: number;
   onStepChange: (step: 'jurisdiction' | 'standardSet' | 'standards') => void;
   onJurisdictionSelect: (jurisdictionId: string) => void;
   onStandardSetSelect: (standardSetId: string) => void;
@@ -1029,10 +1157,16 @@ function StandardsConfigurationDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Globe className="w-5 h-5 text-blue-600" />
-            Standards Configuration: {classroom.name}
+            {isBulkConfiguration 
+              ? `Bulk Standards Configuration (${bulkClassroomCount} classrooms)`
+              : `Standards Configuration: ${classroom.name}`
+            }
           </DialogTitle>
           <DialogDescription>
-            Configure educational standards for Standards-Based Grading
+            {isBulkConfiguration
+              ? `Configure standards for all ${bulkClassroomCount} sections at once for Standards-Based Grading`
+              : "Configure educational standards for Standards-Based Grading"
+            }
           </DialogDescription>
         </DialogHeader>
 
