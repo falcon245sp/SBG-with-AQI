@@ -202,8 +202,12 @@ export default function FileCabinet() {
   };
 
   const handleDeleteDocument = (documentId: string, fileName: string) => {
+    console.log(`[HandleDelete] Delete button clicked for document: ${documentId}, fileName: ${fileName}`);
     if (confirm(`Are you sure you want to delete "${fileName}"? This action cannot be undone.`)) {
+      console.log(`[HandleDelete] User confirmed deletion, calling mutation for: ${documentId}`);
       deleteMutation.mutate(documentId);
+    } else {
+      console.log(`[HandleDelete] User cancelled deletion for: ${documentId}`);
     }
   };
 
