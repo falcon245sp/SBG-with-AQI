@@ -104,9 +104,12 @@ export class DocumentProcessor {
       }
 
       // Store AI analysis results for each question with JSON voting
+      console.log(`\n🔄 PROCESSING ${questionRecords.length} QUESTIONS WITH NEW DIRECT AI PIPELINE`);
       for (const question of questionRecords) {
+        console.log(`📝 About to process question ${question.questionNumber} with NEW PIPELINE`);
         await this.storeAIResultsWithJsonVoting(question, question.aiResults);
       }
+      console.log(`✅ COMPLETED PROCESSING ALL QUESTIONS WITH NEW PIPELINE\n`);
 
       // Update status to completed
       await DatabaseWriteService.updateDocumentStatus(documentId, ProcessingStatus.COMPLETED);
