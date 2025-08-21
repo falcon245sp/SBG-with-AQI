@@ -375,18 +375,26 @@ export default function GoogleClassroomIntegration() {
                           )}
                           
                           {/* SBG Toggle */}
-                          <div className="mt-2 flex items-center gap-2 p-2 bg-gray-50 rounded border">
+                          <div 
+                            className="mt-2 flex items-center gap-2 p-2 bg-gray-50 rounded border"
+                            onClick={() => console.log('🔘 Toggle container clicked!')}
+                          >
                             <Switch
                               checked={classroom.sbgEnabled || false}
                               onCheckedChange={(checked) => {
-                                console.log('SBG toggle changed:', { classroomId: classroom.id, checked, currentValue: classroom.sbgEnabled });
-                                updateClassificationMutation.mutate({
-                                  classroomId: classroom.id,
-                                  sbgEnabled: checked
-                                });
+                                console.log('🔥 SBG TOGGLE CLICKED!', { classroomId: classroom.id, checked, currentValue: classroom.sbgEnabled });
+                                try {
+                                  updateClassificationMutation.mutate({
+                                    classroomId: classroom.id,
+                                    sbgEnabled: checked
+                                  });
+                                } catch (error) {
+                                  console.error('❌ Error in toggle handler:', error);
+                                }
                               }}
                               disabled={updateClassificationMutation.isPending}
                               className="data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-gray-300"
+                              onClick={() => console.log('🎯 Switch clicked!')}
                             />
                             <Target className="w-4 h-4 text-emerald-600" />
                             <span className="text-sm font-medium text-gray-900">

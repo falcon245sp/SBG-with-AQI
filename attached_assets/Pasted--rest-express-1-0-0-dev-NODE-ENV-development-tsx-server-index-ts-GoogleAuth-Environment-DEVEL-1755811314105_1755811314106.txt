@@ -1,0 +1,543 @@
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+[GoogleAuth] Environment: DEVELOPMENT
+[GoogleAuth] Using DEV_ prefixed environment variables:
+[GoogleAuth] DEV_GOOGLE_CLIENT_ID: Present
+[GoogleAuth] DEV_GOOGLE_CLIENT_SECRET: Present
+[GoogleAuth] DEV_GOOGLE_REDIRECT_URI: https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev/api/auth/google/callback
+[GoogleAuth] REPLIT_DOMAINS: be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev
+[GoogleAuth] Creating OAuth client with DEV_ environment variables:
+[GoogleAuth] OAuth client created successfully
+[GoogleAuth] Creating OAuth client with DEV_ environment variables:
+[GoogleAuth] OAuth client created successfully
+Event-driven queue processor started and ready
+[ExportProcessor] Export processor started and ready
+Queue processor started for sequential document processing
+[Routes] Registering File Cabinet router
+[SessionCleanup] Starting automatic session cleanup (every 1 hour)
+[MaterializedViewManager] No materialized views to manage - using direct queries
+Standards Sherpa server started on port 5000
+[SessionCleanup] No expired sessions to clean (1242ms)
+2025-08-21T21:19:12.578Z [DEBUG] Request started | requestId=e05a79dba89b8aa2db3b79e72048f1a9, method=GET, path=/, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.4.168, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:13.341Z [DEBUG] Request started | requestId=33baefabbce1d76991ca1d5b33f65b7d, method=GET, path=/@vite/client, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+Browserslist: browsers data (caniuse-lite) is 10 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+2025-08-21T21:19:14.588Z [DEBUG] Request started | requestId=50e1cd60945c10a0e331393a27ac45b0, method=GET, path=/@react-refresh, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.0.114, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:16.052Z [DEBUG] Request started | requestId=2d84c0af81b63e8c7c06054e553207ca, method=GET, path=/src/main.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:16.365Z [DEBUG] Request started | requestId=a02345f1565980eb47053cd90bfdae8f, method=GET, path=/src/App.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:16.367Z [DEBUG] Request started | requestId=9e4c6da5435a41f12f6c809f13ef17a5, method=GET, path=/src/index.css, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.0.114, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:16.382Z [DEBUG] Request started | requestId=c0f2826c1f199a20570b71eae5b2da22, method=GET, path=/@fs/home/runner/workspace/node_modules/vite/dist/client/env.mjs, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:16.609Z [DEBUG] Request started | requestId=8e50fbad94c4112b0000bda19936bdf9, method=GET, path=/src/components/ui/toaster.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.4.168, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:16.611Z [DEBUG] Request started | requestId=f3a20024df68e90b1a3e0d29e7aea2dc, method=GET, path=/src/components/ui/tooltip.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:16.612Z [DEBUG] Request started | requestId=b7d8871cdccda3889d85744fb7aacf93, method=GET, path=/src/hooks/useAuth.ts, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.0.114, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:16.762Z [DEBUG] Request started | requestId=c97a767f136e0e06e0d2b909cc6c531a, method=GET, path=/src/pages/not-found.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.0.114, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:16.833Z [DEBUG] Request started | requestId=896eb731e92a670a696182ddb024bf79, method=GET, path=/src/pages/google-oauth-landing.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.4.168, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:16.836Z [DEBUG] Request started | requestId=ce56c4bb4850210b1417342253e1122e, method=GET, path=/src/pages/role-selection.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:16.988Z [DEBUG] Request started | requestId=19770393d5eba43d82d9fbc9255156c2, method=GET, path=/src/pages/auth-error.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.0.114, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:17.059Z [DEBUG] Request started | requestId=d57b6bd37c6637037a8f8b3c56e27cb2, method=GET, path=/src/lib/queryClient.ts, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:17.060Z [DEBUG] Request started | requestId=d264b3b505b084d38f9cd007775b618c, method=GET, path=/src/pages/traditional-login.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.4.168, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:17.064Z [DEBUG] Request started | requestId=2c590eb7a12ae2e3df793e9b690771cf, method=GET, path=/src/pages/upload.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:17.219Z [DEBUG] Request started | requestId=5a63c12fba73006bad6b3219e8b53fb5, method=GET, path=/src/pages/results.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.0.114, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:17.287Z [DEBUG] Request started | requestId=321f63050bad15c82fd918d50645f3f1, method=GET, path=/src/pages/document-results.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.4.168, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:17.294Z [DEBUG] Request started | requestId=067d12cb32b5972a5ba0c35a5527659f, method=GET, path=/src/pages/admin-dashboard.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:17.296Z [DEBUG] Request started | requestId=0d082585786cdaf8a4d50089dd4351c1, method=GET, path=/src/pages/prompt-config.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:17.296Z [DEBUG] Request started | requestId=1867f7b50b175b0414483ecc9df88787, method=GET, path=/src/pages/file-cabinet.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:17.299Z [DEBUG] Request started | requestId=0e4fca56cfee78d14120cc018c9db1bb, method=GET, path=/src/pages/customer-dashboard.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.0.114, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:17.468Z [DEBUG] Request started | requestId=0ad802e50ecde08570b0e536d8ba76c0, method=GET, path=/src/pages/document-inspector.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.0.114, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:17.515Z [DEBUG] Request started | requestId=9e66e39c73de4ae5ca47e77cfeab3a0b, method=GET, path=/src/pages/testing-dashboard.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.4.168, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:17.521Z [DEBUG] Request started | requestId=acedb8d04a73a8e45eeabc076671efb9, method=GET, path=/src/pages/google-classroom-integration.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:17.524Z [DEBUG] Request started | requestId=9f46e134baaae656afd85ffdf2894fc2, method=GET, path=/src/hooks/use-toast.ts, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:17.527Z [DEBUG] Request started | requestId=615ef022d9c7d0ee652f2c14edd3f079, method=GET, path=/src/components/ui/toast.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:17.532Z [DEBUG] Request started | requestId=3a5759aaf271655f8bf34b69d0974cf4, method=GET, path=/src/lib/utils.ts, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.0.114, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:17.698Z [DEBUG] Request started | requestId=ca494419a7fac0e8f1fa9898075881da, method=GET, path=/src/components/ui/card.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.0.114, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:17.741Z [DEBUG] Request started | requestId=ae1f49d1e486f2be9002fddcb6f6c4c9, method=GET, path=/src/components/ui/button.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.4.168, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:17.754Z [DEBUG] Request started | requestId=e7b2cc5aba1b1639cd3bb0642fa563f0, method=GET, path=/src/components/ui/input.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:17.759Z [DEBUG] Request started | requestId=ff977d4d2b25fb1b7d38dc6eb025e40f, method=GET, path=/src/components/ui/label.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.0.114, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:17.760Z [DEBUG] Request started | requestId=80c06614a5fba7a40f61512e99dad825, method=GET, path=/src/components/ui/alert.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:17.924Z [DEBUG] Request started | requestId=09e9dfd5243d70fb9ec38e0472cce03c, method=GET, path=/src/components/FileUploader.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:17.925Z [DEBUG] Request started | requestId=6974932b004f0d13988aeb54c7b6cbb3, method=GET, path=/src/components/Sidebar.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.0.114, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:17.967Z [DEBUG] Request started | requestId=3662aaab1159fc6acf1693a6f04f61d1, method=GET, path=/src/lib/webServiceClient.ts, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.4.168, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:17.985Z [DEBUG] Request started | requestId=76888dd0906670939aa9fcde0ffd8b93, method=GET, path=/src/components/ui/badge.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:17.990Z [DEBUG] Request started | requestId=f7e350baa9ce1c7f6fe18eb97a72611e, method=GET, path=/src/components/ui/dropdown-menu.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:17.993Z [DEBUG] Request started | requestId=0f2c7db24f91e5bbddd9b57f8abbf4e0, method=GET, path=/src/components/ProcessingStatus.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.0.114, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:18.151Z [DEBUG] Request started | requestId=15e449054e171a6cefcc060ca503a5cd, method=GET, path=/src/components/ui/select.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.0.114, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:18.153Z [DEBUG] Request started | requestId=bf5593d4f969d309a9090f75ecbf78fe, method=GET, path=/src/components/ui/textarea.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:18.195Z [DEBUG] Request started | requestId=a9650145924c1eeb33ed7a0d2e34733b, method=GET, path=/src/components/RigorBadge.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.4.168, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:18.217Z [DEBUG] Request started | requestId=d348ba491bba4ef1534b1cab198d3d74, method=GET, path=/@fs/home/runner/workspace/shared/commonCoreStandards.ts, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:18.218Z [DEBUG] Request started | requestId=91f64fda55c202c930c9d4fa8c55c594, method=GET, path=/src/components/ui/dialog.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:18.221Z [DEBUG] Request started | requestId=b5034fc03d664ec389038c57a5bf53dc, method=GET, path=/src/components/ui/separator.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.0.114, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:18.378Z [DEBUG] Request started | requestId=f74c449743f25fcf9ab01e1d6062dcb7, method=GET, path=/src/components/ui/tabs.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.0.114, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:18.379Z [DEBUG] Request started | requestId=1ffa808d35812575e282b19f82ebb67b, method=GET, path=/src/components/ui/table.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:18.421Z [DEBUG] Request started | requestId=7ca23755a8a2cc409340481f0118908d, method=GET, path=/src/hooks/useSessionHandler.ts, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.4.168, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:18.444Z [DEBUG] Request started | requestId=6e7d63e9167032646a8e5540abc15e40, method=GET, path=/src/components/ui/switch.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:18.724Z [DEBUG] Request started | requestId=b7d03953b5567798da05c6ad9db9ddea, method=GET, path=/api/auth/user, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:18.877Z [INFO] API Request | method=GET, path=/api/auth/user, statusCode=200, duration=154, requestId=b7d03953b5567798da05c6ad9db9ddea, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+[Routes] Processing pending exports on startup...
+[ExportProcessor] Found 0 pending exports
+2025-08-21T21:19:31.150Z [DEBUG] Request started | requestId=93fb60a999b4d4021fbe012245f3d1db, method=GET, path=/api/auth/google, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+[DEBUG] /api/auth/google route hit
+
+=== ENHANCED OAUTH DEBUG ===
+[DEBUG] Request Details:
+- Method: GET
+- URL: /api/auth/google
+- Host: be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev
+- Origin: undefined
+- Referer: https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev/
+- User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36
+- Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+
+[DEBUG] Environment Variables:
+- Environment: DEVELOPMENT
+- DEV_GOOGLE_CLIENT_ID exists: true
+- DEV_GOOGLE_CLIENT_SECRET exists: true
+- DEV_GOOGLE_REDIRECT_URI: https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev/api/auth/google/callback
+- REPLIT_DOMAINS: be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev
+- NODE_ENV: development
+
+[OAuth] Initiating basic Google authentication
+[GoogleAuth] Generating BASIC authorization URL with scopes: [
+  'https://www.googleapis.com/auth/userinfo.profile',
+  'https://www.googleapis.com/auth/userinfo.email'
+]
+[GoogleAuth] Generated OAuth URL with renamed env vars: https://accounts.google.com/o/oauth2/v2/auth?access_type=offline&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email&prompt=select_account&state=&include_granted_scopes=true&response_type=code&client_id=1064115232790-0rbc41hch5df1vtctncbfm1aft5241a0.apps.googleusercontent.com&redirect_uri=https%3A%2F%2Fbe365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev%2Fapi%2Fauth%2Fgoogle%2Fcallback
+[GoogleAuth] Redirect URI from renamed env var: https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev/api/auth/google/callback
+
+[DEBUG] Generated OAuth URL Analysis:
+- Full URL: https://accounts.google.com/o/oauth2/v2/auth?access_type=offline&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email&prompt=select_account&state=&include_granted_scopes=true&response_type=code&client_id=1064115232790-0rbc41hch5df1vtctncbfm1aft5241a0.apps.googleusercontent.com&redirect_uri=https%3A%2F%2Fbe365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev%2Fapi%2Fauth%2Fgoogle%2Fcallback
+- Protocol: https:
+- Host: accounts.google.com
+- Pathname: /o/oauth2/v2/auth
+- Client ID: 1064115232790-0rbc41hch5df1vtctncbfm1aft5241a0.apps.googleusercontent.com
+- Redirect URI: https://be365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev/api/auth/google/callback
+- Response Type: code
+- Scope: https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email
+- Access Type: offline
+- Prompt: select_account
+
+[DEBUG] Request Type Analysis:
+- Accept Header: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+- Is Direct Browser Request: true
+
+[OAuth] Direct browser request detected
+[OAuth] Setting redirect response to: https://accounts.google.com/o/oauth2/v2/auth?access_type=offline&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email&prompt=select_account&state=&include_granted_scopes=true&response_type=code&client_id=1064115232790-0rbc41hch5df1vtctncbfm1aft5241a0.apps.googleusercontent.com&redirect_uri=https%3A%2F%2Fbe365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev%2Fapi%2Fauth%2Fgoogle%2Fcallback
+[OAuth] Response headers will include Location: https://accounts.google.com/o/oauth2/v2/auth?access_type=offline&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email&prompt=select_account&state=&include_granted_scopes=true&response_type=code&client_id=1064115232790-0rbc41hch5df1vtctncbfm1aft5241a0.apps.googleusercontent.com&redirect_uri=https%3A%2F%2Fbe365067-8647-49d0-ac80-367c87b1cbcc-00-330w27orl8pv0.janeway.replit.dev%2Fapi%2Fauth%2Fgoogle%2Fcallback
+[OAuth] Redirect response sent
+=== END OAUTH DEBUG ===
+
+2025-08-21T21:19:31.235Z [INFO] API Request | method=GET, path=/api/auth/google, statusCode=302, duration=85, requestId=93fb60a999b4d4021fbe012245f3d1db, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:34.023Z [DEBUG] Request started | requestId=bb9b4df49bc46abc3f48a4eea4336a53, method=GET, path=/api/auth/google/callback, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+[OAuth] Callback received with code: true
+[OAuth] OAuth error: undefined
+[OAuth] State: undefined
+[GoogleAuth] Exchanging authorization code for tokens, code length: 73
+[GoogleAuth] Google token exchange successful: {
+  has_access_token: true,
+  has_refresh_token: false,
+  token_type: 'Bearer',
+  expires_in: 1755814772145,
+  scope: 'https://www.googleapis.com/auth/userinfo.email openid https://www.googleapis.com/auth/classroom.courses.readonly https://www.googleapis.com/auth/classroom.rosters.readonly https://www.googleapis.com/auth/userinfo.profile'
+}
+[OAuth] Tokens received, access token present: true
+[GoogleAuth] Fetching user info from Google API with access token length: 254
+[GoogleAuth] Google userinfo API successful: {
+  user_id: '107439734063109552129',
+  email: 'jfielder@srvusd.net',
+  name: 'Jerrel Fielder (SR)',
+  verified_email: true,
+  has_picture: true
+}
+[OAuth] User profile retrieved: jfielder@srvusd.net
+[OAuth] User authenticated successfully: jfielder@srvusd.net
+[OAuth] Session userId set to: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+[OAuth] Authentication successful, redirecting to dashboard
+2025-08-21T21:19:34.790Z [INFO] API Request | method=GET, path=/api/auth/google/callback, statusCode=302, duration=767, requestId=bb9b4df49bc46abc3f48a4eea4336a53, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:34.985Z [DEBUG] Request started | requestId=63fa24b2ca891261b8793f3ecb37fb73, method=GET, path=/dashboard, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:35.170Z [DEBUG] Request started | requestId=4255fdfd7f33d755413829f764289c1d, method=GET, path=/@vite/client, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.2.72, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:35.586Z [DEBUG] Request started | requestId=64cfb5741ab2e0e64bad56113a3a10c3, method=GET, path=/@fs/home/runner/workspace/node_modules/vite/dist/client/env.mjs, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.2.72, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:35.609Z [DEBUG] Request started | requestId=a1d13aa5eed1768c57cfc2ae814ccb4e, method=GET, path=/@react-refresh, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:35.752Z [DEBUG] Request started | requestId=a0e7920bdc42dcd2fcb69699e3e0df99, method=GET, path=/src/main.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:35.982Z [DEBUG] Request started | requestId=443650e670dea32930c95b9df8197296, method=GET, path=/src/index.css, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:35.984Z [DEBUG] Request started | requestId=4e1c7cfe44b072d8cda855d85628adb4, method=GET, path=/src/App.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:36.230Z [DEBUG] Request started | requestId=093181332fa8d48b4a83af0972c19cba, method=GET, path=/src/components/ui/tooltip.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.2.72, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:36.231Z [DEBUG] Request started | requestId=db3b8995909bc89a6477b12a62317de6, method=GET, path=/src/lib/queryClient.ts, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:36.233Z [DEBUG] Request started | requestId=1c996dd4cee525615781680fb98c3496, method=GET, path=/src/hooks/useAuth.ts, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:36.374Z [DEBUG] Request started | requestId=87d87259b2fb4b80e5bebb951b4a27eb, method=GET, path=/src/pages/google-oauth-landing.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:36.460Z [DEBUG] Request started | requestId=8327875dade082c06531dcdcd673c4a5, method=GET, path=/src/pages/role-selection.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.2.72, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:36.460Z [DEBUG] Request started | requestId=626166e794ed5dac19baefbbab5db8c5, method=GET, path=/src/pages/customer-dashboard.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:36.600Z [DEBUG] Request started | requestId=8e1eaa62b74c2ee96d7e3e402a51c42c, method=GET, path=/src/pages/auth-error.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:36.688Z [DEBUG] Request started | requestId=7918379e3b2d53fc46ce5235693998d5, method=GET, path=/src/pages/not-found.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:36.689Z [DEBUG] Request started | requestId=aa7aad57dc69e6492ea54e53dc1cb594, method=GET, path=/src/pages/traditional-login.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:36.690Z [DEBUG] Request started | requestId=735ec3d7423f3bac879d0cd928dd2667, method=GET, path=/src/pages/upload.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.2.72, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:36.699Z [DEBUG] Request started | requestId=51b626bef207efd95d9964fbb18f05bd, method=GET, path=/src/components/ui/toaster.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:36.825Z [DEBUG] Request started | requestId=3909fc3f3a5093387c403c2ab8d3525f, method=GET, path=/src/pages/results.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:36.888Z [DEBUG] Request started | requestId=a447b0b3f6d72fbe1e1fd3e764cf49e4, method=GET, path=/src/pages/admin-dashboard.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:36.917Z [DEBUG] Request started | requestId=7a910fc48f61624b4b726d37db0cf144, method=GET, path=/src/pages/document-results.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:36.919Z [DEBUG] Request started | requestId=826d6fe8f1c0a11092048cfb50abc0c7, method=GET, path=/src/pages/prompt-config.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:36.931Z [DEBUG] Request started | requestId=60cfe57a563380c494e59a7a9983c67f, method=GET, path=/src/pages/file-cabinet.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:36.948Z [DEBUG] Request started | requestId=7ebca318848918f55c778fb9a98b524c, method=GET, path=/src/pages/document-inspector.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.2.72, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:37.053Z [DEBUG] Request started | requestId=92ef668eea6daefefff3a4ef00c35d1b, method=GET, path=/src/pages/testing-dashboard.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:37.113Z [DEBUG] Request started | requestId=d4cf8969957a62dcdba4600226624969, method=GET, path=/src/pages/google-classroom-integration.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:37.145Z [DEBUG] Request started | requestId=3054ef610fc7fa942da42b206aeb6fae, method=GET, path=/src/lib/utils.ts, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:37.151Z [DEBUG] Request started | requestId=3ef442a4caeaa6c62f0eb5e6085b5aab, method=GET, path=/src/components/ui/button.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:37.164Z [DEBUG] Request started | requestId=af5942595f54a781d6962f9574ca4ebe, method=GET, path=/src/components/ui/card.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:37.176Z [DEBUG] Request started | requestId=5f95e79123be7bd79e2af22e5551e800, method=GET, path=/src/components/ui/alert.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.2.72, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:37.277Z [DEBUG] Request started | requestId=1e1fa470a094977b430fdcb40a641855, method=GET, path=/src/components/ui/badge.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:37.370Z [DEBUG] Request started | requestId=ce1ce655afd9c45180ecc38aeb381783, method=GET, path=/src/hooks/use-toast.ts, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:37.381Z [DEBUG] Request started | requestId=793a81861efe1d55917f02fa35e13811, method=GET, path=/src/components/Sidebar.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:37.395Z [DEBUG] Request started | requestId=e0271d8c64c2d0a0a6f70e922f4ff8bf, method=GET, path=/src/components/RigorBadge.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:37.407Z [DEBUG] Request started | requestId=615b6e432f24685152acde77d933a815, method=GET, path=/src/components/ProcessingStatus.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.2.72, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:37.504Z [DEBUG] Request started | requestId=7af3abc57089d2bc142ed2239f79ef18, method=GET, path=/src/components/ui/input.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:37.514Z [DEBUG] Request started | requestId=438286e8fa8ccfc1a7e91b6d2dad8cd3, method=GET, path=/src/components/ui/label.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:37.598Z [DEBUG] Request started | requestId=3bad98d4fb307eaa093bc3a8d81b71f4, method=GET, path=/src/components/ui/toast.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:37.611Z [DEBUG] Request started | requestId=75e5925afff98634534e4a5cbde20283, method=GET, path=/src/components/FileUploader.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:37.630Z [DEBUG] Request started | requestId=ec3b880bd9ab1ef9c51db97c2a722d59, method=GET, path=/src/lib/webServiceClient.ts, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:37.637Z [DEBUG] Request started | requestId=a66d40dfb83305e7ca52c5d16a2bbfd5, method=GET, path=/src/components/ui/dropdown-menu.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.2.72, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:37.736Z [DEBUG] Request started | requestId=d5c9576ec8884aca3cf42f771726e6cc, method=GET, path=/src/components/ui/separator.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:37.741Z [DEBUG] Request started | requestId=994e6d571d31d545503b379bd5fca8bb, method=GET, path=/src/components/ui/tabs.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:37.829Z [DEBUG] Request started | requestId=2df49f70015db1eaeab2710a852c111e, method=GET, path=/src/components/ui/textarea.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:37.841Z [DEBUG] Request started | requestId=f238a16b83dcae892ca87b97fc4da713, method=GET, path=/src/components/ui/select.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:37.865Z [DEBUG] Request started | requestId=de611bfbbe6866175f0c1a6c27551179, method=GET, path=/src/components/ui/dialog.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:37.866Z [DEBUG] Request started | requestId=a4c7995b82a32e043e7ca25442a7a209, method=GET, path=/@fs/home/runner/workspace/shared/commonCoreStandards.ts, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.2.72, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:37.964Z [DEBUG] Request started | requestId=d44e072eb6723d00664668d34119dd3d, method=GET, path=/src/components/ui/table.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:37.968Z [DEBUG] Request started | requestId=39dd50c9ef07842e2c035c4c2c3bddaa, method=GET, path=/src/hooks/useSessionHandler.ts, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+[ExportProcessor] Found 0 pending exports
+2025-08-21T21:19:42.627Z [DEBUG] Request started | requestId=c10fe69a670e646f78e1e3cb46316c96, method=GET, path=/src/components/ui/switch.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:42.900Z [DEBUG] Request started | requestId=8aea2f8cead0e7d6ea0768307f369229, method=GET, path=/api/auth/user, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:42.922Z [DEBUG] Request started | requestId=fd2841b8249c67134102eb7041c0d8f8, method=GET, path=/favicon.ico, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:43.048Z [INFO] API Request | method=GET, path=/api/auth/user, statusCode=200, duration=148, requestId=8aea2f8cead0e7d6ea0768307f369229, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:43.207Z [DEBUG] Request started | requestId=94fb0514e2f7181b2fa76c3e202ab770, method=GET, path=/api/auth/user, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:43.208Z [DEBUG] Request started | requestId=3da99c7febe2737b4166d0ec0c7f97c0, method=GET, path=/api/documents, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+[CustomerLookupService] Looking up customer UUID for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+2025-08-21T21:19:43.212Z [DEBUG] Request started | requestId=4e4e3ba26396d65959cbffe8a23aa3b3, method=GET, path=/api/stats, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+[CustomerLookupService] Looking up customer UUID for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+[CustomerLookupService] Found customer UUID: e9e41d64-44f6-4c77-b626-40487868c72d for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+2025-08-21T21:19:43.358Z [INFO] API Request | method=GET, path=/api/auth/user, statusCode=200, duration=151, requestId=94fb0514e2f7181b2fa76c3e202ab770, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+[CustomerLookupService] Found customer UUID: e9e41d64-44f6-4c77-b626-40487868c72d for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+[Documents] Fetching documents for customer: e9e41d64-44f6-4c77-b626-40487868c72d
+2025-08-21T21:19:43.729Z [INFO] API Request | method=GET, path=/api/stats, statusCode=200, duration=517, requestId=4e4e3ba26396d65959cbffe8a23aa3b3, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+[Documents] Found 3 documents for customer: e9e41d64-44f6-4c77-b626-40487868c72d
+2025-08-21T21:19:43.873Z [INFO] API Request | method=GET, path=/api/documents, statusCode=200, duration=665, requestId=3da99c7febe2737b4166d0ec0c7f97c0, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:44.882Z [DEBUG] Request started | requestId=5a1bc7414046a4fef05d2b5450f4bf75, method=GET, path=/api/classrooms, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+[CustomerLookupService] Looking up user and customer UUID for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+2025-08-21T21:19:44.883Z [DEBUG] Request started | requestId=cd7670e7a00f11d580da23acded904b0, method=GET, path=/favicon.ico, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:44.884Z [DEBUG] Request started | requestId=4789b38a6c8491261d26aadaa7997e5c, method=GET, path=/api/auth/user, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+[CustomerLookupService] Found user and customer UUID: e9e41d64-44f6-4c77-b626-40487868c72d for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+2025-08-21T21:19:45.032Z [INFO] API Request | method=GET, path=/api/auth/user, statusCode=200, duration=147, requestId=4789b38a6c8491261d26aadaa7997e5c, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:45.105Z [INFO] API Request | method=GET, path=/api/classrooms, statusCode=200, duration=223, requestId=5a1bc7414046a4fef05d2b5450f4bf75, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:51.768Z [DEBUG] Request started | requestId=d360a4492997eb720701c61d0c122b2a, method=GET, path=/google-classroom, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:51.944Z [DEBUG] Request started | requestId=519b67436cda3215f4ea0fc811a45b41, method=GET, path=/@vite/client, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:51.950Z [DEBUG] Request started | requestId=b1b984fcb334b475c54e49814113f40e, method=GET, path=/@react-refresh, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:52.175Z [DEBUG] Request started | requestId=799df77f714ffd2dee9f21b7bf8b461e, method=GET, path=/src/main.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:52.179Z [DEBUG] Request started | requestId=06380adef76d364f02e983b96abad7fd, method=GET, path=/@fs/home/runner/workspace/node_modules/vite/dist/client/env.mjs, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:52.410Z [DEBUG] Request started | requestId=f81947e25a42fc4ef729e8881e1d82e3, method=GET, path=/src/index.css, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:52.411Z [DEBUG] Request started | requestId=a20d417e1eee3ceb6f2b2737a6ca48ac, method=GET, path=/src/App.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:52.842Z [DEBUG] Request started | requestId=86af6f9418ffbd00e18e793d85b8b0f4, method=GET, path=/src/components/ui/toaster.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:52.844Z [DEBUG] Request started | requestId=92ac171c6603adda2312dce654ce71e1, method=GET, path=/src/pages/not-found.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:52.845Z [DEBUG] Request started | requestId=4ef6fdb26dbe19cd6cc93e8b41324712, method=GET, path=/src/lib/queryClient.ts, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:53.069Z [DEBUG] Request started | requestId=a94696f2adad72659413c5dc8efef6d5, method=GET, path=/src/pages/role-selection.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:53.070Z [DEBUG] Request started | requestId=b248da4e7dba383b7a025d0b5867c035, method=GET, path=/src/pages/google-oauth-landing.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:53.075Z [DEBUG] Request started | requestId=13f3e94091472f51b57a2ea868d170f7, method=GET, path=/src/pages/admin-dashboard.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:53.274Z [DEBUG] Request started | requestId=4a002744ec0fa86ee33c92dcdf33c870, method=GET, path=/src/components/ui/tooltip.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:53.287Z [DEBUG] Request started | requestId=ef63ce2283f0fc6ef32d54deabea24e2, method=GET, path=/src/hooks/useAuth.ts, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.2.72, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:53.306Z [DEBUG] Request started | requestId=618fe6c41078063a3d81deacbd3b0421, method=GET, path=/src/pages/upload.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:53.309Z [DEBUG] Request started | requestId=8cce6ae7f016771d8d0e5363d33e6a37, method=GET, path=/src/pages/auth-error.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:53.311Z [DEBUG] Request started | requestId=b550a54070c8f0155e635dbae4f6cd07, method=GET, path=/src/pages/traditional-login.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:53.509Z [DEBUG] Request started | requestId=7cfa7498fb04d2f7f2821755895c440c, method=GET, path=/src/pages/results.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:53.515Z [DEBUG] Request started | requestId=138ff7346e6b08722ddbe9abd28298a0, method=GET, path=/src/pages/customer-dashboard.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:53.516Z [DEBUG] Request started | requestId=92bace396ad0fc95b343845b09110521, method=GET, path=/src/pages/document-results.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.2.72, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:53.533Z [DEBUG] Request started | requestId=5595471a3ee8a7baf51449f8b79016d1, method=GET, path=/src/pages/prompt-config.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:53.538Z [DEBUG] Request started | requestId=65c5877f2ad6aca1454a3b8d910b6a39, method=GET, path=/src/pages/document-inspector.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:53.540Z [DEBUG] Request started | requestId=6ea5f1bff3cd2792b39f5abd5b52ddca, method=GET, path=/src/pages/file-cabinet.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:53.741Z [DEBUG] Request started | requestId=c5e115a91bfa14f776d4e1812ccce292, method=GET, path=/src/pages/testing-dashboard.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:53.748Z [DEBUG] Request started | requestId=50ff00b4e3b4d5b7b6cfc6c3802ff526, method=GET, path=/src/pages/google-classroom-integration.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:53.749Z [DEBUG] Request started | requestId=bf02f95baf343dd9f869f0655cf14bc2, method=GET, path=/src/hooks/use-toast.ts, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.2.72, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:53.759Z [DEBUG] Request started | requestId=582e2bfd735f452fc81ca507610e2742, method=GET, path=/src/components/ui/toast.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:53.762Z [DEBUG] Request started | requestId=0e8f7141bda35059b665a232c38ba9de, method=GET, path=/src/components/ui/card.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:53.768Z [DEBUG] Request started | requestId=b0762de500908bb1f98c095abed09261, method=GET, path=/src/components/ui/button.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:53.971Z [DEBUG] Request started | requestId=c084b611fef6c91c8f240b2d466f1920, method=GET, path=/src/components/ui/alert.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:53.972Z [DEBUG] Request started | requestId=9166219e48e35b18eed83efba9096f2c, method=GET, path=/src/components/ui/badge.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:53.975Z [DEBUG] Request started | requestId=571e2f8d31cdab8f5eecbcb2956dcf69, method=GET, path=/src/components/ui/separator.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.2.72, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:53.984Z [DEBUG] Request started | requestId=35488102eb53ea1d6128b0625dff205e, method=GET, path=/src/components/ui/tabs.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:53.987Z [DEBUG] Request started | requestId=7493c302e0a17e86edbb371abbcb5634, method=GET, path=/src/lib/utils.ts, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:53.997Z [DEBUG] Request started | requestId=f95fefab21d924002ed343fecbe64d99, method=GET, path=/src/components/ui/input.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:54.201Z [DEBUG] Request started | requestId=9ac3576b656ff6bf5d14f3ddbb479124, method=GET, path=/src/components/FileUploader.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.2.72, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:54.202Z [DEBUG] Request started | requestId=572fe5e14598b56536b6cc0870773914, method=GET, path=/src/components/Sidebar.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:54.203Z [DEBUG] Request started | requestId=c7d5ca6d14b0a83ddccb4f26ef6dc745, method=GET, path=/src/components/ui/label.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:54.209Z [DEBUG] Request started | requestId=447b6ed3d5dab5d3146a6016f6180bf1, method=GET, path=/src/lib/webServiceClient.ts, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:54.213Z [DEBUG] Request started | requestId=7edf33c56f155965bdc40b5a9151a20f, method=GET, path=/src/components/ui/dropdown-menu.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:54.224Z [DEBUG] Request started | requestId=f7e4c4de8211d7d375ee6643ffbc3dcb, method=GET, path=/src/components/ProcessingStatus.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:54.428Z [DEBUG] Request started | requestId=effc259ea39e922f59b1f38f9054731c, method=GET, path=/src/components/RigorBadge.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.2.72, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:54.430Z [DEBUG] Request started | requestId=feb3df82997d203fc2f9678a7b46ea96, method=GET, path=/src/components/ui/select.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:54.431Z [DEBUG] Request started | requestId=59f1bd950159663122fba4bbc162ba01, method=GET, path=/src/components/ui/textarea.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:54.436Z [DEBUG] Request started | requestId=4cb30a44cc61a5b58190345e900d03e4, method=GET, path=/src/components/ui/dialog.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:54.440Z [DEBUG] Request started | requestId=25d2796647588370189f160439cc3ee7, method=GET, path=/@fs/home/runner/workspace/shared/commonCoreStandards.ts, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:54.450Z [DEBUG] Request started | requestId=ab2de7cb0d6b83907ff713d023200ee3, method=GET, path=/src/components/ui/table.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:54.654Z [DEBUG] Request started | requestId=1652df5ca18b8d601bc755bd311c5f5a, method=GET, path=/src/hooks/useSessionHandler.ts, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.2.72, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:54.655Z [DEBUG] Request started | requestId=2dd5b6645023bf27f4be6bc006f3f7cc, method=GET, path=/src/components/ui/switch.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:54.917Z [DEBUG] Request started | requestId=f989617397c4a98b690d24d720f0ae83, method=GET, path=/api/auth/user, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:54.932Z [DEBUG] Request started | requestId=95a0e3db382581c31d0ee08900bc4bc9, method=GET, path=/favicon.ico, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.2.72, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:55.063Z [INFO] API Request | method=GET, path=/api/auth/user, statusCode=200, duration=146, requestId=f989617397c4a98b690d24d720f0ae83, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:55.219Z [DEBUG] Request started | requestId=7dcb26d6c431d3ffbc1e680ecf2ea9b3, method=GET, path=/api/auth/user, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:55.220Z [DEBUG] Request started | requestId=25185619aeef328c9825cf43a73518cd, method=GET, path=/api/classrooms, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+[CustomerLookupService] Looking up user and customer UUID for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+[CustomerLookupService] Found user and customer UUID: e9e41d64-44f6-4c77-b626-40487868c72d for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+2025-08-21T21:19:55.364Z [INFO] API Request | method=GET, path=/api/auth/user, statusCode=200, duration=145, requestId=7dcb26d6c431d3ffbc1e680ecf2ea9b3, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:19:55.441Z [INFO] API Request | method=GET, path=/api/classrooms, statusCode=200, duration=221, requestId=25185619aeef328c9825cf43a73518cd, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:20:00.827Z [DEBUG] Request started | requestId=ae4c7bcbd561ac1db420ac43e7e093d5, method=GET, path=/api/classrooms/f18e5149-283a-4d4d-afb3-7028c6af91f2/students, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.2.72, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:20:00.828Z [DEBUG] Request started | requestId=358f0e1ada1c05e4fc66d5d188877035, method=GET, path=/api/classrooms/f18e5149-283a-4d4d-afb3-7028c6af91f2/assignments, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+2025-08-21T21:20:00.845Z [DEBUG] Request started | requestId=d822db885399f6977cb4cdc818df5e61, method=PATCH, path=/api/classrooms/f18e5149-283a-4d4d-afb3-7028c6af91f2/classification, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+[OAuth] Error updating classroom settings: ReferenceError: require is not defined
+    at updateClassroomClassification (/home/runner/workspace/server/routes/googleAuth.ts:470:52)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+    at Route.dispatch (/home/runner/workspace/node_modules/express/lib/router/route.js:119:3)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at /home/runner/workspace/node_modules/express/lib/router/index.js:284:15
+    at param (/home/runner/workspace/node_modules/express/lib/router/index.js:365:14)
+    at param (/home/runner/workspace/node_modules/express/lib/router/index.js:376:14)
+    at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:421:3)
+    at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+    at strategy.pass (/home/runner/workspace/node_modules/passport/lib/middleware/authenticate.js:355:9)
+    at SessionStrategy.authenticate (/home/runner/workspace/node_modules/passport/lib/strategies/session.js:126:10)
+    at attempt (/home/runner/workspace/node_modules/passport/lib/middleware/authenticate.js:378:16)
+    at authenticate (/home/runner/workspace/node_modules/passport/lib/middleware/authenticate.js:379:7)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/home/runner/workspace/node_modules/express/lib/router/index.js:328:13)
+    at /home/runner/workspace/node_modules/express/lib/router/index.js:286:9
+    at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+    at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+    at initialize (/home/runner/workspace/node_modules/passport/lib/middleware/initialize.js:98:5)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/home/runner/workspace/node_modules/express/lib/router/index.js:328:13)
+    at /home/runner/workspace/node_modules/express/lib/router/index.js:286:9
+    at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+    at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+    at session (/home/runner/workspace/node_modules/express-session/index.js:182:7)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/home/runner/workspace/node_modules/express/lib/router/index.js:328:13)
+    at /home/runner/workspace/node_modules/express/lib/router/index.js:286:9
+    at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+    at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+    at requestLoggingMiddleware (/home/runner/workspace/server/utils/logger.ts:241:3)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/home/runner/workspace/node_modules/express/lib/router/index.js:328:13)
+    at /home/runner/workspace/node_modules/express/lib/router/index.js:286:9
+    at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+    at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+    at /home/runner/workspace/node_modules/express-session/index.js:514:7
+    at /home/runner/workspace/node_modules/connect-pg-simple/index.js:370:18
+    at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+[CustomerLookupService] Looking up user and customer UUID for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+[CustomerLookupService] Looking up user and customer UUID for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+2025-08-21T21:20:00.924Z [INFO] API Request | method=PATCH, path=/api/classrooms/f18e5149-283a-4d4d-afb3-7028c6af91f2/classification, statusCode=500, duration=79, requestId=d822db885399f6977cb4cdc818df5e61, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.10.142, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+[CustomerLookupService] Found user and customer UUID: e9e41d64-44f6-4c77-b626-40487868c72d for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+[CustomerLookupService] Found user and customer UUID: e9e41d64-44f6-4c77-b626-40487868c72d for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+Error fetching assignments: GaxiosError: Request had insufficient authentication scopes.
+    at Gaxios._request (/home/runner/workspace/node_modules/google-auth-library/node_modules/gaxios/src/gaxios.ts:211:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async OAuth2Client.requestAsync (/home/runner/workspace/node_modules/google-auth-library/build/src/auth/oauth2client.js:463:20)
+    at async createAPIRequestAsync (/home/runner/workspace/node_modules/googleapis-common/build/src/apirequest.js:308:25)
+    at async GoogleAuthService.getAssignments (/home/runner/workspace/server/services/googleAuth.ts:259:26)
+    at async getClassroomAssignments (/home/runner/workspace/server/routes/googleAuth.ts:266:25) {
+  config: {
+    url: URL {
+      href: 'https://classroom.googleapis.com/v1/courses/795139294298/courseWork?pageSize=100&courseWorkStates=PUBLISHED',
+      origin: 'https://classroom.googleapis.com',
+      protocol: 'https:',
+      username: '',
+      password: '',
+      host: 'classroom.googleapis.com',
+      hostname: 'classroom.googleapis.com',
+      port: '',
+      pathname: '/v1/courses/795139294298/courseWork',
+      search: '?pageSize=100&courseWorkStates=PUBLISHED',
+      searchParams: URLSearchParams { 'pageSize' => '100', 'courseWorkStates' => 'PUBLISHED' },
+      hash: ''
+    },
+    method: 'GET',
+    apiVersion: '',
+    userAgentDirectives: [ [Object] ],
+    paramsSerializer: [Function (anonymous)],
+    headers: Headers {
+      'accept-encoding': 'gzip',
+      authorization: '<<REDACTED> - See `errorRedactor` option in `gaxios` for configuration>.',
+      'user-agent': 'google-api-nodejs-client/8.0.0 (gzip)',
+      'x-goog-api-client': 'gdcl/8.0.0 gl-node/20.19.3'
+    },
+    params: { pageSize: 100, courseWorkStates: [Array] },
+    validateStatus: [Function (anonymous)],
+    retry: true,
+    responseType: 'unknown',
+    errorRedactor: [Function: defaultErrorRedactor],
+    retryConfig: {
+      currentRetryAttempt: 0,
+      retry: 3,
+      httpMethodsToRetry: [Array],
+      noResponseRetries: 2,
+      retryDelayMultiplier: 2,
+      timeOfFirstRequest: 1755811201076,
+      totalTimeout: 9007199254740991,
+      maxRetryDelay: 9007199254740991,
+      statusCodesToRetry: [Array]
+    }
+  },
+  response: Response {
+    size: 0,
+    data: { error: [Object] },
+    config: {
+      url: URL {},
+      method: 'GET',
+      apiVersion: '',
+      userAgentDirectives: [Array],
+      paramsSerializer: [Function (anonymous)],
+      headers: Headers {
+        'accept-encoding': 'gzip',
+        authorization: '<<REDACTED> - See `errorRedactor` option in `gaxios` for configuration>.',
+        'user-agent': 'google-api-nodejs-client/8.0.0 (gzip)',
+        'x-goog-api-client': 'gdcl/8.0.0 gl-node/20.19.3'
+      },
+      params: [Object],
+      validateStatus: [Function (anonymous)],
+      retry: true,
+      responseType: 'unknown',
+      errorRedactor: [Function: defaultErrorRedactor]
+    },
+    [Symbol(Body internals)]: {
+      body: [Gunzip],
+      stream: [Gunzip],
+      boundary: null,
+      disturbed: true,
+      error: null
+    },
+    [Symbol(Response internals)]: {
+      type: 'default',
+      url: 'https://classroom.googleapis.com/v1/courses/795139294298/courseWork?pageSize=100&courseWorkStates=PUBLISHED',
+      status: 403,
+      statusText: 'Forbidden',
+      headers: [Object],
+      counter: 0,
+      highWaterMark: 16384
+    }
+  },
+  code: 403,
+  status: 403,
+  error: undefined,
+  [Symbol(gaxios-gaxios-error)]: '7.1.1',
+  [cause]: {
+    message: 'Request had insufficient authentication scopes.',
+    code: 403,
+    status: 'PERMISSION_DENIED',
+    errors: [ [Object] ],
+    details: [ [Object] ]
+  }
+}
+[OAuth] Error fetching classroom assignments: GaxiosError: Request had insufficient authentication scopes.
+    at Gaxios._request (/home/runner/workspace/node_modules/google-auth-library/node_modules/gaxios/src/gaxios.ts:211:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async OAuth2Client.requestAsync (/home/runner/workspace/node_modules/google-auth-library/build/src/auth/oauth2client.js:463:20)
+    at async createAPIRequestAsync (/home/runner/workspace/node_modules/googleapis-common/build/src/apirequest.js:308:25)
+    at async GoogleAuthService.getAssignments (/home/runner/workspace/server/services/googleAuth.ts:259:26)
+    at async getClassroomAssignments (/home/runner/workspace/server/routes/googleAuth.ts:266:25) {
+  config: {
+    url: URL {
+      href: 'https://classroom.googleapis.com/v1/courses/795139294298/courseWork?pageSize=100&courseWorkStates=PUBLISHED',
+      origin: 'https://classroom.googleapis.com',
+      protocol: 'https:',
+      username: '',
+      password: '',
+      host: 'classroom.googleapis.com',
+      hostname: 'classroom.googleapis.com',
+      port: '',
+      pathname: '/v1/courses/795139294298/courseWork',
+      search: '?pageSize=100&courseWorkStates=PUBLISHED',
+      searchParams: URLSearchParams { 'pageSize' => '100', 'courseWorkStates' => 'PUBLISHED' },
+      hash: ''
+    },
+    method: 'GET',
+    apiVersion: '',
+    userAgentDirectives: [ [Object] ],
+    paramsSerializer: [Function (anonymous)],
+    headers: Headers {
+      'accept-encoding': 'gzip',
+      authorization: '<<REDACTED> - See `errorRedactor` option in `gaxios` for configuration>.',
+      'user-agent': 'google-api-nodejs-client/8.0.0 (gzip)',
+      'x-goog-api-client': 'gdcl/8.0.0 gl-node/20.19.3'
+    },
+    params: { pageSize: 100, courseWorkStates: [Array] },
+    validateStatus: [Function (anonymous)],
+    retry: true,
+    responseType: 'unknown',
+    errorRedactor: [Function: defaultErrorRedactor],
+    retryConfig: {
+      currentRetryAttempt: 0,
+      retry: 3,
+      httpMethodsToRetry: [Array],
+      noResponseRetries: 2,
+      retryDelayMultiplier: 2,
+      timeOfFirstRequest: 1755811201076,
+      totalTimeout: 9007199254740991,
+      maxRetryDelay: 9007199254740991,
+      statusCodesToRetry: [Array]
+    }
+  },
+  response: Response {
+    size: 0,
+    data: { error: [Object] },
+    config: {
+      url: URL {},
+      method: 'GET',
+      apiVersion: '',
+      userAgentDirectives: [Array],
+      paramsSerializer: [Function (anonymous)],
+      headers: Headers {
+        'accept-encoding': 'gzip',
+        authorization: '<<REDACTED> - See `errorRedactor` option in `gaxios` for configuration>.',
+        'user-agent': 'google-api-nodejs-client/8.0.0 (gzip)',
+        'x-goog-api-client': 'gdcl/8.0.0 gl-node/20.19.3'
+      },
+      params: [Object],
+      validateStatus: [Function (anonymous)],
+      retry: true,
+      responseType: 'unknown',
+      errorRedactor: [Function: defaultErrorRedactor]
+    },
+    [Symbol(Body internals)]: {
+      body: [Gunzip],
+      stream: [Gunzip],
+      boundary: null,
+      disturbed: true,
+      error: null
+    },
+    [Symbol(Response internals)]: {
+      type: 'default',
+      url: 'https://classroom.googleapis.com/v1/courses/795139294298/courseWork?pageSize=100&courseWorkStates=PUBLISHED',
+      status: 403,
+      statusText: 'Forbidden',
+      headers: [Object],
+      counter: 0,
+      highWaterMark: 16384
+    }
+  },
+  code: 403,
+  status: 403,
+  error: undefined,
+  [Symbol(gaxios-gaxios-error)]: '7.1.1',
+  [cause]: {
+    message: 'Request had insufficient authentication scopes.',
+    code: 403,
+    status: 'PERMISSION_DENIED',
+    errors: [ [Object] ],
+    details: [ [Object] ]
+  }
+}
+2025-08-21T21:20:01.162Z [INFO] API Request | method=GET, path=/api/classrooms/f18e5149-283a-4d4d-afb3-7028c6af91f2/assignments, statusCode=500, duration=334, requestId=358f0e1ada1c05e4fc66d5d188877035, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+Retrieved 30 students (page token: more pages) for course 795139294298
+Retrieved 4 students (page token: last page) for course 795139294298
+Total students retrieved for course 795139294298: 34
+2025-08-21T21:20:01.894Z [INFO] API Request | method=GET, path=/api/classrooms/f18e5149-283a-4d4d-afb3-7028c6af91f2/students, statusCode=200, duration=1067, requestId=ae4c7bcbd561ac1db420ac43e7e093d5, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.2.72, sessionId=KiQqIo9Vj46xJhlSYuVrocUsvXK1a1Ss
+[ExportProcessor] Found 0 pending exports
+[ExportProcessor] Found 0 pending exports
+[ExportProcessor] Found 0 pending exports
