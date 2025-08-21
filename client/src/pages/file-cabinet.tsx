@@ -39,6 +39,36 @@ import { DocumentViewer } from '@/components/DocumentViewer';
 import { useSessionHandler } from '@/hooks/useSessionHandler';
 import { useToast } from '@/hooks/use-toast';
 
+// Smart polling state management hook
+const useSmartPolling = () => {
+  const [uploadTriggerTime, setUploadTriggerTime] = useState<number | null>(null);
+  
+  // Listen for upload events from other components
+  useEffect(() => {
+    const handleUploadComplete = () => {
+      console.log('[SmartPolling] Upload detected, starting active polling');
+      setUploadTriggerTime(Date.now());
+    };
+
+    // Listen for custom upload events
+    window.addEventListener('documentUploadComplete', handleUploadComplete);
+    
+    return () => {
+      window.removeEventListener('documentUploadComplete', handleUploadComplete);
+    };
+  }, []);
+
+  const triggerUploadPolling = () => {
+    console.log('[SmartPolling] Manual trigger - starting active polling');
+    setUploadTriggerTime(Date.now());
+  };
+
+  return {
+    uploadTriggerTime,
+    triggerUploadPolling
+  };
+};
+
 interface Document {
   id: string;
   fileName: string;
@@ -110,6 +140,11 @@ export default function FileCabinet() {
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
 
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const { handleSessionError } = useSessionHandler();
+  
+  // Initialize smart polling
+  const { uploadTriggerTime, triggerUploadPolling } = useSmartPolling();
 
   // Handle collation of submissions for a document
   const collateMutation = useMutation({
@@ -235,7 +270,6 @@ export default function FileCabinet() {
 
 
   const { fetchWithSessionHandling } = useSessionHandler();
-  const { toast } = useToast();
 
   // Fetch File Cabinet data with real-time polling for processing documents
   const { data: fileCabinetData, isLoading } = useQuery({
@@ -266,14 +300,38 @@ export default function FileCabinet() {
       return response.json();
     },
     refetchInterval: (query) => {
-      // Poll every 10 seconds if there are any processing documents or export queue items
+      // Feature flag for smart polling (default: enabled)
+      const smartPollingEnabled = true;
+      
+      if (!smartPollingEnabled) {
+        // Fallback to old behavior: Poll every 10 seconds if there are processing docs
+        const data = query.state.data;
+        const hasProcessingDocs = data?.documents?.some(doc => 
+          doc.status === 'processing' || 
+          doc.status === 'pending' || 
+          doc.teacherReviewStatus === 'not_reviewed'
+        );
+        return hasProcessingDocs ? 10000 : false;
+      }
+
+      // Smart polling logic: Only poll for truly active processing
       const data = query.state.data;
-      const hasProcessingDocs = data?.documents?.some(doc => 
+      const hasActiveProcessing = data?.documents?.some(doc => 
         doc.status === 'processing' || 
-        doc.status === 'pending' || 
-        doc.teacherReviewStatus === 'not_reviewed'
+        doc.status === 'pending'
       );
-      return hasProcessingDocs ? 10000 : false;
+      
+      // Check if we should be actively polling due to recent upload
+      const shouldActivelyPoll = uploadTriggerTime && (Date.now() - uploadTriggerTime < 60000); // Poll for 1 minute after upload
+      
+      // Smart polling: Fast polling (2s) for active processing or recent uploads, no polling otherwise
+      if (hasActiveProcessing || shouldActivelyPoll) {
+        console.log('[SmartPolling] Active polling - hasActiveProcessing:', hasActiveProcessing, 'shouldActivelyPoll:', shouldActivelyPoll);
+        return 2000;
+      }
+      
+      console.log('[SmartPolling] No active processing detected, stopping polling');
+      return false;
     },
     refetchIntervalInBackground: true,
     staleTime: 0, // Always treat data as stale for fresh status updates

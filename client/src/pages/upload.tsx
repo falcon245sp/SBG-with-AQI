@@ -110,6 +110,15 @@ export default function UploadPage() {
         description: `${successMessage}. Files: ${fileNames}`,
       });
       
+      // Trigger smart polling for File Cabinet
+      console.log('[SmartPolling] Dispatching documentUploadComplete event');
+      window.dispatchEvent(new CustomEvent('documentUploadComplete', { 
+        detail: { 
+          fileCount: files.length, 
+          successfulSubmissions: result.successfulSubmissions 
+        } 
+      }));
+      
       if (result.errors && result.errors.length > 0) {
         const errorList = result.errors.map(e => `${e.fileName}: ${e.error}`).join('; ');
         toast({
