@@ -1,6 +1,5 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+import { Pool as PgPool } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
 if (!process.env.DATABASE_URL) {
@@ -9,29 +8,13 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// Configure Neon based on environment - use HTTP for production deployment stability
-const isProduction = process.env.NODE_ENV === 'production';
-
-if (!isProduction) {
-  // Development: Use websockets for better performance
-  neonConfig.webSocketConstructor = ws;
-  neonConfig.wsProxy = (host) => `${host}/v2`;
-  neonConfig.useSecureWebSocket = true;
-  neonConfig.pipelineConnect = false;
-} else {
-  // Production: Use HTTP for deployment reliability  
-  neonConfig.webSocketConstructor = undefined;
-  neonConfig.useSecureWebSocket = false;
-  neonConfig.pipelineConnect = "password";
-}
-
-// Create pool with connection timeout and retry configurations
-export const pool = new Pool({ 
+// Use standard PostgreSQL driver for complete websocket-free deployment
+export const pool = new PgPool({
   connectionString: process.env.DATABASE_URL,
-  connectionTimeoutMillis: isProduction ? 10000 : 20000, // Shorter timeout for production
-  idleTimeoutMillis: isProduction ? 15000 : 30000,       
-  max: isProduction ? 3 : 5,                            // Fewer connections for production
+  connectionTimeoutMillis: 8000,   // Short timeout to fail fast
+  idleTimeoutMillis: 12000,        // Short idle timeout  
+  max: 2,                          // Minimal connections for deployment
   ssl: { rejectUnauthorized: false }
 });
 
-export const db = drizzle({ client: pool, schema });
+export const db = drizzle(pool, { schema });
