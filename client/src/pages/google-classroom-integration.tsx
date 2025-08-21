@@ -9,7 +9,8 @@ import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { AlertCircle, CheckCircle, Users, BookOpen, GraduationCap, Calendar, Clock, ExternalLink, Settings, Lightbulb } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { AlertCircle, CheckCircle, Users, BookOpen, GraduationCap, Calendar, Clock, ExternalLink, Settings, Lightbulb, Target } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 
 interface GoogleUser {
@@ -32,6 +33,7 @@ interface Classroom {
   subjectArea?: string;
   detectedSubjectArea?: string;
   standardsJurisdiction?: string;
+  sbgEnabled?: boolean;
   _classificationData?: {
     subjectArea: string;
     confidence: number;
@@ -145,16 +147,17 @@ export default function GoogleClassroomIntegration() {
     },
   });
 
-  // Update classroom classification mutation
+  // Update classroom settings mutation
   const updateClassificationMutation = useMutation({
-    mutationFn: ({ classroomId, subjectArea, standardsJurisdiction }: {
+    mutationFn: ({ classroomId, ...settings }: {
       classroomId: string;
-      subjectArea: string;
-      standardsJurisdiction: string;
+      subjectArea?: string;
+      standardsJurisdiction?: string;
+      sbgEnabled?: boolean;
     }) => fetch(`/api/classrooms/${classroomId}/classification`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ subjectArea, standardsJurisdiction }),
+      body: JSON.stringify(settings),
     }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/classrooms'] });
@@ -343,6 +346,8 @@ export default function GoogleClassroomIntegration() {
                           className={`p-3 rounded-lg border cursor-pointer transition-colors ${
                             selectedClassroom === classroom.id
                               ? 'border-blue-500 bg-blue-50'
+                              : classroom.sbgEnabled
+                              ? 'border-green-300 bg-green-50 hover:border-green-400'
                               : 'border-gray-200 hover:border-gray-300'
                           }`}
                           onClick={() => setSelectedClassroom(classroom.id)}
@@ -352,6 +357,29 @@ export default function GoogleClassroomIntegration() {
                             <p className="text-sm text-gray-600">{classroom.section}</p>
                           )}
                           
+                          {/* SBG Toggle */}
+                          <div className="mt-2 flex items-center gap-2">
+                            <Switch
+                              checked={classroom.sbgEnabled || false}
+                              onCheckedChange={(checked) => {
+                                updateClassificationMutation.mutate({
+                                  classroomId: classroom.id,
+                                  sbgEnabled: checked
+                                });
+                              }}
+                              className="scale-75"
+                            />
+                            <Target className="w-3 h-3 text-emerald-600" />
+                            <span className="text-xs font-medium text-gray-700">
+                              Standards-Based Grading
+                            </span>
+                            {classroom.sbgEnabled && (
+                              <Badge variant="default" className="text-xs bg-green-600">
+                                SBG Active
+                              </Badge>
+                            )}
+                          </div>
+
                           {/* Subject Area Classification */}
                           <div className="mt-2 space-y-1">
                             <div className="flex items-center gap-2">
@@ -375,16 +403,37 @@ export default function GoogleClassroomIntegration() {
                               </div>
                             )}
                             
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setEditingClassification(classroom.id);
-                              }}
-                              className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 mt-1"
-                            >
-                              <Settings className="w-3 h-3" />
-                              Edit Classification
-                            </button>
+                            {classroom.sbgEnabled && (
+                              <div className="mt-2 p-2 bg-green-100 rounded border border-green-200">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-medium text-green-800">
+                                    SBG Configuration
+                                  </span>
+                                  <button 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setEditingClassification(classroom.id);
+                                    }}
+                                    className="text-xs text-green-700 hover:text-green-900 underline"
+                                  >
+                                    Configure Standards
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {!classroom.sbgEnabled && (
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingClassification(classroom.id);
+                                }}
+                                className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 mt-1"
+                              >
+                                <Settings className="w-3 h-3" />
+                                Edit Classification
+                              </button>
+                            )}
                           </div>
                           
                           <div className="flex items-center gap-2 mt-2">
@@ -525,11 +574,12 @@ export default function GoogleClassroomIntegration() {
           classroom={classrooms.find(c => c.id === editingClassification)!}
           subjectAreas={subjectAreas}
           standardsJurisdictions={standardsJurisdictions}
-          onSave={(subjectArea, standardsJurisdiction) => {
+          onSave={(subjectArea, standardsJurisdiction, sbgEnabled) => {
             updateClassificationMutation.mutate({
               classroomId: editingClassification,
               subjectArea,
-              standardsJurisdiction
+              standardsJurisdiction,
+              sbgEnabled
             });
           }}
           onCancel={() => setEditingClassification(null)}
@@ -552,7 +602,7 @@ function ClassificationEditDialog({
   classroom: Classroom;
   subjectAreas: Array<{value: string; label: string}>;
   standardsJurisdictions: Array<{value: string; label: string}>;
-  onSave: (subjectArea: string, standardsJurisdiction: string) => void;
+  onSave: (subjectArea: string, standardsJurisdiction: string, sbgEnabled: boolean) => void;
   onCancel: () => void;
   isLoading: boolean;
 }) {
@@ -562,10 +612,11 @@ function ClassificationEditDialog({
   const [selectedJurisdiction, setSelectedJurisdiction] = useState(
     classroom.standardsJurisdiction || classroom._classificationData?.suggestedJurisdiction || ''
   );
+  const [sbgEnabled, setSbgEnabled] = useState(classroom.sbgEnabled || false);
 
   const handleSave = () => {
     if (selectedSubject && selectedJurisdiction) {
-      onSave(selectedSubject, selectedJurisdiction);
+      onSave(selectedSubject, selectedJurisdiction, sbgEnabled);
     }
   };
 
@@ -573,9 +624,9 @@ function ClassificationEditDialog({
     <Dialog open={true} onOpenChange={() => onCancel()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Edit Classroom Classification</DialogTitle>
+          <DialogTitle>Configure Classroom Settings</DialogTitle>
           <DialogDescription>
-            Update the subject area and standards jurisdiction for "{classroom.name}"
+            Update the subject area, standards jurisdiction, and SBG settings for "{classroom.name}"
           </DialogDescription>
         </DialogHeader>
         
@@ -627,6 +678,28 @@ function ClassificationEditDialog({
               </SelectContent>
             </Select>
           </div>
+
+          <div className="space-y-2 pt-4 border-t">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="sbg-enabled"
+                checked={sbgEnabled}
+                onCheckedChange={setSbgEnabled}
+              />
+              <Label htmlFor="sbg-enabled" className="flex items-center gap-2">
+                <Target className="w-4 h-4 text-emerald-600" />
+                Enable Standards-Based Grading
+              </Label>
+            </div>
+            {sbgEnabled && (
+              <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                <p className="text-sm text-green-800">
+                  <strong>Standards-Based Grading Enabled</strong><br />
+                  This classroom will use SBG methodology for document analysis and assessment generation.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex justify-end space-x-2">
@@ -641,7 +714,7 @@ function ClassificationEditDialog({
             onClick={handleSave}
             disabled={!selectedSubject || !selectedJurisdiction || isLoading}
           >
-            {isLoading ? 'Saving...' : 'Save Changes'}
+            {isLoading ? 'Saving...' : 'Save Settings'}
           </Button>
         </div>
       </DialogContent>

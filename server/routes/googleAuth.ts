@@ -456,11 +456,11 @@ export async function getClassroomStudents(req: Request, res: Response) {
   }
 }
 
-// Update classroom subject area and standards jurisdiction
+// Update classroom classification and SBG settings
 export async function updateClassroomClassification(req: Request, res: Response) {
   try {
     const { classroomId } = req.params;
-    const { subjectArea, standardsJurisdiction } = req.body;
+    const { subjectArea, standardsJurisdiction, sbgEnabled } = req.body;
     
     if (!classroomId) {
       return res.status(400).json({ error: 'Classroom ID is required' });
@@ -485,20 +485,22 @@ export async function updateClassroomClassification(req: Request, res: Response)
       return res.status(404).json({ error: 'Classroom not found' });
     }
 
-    // Update the classroom classification
-    const updatedClassroom = await storage.updateClassroom(classroomId, {
-      subjectArea,
-      standardsJurisdiction,
-      updatedAt: new Date()
-    });
+    // Build update object with only provided fields
+    const updates: any = { updatedAt: new Date() };
+    if (subjectArea !== undefined) updates.subjectArea = subjectArea;
+    if (standardsJurisdiction !== undefined) updates.standardsJurisdiction = standardsJurisdiction;
+    if (sbgEnabled !== undefined) updates.sbgEnabled = sbgEnabled;
+
+    // Update the classroom
+    const updatedClassroom = await storage.updateClassroom(classroomId, updates);
 
     res.json({
       success: true,
-      message: 'Classroom classification updated successfully',
+      message: 'Classroom settings updated successfully',
       classroom: updatedClassroom
     });
   } catch (error) {
-    console.error('[OAuth] Error updating classroom classification:', error);
-    res.status(500).json({ error: 'Failed to update classroom classification' });
+    console.error('[OAuth] Error updating classroom settings:', error);
+    res.status(500).json({ error: 'Failed to update classroom settings' });
   }
 }

@@ -59,6 +59,7 @@ export const classrooms = pgTable("classrooms", {
   subjectArea: varchar("subject_area"), // Subject classification for standards mapping
   detectedSubjectArea: varchar("detected_subject_area"), // AI-detected subject area
   standardsJurisdiction: varchar("standards_jurisdiction"), // Which standards framework to use
+  sbgEnabled: boolean("sbg_enabled").default(false), // Whether this classroom uses Standards-Based Grading
   creationTime: timestamp("creation_time"),
   updateTime: timestamp("update_time"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -367,6 +368,7 @@ export const insertClassroomSchema = createInsertSchema(classrooms).pick({
   subjectArea: true,
   detectedSubjectArea: true,
   standardsJurisdiction: true,
+  sbgEnabled: true,
   creationTime: true,
   updateTime: true,
 });
