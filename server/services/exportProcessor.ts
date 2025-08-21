@@ -187,6 +187,15 @@ export class ExportProcessor {
     const questions = await storage.getQuestionsByDocumentId(document.id);
     const questionResults = await storage.getQuestionResultsByDocumentId(document.id);
     
+    // Get teacher overrides for each question to respect teacher corrections
+    const teacherOverrides = new Map<string, any>();
+    for (const question of questions) {
+      const override = await storage.getQuestionOverride(question.id, document.customerUuid);
+      if (override) {
+        teacherOverrides.set(question.id, override);
+      }
+    }
+    
     const pdf = new jsPDF('portrait', 'mm', 'a4');
     
     // Header with QR code space (upper left) and student name (upper right)
@@ -260,9 +269,16 @@ export class ExportProcessor {
         yPosition = 20;
       }
       
-      // Get standards text
+      // Check for teacher override first, then fallback to AI consensus
+      const override = teacherOverrides.get(question.id);
+      
+      // Get standards text (prioritize teacher override)
       let standardsText = 'Not analyzed';
-      if (result && result.consensusStandards) {
+      if (override && override.overriddenStandards) {
+        if (Array.isArray(override.overriddenStandards)) {
+          standardsText = override.overriddenStandards.map((s: any) => s.code || s).join(', ');
+        }
+      } else if (result && result.consensusStandards) {
         if (typeof result.consensusStandards === 'string') {
           standardsText = result.consensusStandards;
         } else if (Array.isArray(result.consensusStandards)) {
@@ -272,10 +288,18 @@ export class ExportProcessor {
         }
       }
       
-      // Get rigor level as text symbols (emojis don't render in PDF)
+      // Get rigor level (prioritize teacher override)
       let rigorDisplay = '*';
-      if (result && result.consensusRigorLevel) {
+      let rigorSource = '';
+      if (override && override.overriddenRigorLevel) {
+        const rigor = override.overriddenRigorLevel.toLowerCase();
+        rigorSource = ' (Teacher)';
+        if (rigor === 'mild') rigorDisplay = '*';
+        else if (rigor === 'medium') rigorDisplay = '**';
+        else if (rigor === 'spicy') rigorDisplay = '***';
+      } else if (result && result.consensusRigorLevel) {
         const rigor = result.consensusRigorLevel.toLowerCase();
+        rigorSource = ' (AI)';
         if (rigor === 'mild') rigorDisplay = '*';
         else if (rigor === 'medium') rigorDisplay = '**';
         else if (rigor === 'spicy') rigorDisplay = '***';
@@ -301,9 +325,11 @@ export class ExportProcessor {
       pdf.setFontSize(8);
       pdf.text(standardsText, cols.criteria.x + 2, yPosition + 16);
       
-      // Points column (rigor)
+      // Rigor column with source indicator
       pdf.setFontSize(12);
       pdf.text(rigorDisplay, cols.rigor.x + 5, yPosition + 10);
+      pdf.setFontSize(6);
+      pdf.text(rigorSource, cols.rigor.x + 1, yPosition + 17);
       
       // Full Credit column
       pdf.setFontSize(8);
@@ -407,6 +433,15 @@ export class ExportProcessor {
     const questions = await storage.getQuestionsByDocumentId(document.id);
     const questionResults = await storage.getQuestionResultsByDocumentId(document.id);
     
+    // Get teacher overrides for each question to respect teacher corrections
+    const teacherOverrides = new Map<string, any>();
+    for (const question of questions) {
+      const override = await storage.getQuestionOverride(question.id, document.customerUuid);
+      if (override) {
+        teacherOverrides.set(question.id, override);
+      }
+    }
+    
     const pdf = new jsPDF();
     
     // Header
@@ -437,9 +472,17 @@ export class ExportProcessor {
       const result = questionResults.find(r => r.questionNumber === question.questionNumber);
       
       pdf.text(`${i + 1}`, 20, yPosition);
-      // Get standards text properly formatted
+      
+      // Check for teacher override first, then fallback to AI consensus
+      const override = teacherOverrides.get(question.id);
+      
+      // Get standards text (prioritize teacher override)
       let standardsText = 'TBD';
-      if (result && result.consensusStandards) {
+      if (override && override.overriddenStandards) {
+        if (Array.isArray(override.overriddenStandards)) {
+          standardsText = override.overriddenStandards.map((s: any) => s.code || s).join(', ');
+        }
+      } else if (result && result.consensusStandards) {
         if (typeof result.consensusStandards === 'string') {
           standardsText = result.consensusStandards;
         } else if (Array.isArray(result.consensusStandards)) {
@@ -450,12 +493,17 @@ export class ExportProcessor {
       }
       pdf.text(standardsText, 50, yPosition);
       
-      // Get rigor level - use consensusRigorLevel consistently
+      // Get rigor level (prioritize teacher override)
       let rigorText = 'Medium';
-      if (result && result.consensusRigorLevel) {
+      let rigorSource = '';
+      if (override && override.overriddenRigorLevel) {
+        rigorText = override.overriddenRigorLevel.charAt(0).toUpperCase() + override.overriddenRigorLevel.slice(1);
+        rigorSource = ' (Teacher)';
+      } else if (result && result.consensusRigorLevel) {
         rigorText = result.consensusRigorLevel.charAt(0).toUpperCase() + result.consensusRigorLevel.slice(1);
+        rigorSource = ' (AI)';
       }
-      pdf.text(rigorText, 150, yPosition);
+      pdf.text(rigorText + rigorSource, 150, yPosition);
       yPosition += 8;
       
       // Start new page if needed

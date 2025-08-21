@@ -413,6 +413,7 @@ export const insertQrSequenceNumberSchema = createInsertSchema(qrSequenceNumbers
   documentId: true,
   studentId: true,
   sequenceNumber: true,
+  isUsed: true,
 });
 
 export const insertGradeSubmissionSchema = createInsertSchema(gradeSubmissions).pick({
