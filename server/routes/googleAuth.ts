@@ -168,18 +168,21 @@ export async function handleGoogleCallback(req: Request, res: Response) {
 // Sync classroom data for authenticated user
 export async function syncClassroomData(req: Request, res: Response) {
   try {
-    const user = await ActiveUserService.requireActiveUser(req);
+    const { user, customerUuid } = await ActiveUserService.requireActiveUserAndCustomerUuid(req);
     if (!user?.googleAccessToken) {
       return res.status(400).json({ error: 'Google access token not found' });
     }
 
     // Sync classrooms from Google Classroom API using getClassrooms method
-    const classrooms = await googleAuth.getClassrooms(user.googleAccessToken, user.googleRefreshToken || undefined);
+    const googleClassrooms = await googleAuth.getClassrooms(user.googleAccessToken, user.googleRefreshToken || undefined);
+    
+    // Save/update classrooms in database using existing storage method
+    const savedClassrooms = await storage.syncClassrooms(customerUuid, googleClassrooms);
     
     res.json({
       success: true,
-      message: `Synced ${classrooms.length} classrooms`,
-      classrooms
+      message: `Synced ${savedClassrooms.length} classrooms`,
+      classrooms: savedClassrooms
     });
   } catch (error) {
     console.error('[OAuth] Error syncing classroom data:', error);
@@ -383,5 +386,49 @@ export async function getAssignmentDetails(req: Request, res: Response) {
   } catch (error) {
     console.error('[OAuth] Error fetching assignment details:', error);
     res.status(500).json({ error: 'Failed to fetch assignment details' });
+  }
+}
+
+// Get students for a specific classroom
+export async function getClassroomStudents(req: Request, res: Response) {
+  try {
+    const user = await ActiveUserService.requireActiveUser(req);
+    if (!user?.googleAccessToken) {
+      return res.status(400).json({ error: 'Google access token not found' });
+    }
+
+    const { classroomId } = req.params;
+    if (!classroomId) {
+      return res.status(400).json({ error: 'Classroom ID is required' });
+    }
+
+    // Get the classroom to find the Google Class ID
+    const { customerUuid } = await ActiveUserService.requireActiveUserAndCustomerUuid(req);
+    const classroom = await storage.getClassroomById(classroomId);
+    
+    if (!classroom || classroom.customerUuid !== customerUuid) {
+      return res.status(404).json({ error: 'Classroom not found' });
+    }
+
+    // Get students from Google Classroom API
+    const googleStudents = await googleAuth.getStudents(
+      classroom.googleClassId,
+      user.googleAccessToken,
+      user.googleRefreshToken || undefined
+    );
+
+    // Transform the data for frontend consumption
+    const students = googleStudents.map((student: any) => ({
+      id: student.userId,
+      firstName: student.profile?.name?.givenName || '',
+      lastName: student.profile?.name?.familyName || '',
+      email: student.profile?.emailAddress || '',
+      photoUrl: student.profile?.photoUrl || null,
+    }));
+
+    res.json(students);
+  } catch (error) {
+    console.error('[OAuth] Error fetching classroom students:', error);
+    res.status(500).json({ error: 'Failed to fetch students' });
   }
 }
