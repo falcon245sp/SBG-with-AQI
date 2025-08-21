@@ -47,6 +47,7 @@ import { requireAdmin } from "./middleware/adminAuth";
 import { sessionErrorHandler, withSessionHandling } from "./middleware/sessionHandler";
 
 import { config } from "./config/environment";
+import { materializedViewManager } from "./services/materializedViewManager";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -781,36 +782,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         documentType = 'generated';
       }
 
-      // Build document lineage (parents) with targeted queries instead of fetching all documents
-      const lineage = [];
-      if (document.parentDocumentId) {
-        const parent = await storage.getDocument(document.parentDocumentId);
-        if (parent && parent.customerUuid === customerUuid) {
-          lineage.push(parent);
-        }
-      }
+      // Use materialized view for optimized performance
+      const [relationships, lineage, children, questions] = await Promise.all([
+        storage.getDocumentRelationships(id),
+        storage.getDocumentLineage(id),
+        storage.getDocumentChildren(id),
+        storage.getDocumentResults(id, customerUuid)
+      ]);
 
-      // Find children (documents generated from this one) with targeted query
-      const children = await storage.getGeneratedDocuments(id);
-
-      // Get grade submissions related to this document
+      // Get grade submissions (still need targeted query for now)
       const gradeSubmissions = await storage.getCustomerGradeSubmissions(customerUuid);
       const relatedSubmissions = gradeSubmissions.filter(
         sub => sub.originalDocumentId === id || sub.rubricDocumentId === id
       );
 
-      // Get questions for this document
-      const questions = await storage.getDocumentResults(id, customerUuid);
-
-      // Get processing results
-      const processingResults = await storage.getDocumentResults(id, customerUuid);
-
-      // Calculate relationship counts
-      const relationships = {
+      // Use pre-computed relationship counts from materialized view
+      const relationshipCounts = {
         parentCount: lineage.length,
-        childCount: children.length,
-        submissionCount: relatedSubmissions.length,
-        questionCount: questions.length
+        childCount: relationships?.child_count || 0,
+        submissionCount: relationships?.submission_count || relatedSubmissions.length,
+        questionCount: relationships?.question_count || questions.length
       };
 
       const inspectionData = {
@@ -819,9 +810,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         children,
         gradeSubmissions: relatedSubmissions,
         questions,
-        processingResults,
+        processingResults: questions, // Processing results are same as questions in current implementation
         documentType,
-        relationships
+        relationships: relationshipCounts
       };
 
       res.json(inspectionData);
@@ -921,6 +912,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`[DELETE] Calling DatabaseWriteService.deleteDocument for ID: ${id}`);
       await DatabaseWriteService.deleteDocument(id);
       console.log(`[DELETE] Database deletion successful for ID: ${id}`);
+      
+      // Refresh materialized view after document deletion
+      try {
+        await materializedViewManager.refreshOnDemand();
+      } catch (error) {
+        console.warn('[DELETE] Failed to refresh materialized view:', error);
+      }
       
       // Clean up physical file if it exists - determine path by document type using centralized environment variables
       let basePath;

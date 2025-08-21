@@ -905,6 +905,68 @@ export class DatabaseStorage implements IStorage {
 
 
 
+  // Materialized view methods for optimized document relationships
+  async getDocumentRelationships(documentId: string): Promise<any> {
+    const result = await db.execute(sql`
+      SELECT 
+        id,
+        customer_uuid,
+        file_name,
+        asset_type,
+        parent_document_id,
+        depth,
+        child_count,
+        question_count,
+        submission_count,
+        parent_file_name,
+        parent_asset_type
+      FROM document_relationships 
+      WHERE id = ${documentId}
+      LIMIT 1
+    `);
+    
+    return result.rows[0] || null;
+  }
+
+  async getDocumentLineage(documentId: string): Promise<any[]> {
+    const result = await db.execute(sql`
+      WITH target_doc AS (
+        SELECT lineage_path FROM document_relationships WHERE id = ${documentId}
+      )
+      SELECT 
+        dr.id,
+        dr.file_name,
+        dr.asset_type,
+        dr.depth
+      FROM document_relationships dr
+      CROSS JOIN target_doc td
+      WHERE dr.id = ANY(td.lineage_path)
+        AND dr.id != ${documentId}
+      ORDER BY dr.depth ASC
+    `);
+    
+    return result.rows;
+  }
+
+  async getDocumentChildren(documentId: string): Promise<any[]> {
+    const result = await db.execute(sql`
+      SELECT 
+        id,
+        file_name,
+        asset_type,
+        created_at
+      FROM document_relationships 
+      WHERE parent_document_id = ${documentId}
+      ORDER BY created_at ASC
+    `);
+    
+    return result.rows;
+  }
+
+  async refreshDocumentRelationships(): Promise<void> {
+    await db.execute(sql`SELECT refresh_document_relationships()`);
+  }
+
   async getQuestionResultsByDocumentId(documentId: string): Promise<any[]> {
     return await db
       .select({

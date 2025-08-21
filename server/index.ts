@@ -46,6 +46,10 @@ app.use(requestLoggingMiddleware);
   
   // Start automatic session cleanup
   SessionCleanup.startAutomaticCleanup();
+  
+  // Start materialized view manager for document relationships
+  const { materializedViewManager } = await import('./services/materializedViewManager');
+  materializedViewManager.start();
 
   app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -85,10 +89,6 @@ app.use(requestLoggingMiddleware);
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    logger.info('Standards Sherpa server started', {
-      port: port,
-      environment: process.env.NODE_ENV || 'development',
-      version: process.env.npm_package_version || '0.7.4'
-    });
+    console.log(`Standards Sherpa server started on port ${port}`);
   });
 })();
