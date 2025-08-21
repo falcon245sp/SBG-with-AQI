@@ -423,15 +423,16 @@ export class QueueProcessor {
       throw new Error('Queue processor not started');
     }
 
-    console.log(`PUSH: Adding document ${documentId} to queue`);
+    console.log(`📥 PUSH: Adding document ${documentId} to queue (priority: ${priority})`);
     await storage.addToProcessingQueue(documentId, priority);
+    console.log(`💾 Document ${documentId} added to storage queue`);
     
     // Start processing if not already processing
     if (!this.isProcessing) {
-      console.log('Queue was idle, starting processing immediately');
+      console.log(`⚡ Queue was idle, starting processing immediately for ${documentId}`);
       this.processNext();
     } else {
-      console.log('Queue processor is busy, item will be processed next');
+      console.log(`⏳ Queue processor is busy, document ${documentId} will be processed next`);
     }
   }
 
@@ -448,13 +449,15 @@ export class QueueProcessor {
     }
 
     this.isProcessing = true;
-    console.log(`POP: Processing document from queue: ${nextItem.documentId}`);
+    console.log(`📤 POP: Processing document from queue: ${nextItem.documentId}`);
 
     try {
       // Check if document still exists and is pending
       const document = await storage.getDocument(nextItem.documentId);
+      console.log(`🔍 Document status check: ${nextItem.documentId} status=${document?.status}`);
+      
       if (!document || document.status !== 'pending') {
-        console.log(`Skipping document ${nextItem.documentId} - invalid status: ${document?.status}`);
+        console.log(`⏭️  SKIPPING document ${nextItem.documentId} - invalid status: ${document?.status}`);
         await storage.removeFromQueue(nextItem.id);
         this.isProcessing = false;
         // Try next item since we skipped this one
@@ -466,6 +469,7 @@ export class QueueProcessor {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Process the document
+      console.log(`🎯 CALLING PROCESSOR.processDocument(${nextItem.documentId})`);
       await this.processor.processDocument(nextItem.documentId);
       
       // Remove from queue after successful processing

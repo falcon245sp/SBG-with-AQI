@@ -252,8 +252,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`Created document ${document.id} for file ${file.originalname}`);
           
           // Add to event-driven processing queue  
+          console.log(`🏗️ ABOUT TO ADD DOCUMENT TO QUEUE: ${document.id}`);
           await queueProcessor.addToQueue(document.id);
-          console.log(`Added document ${document.id} to event-driven queue`);
+          console.log(`✅ SUCCESSFULLY ADDED DOCUMENT TO QUEUE: ${document.id}`);
           
           // Processing will be handled by the queue processor
           
