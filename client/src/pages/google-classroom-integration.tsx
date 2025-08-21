@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -110,6 +111,7 @@ export default function GoogleClassroomIntegration() {
   const [selectedStandardsMap, setSelectedStandardsMap] = useState<Record<string, boolean>>({});
   
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   
   // States for course configuration
   const [selectedClassroomForStandards, setSelectedClassroomForStandards] = useState<string | null>(null);
@@ -264,6 +266,61 @@ export default function GoogleClassroomIntegration() {
     },
     onError: (error) => {
       console.error('SBG toggle update failed:', error);
+    },
+  });
+
+  // Mutation for saving standards configuration with similarity matching
+  const saveStandardsConfigMutation = useMutation({
+    mutationFn: async (data: {
+      classroomId: string;
+      jurisdictionId: string;
+      standardSetId: string;
+      selectedStandards: string[];
+      courseTitle: string;
+    }) => {
+      const response = await fetch(`/api/classrooms/${data.classroomId}/standards-configuration`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jurisdictionId: data.jurisdictionId,
+          standardSetId: data.standardSetId,
+          selectedStandards: data.selectedStandards,
+          courseTitle: data.courseTitle
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to save standards configuration');
+      }
+
+      return result;
+    },
+    onSuccess: (response) => {
+      // Show feedback about similar classrooms that were auto-configured
+      if (response.similarClassroomsUpdated && response.similarClassroomsUpdated.length > 0) {
+        toast({
+          title: "Configuration Applied to Similar Classrooms",
+          description: `Standards configuration applied to ${response.similarClassroomsUpdated.length} similar classroom(s): ${response.similarClassroomsUpdated.map((c: any) => c.name).join(', ')}`,
+          duration: 6000,
+        });
+      } else {
+        toast({
+          title: "Standards Configuration Saved",
+          description: "Successfully configured classroom standards.",
+        });
+      }
+      
+      // Refresh classroom list to show updated configurations
+      queryClient.invalidateQueries({ queryKey: ['/api/classrooms'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Save Failed",
+        description: error.message || "Failed to save standards configuration",
+        variant: "destructive",
+      });
     },
   });
 
@@ -737,14 +794,33 @@ export default function GoogleClassroomIntegration() {
             setSelectedStandardsMap({});
           }}
           onSave={() => {
-            // TODO: Save selected standards to classroom
-            console.log('Saving standards configuration:', {
+            if (!configuringClassroom || !selectedJurisdiction || !selectedStandardSetId) return;
+            
+            // Get the selected course title for display
+            const selectedStandardSet = gradeBandCourses
+              .flatMap(gb => gb.courses)
+              .find(course => course.id === selectedStandardSetId);
+            
+            // Get enabled standards (defaults to all if none explicitly disabled)
+            const enabledStandards = cspStandards
+              .filter(standard => selectedStandardsMap[standard.id] ?? true)
+              .map(standard => standard.id);
+            
+            // Save configuration with similarity matching
+            saveStandardsConfigMutation.mutate({
               classroomId: configuringClassroom,
               jurisdictionId: selectedJurisdiction,
               standardSetId: selectedStandardSetId,
-              selectedStandards: Object.keys(selectedStandardsMap).filter(id => selectedStandardsMap[id])
+              selectedStandards: enabledStandards,
+              courseTitle: selectedStandardSet?.title || 'Unknown Course'
             });
+            
+            // Close dialog
             setConfiguringClassroom(null);
+            setConfigurationStep('jurisdiction');
+            setSelectedJurisdiction(null);
+            setSelectedStandardSetId(null);
+            setSelectedStandardsMap({});
           }}
         />
       )}

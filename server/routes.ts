@@ -151,6 +151,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/standards/course-standards', getStandardsForCourseTitle);
   app.get('/api/standards/course-suggestions', getSuggestedCourses);
   app.get('/api/classrooms/:classroomId/standards', getClassroomStandards);
+  
+  // Save classroom standards configuration with similarity matching
+  app.post('/api/classrooms/:classroomId/standards-configuration', async (req, res) => {
+    try {
+      const { classroomId } = req.params;
+      const { jurisdictionId, standardSetId, selectedStandards, courseTitle } = req.body;
+      
+      if (!classroomId) {
+        return res.status(400).json({ error: 'Classroom ID is required' });
+      }
+
+      // Get user and verify ownership
+      const { user, customerUuid } = await ActiveUserService.requireActiveUserAndCustomerUuid(req);
+      const classroom = await storage.getClassroomById(classroomId);
+      
+      if (!classroom || classroom.customerUuid !== customerUuid) {
+        return res.status(404).json({ error: 'Classroom not found' });
+      }
+
+      // Helper function to extract core course name for similarity matching
+      const extractCoreCourseName = (classroomName: string): string | null => {
+        // Common patterns: "Course Name - Period X", "Course Name (Period X)", "Course Name Pd X", etc.
+        // Remove periods, sections, parentheses content, and common suffixes
+        const cleaned = classroomName
+          .replace(/\s*-\s*(period|pd|per|p)\s*\d+.*$/i, '') // "- Period 1", "- Pd 2"
+          .replace(/\s*\((period|pd|per|p)?\s*\d+[^)]*\)/i, '') // "(Period 1)", "(Pd 2)"
+          .replace(/\s+(period|pd|per|p)\s*\d+.*$/i, '') // "Period 1", "Pd 2"  
+          .replace(/\s*-\s*section\s*[a-z0-9]+.*$/i, '') // "- Section A"
+          .replace(/\s*\(section\s*[a-z0-9]+[^)]*\)/i, '') // "(Section A)"
+          .replace(/\s+section\s*[a-z0-9]+.*$/i, '') // "Section A"
+          .replace(/\s*-\s*[a-z0-9]+$/i, '') // Generic "- A", "- 1" at end
+          .replace(/\s*\([a-z0-9]+\)$/i, '') // Generic "(A)", "(1)" at end
+          .trim();
+        
+        // Return null if name is too short (likely just a section identifier)
+        return cleaned.length >= 3 ? cleaned : null;
+      };
+
+      // Get all classrooms for this customer to find similar ones
+      const allClassrooms = await storage.getTeacherClassrooms(customerUuid);
+      const currentCoreCourseName = extractCoreCourseName(classroom.name);
+      
+      // Find similar classrooms
+      const similarClassrooms = currentCoreCourseName ? 
+        allClassrooms.filter(c => {
+          if (c.id === classroomId) return false; // Skip current classroom
+          const otherCoreCourseName = extractCoreCourseName(c.name);
+          return otherCoreCourseName && 
+                 otherCoreCourseName.toLowerCase() === currentCoreCourseName.toLowerCase();
+        }) : [];
+
+      // Prepare the standards configuration
+      const enabledStandardIds = selectedStandards || [];
+      
+      // Configuration to apply
+      const standardsConfig = {
+        standardsJurisdiction: jurisdictionId,
+        courseTitle: courseTitle,
+        enabledStandards: enabledStandardIds,
+        updatedAt: new Date()
+      };
+
+      // Update the primary classroom
+      await storage.updateClassroom(classroomId, standardsConfig);
+      
+      // Update similar classrooms with the same configuration
+      const updatedSimilarClassrooms = [];
+      for (const similarClassroom of similarClassrooms) {
+        await storage.updateClassroom(similarClassroom.id, standardsConfig);
+        updatedSimilarClassrooms.push({
+          id: similarClassroom.id,
+          name: similarClassroom.name
+        });
+      }
+
+      console.log(`[StandardsConfig] Updated ${1 + similarClassrooms.length} classrooms:`, {
+        primary: classroom.name,
+        similar: similarClassrooms.map(c => c.name),
+        configuration: {
+          jurisdiction: jurisdictionId,
+          courseTitle,
+          standardsCount: enabledStandardIds.length
+        }
+      });
+
+      res.json({
+        success: true,
+        message: `Standards configuration saved${similarClassrooms.length > 0 ? ` and applied to ${similarClassrooms.length} similar classroom(s)` : ''}`,
+        primaryClassroom: {
+          id: classroom.id,
+          name: classroom.name
+        },
+        similarClassroomsUpdated: updatedSimilarClassrooms,
+        configuration: {
+          jurisdictionId,
+          standardSetId,
+          courseTitle,
+          enabledStandardsCount: enabledStandardIds.length
+        }
+      });
+    } catch (error) {
+      console.error('[StandardsConfig] Error saving standards configuration:', error);
+      res.status(500).json({ error: 'Failed to save standards configuration' });
+    }
+  });
 
   // Common Standards Project routes (new - dynamic API-based)
   app.get('/api/csp/jurisdictions', getJurisdictions);
