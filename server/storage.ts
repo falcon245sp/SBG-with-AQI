@@ -905,70 +905,95 @@ export class DatabaseStorage implements IStorage {
 
 
 
-  // Materialized view methods for optimized document relationships
+  // Direct query methods for document relationships
   async getDocumentRelationships(documentId: string): Promise<any> {
-    console.log(`[MaterializedView] Getting relationships for document: ${documentId}`);
+    console.log(`[DocumentRelationships] Getting relationships for document: ${documentId}`);
+    
+    // Get the document with parent info
     const result = await db.execute(sql`
       SELECT 
-        id,
-        customer_uuid,
-        file_name,
-        asset_type,
-        parent_document_id,
-        depth,
-        child_count,
-        question_count,
-        submission_count,
-        parent_file_name,
-        parent_asset_type
-      FROM document_relationships 
-      WHERE id = ${documentId}
+        d.id,
+        d.customer_uuid,
+        d.file_name,
+        d.asset_type,
+        d.parent_document_id,
+        CASE WHEN d.parent_document_id IS NULL THEN 0 ELSE 1 END as depth,
+        (SELECT count(*) FROM ${documents} children WHERE children.parent_document_id = d.id) as child_count,
+        (SELECT count(*) FROM ${questions} WHERE ${questions.documentId} = d.id) as question_count,
+        (SELECT count(*) FROM ${gradeSubmissions} WHERE ${gradeSubmissions.originalDocumentId} = d.id) as submission_count,
+        parent.file_name as parent_file_name,
+        parent.asset_type as parent_asset_type
+      FROM ${documents} d
+      LEFT JOIN ${documents} parent ON d.parent_document_id = parent.id
+      WHERE d.id = ${documentId}
       LIMIT 1
     `);
     
-    console.log(`[MaterializedView] Found ${result.rows.length} relationship records`);
+    console.log(`[DocumentRelationships] Found ${result.rows.length} relationship records`);
     return result.rows[0] || null;
   }
 
   async getDocumentLineage(documentId: string): Promise<any[]> {
-    const result = await db.execute(sql`
-      WITH target_doc AS (
-        SELECT lineage_path FROM document_relationships WHERE id = ${documentId}
-      )
-      SELECT 
-        dr.id,
-        dr.file_name,
-        dr.asset_type,
-        dr.depth
-      FROM document_relationships dr
-      CROSS JOIN target_doc td
-      WHERE dr.id = ANY(td.lineage_path)
-        AND dr.id != ${documentId}
-      ORDER BY dr.depth ASC
-    `);
+    // Build lineage by traversing up the parent chain
+    const lineage = [];
+    let currentDocumentId = documentId;
+    let depth = 0;
     
-    return result.rows;
+    // First collect all document IDs in the chain
+    const documentIds = [];
+    while (currentDocumentId && depth < 10) { // Safety limit
+      const doc = await this.getDocument(currentDocumentId);
+      if (!doc) break;
+      
+      documentIds.unshift(currentDocumentId); // Add to beginning for proper order
+      currentDocumentId = doc.parentDocumentId;
+      depth++;
+    }
+    
+    // Now get all documents except the target
+    const filteredIds = documentIds.filter(id => id !== documentId);
+    
+    if (filteredIds.length === 0) {
+      return [];
+    }
+    
+    // Get documents in proper order
+    const documentsData = [];
+    for (let i = 0; i < filteredIds.length; i++) {
+      const doc = await this.getDocument(filteredIds[i]);
+      if (doc) {
+        documentsData.push({
+          id: doc.id,
+          file_name: doc.fileName,
+          asset_type: doc.assetType,
+          depth: doc.parentDocumentId ? 1 : 0
+        });
+      }
+    }
+    
+    return documentsData;
   }
 
   async getDocumentChildren(documentId: string): Promise<any[]> {
-    console.log(`[MaterializedView] Getting children for document: ${documentId}`);
+    console.log(`[DocumentRelationships] Getting children for document: ${documentId}`);
     const result = await db.execute(sql`
       SELECT 
         id,
         file_name,
         asset_type,
         created_at
-      FROM document_relationships 
+      FROM ${documents}
       WHERE parent_document_id = ${documentId}
       ORDER BY created_at ASC
     `);
     
-    console.log(`[MaterializedView] Found ${result.rows.length} child documents`);
+    console.log(`[DocumentRelationships] Found ${result.rows.length} child documents`);
     return result.rows;
   }
 
   async refreshDocumentRelationships(): Promise<void> {
-    await db.execute(sql`SELECT refresh_document_relationships_manual()`);
+    // No longer needed - direct queries don't require refresh
+    console.log(`[DocumentRelationships] Refresh not needed for direct queries`);
   }
 
   async getQuestionResultsByDocumentId(documentId: string): Promise<any[]> {

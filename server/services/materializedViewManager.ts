@@ -13,15 +13,8 @@ class MaterializedViewManager {
   private readonly REFRESH_DEBOUNCE_MS = 1000; // Debounce multiple rapid changes
 
   start() {
-    console.log('[MaterializedViewManager] Starting trigger-based refresh system');
-    
-    // Initial refresh
-    this.refreshViews().catch(error => {
-      console.error('[MaterializedViewManager] Initial refresh failed:', error);
-    });
-
-    // Set up database notification listener for automatic refresh
-    this.setupNotificationListener();
+    console.log('[MaterializedViewManager] No materialized views to manage - using direct queries');
+    // No longer needed - using direct queries instead of materialized views
   }
 
   private async setupNotificationListener() {
