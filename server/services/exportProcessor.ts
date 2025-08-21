@@ -190,7 +190,8 @@ export class ExportProcessor {
       throw new Error(`No CONFIRMED analysis found for document: ${document.id}. Cannot generate rubric without confirmed analysis.`);
     }
 
-    console.log(`[ExportProcessor] Using CONFIRMED analysis with ${confirmedAnalysis.overrideCount} teacher overrides out of ${confirmedAnalysis.analysisData.totalQuestions} questions`);
+    const analysisData = confirmedAnalysis.analysisData as any;
+    console.log(`[ExportProcessor] Using CONFIRMED analysis with ${confirmedAnalysis.overrideCount} teacher overrides out of ${analysisData.totalQuestions} questions`);
     
     const pdf = new jsPDF('portrait', 'mm', 'a4');
     

@@ -884,7 +884,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(deadLetterQueue.id, id))
       .limit(1);
     
-    return result[0] || null;
+    return result.length > 0 ? result[0] : null;
   }
 
   async deleteDeadLetterQueueItem(id: string): Promise<void> {
