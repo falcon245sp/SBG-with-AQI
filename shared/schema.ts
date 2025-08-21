@@ -10,8 +10,7 @@ import {
   boolean,
   decimal,
   real,
-  pgEnum,
-  pgMaterializedView
+  pgEnum
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -309,28 +308,6 @@ export const gradeSubmissions = pgTable("grade_submissions", {
   scannedAt: timestamp("scanned_at").defaultNow(),
   processedAt: timestamp("processed_at"),
   createdAt: timestamp("created_at").defaultNow(),
-});
-
-// Document relationships materialized view for File Cabinet hierarchy and analytics
-export const documentRelationships = pgMaterializedView("document_relationships").as((qb) => {
-  return qb
-    .select({
-      id: documents.id,
-      customerUuid: documents.customerUuid,
-      fileName: documents.fileName,
-      assetType: documents.assetType,
-      parentDocumentId: documents.parentDocumentId,
-      depth: sql<number>`CASE WHEN ${documents.parentDocumentId} IS NULL THEN 0 ELSE 1 END`.as('depth'),
-      childCount: sql<number>`(SELECT count(*) FROM ${documents} children WHERE children.parent_document_id = ${documents.id})`.as('child_count'),
-      questionCount: sql<number>`(SELECT count(*) FROM ${questions} WHERE ${questions.documentId} = ${documents.id})`.as('question_count'),
-      submissionCount: sql<number>`(SELECT count(*) FROM ${gradeSubmissions} WHERE ${gradeSubmissions.originalDocumentId} = ${documents.id})`.as('submission_count'),
-      parentFileName: sql<string>`parent.file_name`.as('parent_file_name'),
-      parentAssetType: sql<string>`parent.asset_type`.as('parent_asset_type'),
-      createdAt: documents.createdAt,
-      lineagePath: sql<string[]>`CASE WHEN ${documents.parentDocumentId} IS NULL THEN ARRAY[${documents.id}] ELSE ARRAY[${documents.parentDocumentId}, ${documents.id}] END`.as('lineage_path')
-    })
-    .from(documents)
-    .leftJoin(sql`${documents} parent`, sql`${documents.parentDocumentId} = parent.id`);
 });
 
 // Insert schemas
