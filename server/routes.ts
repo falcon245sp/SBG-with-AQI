@@ -492,12 +492,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (path.isAbsolute(document.originalPath)) {
           filePath = document.originalPath;
         } else {
-          filePath = path.join(config.uploadsDir, document.originalPath);
+          // Check if originalPath already contains the uploads directory to avoid double path
+          if (document.originalPath.includes(config.uploadsDir)) {
+            filePath = document.originalPath;
+          } else {
+            filePath = path.join(config.uploadsDir, document.originalPath);
+          }
         }
         fileName = document.originalFilename || document.fileName || 'document';
       } else {
         return res.status(404).json({ message: 'Document file path not found' });
       }
+      
+      // Debug logging for file path resolution
+      console.log(`[Documents] Resolved file path: ${filePath}`);
+      console.log(`[Documents] Original path from DB: ${document.originalPath}`);
+      console.log(`[Documents] Config uploads dir: ${config.uploadsDir}`);
       
       // Check if file exists
       if (!fs.existsSync(filePath)) {
