@@ -19,6 +19,9 @@ export class DocumentProcessor {
     focusStandards?: string[]
   ): Promise<void> {
     try {
+      console.log(`\n🚀 DOCUMENT PROCESSING STARTED: ${documentId}`);
+      console.log(`📄 Processing parameters: callbackUrl=${!!callbackUrl}, focusStandards=${focusStandards?.length || 0}`);
+      
       logger.documentProcessing('Starting document processing', {
         documentId,
         callbackUrl,
