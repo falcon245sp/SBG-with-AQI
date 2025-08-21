@@ -158,38 +158,29 @@ export default function FileCabinet() {
   // Delete document
   const deleteMutation = useMutation({
     mutationFn: async (documentId: string) => {
-      console.log(`[Delete] Attempting to delete document: ${documentId}`);
       const response = await fetch(`/api/documents/${documentId}`, {
         method: 'DELETE',
         credentials: 'include'
       });
       
-      console.log(`[Delete] Response status: ${response.status}`);
-      
       if (!response.ok) {
-        const errorData = await response.text();
-        console.error(`[Delete] Server error:`, errorData);
-        throw new Error(`Failed to delete document: ${response.status} ${errorData}`);
+        const errorText = await response.text();
+        throw new Error(`Delete failed: ${response.status} - ${errorText}`);
       }
       
-      const result = await response.json();
-      console.log(`[Delete] Success response:`, result);
-      return result;
+      return response.json();
     },
-    onSuccess: (data, documentId) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['file-cabinet'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/documents'] });
       toast({
         title: "Document Deleted",
         description: "The document has been successfully removed from your File Cabinet.",
       });
-      console.log(`Document ${documentId} deleted successfully:`, data);
     },
     onError: (error) => {
-      console.error('Failed to delete document:', error);
       toast({
         title: "Deletion Failed",
-        description: `Unable to delete the document: ${error.message}`,
+        description: error.message,
         variant: "destructive",
       });
     }
@@ -202,18 +193,9 @@ export default function FileCabinet() {
   };
 
   const handleDeleteDocument = (documentId: string, fileName: string) => {
-    console.log(`[HandleDelete] Delete button clicked for document: ${documentId}, fileName: ${fileName}`);
-    console.log(`[HandleDelete] Bypassing confirmation dialog for testing - calling mutation directly`);
-    deleteMutation.mutate(documentId);
-    // Temporarily disable confirmation for testing
-    /*
     if (confirm(`Are you sure you want to delete "${fileName}"? This action cannot be undone.`)) {
-      console.log(`[HandleDelete] User confirmed deletion, calling mutation for: ${documentId}`);
       deleteMutation.mutate(documentId);
-    } else {
-      console.log(`[HandleDelete] User cancelled deletion for: ${documentId}`);
     }
-    */
   };
 
   // Accept AI analysis and proceed to document generation
