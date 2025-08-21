@@ -43,14 +43,15 @@ export class ExportProcessor {
 
     this.isProcessing = true;
     
+    // Get export queue item first for broader scope access
+    const exportItem = await storage.getExportQueueItem(exportId);
+    if (!exportItem || exportItem.status !== 'pending') {
+      console.log(`[ExportProcessor] Skipping export ${exportId} - invalid status: ${exportItem?.status}`);
+      this.isProcessing = false;
+      return;
+    }
+    
     try {
-      // Get export queue item
-      const exportItem = await storage.getExportQueueItem(exportId);
-      if (!exportItem || exportItem.status !== 'pending') {
-        console.log(`[ExportProcessor] Skipping export ${exportId} - invalid status: ${exportItem?.status}`);
-        this.isProcessing = false;
-        return;
-      }
 
       console.log(`[ExportProcessor] Processing export: ${exportItem.exportType} for document ${exportItem.documentId}`);
 
@@ -433,7 +434,7 @@ export class ExportProcessor {
     // Table content
     for (let i = 0; i < Math.min(questions.length, 20); i++) { // Limit to 20 questions
       const question = questions[i];
-      const result = questionResults.find(r => r.questionId === question.id);
+      const result = questionResults.find(r => r.questionNumber === question.questionNumber);
       
       pdf.text(`${i + 1}`, 20, yPosition);
       // Get standards text properly formatted
@@ -448,7 +449,13 @@ export class ExportProcessor {
         }
       }
       pdf.text(standardsText, 50, yPosition);
-      pdf.text(result?.rigorLevel || 'Medium', 150, yPosition);
+      
+      // Get rigor level - use consensusRigorLevel consistently
+      let rigorText = 'Medium';
+      if (result && result.consensusRigorLevel) {
+        rigorText = result.consensusRigorLevel.charAt(0).toUpperCase() + result.consensusRigorLevel.slice(1);
+      }
+      pdf.text(rigorText, 150, yPosition);
       yPosition += 8;
       
       // Start new page if needed
