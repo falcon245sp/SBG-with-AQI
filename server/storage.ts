@@ -907,6 +907,7 @@ export class DatabaseStorage implements IStorage {
 
   // Materialized view methods for optimized document relationships
   async getDocumentRelationships(documentId: string): Promise<any> {
+    console.log(`[MaterializedView] Getting relationships for document: ${documentId}`);
     const result = await db.execute(sql`
       SELECT 
         id,
@@ -925,6 +926,7 @@ export class DatabaseStorage implements IStorage {
       LIMIT 1
     `);
     
+    console.log(`[MaterializedView] Found ${result.rows.length} relationship records`);
     return result.rows[0] || null;
   }
 
@@ -949,6 +951,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getDocumentChildren(documentId: string): Promise<any[]> {
+    console.log(`[MaterializedView] Getting children for document: ${documentId}`);
     const result = await db.execute(sql`
       SELECT 
         id,
@@ -960,6 +963,7 @@ export class DatabaseStorage implements IStorage {
       ORDER BY created_at ASC
     `);
     
+    console.log(`[MaterializedView] Found ${result.rows.length} child documents`);
     return result.rows;
   }
 

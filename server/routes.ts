@@ -782,13 +782,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         documentType = 'generated';
       }
 
-      // Use materialized view for optimized performance
-      const [relationships, lineage, children, questions] = await Promise.all([
-        storage.getDocumentRelationships(id),
-        storage.getDocumentLineage(id),
-        storage.getDocumentChildren(id),
-        storage.getDocumentResults(id, customerUuid)
-      ]);
+      // Use materialized view for optimized performance with fallback to direct queries
+      let relationships, lineage, children;
+      try {
+        [relationships, lineage, children] = await Promise.all([
+          storage.getDocumentRelationships(id),
+          storage.getDocumentLineage(id), 
+          storage.getDocumentChildren(id)
+        ]);
+        console.log(`[DocumentInspector] Using materialized view - found ${children?.length || 0} children`);
+      } catch (error) {
+        console.warn('[DocumentInspector] Materialized view failed, falling back to direct queries:', error);
+        // Fallback to direct queries
+        lineage = [];
+        if (document.parentDocumentId) {
+          const parent = await storage.getDocument(document.parentDocumentId);
+          if (parent && parent.customerUuid === customerUuid) {
+            lineage.push(parent);
+          }
+        }
+        children = await storage.getGeneratedDocuments(id);
+        relationships = {
+          child_count: children?.length || 0,
+          question_count: 0,
+          submission_count: 0
+        };
+      }
+
+      // Always get questions directly (they're needed for display)
+      const questions = await storage.getDocumentResults(id, customerUuid);
 
       // Get grade submissions (still need targeted query for now)
       const gradeSubmissions = await storage.getCustomerGradeSubmissions(customerUuid);

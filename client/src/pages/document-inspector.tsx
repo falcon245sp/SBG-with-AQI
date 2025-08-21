@@ -354,7 +354,7 @@ export default function DocumentInspector() {
               ))}
               {typedInspection.questions.length > 3 && (
                 <div className="text-center pt-4 border-t">
-                  <Link href={`/documents/${documentId}/results`}>
+                  <Link href={`/results/${documentId}`}>
                     <Button variant="outline">
                       View All {typedInspection.questions.length} Questions
                     </Button>
