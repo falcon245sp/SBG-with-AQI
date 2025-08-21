@@ -913,12 +913,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await DatabaseWriteService.deleteDocument(id);
       console.log(`[DELETE] Database deletion successful for ID: ${id}`);
       
-      // Refresh materialized view after document deletion
-      try {
-        await materializedViewManager.refreshOnDemand();
-      } catch (error) {
-        console.warn('[DELETE] Failed to refresh materialized view:', error);
-      }
+      // Note: Materialized view will auto-refresh via database triggers
       
       // Clean up physical file if it exists - determine path by document type using centralized environment variables
       let basePath;
