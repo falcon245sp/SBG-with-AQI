@@ -559,6 +559,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Regenerate missing generated documents endpoint
+  app.post('/api/documents/:documentId/regenerate-missing', async (req: any, res) => {
+    try {
+      const { documentId } = req.params;
+      console.log(`[RegenerateMissing] Processing regenerate-missing request for document: ${documentId}`);
+      
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+      
+      if (!customerUuid) {
+        console.error(`[RegenerateMissing] No customer UUID found for document: ${documentId}`);
+        return res.status(401).json({ 
+          error: 'Authentication required',
+          message: 'Unable to identify customer for this request'
+        });
+      }
+
+      // Get document and verify ownership
+      const document = await storage.getDocument(documentId);
+      if (!document || document.customerUuid !== customerUuid) {
+        return res.status(404).json({ message: 'Document not found' });
+      }
+      
+      // Only allow regeneration for uploaded documents that are reviewed and accepted
+      if (document.assetType !== 'uploaded') {
+        return res.status(400).json({ message: 'Can only regenerate for uploaded documents' });
+      }
+      
+      if (document.teacherReviewStatus !== 'reviewed_and_accepted') {
+        return res.status(400).json({ message: 'Document must be reviewed and accepted first' });
+      }
+
+      console.log(`[RegenerateMissing] Customer UUID: ${customerUuid}, analyzing missing exports for document: ${documentId}`);
+
+      // Detect which exports are missing and queue only those
+      const missingExports = await DatabaseWriteService.detectAndQueueMissingExports(documentId, customerUuid);
+
+      console.log(`[RegenerateMissing] Queued ${missingExports.length} missing exports for document: ${documentId}`);
+
+      res.json({ 
+        success: true, 
+        message: `Regenerating ${missingExports.length} missing generated document(s)`,
+        documentId,
+        missingExports: missingExports
+      });
+
+    } catch (error) {
+      console.error(`[RegenerateMissing] Failed to regenerate missing documents for ${req.params?.documentId}:`, error);
+      res.status(500).json({ 
+        error: 'Failed to regenerate missing documents',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Get user documents
   app.get('/api/documents', async (req: any, res) => {
     try {

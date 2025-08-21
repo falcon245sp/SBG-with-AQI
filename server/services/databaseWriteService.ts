@@ -722,4 +722,48 @@ export class DatabaseWriteService {
       throw new Error(`Failed to queue document exports: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
+
+  /**
+   * Detect missing generated documents and queue only those for regeneration
+   */
+  static async detectAndQueueMissingExports(documentId: string, customerUuid: string): Promise<string[]> {
+    console.log(`[DatabaseWriteService] Detecting missing exports for document ${documentId}`);
+    
+    try {
+      // Verify document ownership and status
+      const document = await storage.getDocument(documentId);
+      if (!document || document.customerUuid !== customerUuid) {
+        throw new Error('Document not found or access denied');
+      }
+
+      // Get all generated documents for this source document
+      const generatedDocs = await storage.getChildDocuments(documentId);
+      console.log(`[DatabaseWriteService] Found ${generatedDocs.length} existing generated documents`);
+
+      // Check which export types already exist
+      const existingExportTypes = new Set(generatedDocs.map(doc => doc.exportType).filter(Boolean));
+      console.log(`[DatabaseWriteService] Existing export types:`, Array.from(existingExportTypes));
+
+      // Define expected export types for a reviewed and accepted document
+      const expectedExportTypes = [BusinessExportType.COVER_SHEET, BusinessExportType.RUBRIC_PDF];
+      
+      // Find missing export types
+      const missingExportTypes = expectedExportTypes.filter(exportType => !existingExportTypes.has(exportType));
+      console.log(`[DatabaseWriteService] Missing export types:`, missingExportTypes);
+
+      // Queue only the missing exports
+      const queuedExports: string[] = [];
+      for (const exportType of missingExportTypes) {
+        await storage.addToExportQueue(documentId, exportType);
+        queuedExports.push(exportType);
+        console.log(`[DatabaseWriteService] Queued missing export: ${exportType}`);
+      }
+      
+      console.log(`[DatabaseWriteService] Queued ${queuedExports.length} missing exports for document ${documentId}`);
+      return queuedExports;
+    } catch (error) {
+      console.error(`[DatabaseWriteService] Failed to detect and queue missing exports:`, error);
+      throw new Error(`Failed to detect and queue missing exports: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
 }

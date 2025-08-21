@@ -306,6 +306,52 @@ export default function FileCabinet() {
     }
   };
 
+  // Regenerate missing documents mutation
+  const regenerateMissingMutation = useMutation({
+    mutationFn: async (documentId: string) => {
+      const response = await fetch(`/api/documents/${documentId}/regenerate-missing`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to regenerate missing documents');
+      return response.json();
+    },
+    onSuccess: (data, documentId) => {
+      queryClient.invalidateQueries({ queryKey: ['file-cabinet'] });
+      toast({
+        title: "Regenerating Missing Documents",
+        description: "Missing generated documents are being created. Check back in a few moments.",
+      });
+      console.log(`Regenerating missing documents for ${documentId}:`, data);
+    },
+    onError: (error) => {
+      console.error('Failed to regenerate missing documents:', error);
+      toast({
+        title: "Error",
+        description: "Failed to regenerate missing documents. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleRegenerateMissing = (documentId: string) => {
+    if (confirm('Regenerate missing generated documents (cover sheet, rubric)? Existing documents will be preserved.')) {
+      regenerateMissingMutation.mutate(documentId);
+    }
+  };
+
+  // Helper function to detect incomplete document sets
+  const hasIncompleteGeneration = (doc: Document) => {
+    if (doc.assetType !== 'uploaded' || doc.teacherReviewStatus !== 'reviewed_and_accepted') {
+      return false;
+    }
+    
+    // For reviewed and accepted documents, we expect both cover sheet and rubric
+    // Check if document has incomplete generation by looking for missing linked documents
+    // This is heuristic-based until we have proper completion tracking
+    return !doc.hasLinkedDocuments || (doc.linkedDocumentCount && doc.linkedDocumentCount < 2);
+  };
+
 
 
   const { fetchWithSessionHandling } = useSessionHandler();
@@ -756,6 +802,20 @@ export default function FileCabinet() {
                                 }}
                               >
                                 <FileText className="h-4 w-4" />
+                              </Button>
+                            )}
+
+                            {/* Regenerate Missing Documents - only show for incomplete sets */}
+                            {hasIncompleteGeneration(doc) && (
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                title="Regenerate missing generated documents (preserves existing ones)"
+                                onClick={() => handleRegenerateMissing(doc.id)}
+                                disabled={regenerateMissingMutation.isPending}
+                                className="text-orange-600 hover:text-orange-700"
+                              >
+                                <RefreshCw className="h-4 w-4" />
                               </Button>
                             )}
 

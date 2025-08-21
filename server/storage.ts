@@ -1395,6 +1395,14 @@ export class DatabaseStorage implements IStorage {
       .where(eq(documents.customerUuid, customerUuid))
       .orderBy(desc(documents.createdAt));
   }
+
+  async getChildDocuments(parentDocumentId: string): Promise<Document[]> {
+    return await db
+      .select()
+      .from(documents)
+      .where(eq(documents.parentDocumentId, parentDocumentId))
+      .orderBy(desc(documents.createdAt));
+  }
   
   async getStudent(studentId: string): Promise<Student | undefined> {
     const [student] = await db
