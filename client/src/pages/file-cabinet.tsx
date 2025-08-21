@@ -349,7 +349,7 @@ export default function FileCabinet() {
     // For reviewed and accepted documents, we expect both cover sheet and rubric
     // Check if document has incomplete generation by looking for missing linked documents
     // This is heuristic-based until we have proper completion tracking
-    return !doc.hasLinkedDocuments || (doc.linkedDocumentCount && doc.linkedDocumentCount < 2);
+    return !doc.hasLinkedDocuments || ((doc as any).linkedDocumentCount && (doc as any).linkedDocumentCount < 2);
   };
 
 
@@ -843,7 +843,11 @@ export default function FileCabinet() {
                               disabled={deleteMutation.isPending}
                               className="text-red-600 hover:text-red-700"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              {deleteMutation.isPending ? (
+                                <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
                             </Button>
                           </div>
                         </TableCell>

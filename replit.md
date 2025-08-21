@@ -1,30 +1,10 @@
 # Document Processing Service - Standards Sherpa
 
 ## Overview
-The Document Processing Service, personified as "Standards Sherpa," is a full-stack web application that provides AI-powered analysis of educational documents (PDFs, Word docs, Google Docs). Its main purpose is to automatically identify standards alignment and determine cognitive rigor levels using multiple AI engines. The application aims to empower educators and EdTech companies with efficient tools for analyzing and aligning educational content, thereby improving curriculum development and assessment. Key capabilities include automated document processing, rubric collation, anti-fraud grading, and comprehensive document management.
+The Document Processing Service, "Standards Sherpa," is a full-stack web application for AI-powered analysis of educational documents (PDFs, Word docs, Google Docs). Its core purpose is to automatically identify standards alignment and cognitive rigor levels using multiple AI engines. It aims to provide educators and EdTech companies with efficient tools for analyzing and aligning educational content, thereby enhancing curriculum development and assessment. Key capabilities include automated document processing, rubric collation, anti-fraud grading, and comprehensive document management. The business vision is to improve educational content quality and efficiency through advanced AI integration.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
-
-## Recent Changes  
-- **August 21, 2025**: **CRITICAL INFRASTRUCTURE**: Fixed PDF viewer bug and eliminated ALL hardcoded file paths across entire codebase. Both content and download endpoints now use unified file path logic with centralized environment variables (`config.uploadsDir`, `config.rubricsDir`, `config.coversheetsDir`). Rubric viewer now displays actual generated PDF content from files, not recreated data. Updated routes.ts, databaseWriteService.ts, testing routes, and storage.ts to consistently use environment configuration. This ensures all file operations are centrally managed and environment-consistent.
-- **August 21, 2025**: **MAJOR ARCHITECTURE IMPROVEMENT**: Implemented clean DRAFT → CONFIRMED analysis workflow to eliminate complex override logic. AI analysis is now considered "DRAFT" status. When teacher accepts (with optional overrides), system creates single "CONFIRMED analysis document" as authoritative source. All generated documents (rubrics, cover sheets) now read from this single source, eliminating data inconsistencies and complex scattered override logic. Added new `confirmedAnalysis` table and updated Accept & Proceed workflow to create CONFIRMED documents before generation.
-- **August 21, 2025**: Fixed critical teacher override integration where generated documents ignored teacher corrections. Export processors now respect teacher overrides over AI consensus with visual source indicators (Teacher/AI).
-- **August 21, 2025**: Implemented comprehensive export queue cleanup system with 60-minute TTL for successful exports and 24-hour TTL for failed exports. Fixed broken retry mechanism - exports now properly increment attempts with exponential backoff (1min, 4min, 16min) and requeue up to 3 attempts before permanent failure. Added automated queue management with `deleteExportQueueItem`, `incrementExportAttempts`, and `rescheduleExport` methods. Cleaned up 6 stale completed exports and resolved foreign key constraint issues preventing document deletion.
-- **August 20, 2025**: Implemented comprehensive environment variable system for all file paths to prevent file creation issues and ensure consistency. Added `STABLE_UPLOADS_DIR`, `STABLE_GENERATED_DIR`, `STABLE_RUBRICS_DIR`, `STABLE_COVERSHEETS_DIR`, and `STABLE_GRADED_DIR` environment variables with proper fallback values. Updated multer configuration, export processor, rubric collation service, and document content API to use centralized environment configuration. Created comprehensive `.env.example` file documenting all file path configurations.
-- **August 20, 2025**: Implemented human-readable file organization structure under `appdata` directory. Files now properly organized: uploaded files at `appdata/uploads`, generated rubrics at `appdata/generated/rubrics`, generated cover sheets at `appdata/generated/coversheets`, and graded submissions at `appdata/generated/graded`. Updated all file handling, export processing, and document preview APIs to use the new directory structure. Fixed file preview system to properly locate generated documents based on their asset type and export type.
-- **August 19, 2025**: Fixed critical status reporting bug affecting user experience across ALL components. Implemented comprehensive real-time polling system with 2-3 second intervals for processing documents, teacher review status, and export queue monitoring. Added staleTime: 0 to queryClient for fresh status updates. Enhanced polling triggers to include 'not_reviewed' teacher status. Replaced simulated status updates in upload page with authentic API polling. Status updates now work reliably across Dashboard, Results, File Cabinet, Document Results, and Upload pages.
-- **August 19, 2025**: Added NGSS (Next Generation Science Standards) jurisdiction support for testing non-math subjects. Includes comprehensive NGSS standards reference covering K-12 science standards across Physical Science, Life Science, Earth Science, and Engineering Design domains. Features dynamic focus standards placeholder text and specialized AI prompt system for science document analysis.
-- **August 19, 2025**: Added comprehensive data truncation feature to admin interface "Dev Tools" tab for clean test runs. Includes POST `/api/admin/truncate-data` endpoint with complete database and file system cleanup, double-confirmation UI safeguards, and detailed operation reporting. Safely clears all tables in proper order, removes uploaded files, and provides comprehensive feedback on completion.
-- **August 19, 2025**: Implemented comprehensive environment variable system with DEV_/PROD_ prefixes for environment-specific settings and STABLE_ prefixes for environment-stable constants. Automatically selects appropriate configuration based on NODE_ENV. Moved all hardcoded values including web service URLs, API keys, session secrets, admin emails, domain configuration, session TTL, OIDC cache settings, OAuth delays, ports, and performance thresholds to configurable environment variables. Cookie security automatically enabled in production (HTTPS-only). Created centralized environment configuration manager with type safety.
-- **August 19, 2025**: Fixed emoji rendering issue in PDF rubrics by replacing chili pepper emojis with asterisk symbols (* mild, ** medium, *** spicy) for proper PDF display compatibility.
-- **August 19, 2025**: Implemented comprehensive document overwrite system preventing duplicate generated documents. System now automatically deletes existing generated documents before creating new versions, ensuring only one document of each type exists per source document.
-- **August 19, 2025**: Cleaned up duplicate document accumulation - removed 13 duplicate rubric documents and 7 duplicate cover sheet documents, implementing proper one-to-one relationship between source documents and generated outputs.
-- **August 19, 2025**: Implemented professional table-based rubric format exactly matching user's provided template. Features include: six-column table layout (Criteria, Points, Full Credit, Partial Credit, Minimal Credit, No Credit), rigor indicators, standards alignment per question, student name field (upper right), and QR code placeholder (upper left) for future automated gradebook integration.
-- **August 19, 2025**: Completely overhauled rubric generation to align with Standards-Based Grading methodology. The new SBG rubric displays standard/rigor pairs for each question and uses the proper 4-level mastery scale: "Demonstrates Full Mastery" (4), "Demonstrates Mastery with Unrelated Mistakes" (3), "Does Not Demonstrate Mastery" (2), and "No Attempt" (1), replacing the previous points-based system.
-- **August 19, 2025**: Fixed critical "Accept & Proceed" functionality that was failing due to database access errors in storage.ts. Resolved TypeScript errors where `this.db` was incorrectly used instead of the imported `db` instance. The teacher review workflow now functions properly, allowing documents to transition from "not_reviewed" to "reviewed_and_accepted" status and trigger cover sheet and rubric generation.
-- **August 18, 2025**: Implemented comprehensive production-ready logging system with customer context correlation, request tracing, and specialized logging methods for debugging customer issues in production environments. Created PRODUCTION_LOGGING_GUIDE.md with complete debugging workflows.
-- **August 18, 2025**: Split UX into dual system: customer-facing dashboard for document operations (upload, file cabinet, results) and admin panel for system diagnostics, monitoring, and debugging tools. Admin access restricted to specific email addresses.
 
 ## System Architecture
 
@@ -43,10 +23,7 @@ Preferred communication style: Simple, everyday language.
 - **Authentication**: Replit Auth integration with session management
 - **File Processing**: Multer for uploads, PDF-extract for PDFs, Mammoth for Word documents
 - **AI Integration**: Multiple AI service integrations
-- **Three-Layer Architecture**:
-    - **ActiveUserService**: Centralized service for accessing authenticated user data.
-    - **CustomerLookupService**: Single database service for customer UUID resolution and PII decryption.
-    - **DatabaseWriteService**: Centralized write operations service with business logic, error handling, audit trails, and transaction management.
+- **Three-Layer Architecture**: ActiveUserService, CustomerLookupService, DatabaseWriteService for centralized data access and write operations.
 
 ### Database Design
 - **Primary Database**: PostgreSQL via Neon serverless
@@ -57,15 +34,17 @@ Preferred communication style: Simple, everyday language.
 - **Multi-Engine Analysis**: Parallel processing with ChatGPT, Grok, and Claude.
 - **Consensus Algorithm**: Voting methodology to consolidate results.
 - **Rigor Assessment**: Three-tier classification system (mild, medium, spicy) based on Depth of Knowledge (DOK) levels.
-- **Standards Mapping**: Automated identification of educational standards alignment.
+- **Standards Mapping**: Automated identification of educational standards alignment, including NGSS support.
+- **Analysis Workflow**: Clean DRAFT → CONFIRMED analysis workflow where AI analysis is "DRAFT," and teacher acceptance creates a single "CONFIRMED analysis document" as the authoritative source for all generated documents.
 
 ### File Processing
 - **Supported Formats**: PDF, Microsoft Word (.docx), Google Docs.
 - **Question Parsing**: Intelligent parsing to extract individual questions and context.
 - **Asynchronous Processing**: Queue-based system for handling large documents.
 - **Multi-File Upload**: Support for uploading and processing multiple documents simultaneously.
-- **Document Re-submission Overwrite System**: Automatically deletes previously generated documents and clears export queues for re-processed source documents, ensuring seamless re-generation.
+- **Document Re-submission Overwrite System**: Automatically deletes existing generated documents and clears export queues for re-processed source documents, ensuring seamless re-generation.
 - **User-Friendly Filename Generation**: Generated documents use descriptive names (e.g., `[Original-Document-Name]_[type]_[YYYY-MM-DD].pdf`).
+- **File Organization**: Human-readable structure under `appdata` (uploads, generated rubrics, coversheets, graded).
 
 ### Security & Authentication
 - **Authentication Provider**: Replit Auth with OpenID Connect (with fallback username/password).
@@ -75,23 +54,27 @@ Preferred communication style: Simple, everyday language.
 - **PII Encryption**: All personally identifiable information encrypted at rest using AES encryption.
 - **Credential Security**: OAuth credentials stored in environment variables.
 - **Centralized Data Access**: CustomerLookupService and DatabaseWriteService enforce secure and consistent data handling.
+- **Environment Configuration**: Comprehensive environment variable system with DEV_/PROD_ prefixes and STABLE_ constants for environment-specific settings.
 
 ### Error Handling & Monitoring
 - **Production-Ready Logging**: Comprehensive structured logging system with customer context correlation, request tracing, and specialized logging methods for debugging production issues.
-- **Log Levels**: ERROR, WARN, INFO, DEBUG with environment-appropriate formatting (JSON for production, readable for development).
-- **Customer Correlation**: All logs include customerUuid, requestId, and relevant context for complete issue tracing.
+- **Log Levels**: ERROR, WARN, INFO, DEBUG.
+- **Customer Correlation**: All logs include customerUuid, requestId, and relevant context.
 - **Error Boundaries**: Comprehensive error handling with full stack traces and correlation IDs.
-- **Status Tracking**: Real-time processing status updates.
-- **Performance Monitoring**: Automatic performance logging with warnings for slow operations (>5 seconds).
+- **Status Tracking**: Real-time polling system for processing documents, teacher review status, and export queue monitoring.
+- **Performance Monitoring**: Automatic performance logging with warnings for slow operations.
 
 ### Feature Specifications
 - **Student Facing Test Cover Sheet**: PDF export with four-column layout (Question, Standard, Topic, Rigor Level).
-- **Teacher Override System**: Database and UI for teachers to save corrections to AI analysis, including confidence scoring and "Revert to Sherpa" functionality.
+- **Teacher Override System**: Database and UI for teachers to save corrections to AI analysis, including confidence scoring and "Revert to Sherpa" functionality; export processors respect teacher overrides.
 - **Google Classroom Integration**: Google Classroom API integration for roster and class management.
 - **Anti-Fraud QR Grading**: One-time sequence number system prevents duplicate grade submissions for rubrics.
-- **Rubric Collation System**: Automatically combines individual graded rubric submissions into organized multipage PDFs, integrating with the File Cabinet.
+- **Rubric Collation System**: Automatically combines individual graded rubric submissions into organized multipage PDFs.
 - **File Cabinet Document Management**: Three-drawer system (Uploaded, Generated, Graded) with reliable type identification and Mac Finder-style interface.
 - **Visual Design**: Warm scholarly aesthetic with a rich blue and wood tone color palette.
+- **Rubric Format**: Professional table-based format with six-column layout, rigor indicators, standards alignment, student name field, and QR code placeholder. Standards-Based Grading methodology applied with a 4-level mastery scale.
+- **Export Queue Management**: Comprehensive cleanup system with TTL for exports and retry mechanism with exponential backoff.
+- **UX**: Dual system with customer-facing dashboard and admin panel for system diagnostics.
 
 ## External Dependencies
 
@@ -105,8 +88,8 @@ Preferred communication style: Simple, everyday language.
 - **Google Cloud Storage**: Configured for file storage (not actively used)
 
 ### Authentication & Google Integration
-- **Google OAuth**: Primary authentication, configured with renamed environment variables (SHERPA_*) to avoid Replit platform conflicts.
-- **Google Classroom Integration**: Full OAuth-based integration with proper token management.
+- **Google OAuth**: Primary authentication, configured with renamed environment variables (SHERPA_*)
+- **Google Classroom Integration**: Full OAuth-based integration
 
 ### UI Libraries
 - **Radix UI**: Headless component primitives

@@ -1122,11 +1122,32 @@ function TeacherOverrideForm({
       await queryClient.refetchQueries({ queryKey: [`/api/documents/${documentId}/results`] });
       console.log('Cache refetch completed');
       
-      toast({
-        title: "Override Saved",
-        description: "Your changes have been saved successfully.",
-        variant: "default",
-      });
+      // Trigger regeneration of rubrics and cover sheets with teacher overrides
+      try {
+        console.log('Triggering rubric regeneration after teacher override...');
+        const response = await fetch(`/api/documents/${documentId}/accept`, {
+          method: 'POST',
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          console.log('Rubric regeneration triggered successfully');
+          toast({
+            title: "Override Saved & Rubrics Regenerating",
+            description: "Your changes have been saved and new rubrics are being generated with your corrections.",
+            variant: "default",
+          });
+        } else {
+          throw new Error('Failed to trigger regeneration');
+        }
+      } catch (error) {
+        console.error('Failed to trigger rubric regeneration:', error);
+        toast({
+          title: "Override Saved",
+          description: "Changes saved but rubric regeneration failed. Use Accept & Proceed to manually regenerate.",
+          variant: "default",
+        });
+      }
       
       onSuccess();
     },
