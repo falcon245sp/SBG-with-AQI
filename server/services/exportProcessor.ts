@@ -252,10 +252,10 @@ export class ExportProcessor {
     
     yPosition += 8;
     
-    // Add questions in table format
-    for (let i = 0; i < questions.length; i++) {
-      const question = questions[i];
-      const result = questionResults.find(r => r.questionNumber === question.questionNumber);
+    // Add questions using CONFIRMED analysis
+    const confirmedQuestions = analysisData.questions;
+    for (let i = 0; i < confirmedQuestions.length; i++) {
+      const questionAnalysis = confirmedQuestions[i];
       
       // Calculate row height needed
       const rowHeight = 20;
@@ -266,37 +266,23 @@ export class ExportProcessor {
         yPosition = 20;
       }
       
-      // Check for teacher override first, then fallback to AI consensus
-      const override = teacherOverrides.get(question.id);
-      
-      // Get standards text (prioritize teacher override)
+      // Get standards from CONFIRMED analysis
       let standardsText = 'Not analyzed';
-      if (override && override.overriddenStandards) {
-        if (Array.isArray(override.overriddenStandards)) {
-          standardsText = override.overriddenStandards.map((s: any) => s.code || s).join(', ');
-        }
-      } else if (result && result.consensusStandards) {
-        if (typeof result.consensusStandards === 'string') {
-          standardsText = result.consensusStandards;
-        } else if (Array.isArray(result.consensusStandards)) {
-          standardsText = result.consensusStandards.map((s: any) => s.code || s).join(', ');
-        } else if (result.consensusStandards.code) {
-          standardsText = result.consensusStandards.code;
+      if (questionAnalysis.finalStandards) {
+        if (Array.isArray(questionAnalysis.finalStandards)) {
+          standardsText = questionAnalysis.finalStandards.map((s: any) => s.code || s).join(', ');
+        } else if (typeof questionAnalysis.finalStandards === 'string') {
+          standardsText = questionAnalysis.finalStandards;
+        } else if (questionAnalysis.finalStandards.code) {
+          standardsText = questionAnalysis.finalStandards.code;
         }
       }
       
-      // Get rigor level (prioritize teacher override)
+      // Get rigor level from CONFIRMED analysis
       let rigorDisplay = '*';
-      let rigorSource = '';
-      if (override && override.overriddenRigorLevel) {
-        const rigor = override.overriddenRigorLevel.toLowerCase();
-        rigorSource = ' (Teacher)';
-        if (rigor === 'mild') rigorDisplay = '*';
-        else if (rigor === 'medium') rigorDisplay = '**';
-        else if (rigor === 'spicy') rigorDisplay = '***';
-      } else if (result && result.consensusRigorLevel) {
-        const rigor = result.consensusRigorLevel.toLowerCase();
-        rigorSource = ' (AI)';
+      let rigorSource = questionAnalysis.hasTeacherOverride ? ' (Teacher)' : ' (AI)';
+      if (questionAnalysis.finalRigorLevel) {
+        const rigor = questionAnalysis.finalRigorLevel.toLowerCase();
         if (rigor === 'mild') rigorDisplay = '*';
         else if (rigor === 'medium') rigorDisplay = '**';
         else if (rigor === 'spicy') rigorDisplay = '***';
@@ -316,7 +302,7 @@ export class ExportProcessor {
       pdf.setFont('helvetica', 'normal');
       
       // Criteria column
-      const questionTitle = `Q${question.questionNumber}: ${question.questionText.substring(0, 50)}...`;
+      const questionTitle = `Q${questionAnalysis.questionNumber}: ${questionAnalysis.questionText ? questionAnalysis.questionText.substring(0, 50) : 'Question text'}...`;
       const wrappedQuestion = pdf.splitTextToSize(questionTitle, cols.criteria.width - 4);
       pdf.text(wrappedQuestion, cols.criteria.x + 2, yPosition + 4);
       pdf.setFontSize(8);
@@ -426,18 +412,15 @@ export class ExportProcessor {
   private async generateCoverSheet(document: any, exportItem: any): Promise<string> {
     console.log(`[ExportProcessor] Generating cover sheet for document: ${document.fileName}`);
 
-    // Get questions and AI results for the document
-    const questions = await storage.getQuestionsByDocumentId(document.id);
-    const questionResults = await storage.getQuestionResultsByDocumentId(document.id);
+    // NEW ARCHITECTURE: Use CONFIRMED analysis as single source of truth
+    const confirmedAnalysis = await storage.getConfirmedAnalysis(document.id);
     
-    // Get teacher overrides for each question to respect teacher corrections
-    const teacherOverrides = new Map<string, any>();
-    for (const question of questions) {
-      const override = await storage.getQuestionOverride(question.id, document.customerUuid);
-      if (override) {
-        teacherOverrides.set(question.id, override);
-      }
+    if (!confirmedAnalysis) {
+      throw new Error(`No CONFIRMED analysis found for document: ${document.id}. Cannot generate cover sheet without confirmed analysis.`);
     }
+
+    const analysisData = confirmedAnalysis.analysisData as any;
+    console.log(`[ExportProcessor] Cover sheet using CONFIRMED analysis with ${confirmedAnalysis.overrideCount} teacher overrides`);
     
     const pdf = new jsPDF();
     
@@ -447,7 +430,7 @@ export class ExportProcessor {
     
     pdf.setFontSize(12);
     pdf.text(`Assessment: ${document.fileName}`, 20, 45);
-    pdf.text(`Number of Questions: ${questions.length}`, 20, 60);
+    pdf.text(`Number of Questions: ${analysisData.totalQuestions}`, 20, 60);
     
     let yPosition = 80;
     
@@ -463,42 +446,31 @@ export class ExportProcessor {
     pdf.text('Rigor Level', 150, yPosition);
     yPosition += 10;
     
-    // Table content
-    for (let i = 0; i < Math.min(questions.length, 20); i++) { // Limit to 20 questions
-      const question = questions[i];
-      const result = questionResults.find(r => r.questionNumber === question.questionNumber);
+    // Table content using CONFIRMED analysis
+    const confirmedQuestions = analysisData.questions;
+    for (let i = 0; i < Math.min(confirmedQuestions.length, 20); i++) { // Limit to 20 questions
+      const questionAnalysis = confirmedQuestions[i];
       
       pdf.text(`${i + 1}`, 20, yPosition);
       
-      // Check for teacher override first, then fallback to AI consensus
-      const override = teacherOverrides.get(question.id);
-      
-      // Get standards text (prioritize teacher override)
+      // Get standards from CONFIRMED analysis
       let standardsText = 'TBD';
-      if (override && override.overriddenStandards) {
-        if (Array.isArray(override.overriddenStandards)) {
-          standardsText = override.overriddenStandards.map((s: any) => s.code || s).join(', ');
-        }
-      } else if (result && result.consensusStandards) {
-        if (typeof result.consensusStandards === 'string') {
-          standardsText = result.consensusStandards;
-        } else if (Array.isArray(result.consensusStandards)) {
-          standardsText = result.consensusStandards.map((s: any) => s.code || s).join(', ');
-        } else if (result.consensusStandards.code) {
-          standardsText = result.consensusStandards.code;
+      if (questionAnalysis.finalStandards) {
+        if (Array.isArray(questionAnalysis.finalStandards)) {
+          standardsText = questionAnalysis.finalStandards.map((s: any) => s.code || s).join(', ');
+        } else if (typeof questionAnalysis.finalStandards === 'string') {
+          standardsText = questionAnalysis.finalStandards;
+        } else if (questionAnalysis.finalStandards.code) {
+          standardsText = questionAnalysis.finalStandards.code;
         }
       }
       pdf.text(standardsText, 50, yPosition);
       
-      // Get rigor level (prioritize teacher override)
+      // Get rigor level from CONFIRMED analysis
       let rigorText = 'Medium';
-      let rigorSource = '';
-      if (override && override.overriddenRigorLevel) {
-        rigorText = override.overriddenRigorLevel.charAt(0).toUpperCase() + override.overriddenRigorLevel.slice(1);
-        rigorSource = ' (Teacher)';
-      } else if (result && result.consensusRigorLevel) {
-        rigorText = result.consensusRigorLevel.charAt(0).toUpperCase() + result.consensusRigorLevel.slice(1);
-        rigorSource = ' (AI)';
+      let rigorSource = questionAnalysis.hasTeacherOverride ? ' (Teacher)' : ' (AI)';
+      if (questionAnalysis.finalRigorLevel) {
+        rigorText = questionAnalysis.finalRigorLevel.charAt(0).toUpperCase() + questionAnalysis.finalRigorLevel.slice(1);
       }
       pdf.text(rigorText + rigorSource, 150, yPosition);
       yPosition += 8;
