@@ -11,13 +11,18 @@ export async function getJurisdictions(req: Request, res: Response) {
     const jurisdictions = await commonStandardsProjectService.getJurisdictions();
     
     res.json({
-      jurisdictions: jurisdictions.filter(j => 
-        // Filter to common jurisdictions users care about
-        j.title.includes('Core') || // Common Core
-        j.type === 'state' || // State standards
-        j.title.includes('NGSS') || // Next Generation Science Standards
-        j.title.includes('Texas') // Popular state example
-      )
+      jurisdictions: jurisdictions.filter(j => {
+        // Filter to educational jurisdictions that have actual standards
+        const title = j.title.toLowerCase();
+        const isState = j.type === 'state';
+        const isCommonCore = title.includes('core');
+        const isNGSS = title.includes('ngss') || title.includes('science');
+        const isStandards = title.includes('standards') || title.includes('curriculum');
+        const isEducational = title.includes('education') || title.includes('learning');
+        
+        // Include states, major standards organizations, and educational bodies
+        return isState || isCommonCore || isNGSS || isStandards || isEducational;
+      })
     });
 
   } catch (error) {
