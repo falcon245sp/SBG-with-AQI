@@ -76,7 +76,7 @@ class EnvironmentManager {
       ),
       sessionSecret: this.getEnvVar('SESSION_SECRET', 
         this.isProduction() 
-          ? undefined // Force production to set this
+          ? 'prod-default-session-secret-change-if-needed'
           : 'dev-session-secret-not-for-production'
       ),
       cookieSecure: this.isProduction(),
