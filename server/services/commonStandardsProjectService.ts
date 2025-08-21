@@ -71,6 +71,28 @@ export interface GradeBandCourses {
   }[];
 }
 
+// Course mapping for Common Core State Standards to traditional course names
+const COMMON_CORE_COURSE_MAPPING: Record<string, string> = {
+  // High School Mathematics - Map domains to traditional courses
+  'High School — Algebra': 'Algebra 1',
+  'High School — Functions': 'Algebra 2', 
+  'High School — Geometry': 'Geometry',
+  'High School — Number and Quantity': 'Pre-Calculus',
+  'High School — Statistics and Probability': 'Statistics',
+  'Grades 9, 10, 11, 12': 'High School Mathematics (General)',
+  
+  // Keep elementary/middle school grade-based naming
+  'Grade K': 'Kindergarten Mathematics',
+  'Grade 1': 'Grade 1 Mathematics',
+  'Grade 2': 'Grade 2 Mathematics', 
+  'Grade 3': 'Grade 3 Mathematics',
+  'Grade 4': 'Grade 4 Mathematics',
+  'Grade 5': 'Grade 5 Mathematics',
+  'Grade 6': 'Grade 6 Mathematics',
+  'Grade 7': 'Grade 7 Mathematics',
+  'Grade 8': 'Grade 8 Mathematics',
+};
+
 class CommonStandardsProjectService {
   private async makeApiRequest<T>(endpoint: string): Promise<T> {
     const response = await fetch(`${CSP_API_BASE}${endpoint}`);
@@ -230,9 +252,15 @@ class CommonStandardsProjectService {
         };
       }
       
+      // Apply course mapping for Common Core State Standards
+      let displayTitle = set.title;
+      if (set.title && COMMON_CORE_COURSE_MAPPING[set.title]) {
+        displayTitle = COMMON_CORE_COURSE_MAPPING[set.title];
+      }
+      
       gradeBands[gradeBand].courses.push({
         id: set.id,
-        title: set.title,
+        title: displayTitle,
         subject: set.subject
       });
     });
