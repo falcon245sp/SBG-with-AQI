@@ -873,20 +873,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await DatabaseWriteService.deleteDocument(id);
       console.log(`[DELETE] Database deletion successful for ID: ${id}`);
       
-      // Clean up physical file if it exists - determine path by document type
+      // Clean up physical file if it exists - determine path by document type using centralized environment variables
       let basePath;
       if (document.assetType === 'uploaded') {
-        basePath = path.join(process.cwd(), 'appdata', 'uploads');
+        basePath = config.uploadsDir;
       } else if (document.assetType === 'generated') {
         if (document.exportType === 'rubric_pdf') {
-          basePath = path.join(process.cwd(), 'appdata', 'generated', 'rubrics');
+          basePath = config.rubricsDir;
         } else if (document.exportType === 'cover_sheet') {
-          basePath = path.join(process.cwd(), 'appdata', 'generated', 'coversheets');
+          basePath = config.coversheetsDir;
         } else {
-          basePath = path.join(process.cwd(), 'appdata', 'generated');
+          basePath = config.generatedDir;
         }
       } else {
-        basePath = path.join(process.cwd(), 'appdata', 'uploads'); // fallback
+        basePath = config.uploadsDir; // fallback
       }
       
       const filePath = path.join(basePath, document.originalPath);
@@ -1481,7 +1481,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Test file system
       try {
-        fs.accessSync(path.join(process.cwd(), 'uploads'));
+        fs.accessSync(config.uploadsDir);
         health.fileSystem = 'healthy';
       } catch (err) {
         health.fileSystem = 'error';
@@ -1489,7 +1489,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Test user-friendly filenames by checking recent generated files
       try {
-        const recentFiles = fs.readdirSync(path.join(process.cwd(), 'uploads'))
+        const recentFiles = fs.readdirSync(config.uploadsDir)
           .filter(f => f.includes('rubric') || f.includes('cover'))
           .filter(f => !f.includes('_4251e0f1-1739-4d39-99cc-86052f6ed3f0_')); // Old UUID format
         
@@ -1568,19 +1568,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Clear uploads directory
+      // Clear uploads directory using environment variables
       let filesDeleted = 0;
       try {
-        const uploadsPath = path.join(process.cwd(), 'uploads');
-        
-        if (fs.existsSync(uploadsPath)) {
-          const files = fs.readdirSync(uploadsPath);
+        if (fs.existsSync(config.uploadsDir)) {
+          const files = fs.readdirSync(config.uploadsDir);
           
           for (const file of files) {
             // Skip .gitkeep and other hidden files
             if (!file.startsWith('.')) {
               try {
-                const filePath = path.join(uploadsPath, file);
+                const filePath = path.join(config.uploadsDir, file);
                 fs.unlinkSync(filePath);
                 filesDeleted++;
               } catch (fileError) {

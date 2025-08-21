@@ -94,9 +94,8 @@ router.get('/health-check', async (req, res) => {
     // Test file system access
     try {
       const fs = await import('fs');
-      const path = await import('path');
-      const uploadsDir = path.join(process.cwd(), 'uploads');
-      fs.accessSync(uploadsDir);
+      const { config } = await import('../config/environment');
+      fs.accessSync(config.uploadsDir);
       healthCheck.fileSystem = 'healthy';
     } catch (error) {
       healthCheck.fileSystem = 'error';

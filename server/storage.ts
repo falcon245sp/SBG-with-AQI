@@ -1511,7 +1511,8 @@ export class DatabaseStorage implements IStorage {
         // Delete physical file
         const fs = await import('fs');
         const path = await import('path');
-        const filePath = path.join('uploads', doc.fileName);
+        const { config } = await import('./config/environment');
+        const filePath = path.join(config.uploadsDir, doc.fileName);
         if (fs.existsSync(filePath)) {
           fs.unlinkSync(filePath);
           console.log(`[Storage] Deleted physical file: ${doc.fileName}`);

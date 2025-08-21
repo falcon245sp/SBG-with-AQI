@@ -61,7 +61,8 @@ export class DatabaseWriteService {
             if (existingDoc.originalPath) {
               const fs = await import('fs');
               const path = await import('path');
-              const fullPath = path.join(process.cwd(), 'uploads', existingDoc.originalPath);
+              const { config } = await import('../config/environment');
+              const fullPath = path.join(config.uploadsDir, existingDoc.originalPath);
               if (fs.existsSync(fullPath)) {
                 fs.unlinkSync(fullPath);
                 console.log(`[DatabaseWriteService] Deleted physical file: ${existingDoc.originalPath}`);
