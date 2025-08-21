@@ -1059,11 +1059,11 @@ function StandardsConfigurationDialog({
                   {cspStandards.map((standard) => (
                     <div
                       key={standard.id}
-                      className={`p-3 border-b last:border-b-0 ${selectedStandardsMap[standard.id] ? 'bg-green-50' : 'bg-gray-50'}`}
+                      className={`p-3 border-b last:border-b-0 ${(selectedStandardsMap[standard.id] ?? true) ? 'bg-green-50' : 'bg-gray-50'}`}
                     >
                       <div className="flex items-start gap-3">
                         <Switch
-                          checked={selectedStandardsMap[standard.id] || false}
+                          checked={selectedStandardsMap[standard.id] ?? true}
                           onCheckedChange={() => toggleStandard(standard.id)}
                           className="data-[state=checked]:bg-green-600 mt-1"
                         />
