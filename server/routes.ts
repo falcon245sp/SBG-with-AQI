@@ -338,21 +338,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let filePath: string;
       
       if (document.assetType === 'generated') {
-        // For generated documents, use environment-based directory structure
-        const STABLE_RUBRICS_DIR = 'appdata/generated/rubrics';
-        const STABLE_COVERSHEETS_DIR = 'appdata/generated/coversheets';
-        
+        // For generated documents, use centralized environment variables
         console.log(`[Documents] Content request for generated document: ${document.fileName}`);
         
-        // Determine which subdirectory based on file name
+        // Determine which subdirectory based on file name using environment variables
         if (document.fileName.includes('cover-sheet')) {
-          filePath = path.join(STABLE_COVERSHEETS_DIR, document.fileName);
+          filePath = path.join(config.coversheetsDir, document.fileName);
         } else if (document.fileName.includes('rubric')) {
-          filePath = path.join(STABLE_RUBRICS_DIR, document.fileName);
+          filePath = path.join(config.rubricsDir, document.fileName);
         } else {
           // Fallback to checking both directories
-          const rubricPath = path.join(STABLE_RUBRICS_DIR, document.fileName);
-          const coverSheetPath = path.join(STABLE_COVERSHEETS_DIR, document.fileName);
+          const rubricPath = path.join(config.rubricsDir, document.fileName);
+          const coverSheetPath = path.join(config.coversheetsDir, document.fileName);
           
           if (fs.existsSync(rubricPath)) {
             filePath = rubricPath;
@@ -364,13 +361,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
       } else if (document.originalPath) {
-        // For uploaded documents, use originalPath
-        const { STABLE_UPLOADS_DIR } = await import('./config/environment');
-        
+        // For uploaded documents, use environment variable
         if (path.isAbsolute(document.originalPath)) {
           filePath = document.originalPath;
         } else {
-          filePath = path.join(STABLE_UPLOADS_DIR, document.originalPath);
+          filePath = path.join(config.uploadsDir, document.originalPath);
         }
       } else {
         return res.status(404).json({ message: 'Document file path not found' });
@@ -466,22 +461,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let fileName: string;
       
       if (document.assetType === 'generated') {
-        // For generated documents, use environment-based directory structure
-        const STABLE_RUBRICS_DIR = 'appdata/generated/rubrics';
-        const STABLE_COVERSHEETS_DIR = 'appdata/generated/coversheets';
-        
+        // For generated documents, use centralized environment variables
         console.log(`[Documents] Generated document request: ${document.fileName}`);
         console.log(`[Documents] Asset type: ${document.assetType}`);
         
-        // Determine which subdirectory based on file name
+        // Determine which subdirectory based on file name using environment variables
         if (document.fileName.includes('cover-sheet')) {
-          filePath = path.join(STABLE_COVERSHEETS_DIR, document.fileName);
+          filePath = path.join(config.coversheetsDir, document.fileName);
         } else if (document.fileName.includes('rubric')) {
-          filePath = path.join(STABLE_RUBRICS_DIR, document.fileName);
+          filePath = path.join(config.rubricsDir, document.fileName);
         } else {
           // Fallback to checking both directories
-          const rubricPath = path.join(STABLE_RUBRICS_DIR, document.fileName);
-          const coverSheetPath = path.join(STABLE_COVERSHEETS_DIR, document.fileName);
+          const rubricPath = path.join(config.rubricsDir, document.fileName);
+          const coverSheetPath = path.join(config.coversheetsDir, document.fileName);
           
           if (fs.existsSync(rubricPath)) {
             filePath = rubricPath;
@@ -494,13 +486,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         fileName = document.fileName;
       } else if (document.originalPath) {
-        // For uploaded documents, use originalPath
-        const { STABLE_UPLOADS_DIR } = await import('./config/environment');
-        
+        // For uploaded documents, use environment variable
         if (path.isAbsolute(document.originalPath)) {
           filePath = document.originalPath;
         } else {
-          filePath = path.join(STABLE_UPLOADS_DIR, document.originalPath);
+          filePath = path.join(config.uploadsDir, document.originalPath);
         }
         fileName = document.originalFilename || document.fileName || 'document';
       } else {
