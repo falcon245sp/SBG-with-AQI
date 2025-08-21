@@ -26,12 +26,16 @@ class MaterializedViewManager {
 
   private async setupNotificationListener() {
     try {
-      // Listen for refresh notifications from database triggers
-      await db.execute(sql`LISTEN refresh_document_relationships`);
-
-      // Note: In a production setup, you'd want to use a proper PostgreSQL client
-      // that supports LISTEN/NOTIFY. For now, we'll fall back to debounced refresh
-      console.log('[MaterializedViewManager] Database notification listener setup (trigger-based)');
+      // Skip LISTEN setup in production to avoid websocket connection issues during deployment
+      const isProduction = process.env.NODE_ENV === 'production';
+      
+      if (!isProduction) {
+        // Listen for refresh notifications from database triggers
+        await db.execute(sql`LISTEN refresh_document_relationships`);
+        console.log('[MaterializedViewManager] Database notification listener setup (trigger-based)');
+      } else {
+        console.log('[MaterializedViewManager] Skipping LISTEN setup in production environment');
+      }
     } catch (error) {
       console.warn('[MaterializedViewManager] Could not setup notification listener, using fallback:', error);
     }
