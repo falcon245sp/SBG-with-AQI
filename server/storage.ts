@@ -958,7 +958,23 @@ export class DatabaseStorage implements IStorage {
     return qr;
   }
 
-  async getDocumentResults(documentId: string, customerUuid: string): Promise<Array<Question & { result?: QuestionResult; aiResponses: AiResponse[]; teacherOverride?: TeacherOverride }>> {
+  async getDocumentResults(documentId: string, customerUuid: string): Promise<Array<Question & { result?: QuestionResult; aiResponses: AiResponse[]; teacherOverride?: TeacherOverride; confirmedData?: any }>> {
+    // NEW ARCHITECTURE: Check for CONFIRMED analysis first
+    const confirmedAnalysis = await this.getConfirmedAnalysis(documentId);
+    let confirmedQuestionsMap = new Map<string, any>();
+    
+    if (confirmedAnalysis) {
+      console.log(`[getDocumentResults] Using CONFIRMED analysis for document: ${documentId}`);
+      const analysisData = confirmedAnalysis.analysisData as any;
+      if (analysisData.questions) {
+        for (const q of analysisData.questions) {
+          confirmedQuestionsMap.set(q.questionId, q);
+        }
+      }
+    } else {
+      console.log(`[getDocumentResults] No CONFIRMED analysis found, using original AI analysis for document: ${documentId}`);
+    }
+
     const questionsData = await db
       .select()
       .from(questions)
@@ -1031,11 +1047,15 @@ export class DatabaseStorage implements IStorage {
         }
       }
 
+      // Include CONFIRMED analysis data if available for this question
+      const confirmedData = confirmedQuestionsMap.get(question.id);
+      
       results.push({
         ...question,
         result,
         aiResponses: aiResponsesData,
         teacherOverride,
+        confirmedData, // Add CONFIRMED analysis data
       });
     }
 

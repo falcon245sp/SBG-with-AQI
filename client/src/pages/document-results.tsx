@@ -69,6 +69,12 @@ interface DocumentResult {
       standardsVotes: any;
       rigorVotes: any;
     };
+    confirmedData?: {
+      finalStandards: any;
+      finalRigorLevel: string;
+      hasTeacherOverride: boolean;
+      aiConfidenceScore: string;
+    };
     aiResponses: Array<{
       aiEngine: string;
       rigorLevel: 'mild' | 'medium' | 'spicy';
@@ -269,13 +275,35 @@ export default function DocumentResults() {
     
     results.forEach(question => {
       // Use teacher override as truth if available, otherwise use Sherpa analysis
-      const effectiveStandards = question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [];
-      const effectiveRigor = question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild';
-      const source = question.teacherOverride ? 'Teacher Override' : 'Standards Sherpa';
-      const confidence = question.teacherOverride?.confidenceScore || question.result?.confidenceScore || 'N/A';
+      // NEW ARCHITECTURE: Use CONFIRMED data when available, fallback to old logic for compatibility
+      const getEffectiveData = () => {
+        if (question.confirmedData) {
+          // Use CONFIRMED analysis data (single source of truth)
+          return {
+            standards: question.confirmedData.finalStandards || [],
+            rigor: question.confirmedData.finalRigorLevel || 'mild',
+            source: question.confirmedData.hasTeacherOverride ? 'Teacher (Confirmed)' : 'AI (Confirmed)',
+            confidence: question.confirmedData.aiConfidenceScore || 'N/A'
+          };
+        } else {
+          // Fallback to old scattered logic for documents without CONFIRMED analysis
+          return {
+            standards: question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [],
+            rigor: question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild',
+            source: question.teacherOverride ? 'Teacher Override' : 'Standards Sherpa',
+            confidence: question.teacherOverride?.confidenceScore || question.result?.confidenceScore || 'N/A'
+          };
+        }
+      };
+      
+      const effectiveData = getEffectiveData();
+      const effectiveStandards = effectiveData.standards;
+      const effectiveRigor = effectiveData.rigor;
+      const source = effectiveData.source;
+      const confidence = effectiveData.confidence;
       const justification = question.teacherOverride?.notes || question.teacherOverride?.editReason || question.aiResponses?.[0]?.rigorJustification || '';
       
-      const standardsCodes = effectiveStandards.map(s => s.code).join('; ');
+      const standardsCodes = effectiveStandards.map((s: any) => s.code).join('; ');
       const dokLevel = effectiveRigor === 'mild' ? 'DOK 1-2' : effectiveRigor === 'medium' ? 'DOK 2-3' : 'DOK 3-4';
       
       csvRows.push([
@@ -325,8 +353,9 @@ export default function DocumentResults() {
     const sortedResults = [...results].sort((a, b) => a.questionNumber - b.questionNumber);
     
     sortedResults.forEach((question) => {
-      const effectiveStandards = question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [];
-      const effectiveRigor = question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild';
+      // NEW ARCHITECTURE: Use CONFIRMED data for cover sheet generation
+      const effectiveStandards = question.confirmedData?.finalStandards || question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [];
+      const effectiveRigor = question.confirmedData?.finalRigorLevel || question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild';
       
       const primaryStandard = effectiveStandards[0]?.code || 'No Standard';
       const rigorText = effectiveRigor === 'mild' ? 'MILD (*)' : 
@@ -406,8 +435,9 @@ export default function DocumentResults() {
     const sortedResults = [...results].sort((a, b) => a.questionNumber - b.questionNumber);
     
     sortedResults.forEach((question, index) => {
-      const effectiveStandards = question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [];
-      const effectiveRigor = question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild';
+      // NEW ARCHITECTURE: Use CONFIRMED data for rubric generation
+      const effectiveStandards = question.confirmedData?.finalStandards || question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [];
+      const effectiveRigor = question.confirmedData?.finalRigorLevel || question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild';
       const questionText = question.questionText.length > 40 
         ? question.questionText.substring(0, 40) + '...' 
         : question.questionText;
