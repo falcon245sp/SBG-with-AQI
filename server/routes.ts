@@ -334,32 +334,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Document not found' });
       }
       
-      // Determine the file path based on document type using environment variables
-      let basePath;
-      if (document.assetType === 'uploaded') {
-        basePath = path.join(process.cwd(), config.uploadsDir);
-      } else if (document.assetType === 'generated') {
-        if (document.exportType === 'rubric_pdf') {
-          basePath = path.join(process.cwd(), config.rubricsDir);
-        } else if (document.exportType === 'cover_sheet') {
-          basePath = path.join(process.cwd(), config.coversheetsDir);
+      // Determine file path based on document type and available paths (SAME LOGIC AS DOWNLOAD ENDPOINT)
+      let filePath: string;
+      
+      if (document.assetType === 'generated') {
+        // For generated documents, use environment-based directory structure
+        const STABLE_RUBRICS_DIR = 'appdata/generated/rubrics';
+        const STABLE_COVERSHEETS_DIR = 'appdata/generated/coversheets';
+        
+        console.log(`[Documents] Content request for generated document: ${document.fileName}`);
+        
+        // Determine which subdirectory based on file name
+        if (document.fileName.includes('cover-sheet')) {
+          filePath = path.join(STABLE_COVERSHEETS_DIR, document.fileName);
+        } else if (document.fileName.includes('rubric')) {
+          filePath = path.join(STABLE_RUBRICS_DIR, document.fileName);
         } else {
-          basePath = path.join(process.cwd(), config.generatedDir);
+          // Fallback to checking both directories
+          const rubricPath = path.join(STABLE_RUBRICS_DIR, document.fileName);
+          const coverSheetPath = path.join(STABLE_COVERSHEETS_DIR, document.fileName);
+          
+          if (fs.existsSync(rubricPath)) {
+            filePath = rubricPath;
+          } else if (fs.existsSync(coverSheetPath)) {
+            filePath = coverSheetPath;
+          } else {
+            console.error(`[Documents] Generated document not found in either directory: ${document.fileName}`);
+            return res.status(404).json({ message: 'Generated file not found on disk' });
+          }
+        }
+      } else if (document.originalPath) {
+        // For uploaded documents, use originalPath
+        const { STABLE_UPLOADS_DIR } = await import('./config/environment');
+        
+        if (path.isAbsolute(document.originalPath)) {
+          filePath = document.originalPath;
+        } else {
+          filePath = path.join(STABLE_UPLOADS_DIR, document.originalPath);
         }
       } else {
-        basePath = path.join(process.cwd(), config.uploadsDir); // fallback
+        return res.status(404).json({ message: 'Document file path not found' });
       }
-      
-      const filePath = path.join(basePath, document.originalPath);
       
       // Check if file exists
       if (!fs.existsSync(filePath)) {
+        console.error(`[Documents] File not found: ${filePath}`);
         return res.status(404).json({ message: 'File not found on disk' });
       }
       
       // Get file stats and extension
       const stats = fs.statSync(filePath);
-      const ext = path.extname(document.originalFilename || document.fileName).toLowerCase();
+      const fileName = document.originalFilename || document.fileName;
+      const ext = path.extname(fileName).toLowerCase();
       
       // Set appropriate content type
       let contentType = 'application/octet-stream';
