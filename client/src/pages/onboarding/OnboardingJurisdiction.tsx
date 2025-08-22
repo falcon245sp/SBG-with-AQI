@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { MapPin, ChevronRight } from "lucide-react";
+import { MapPin, ChevronRight, Check, ChevronsUpDown } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 interface Jurisdiction {
   id: string;
@@ -17,6 +20,8 @@ interface Jurisdiction {
 export default function OnboardingJurisdiction() {
   const [, setLocation] = useLocation();
   const [selectedJurisdiction, setSelectedJurisdiction] = useState<string>('');
+  const [open, setOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Fetch available jurisdictions
   const { data: jurisdictionData, isLoading: isLoadingJurisdictions } = useQuery({
@@ -24,10 +29,8 @@ export default function OnboardingJurisdiction() {
   });
 
   // Handle the actual data structure from API
-  const jurisdictions = Array.isArray(jurisdictionData) ? jurisdictionData : (jurisdictionData?.jurisdictions || []);
+  const jurisdictions = Array.isArray(jurisdictionData) ? jurisdictionData : ((jurisdictionData as any)?.jurisdictions || []);
   
-  console.log('[OnboardingJurisdiction] Raw API data:', jurisdictionData);
-  console.log('[OnboardingJurisdiction] Processed jurisdictions:', jurisdictions);
 
   // Update user preferences mutation
   const updatePreferencesMutation = useMutation({
@@ -64,7 +67,7 @@ export default function OnboardingJurisdiction() {
   // Filter to show most common/important jurisdictions first
   const priorityJurisdictions = [
     'ca', 'tx', 'fl', 'ny', 'il', 'pa', 'oh', 'ga', 'nc', 'mi', // Top 10 states by population/education systems
-    'ccss' // Common Core State Standards
+    'ccss', 'common core', 'core', 'ngss' // Common standards
   ];
 
   const sortedJurisdictions = (Array.isArray(jurisdictions) ? jurisdictions : []).sort((a: Jurisdiction, b: Jurisdiction) => {
@@ -106,27 +109,77 @@ export default function OnboardingJurisdiction() {
           </div>
         </div>
 
-        {/* Jurisdictions Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
-          {sortedJurisdictions.map((jurisdiction: Jurisdiction) => (
-            <Card 
-              key={jurisdiction.id}
-              className={`cursor-pointer hover:shadow-lg transition-all duration-200 border-2 ${
-                selectedJurisdiction === jurisdiction.id 
-                  ? 'border-blue-500 bg-blue-50 shadow-md' 
-                  : 'border-gray-200 hover:border-blue-300'
-              }`}
-              onClick={() => setSelectedJurisdiction(jurisdiction.id)}
-              data-testid={`jurisdiction-${jurisdiction.id}`}
-            >
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">{jurisdiction.title}</CardTitle>
-                <CardDescription className="text-sm capitalize">
-                  {jurisdiction.type}
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          ))}
+        {/* Standards Framework Selector */}
+        <div className="max-w-2xl mx-auto">
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={open}
+                className="w-full justify-between h-12 text-left font-normal"
+                data-testid="jurisdiction-selector"
+              >
+                {selectedJurisdiction
+                  ? sortedJurisdictions.find((jurisdiction) => jurisdiction.id === selectedJurisdiction)?.title
+                  : "Select a standards framework..."}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0" align="start">
+              <Command>
+                <CommandInput 
+                  placeholder="Search standards frameworks..." 
+                  value={searchTerm}
+                  onValueChange={setSearchTerm}
+                />
+                <CommandEmpty>No standards framework found.</CommandEmpty>
+                <CommandGroup className="max-h-96 overflow-y-auto">
+                  {sortedJurisdictions
+                    .filter((jurisdiction) => 
+                      jurisdiction.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      jurisdiction.type.toLowerCase().includes(searchTerm.toLowerCase())
+                    )
+                    .map((jurisdiction) => (
+                    <CommandItem
+                      key={jurisdiction.id}
+                      value={jurisdiction.title}
+                      onSelect={() => {
+                        setSelectedJurisdiction(jurisdiction.id);
+                        setOpen(false);
+                        setSearchTerm('');
+                      }}
+                      className="flex items-center justify-between p-3 cursor-pointer"
+                      data-testid={`jurisdiction-${jurisdiction.id}`}
+                    >
+                      <div>
+                        <div className="font-medium">{jurisdiction.title}</div>
+                        <div className="text-sm text-gray-500 capitalize">{jurisdiction.type}</div>
+                      </div>
+                      <Check
+                        className={cn(
+                          "h-4 w-4",
+                          selectedJurisdiction === jurisdiction.id ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </Command>
+            </PopoverContent>
+          </Popover>
+          
+          {/* Selected Framework Display */}
+          {selectedJurisdiction && (
+            <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center gap-2">
+                <Check className="h-5 w-5 text-blue-600" />
+                <span className="font-medium text-blue-900">
+                  Selected: {sortedJurisdictions.find(j => j.id === selectedJurisdiction)?.title}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Navigation */}
