@@ -22,6 +22,13 @@ The Document Processing Service, "Standards Sherpa," is a full-stack web applica
 - **Interactive Matrix**: Hover states with assessment dates and click-through to source rubrics and documents
 - **Manual Marking System**: Teacher symbol menu for marking standards without formal assessments
 
+### **v1.1+ (Future Vision) - Predictive Student Success Analytics**
+- **Cross-Course Progression Modeling**: Using standards linkage data (Achieve The Core Coherence Map) to predict student success likelihood in subsequent mathematics courses
+- **Dual Pressure Motivation System**: Students see both current mastery levels AND predicted readiness for next course (e.g., "75% Algebra 1 mastery → 62% predicted Geometry readiness")
+- **Individual Student Success Dashboards**: Real-time visualization of which current standards have highest impact on future course success
+- **Early Warning & Intervention**: Automated identification of students at risk for next-level struggles based on current performance patterns
+- **Future-Focused Learning Paths**: Personalized recommendations showing students exactly which standards to prioritize for maximum future mathematical success
+
 ### **v0.8 (August 21, 2025) - Performance & Reliability Milestone**
 - **Critical Bug Fixed**: Resolved alphabetical vs numerical question sorting causing rigor level misalignment in generated documents
 - **Document Inspector**: Fixed 404 errors in "View All Questions" navigation links
