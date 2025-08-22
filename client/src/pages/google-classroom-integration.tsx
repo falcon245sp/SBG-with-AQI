@@ -113,9 +113,6 @@ const extractCoreCourseName = (classroomName: string): string => {
     .replace(/\s*\([a-z0-9]+\)$/i, '') // Generic "(A)", "(1)" at end
     .trim();
   
-  // Debug logging (temporary)
-  console.log(`Grouping "${classroomName}" -> "${cleaned}"`);
-  
   return cleaned || classroomName; // Fallback to original name
 };
 
@@ -584,8 +581,28 @@ export default function GoogleClassroomIntegration() {
                                 </p>
                               </div>
                               {group.classrooms.length > 1 && (
-                                <div className="text-sm text-gray-500">
-                                  Similar Course Group
+                                <div className="flex items-center gap-2">
+                                  <div className="text-sm text-gray-500">
+                                    Similar Course Group
+                                  </div>
+                                  {/* Show configure button if some courses in group are unconfigured */}
+                                  {group.classrooms.some(c => !c.sbgEnabled || !c.enabledStandards || c.enabledStandards.length === 0) && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const unconfiguredClassrooms = group.classrooms.filter(c => 
+                                          !c.sbgEnabled || !c.enabledStandards || c.enabledStandards.length === 0
+                                        );
+                                        setBulkConfigSuggestions(unconfiguredClassrooms);
+                                        setShowBulkConfigDialog(true);
+                                      }}
+                                      className="text-xs"
+                                    >
+                                      Configure Similar Courses
+                                    </Button>
+                                  )}
                                 </div>
                               )}
                             </div>
