@@ -679,47 +679,50 @@ export default function GoogleClassroomIntegration() {
                                     : 'border-gray-200 hover:border-gray-300'
                                 }`}
                                 onClick={() => {
-                                  console.log('Clicked classroom:', classroom.name, 'ID:', classroom.id);
-                                  
-                                  // If the classroom is unconfigured, check if it's part of a group that could benefit from bulk configuration
-                                  const isUnconfigured = !classroom.sbgEnabled || !classroom.enabledStandards || classroom.enabledStandards.length === 0;
-                                  console.log('Is unconfigured:', isUnconfigured, 'SBG:', classroom.sbgEnabled, 'Standards:', classroom.enabledStandards?.length);
-                                  
-                                  if (isUnconfigured) {
-                                    // Find the group this classroom belongs to
-                                    const classroomGroup = groupClassrooms(classrooms).find(g => 
-                                      g.classrooms.some(c => c.id === classroom.id)
-                                    );
-                                    console.log('Found group:', classroomGroup?.coreCourseName);
+                                  try {
+                                    console.log('🔸 Clicked classroom:', classroom.name, 'ID:', classroom.id);
                                     
-                                    if (classroomGroup) {
-                                      // Check if there are other unconfigured classrooms in this group
-                                      const unconfiguredInGroup = classroomGroup.classrooms.filter(c => 
-                                        !c.sbgEnabled || !c.enabledStandards || c.enabledStandards.length === 0
-                                      );
-                                      console.log('Unconfigured in group:', unconfiguredInGroup.length, 'classrooms:', unconfiguredInGroup.map(c => c.name));
+                                    // Check if the classroom is unconfigured
+                                    const isUnconfigured = !classroom.sbgEnabled || !classroom.enabledStandards || classroom.enabledStandards.length === 0;
+                                    console.log('🔸 Is unconfigured:', isUnconfigured, 'SBG:', classroom.sbgEnabled, 'Standards:', classroom.enabledStandards?.length);
+                                    
+                                    if (isUnconfigured) {
+                                      // Find other unconfigured classrooms in the same group
+                                      const allGroups = groupClassrooms(classrooms);
+                                      const myGroup = allGroups.find(g => g.classrooms.some(c => c.id === classroom.id));
+                                      console.log('🔸 Found group:', myGroup?.coreCourseName);
                                       
-                                      // If there are multiple unconfigured courses in this group, offer bulk configuration
-                                      if (unconfiguredInGroup.length > 1) {
-                                        console.log('Showing bulk config dialog');
-                                        setBulkConfigSuggestions([{
-                                          coreCourseName: classroomGroup.coreCourseName,
-                                          classrooms: unconfiguredInGroup.map(c => ({
-                                            id: c.id,
-                                            name: c.name,
-                                            section: c.section
-                                          })),
-                                          count: unconfiguredInGroup.length
-                                        }]);
-                                        setShowBulkConfigDialog(true);
-                                        return; // Don't set selectedClassroom, show bulk config instead
+                                      if (myGroup) {
+                                        const unconfiguredInGroup = myGroup.classrooms.filter(c => 
+                                          !c.sbgEnabled || !c.enabledStandards || c.enabledStandards.length === 0
+                                        );
+                                        console.log('🔸 Unconfigured in group:', unconfiguredInGroup.length);
+                                        
+                                        // If there are multiple unconfigured courses, show bulk config
+                                        if (unconfiguredInGroup.length > 1) {
+                                          console.log('🔸 Showing bulk configuration dialog');
+                                          setBulkConfigSuggestions([{
+                                            coreCourseName: myGroup.coreCourseName,
+                                            classrooms: unconfiguredInGroup.map(c => ({
+                                              id: c.id,
+                                              name: c.name,
+                                              section: c.section
+                                            })),
+                                            count: unconfiguredInGroup.length
+                                          }]);
+                                          setShowBulkConfigDialog(true);
+                                          return;
+                                        }
                                       }
                                     }
+                                    
+                                    // Default: select the classroom
+                                    console.log('🔸 Selecting classroom:', classroom.id);
+                                    setSelectedClassroom(classroom.id);
+                                  } catch (error) {
+                                    console.error('🔸 Error in classroom click handler:', error);
+                                    setSelectedClassroom(classroom.id); // Fallback
                                   }
-                                  
-                                  // Default behavior: select the classroom
-                                  console.log('Setting selected classroom to:', classroom.id);
-                                  setSelectedClassroom(classroom.id);
                                 }}
                               >
                                 <h4 className="font-medium text-gray-900">{classroom.name}</h4>

@@ -1,0 +1,217 @@
+[CustomerLookupService] Found user and customer UUID: e9e41d64-44f6-4c77-b626-40487868c72d for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+[CustomerLookupService] Found user and customer UUID: e9e41d64-44f6-4c77-b626-40487868c72d for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+2025-08-22T01:28:04.916Z [INFO] API Request | method=GET, path=/api/auth/user, statusCode=200, duration=140, requestId=044d26d2906f76f849993e8ad2ad99c8, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.4.168, sessionId=DZYkuwQtgWADtFXaVSm9pruck2Cdynp2
+2025-08-22T01:28:05.126Z [INFO] API Request | method=GET, path=/api/classrooms, statusCode=200, duration=348, requestId=2a906fdf6c8bafd2425a2576f5c70015, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=DZYkuwQtgWADtFXaVSm9pruck2Cdynp2
+[CommonStandardsProjectService] Returning 714 cached jurisdictions
+2025-08-22T01:28:05.237Z [INFO] API Request | method=GET, path=/api/csp/jurisdictions, statusCode=200, duration=462, requestId=bdc92e12ac474b472dc28d4db0675830, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=DZYkuwQtgWADtFXaVSm9pruck2Cdynp2
+2025-08-22T01:28:09.506Z [DEBUG] Request started | requestId=0f0ae97947c60c16dd6b9dc5a77fd646, method=GET, path=/api/classrooms/a5bed9fc-af3b-45a5-af3d-3174b9567faa/assignments, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=DZYkuwQtgWADtFXaVSm9pruck2Cdynp2
+2025-08-22T01:28:09.509Z [DEBUG] Request started | requestId=b922136978c76eed310b37c47b548a2a, method=GET, path=/api/classrooms/a5bed9fc-af3b-45a5-af3d-3174b9567faa/students, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=DZYkuwQtgWADtFXaVSm9pruck2Cdynp2
+[CustomerLookupService] Looking up user and customer UUID for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+[CustomerLookupService] Looking up user and customer UUID for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+[CustomerLookupService] Found user and customer UUID: e9e41d64-44f6-4c77-b626-40487868c72d for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+[CustomerLookupService] Found user and customer UUID: e9e41d64-44f6-4c77-b626-40487868c72d for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+Error fetching assignments: GaxiosError: Request had insufficient authentication scopes.
+    at Gaxios._request (/home/runner/workspace/node_modules/google-auth-library/node_modules/gaxios/src/gaxios.ts:211:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async OAuth2Client.requestAsync (/home/runner/workspace/node_modules/google-auth-library/build/src/auth/oauth2client.js:463:20)
+    at async createAPIRequestAsync (/home/runner/workspace/node_modules/googleapis-common/build/src/apirequest.js:308:25)
+    at async GoogleAuthService.getAssignments (/home/runner/workspace/server/services/googleAuth.ts:259:26)
+    at async getClassroomAssignments (/home/runner/workspace/server/routes/googleAuth.ts:317:25) {
+  config: {
+    url: URL {
+      href: 'https://classroom.googleapis.com/v1/courses/690449114303/courseWork?pageSize=100&courseWorkStates=PUBLISHED',
+      origin: 'https://classroom.googleapis.com',
+      protocol: 'https:',
+      username: '',
+      password: '',
+      host: 'classroom.googleapis.com',
+      hostname: 'classroom.googleapis.com',
+      port: '',
+      pathname: '/v1/courses/690449114303/courseWork',
+      search: '?pageSize=100&courseWorkStates=PUBLISHED',
+      searchParams: URLSearchParams { 'pageSize' => '100', 'courseWorkStates' => 'PUBLISHED' },
+      hash: ''
+    },
+    method: 'GET',
+    apiVersion: '',
+    userAgentDirectives: [ [Object] ],
+    paramsSerializer: [Function (anonymous)],
+    headers: Headers {
+      'accept-encoding': 'gzip',
+      authorization: '<<REDACTED> - See `errorRedactor` option in `gaxios` for configuration>.',
+      'user-agent': 'google-api-nodejs-client/8.0.0 (gzip)',
+      'x-goog-api-client': 'gdcl/8.0.0 gl-node/20.19.3'
+    },
+    params: { pageSize: 100, courseWorkStates: [Array] },
+    validateStatus: [Function (anonymous)],
+    retry: true,
+    responseType: 'unknown',
+    errorRedactor: [Function: defaultErrorRedactor],
+    retryConfig: {
+      currentRetryAttempt: 0,
+      retry: 3,
+      httpMethodsToRetry: [Array],
+      noResponseRetries: 2,
+      retryDelayMultiplier: 2,
+      timeOfFirstRequest: 1755826089739,
+      totalTimeout: 9007199254740991,
+      maxRetryDelay: 9007199254740991,
+      statusCodesToRetry: [Array]
+    }
+  },
+  response: Response {
+    size: 0,
+    data: { error: [Object] },
+    config: {
+      url: URL {},
+      method: 'GET',
+      apiVersion: '',
+      userAgentDirectives: [Array],
+      paramsSerializer: [Function (anonymous)],
+      headers: Headers {
+        'accept-encoding': 'gzip',
+        authorization: '<<REDACTED> - See `errorRedactor` option in `gaxios` for configuration>.',
+        'user-agent': 'google-api-nodejs-client/8.0.0 (gzip)',
+        'x-goog-api-client': 'gdcl/8.0.0 gl-node/20.19.3'
+      },
+      params: [Object],
+      validateStatus: [Function (anonymous)],
+      retry: true,
+      responseType: 'unknown',
+      errorRedactor: [Function: defaultErrorRedactor]
+    },
+    [Symbol(Body internals)]: {
+      body: [Gunzip],
+      stream: [Gunzip],
+      boundary: null,
+      disturbed: true,
+      error: null
+    },
+    [Symbol(Response internals)]: {
+      type: 'default',
+      url: 'https://classroom.googleapis.com/v1/courses/690449114303/courseWork?pageSize=100&courseWorkStates=PUBLISHED',
+      status: 403,
+      statusText: 'Forbidden',
+      headers: [Object],
+      counter: 0,
+      highWaterMark: 16384
+    }
+  },
+  code: 403,
+  status: 403,
+  error: undefined,
+  [Symbol(gaxios-gaxios-error)]: '7.1.1',
+  [cause]: {
+    message: 'Request had insufficient authentication scopes.',
+    code: 403,
+    status: 'PERMISSION_DENIED',
+    errors: [ [Object] ],
+    details: [ [Object] ]
+  }
+}
+[OAuth] Error fetching classroom assignments: GaxiosError: Request had insufficient authentication scopes.
+    at Gaxios._request (/home/runner/workspace/node_modules/google-auth-library/node_modules/gaxios/src/gaxios.ts:211:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async OAuth2Client.requestAsync (/home/runner/workspace/node_modules/google-auth-library/build/src/auth/oauth2client.js:463:20)
+    at async createAPIRequestAsync (/home/runner/workspace/node_modules/googleapis-common/build/src/apirequest.js:308:25)
+    at async GoogleAuthService.getAssignments (/home/runner/workspace/server/services/googleAuth.ts:259:26)
+    at async getClassroomAssignments (/home/runner/workspace/server/routes/googleAuth.ts:317:25) {
+  config: {
+    url: URL {
+      href: 'https://classroom.googleapis.com/v1/courses/690449114303/courseWork?pageSize=100&courseWorkStates=PUBLISHED',
+      origin: 'https://classroom.googleapis.com',
+      protocol: 'https:',
+      username: '',
+      password: '',
+      host: 'classroom.googleapis.com',
+      hostname: 'classroom.googleapis.com',
+      port: '',
+      pathname: '/v1/courses/690449114303/courseWork',
+      search: '?pageSize=100&courseWorkStates=PUBLISHED',
+      searchParams: URLSearchParams { 'pageSize' => '100', 'courseWorkStates' => 'PUBLISHED' },
+      hash: ''
+    },
+    method: 'GET',
+    apiVersion: '',
+    userAgentDirectives: [ [Object] ],
+    paramsSerializer: [Function (anonymous)],
+    headers: Headers {
+      'accept-encoding': 'gzip',
+      authorization: '<<REDACTED> - See `errorRedactor` option in `gaxios` for configuration>.',
+      'user-agent': 'google-api-nodejs-client/8.0.0 (gzip)',
+      'x-goog-api-client': 'gdcl/8.0.0 gl-node/20.19.3'
+    },
+    params: { pageSize: 100, courseWorkStates: [Array] },
+    validateStatus: [Function (anonymous)],
+    retry: true,
+    responseType: 'unknown',
+    errorRedactor: [Function: defaultErrorRedactor],
+    retryConfig: {
+      currentRetryAttempt: 0,
+      retry: 3,
+      httpMethodsToRetry: [Array],
+      noResponseRetries: 2,
+      retryDelayMultiplier: 2,
+      timeOfFirstRequest: 1755826089739,
+      totalTimeout: 9007199254740991,
+      maxRetryDelay: 9007199254740991,
+      statusCodesToRetry: [Array]
+    }
+  },
+  response: Response {
+    size: 0,
+    data: { error: [Object] },
+    config: {
+      url: URL {},
+      method: 'GET',
+      apiVersion: '',
+      userAgentDirectives: [Array],
+      paramsSerializer: [Function (anonymous)],
+      headers: Headers {
+        'accept-encoding': 'gzip',
+        authorization: '<<REDACTED> - See `errorRedactor` option in `gaxios` for configuration>.',
+        'user-agent': 'google-api-nodejs-client/8.0.0 (gzip)',
+        'x-goog-api-client': 'gdcl/8.0.0 gl-node/20.19.3'
+      },
+      params: [Object],
+      validateStatus: [Function (anonymous)],
+      retry: true,
+      responseType: 'unknown',
+      errorRedactor: [Function: defaultErrorRedactor]
+    },
+    [Symbol(Body internals)]: {
+      body: [Gunzip],
+      stream: [Gunzip],
+      boundary: null,
+      disturbed: true,
+      error: null
+    },
+    [Symbol(Response internals)]: {
+      type: 'default',
+      url: 'https://classroom.googleapis.com/v1/courses/690449114303/courseWork?pageSize=100&courseWorkStates=PUBLISHED',
+      status: 403,
+      statusText: 'Forbidden',
+      headers: [Object],
+      counter: 0,
+      highWaterMark: 16384
+    }
+  },
+  code: 403,
+  status: 403,
+  error: undefined,
+  [Symbol(gaxios-gaxios-error)]: '7.1.1',
+  [cause]: {
+    message: 'Request had insufficient authentication scopes.',
+    code: 403,
+    status: 'PERMISSION_DENIED',
+    errors: [ [Object] ],
+    details: [ [Object] ]
+  }
+}
+2025-08-22T01:28:09.811Z [INFO] API Request | method=GET, path=/api/classrooms/a5bed9fc-af3b-45a5-af3d-3174b9567faa/assignments, statusCode=500, duration=304, requestId=0f0ae97947c60c16dd6b9dc5a77fd646, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.13, sessionId=DZYkuwQtgWADtFXaVSm9pruck2Cdynp2
+Retrieved 0 students (page token: last page) for course 690449114303
+Total students retrieved for course 690449114303: 0
+2025-08-22T01:28:09.914Z [INFO] API Request | method=GET, path=/api/classrooms/a5bed9fc-af3b-45a5-af3d-3174b9567faa/students, statusCode=200, duration=405, requestId=b922136978c76eed310b37c47b548a2a, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=DZYkuwQtgWADtFXaVSm9pruck2Cdynp2
+[ExportProcessor] Found 0 pending exports
+[ExportProcessor] Found 0 pending exports
+[ExportProcessor] Found 0 pending exports
