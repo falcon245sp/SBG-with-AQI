@@ -615,7 +615,11 @@ export default function GoogleClassroomIntegration() {
                                         );
                                         setBulkConfigSuggestions([{
                                           coreCourseName: group.coreCourseName,
-                                          classrooms: unconfiguredClassrooms,
+                                          classrooms: unconfiguredClassrooms.map(c => ({
+                                            id: c.id,
+                                            name: c.name,
+                                            section: c.section
+                                          })),
                                           count: unconfiguredClassrooms.length
                                         }]);
                                         setShowBulkConfigDialog(true);
