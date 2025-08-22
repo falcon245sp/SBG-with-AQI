@@ -182,6 +182,7 @@ export const teacherReviewStatusEnum = pgEnum('teacher_review_status', [
 export const documents: any = pgTable("documents", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   customerUuid: varchar("customer_uuid").notNull().references(() => users.customerUuid),
+  classroomId: varchar("classroom_id").references(() => classrooms.id), // Link to specific classroom/course
   fileName: text("file_name").notNull(),
   originalPath: text("original_path").notNull(), // File path in uploads/ or exports/ directory
   mimeType: text("mime_type").notNull(),

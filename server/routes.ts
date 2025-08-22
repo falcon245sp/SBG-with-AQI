@@ -360,7 +360,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No files uploaded" });
       }
 
-      const { jurisdictions, focusStandards, callbackUrl } = req.body;
+      const { jurisdictions, focusStandards, callbackUrl, classroomId } = req.body;
+      
+      // Verify classroom ownership if classroomId is provided
+      if (classroomId) {
+        const classroom = await storage.getClassroomById(classroomId);
+        if (!classroom || classroom.customerUuid !== customerUuid) {
+          return res.status(400).json({ message: "Invalid classroom selection" });
+        }
+      }
       
       // Parse jurisdictions with Common Core as default
       let parsedJurisdictions: string[] = ['Common Core'];
@@ -381,6 +389,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             mimeType: file.mimetype,
             fileSize: file.size,
             jurisdictions: parsedJurisdictions,
+            classroomId: classroomId || null,
           };
           console.log(`[Upload] Validating document data:`, documentData);
           const validationResult = insertDocumentSchema.safeParse(documentData);
@@ -790,6 +799,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: 'Failed to regenerate missing documents',
         message: error instanceof Error ? error.message : 'Unknown error'
       });
+    }
+  });
+
+  // Assign document to classroom
+  app.patch('/api/documents/:documentId/assign-classroom', async (req: any, res) => {
+    try {
+      const { documentId } = req.params;
+      const { classroomId } = req.body;
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+      
+      // Verify document ownership
+      const document = await storage.getDocument(documentId);
+      if (!document || document.customerUuid !== customerUuid) {
+        return res.status(404).json({ error: 'Document not found' });
+      }
+      
+      // Verify classroom ownership if classroomId is provided
+      if (classroomId) {
+        const classroom = await storage.getClassroomById(classroomId);
+        if (!classroom || classroom.customerUuid !== customerUuid) {
+          return res.status(404).json({ error: 'Classroom not found' });
+        }
+      }
+      
+      // Update document's classroom assignment
+      await DatabaseWriteService.updateDocumentClassroomAssignment(documentId, classroomId);
+      
+      res.json({ 
+        success: true, 
+        message: classroomId ? 'Document assigned to classroom' : 'Document unassigned from classroom',
+        documentId,
+        classroomId
+      });
+    } catch (error) {
+      console.error('Error assigning document to classroom:', error);
+      res.status(500).json({ error: 'Failed to assign document to classroom' });
+    }
+  });
+  
+  // Get documents for a specific classroom
+  app.get('/api/classrooms/:classroomId/documents', async (req: any, res) => {
+    try {
+      const { classroomId } = req.params;
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+      
+      // Verify classroom ownership
+      const classroom = await storage.getClassroomById(classroomId);
+      if (!classroom || classroom.customerUuid !== customerUuid) {
+        return res.status(404).json({ error: 'Classroom not found' });
+      }
+      
+      // Get documents assigned to this classroom
+      const documents = await storage.getDocumentsByClassroomId(classroomId);
+      
+      res.json({ documents });
+    } catch (error) {
+      console.error('Error getting classroom documents:', error);
+      res.status(500).json({ error: 'Failed to get classroom documents' });
+    }
+  });
+  
+  // Get unassigned documents (documents not linked to any classroom)
+  app.get('/api/documents/unassigned', async (req: any, res) => {
+    try {
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+      
+      // Get documents not assigned to any classroom
+      const documents = await storage.getUnassignedDocuments(customerUuid);
+      
+      res.json({ documents });
+    } catch (error) {
+      console.error('Error getting unassigned documents:', error);
+      res.status(500).json({ error: 'Failed to get unassigned documents' });
     }
   });
 

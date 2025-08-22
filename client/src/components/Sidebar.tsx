@@ -12,7 +12,8 @@ import {
   FolderOpen,
   UserCheck,
   Shield,
-  GraduationCap
+  GraduationCap,
+  BookOpen
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ import { Button } from "@/components/ui/button";
 const navigation = [
   { name: 'Dashboard', href: '/', icon: BarChart3 },
   { name: 'Upload Documents', href: '/upload', icon: Upload },
+  { name: 'Document Assignment', href: '/document-assignment', icon: BookOpen },
   { name: 'File Cabinet', href: '/file-cabinet', icon: FolderOpen },
   { name: 'Google Classroom', href: '/google-classroom', icon: GraduationCap },
   { name: 'Processing Results', href: '/results', icon: Search },

@@ -104,6 +104,9 @@ export interface IStorage {
   getUserDocuments(customerUuid: string, limit?: number): Promise<Document[]>;
   updateDocumentStatus(id: string, status: string, errorMessage?: string): Promise<void>;
   deleteDocument(id: string): Promise<void>;
+  updateDocumentClassroomAssignment(documentId: string, classroomId: string | null): Promise<void>;
+  getDocumentsByClassroomId(classroomId: string): Promise<Document[]>;
+  getUnassignedDocuments(customerUuid: string): Promise<Document[]>;
   
   // Question operations
   createQuestion(question: InsertQuestion): Promise<Question>;
@@ -881,6 +884,37 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(documents)
       .where(eq(documents.id, id));
+  }
+
+  async updateDocumentClassroomAssignment(documentId: string, classroomId: string | null): Promise<void> {
+    await db
+      .update(documents)
+      .set({ 
+        classroomId,
+        updatedAt: new Date()
+      })
+      .where(eq(documents.id, documentId));
+  }
+
+  async getDocumentsByClassroomId(classroomId: string): Promise<Document[]> {
+    return await db
+      .select()
+      .from(documents)
+      .where(eq(documents.classroomId, classroomId))
+      .orderBy(desc(documents.createdAt));
+  }
+
+  async getUnassignedDocuments(customerUuid: string): Promise<Document[]> {
+    return await db
+      .select()
+      .from(documents)
+      .where(
+        and(
+          eq(documents.customerUuid, customerUuid),
+          sql`${documents.classroomId} IS NULL`
+        )
+      )
+      .orderBy(desc(documents.createdAt));
   }
 
   // Export Queue operations
