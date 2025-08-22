@@ -12,6 +12,12 @@ import CustomerDashboard from "@/pages/customer-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
 import AuthError from "@/pages/auth-error";
 import TraditionalLogin from "@/pages/traditional-login";
+import OnboardingCheck from "@/components/OnboardingCheck";
+import OnboardingJurisdiction from "@/pages/onboarding/OnboardingJurisdiction";
+import OnboardingSubject from "@/pages/onboarding/OnboardingSubject";
+import OnboardingGrades from "@/pages/onboarding/OnboardingGrades";
+import OnboardingCourses from "@/pages/onboarding/OnboardingCourses";
+import OnboardingClassroom from "@/pages/onboarding/OnboardingClassroom";
 import UploadPage from "@/pages/upload";
 import ResultsPage from "@/pages/results";
 import DocumentResults from "@/pages/document-results";
@@ -69,6 +75,12 @@ function Router() {
       <Route path="/testing-dashboard" component={TestingDashboard} />
       
       {/* Protected routes - require authentication */}
+      <Route path="/onboarding" component={() => <ProtectedRoute component={OnboardingCheck} />} />
+      <Route path="/onboarding/jurisdiction" component={() => <ProtectedRoute component={OnboardingJurisdiction} />} />
+      <Route path="/onboarding/subject" component={() => <ProtectedRoute component={OnboardingSubject} />} />
+      <Route path="/onboarding/grades" component={() => <ProtectedRoute component={OnboardingGrades} />} />
+      <Route path="/onboarding/courses" component={() => <ProtectedRoute component={OnboardingCourses} />} />
+      <Route path="/onboarding/classroom" component={() => <ProtectedRoute component={OnboardingClassroom} />} />
       <Route path="/role-selection" component={() => <ProtectedRoute component={RoleSelection} />} />
       <Route path="/dashboard" component={() => <ProtectedRoute component={CustomerDashboard} />} />
       <Route path="/admin" component={() => <ProtectedRoute component={AdminDashboard} />} />

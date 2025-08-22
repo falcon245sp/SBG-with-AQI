@@ -67,6 +67,7 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserTokens(userId: string, accessToken: string, refreshToken?: string, expiry?: Date): Promise<void>;
   updateUserGoogleCredentials(userId: string, credentials: any): Promise<void>;
+  updateUserPreferences(userId: string, preferences: any): Promise<void>;
   
   // Classroom operations
   createClassroom(classroom: InsertClassroom): Promise<Classroom>;
@@ -508,6 +509,18 @@ export class DatabaseStorage implements IStorage {
     if (credentials.refresh_token) {
       updateData.googleRefreshToken = credentials.refresh_token;
     }
+
+    await db
+      .update(users)
+      .set(updateData)
+      .where(eq(users.id, userId));
+  }
+
+  async updateUserPreferences(userId: string, preferences: any): Promise<void> {
+    const updateData: any = {
+      updatedAt: new Date(),
+      ...preferences
+    };
 
     await db
       .update(users)

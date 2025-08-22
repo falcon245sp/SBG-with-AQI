@@ -42,6 +42,14 @@ export const users = pgTable("users", {
   googleTokenExpiry: timestamp("google_token_expiry"), // Token expiration
   googleCredentials: text("google_credentials"), // JSON string of service account credentials
   classroomConnected: boolean("classroom_connected").default(false), // Classroom authorization status
+  
+  // V1.0 Onboarding and Preferences
+  onboardingCompleted: boolean("onboarding_completed").default(false),
+  preferredJurisdiction: varchar("preferred_jurisdiction"), // Default jurisdiction for new courses
+  preferredSubjectAreas: jsonb("preferred_subject_areas"), // Array of subject areas user works with
+  selectedGradeLevels: jsonb("selected_grade_levels"), // Array of grade levels user teaches
+  onboardingStep: varchar("onboarding_step"), // Track current step in onboarding flow
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -62,6 +70,12 @@ export const classrooms = pgTable("classrooms", {
   sbgEnabled: boolean("sbg_enabled").default(false), // Whether this classroom uses Standards-Based Grading
   courseTitle: text("course_title"), // Teacher-declared course title for standards matching
   enabledStandards: jsonb("enabled_standards"), // Array of standard codes enabled for assessment
+  
+  // V1.0 Course Configuration Enhancements  
+  selectedStandardSetId: varchar("selected_standard_set_id"), // Link to Common Standards Project standard set
+  rigorTargets: jsonb("rigor_targets"), // Per-standard rigor target recommendations {standardCode: targetRigor}
+  courseConfigurationCompleted: boolean("course_configuration_completed").default(false),
+  
   creationTime: timestamp("creation_time"),
   updateTime: timestamp("update_time"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -198,6 +212,9 @@ export const documents: any = pgTable("documents", {
   tags: text("tags").array().default(sql`'{}'`), // User-defined tags for organization
   originalFilename: text("original_filename"), // User's original filename (for display)
   retentionDate: timestamp("retention_date"), // Calculated based on subscription status
+  
+  // V1.0 Course-Contextual File Cabinet
+  courseId: varchar("course_id"), // References classrooms.id for course-contextual organization
   
   // Processing fields
   processingStarted: timestamp("processing_started"),
@@ -355,6 +372,41 @@ export const qrSequenceNumbers = pgTable("qr_sequence_numbers", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// V1.0 Accountability Matrix - Auto-building from document analysis
+export const accountabilityMatrixEntries = pgTable("accountability_matrix_entries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  courseId: varchar("course_id").notNull().references(() => classrooms.id),
+  customerUuid: varchar("customer_uuid").notNull().references(() => users.customerUuid),
+  standardCode: varchar("standard_code").notNull(), // E.g., "A1.REI.4"
+  standardTitle: text("standard_title").notNull(), // Human readable standard title
+  maxRigorAchieved: rigorLevelEnum("max_rigor_achieved").notNull(), // Highest rigor level seen
+  documentsAssessed: integer("documents_assessed").notNull().default(1), // Count of documents containing this standard
+  firstAssessedAt: timestamp("first_assessed_at").notNull(), // When standard first appeared
+  lastAssessedAt: timestamp("last_assessed_at").notNull(), // Most recent assessment
+  rigorTargetRecommendation: rigorLevelEnum("rigor_target_recommendation"), // AI-suggested target based on course progression
+  teacherRigorTarget: rigorLevelEnum("teacher_rigor_target"), // Teacher override of rigor target
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// V1.0 SBG Gradebook Entries - Student mastery tracking per standard
+export const sbgGradebookEntries = pgTable("sbg_gradebook_entries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  courseId: varchar("course_id").notNull().references(() => classrooms.id),
+  studentId: varchar("student_id").notNull().references(() => students.id),
+  customerUuid: varchar("customer_uuid").notNull().references(() => users.customerUuid),
+  standardCode: varchar("standard_code").notNull(), // E.g., "A1.REI.4"
+  currentMasteryLevel: integer("current_mastery_level"), // 1-4 SBG scale (null = not yet assessed)
+  assessmentCount: integer("assessment_count").notNull().default(0), // Number of times assessed
+  firstAssessedAt: timestamp("first_assessed_at"), // When student first assessed on this standard
+  lastAssessedAt: timestamp("last_assessed_at"), // Most recent assessment
+  progressTrend: varchar("progress_trend"), // "improving", "stable", "declining", null
+  teacherNotes: text("teacher_notes"), // Optional teacher notes for this student/standard
+  isManuallyMarked: boolean("is_manually_marked").default(false), // Manually marked vs from assessment
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Grade Submissions - Results from QR code scans
 export const gradeSubmissions = pgTable("grade_submissions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -385,6 +437,11 @@ export const insertUserSchema = createInsertSchema(users).pick({
   googleRefreshToken: true,
   googleTokenExpiry: true,
   classroomConnected: true,
+  onboardingCompleted: true,
+  preferredJurisdiction: true,
+  preferredSubjectAreas: true,
+  selectedGradeLevels: true,
+  onboardingStep: true,
 });
 
 export const insertClassroomSchema = createInsertSchema(classrooms).pick({
@@ -401,6 +458,9 @@ export const insertClassroomSchema = createInsertSchema(classrooms).pick({
   sbgEnabled: true,
   courseTitle: true,
   enabledStandards: true,
+  selectedStandardSetId: true,
+  rigorTargets: true,
+  courseConfigurationCompleted: true,
   creationTime: true,
   updateTime: true,
 });
@@ -443,6 +503,7 @@ export const insertDocumentSchema = createInsertSchema(documents).pick({
   tags: z.array(z.string()).optional(),
   originalFilename: z.string().optional(),
   retentionDate: z.date().optional(),
+  courseId: z.string().optional(),
 });
 
 export const insertQuestionSchema = createInsertSchema(questions).pick({
@@ -552,6 +613,10 @@ export type ConfirmedAnalysis = typeof confirmedAnalysis.$inferSelect;
 export type QrSequenceNumber = typeof qrSequenceNumbers.$inferSelect;
 export type GradeSubmission = typeof gradeSubmissions.$inferSelect;
 
+// V1.0 Types
+export type AccountabilityMatrixEntry = typeof accountabilityMatrixEntries.$inferSelect;
+export type SbgGradebookEntry = typeof sbgGradebookEntries.$inferSelect;
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertClassroom = z.infer<typeof insertClassroomSchema>;
 export type InsertStudent = z.infer<typeof insertStudentSchema>;
@@ -564,3 +629,35 @@ export type InsertTeacherOverride = z.infer<typeof insertTeacherOverrideSchema>;
 export type InsertConfirmedAnalysis = z.infer<typeof insertConfirmedAnalysisSchema>;
 export type InsertQrSequenceNumber = z.infer<typeof insertQrSequenceNumberSchema>;
 export type InsertGradeSubmission = z.infer<typeof insertGradeSubmissionSchema>;
+
+// V1.0 Insert Schemas
+export const insertAccountabilityMatrixEntrySchema = createInsertSchema(accountabilityMatrixEntries).pick({
+  courseId: true,
+  customerUuid: true,
+  standardCode: true,
+  standardTitle: true,
+  maxRigorAchieved: true,
+  documentsAssessed: true,
+  firstAssessedAt: true,
+  lastAssessedAt: true,
+  rigorTargetRecommendation: true,
+  teacherRigorTarget: true,
+});
+
+export const insertSbgGradebookEntrySchema = createInsertSchema(sbgGradebookEntries).pick({
+  courseId: true,
+  studentId: true,
+  customerUuid: true,
+  standardCode: true,
+  currentMasteryLevel: true,
+  assessmentCount: true,
+  firstAssessedAt: true,
+  lastAssessedAt: true,
+  progressTrend: true,
+  teacherNotes: true,
+  isManuallyMarked: true,
+});
+
+// V1.0 Insert Types
+export type InsertAccountabilityMatrixEntry = z.infer<typeof insertAccountabilityMatrixEntrySchema>;
+export type InsertSbgGradebookEntry = z.infer<typeof insertSbgGradebookEntrySchema>;

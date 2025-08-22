@@ -126,6 +126,150 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // V1.0 ONBOARDING ENDPOINTS
+  
+  // Update user preferences during onboarding
+  app.put('/api/user/preferences', async (req: any, res) => {
+    try {
+      const { user, customerUuid } = await ActiveUserService.requireActiveUserAndCustomerUuid(req);
+      const updates = req.body;
+
+      // Validate the update data
+      const allowedFields = [
+        'preferredJurisdiction', 
+        'preferredSubjectAreas', 
+        'selectedGradeLevels', 
+        'onboardingStep'
+      ];
+
+      const validUpdates = Object.keys(updates)
+        .filter(key => allowedFields.includes(key))
+        .reduce((obj, key) => {
+          obj[key] = updates[key];
+          return obj;
+        }, {} as any);
+
+      if (Object.keys(validUpdates).length === 0) {
+        return res.status(400).json({ error: 'No valid fields to update' });
+      }
+
+      // Update the user record
+      await storage.updateUserPreferences(user.id, validUpdates);
+
+      res.json({ success: true, updated: validUpdates });
+    } catch (error) {
+      console.error('Error updating user preferences:', error);
+      res.status(500).json({ error: 'Failed to update preferences' });
+    }
+  });
+
+  // Complete onboarding process
+  app.put('/api/user/complete-onboarding', async (req: any, res) => {
+    try {
+      const { user, customerUuid } = await ActiveUserService.requireActiveUserAndCustomerUuid(req);
+      const { selectedCourses, classroomSkipped } = req.body;
+
+      const updates = {
+        onboardingCompleted: true,
+        onboardingStep: null,
+        ...(selectedCourses && { selectedCourses }),
+        ...(classroomSkipped && { classroomSkipped })
+      };
+
+      // Update the user record
+      await storage.updateUserPreferences(user.id, updates);
+
+      res.json({ success: true, onboardingCompleted: true });
+    } catch (error) {
+      console.error('Error completing onboarding:', error);
+      res.status(500).json({ error: 'Failed to complete onboarding' });
+    }
+  });
+
+  // Get available courses based on user preferences  
+  app.get('/api/courses/available', async (req: any, res) => {
+    try {
+      const { user } = await ActiveUserService.requireActiveUserAndCustomerUuid(req);
+      const { preferredSubjectAreas, selectedGradeLevels } = req.query;
+
+      // Generate mock course data based on preferences
+      const courses = [];
+
+      // Parse the query parameters
+      const subjectAreas = preferredSubjectAreas ? preferredSubjectAreas.toString().split(',') : [];
+      const gradeLevels = selectedGradeLevels ? selectedGradeLevels.toString().split(',') : [];
+
+      // Mathematics courses
+      if (subjectAreas.includes('mathematics')) {
+        if (gradeLevels.includes('K-5')) {
+          courses.push(
+            { id: 'k-math', title: 'Kindergarten Mathematics', description: 'Foundational math concepts', gradeLevels: ['K'] },
+            { id: 'g1-math', title: 'Grade 1 Mathematics', description: 'Basic arithmetic and number sense', gradeLevels: ['1'] },
+            { id: 'g2-math', title: 'Grade 2 Mathematics', description: 'Place value and operations', gradeLevels: ['2'] },
+            { id: 'g3-math', title: 'Grade 3 Mathematics', description: 'Multiplication and fractions', gradeLevels: ['3'] },
+            { id: 'g4-math', title: 'Grade 4 Mathematics', description: 'Multi-digit operations', gradeLevels: ['4'] },
+            { id: 'g5-math', title: 'Grade 5 Mathematics', description: 'Decimals and fractions', gradeLevels: ['5'] }
+          );
+        }
+        
+        if (gradeLevels.includes('6-8')) {
+          courses.push(
+            { id: 'g6-math', title: 'Grade 6 Mathematics', description: 'Ratios and proportional relationships', gradeLevels: ['6'] },
+            { id: 'g7-math', title: 'Grade 7 Mathematics', description: 'Expressions and equations', gradeLevels: ['7'] },
+            { id: 'g8-math', title: 'Grade 8 Mathematics', description: 'Functions and geometry', gradeLevels: ['8'] }
+          );
+        }
+        
+        if (gradeLevels.includes('9-12')) {
+          courses.push(
+            { id: 'algebra1', title: 'Algebra 1', description: 'Linear equations and inequalities', gradeLevels: ['9', '10'] },
+            { id: 'geometry', title: 'Geometry', description: 'Shapes, proofs, and spatial reasoning', gradeLevels: ['9', '10', '11'] },
+            { id: 'algebra2', title: 'Algebra 2', description: 'Quadratic functions and polynomials', gradeLevels: ['10', '11'] },
+            { id: 'precalculus', title: 'Pre-Calculus', description: 'Advanced functions and trigonometry', gradeLevels: ['11', '12'] },
+            { id: 'calculus', title: 'Calculus', description: 'Limits, derivatives, and integrals', gradeLevels: ['11', '12'] },
+            { id: 'statistics', title: 'Statistics', description: 'Data analysis and probability', gradeLevels: ['9', '10', '11', '12'] }
+          );
+        }
+      }
+
+      // English Language Arts courses
+      if (subjectAreas.includes('english_language_arts')) {
+        if (gradeLevels.includes('K-5')) {
+          courses.push(
+            { id: 'k-ela', title: 'Kindergarten ELA', description: 'Foundational reading and writing', gradeLevels: ['K'] },
+            { id: 'g1-ela', title: 'Grade 1 ELA', description: 'Phonics and reading comprehension', gradeLevels: ['1'] },
+            { id: 'g2-ela', title: 'Grade 2 ELA', description: 'Fluency and writing skills', gradeLevels: ['2'] },
+            { id: 'g3-ela', title: 'Grade 3 ELA', description: 'Reading comprehension strategies', gradeLevels: ['3'] },
+            { id: 'g4-ela', title: 'Grade 4 ELA', description: 'Literary analysis and research', gradeLevels: ['4'] },
+            { id: 'g5-ela', title: 'Grade 5 ELA', description: 'Advanced reading and writing', gradeLevels: ['5'] }
+          );
+        }
+        
+        if (gradeLevels.includes('6-8')) {
+          courses.push(
+            { id: 'g6-ela', title: 'Grade 6 ELA', description: 'Literature and informational texts', gradeLevels: ['6'] },
+            { id: 'g7-ela', title: 'Grade 7 ELA', description: 'Literary elements and writing techniques', gradeLevels: ['7'] },
+            { id: 'g8-ela', title: 'Grade 8 ELA', description: 'Complex texts and argumentative writing', gradeLevels: ['8'] }
+          );
+        }
+        
+        if (gradeLevels.includes('9-12')) {
+          courses.push(
+            { id: 'english9', title: 'English I', description: 'Literature and composition fundamentals', gradeLevels: ['9'] },
+            { id: 'english10', title: 'English II', description: 'World literature and research skills', gradeLevels: ['10'] },
+            { id: 'english11', title: 'English III', description: 'American literature and rhetoric', gradeLevels: ['11'] },
+            { id: 'english12', title: 'English IV', description: 'British literature and advanced composition', gradeLevels: ['12'] }
+          );
+        }
+      }
+
+      res.json(courses);
+    } catch (error) {
+      console.error('Error fetching available courses:', error);
+      res.status(500).json({ error: 'Failed to fetch courses' });
+    }
+  });
+
   // Google OAuth routes with renamed environment variables (workaround for Replit conflicts)
   app.get('/api/auth/google', (req, res, next) => {
     console.log('[DEBUG] /api/auth/google route hit');
@@ -152,6 +296,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/standards/course-standards', getStandardsForCourseTitle);
   app.get('/api/standards/course-suggestions', getSuggestedCourses);
   app.get('/api/classrooms/:classroomId/standards', getClassroomStandards);
+  
+  // V1.0 Standards and Jurisdictions
+  app.get('/api/standards/jurisdictions', getJurisdictions);
   
   // Save classroom standards configuration with similarity matching
   app.post('/api/classrooms/:classroomId/standards-configuration', async (req, res) => {
