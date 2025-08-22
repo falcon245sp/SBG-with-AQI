@@ -13,14 +13,13 @@ export default function OnboardingCheck() {
   useEffect(() => {
     if (isLoading || !user) return;
 
-    // Check onboarding completion status
-    const { 
-      onboardingCompleted, 
-      onboardingStep,
-      preferredJurisdiction,
-      preferredSubjectAreas,
-      selectedGradeLevels 
-    } = user as any;
+    // Check onboarding completion status (handle both camelCase and snake_case)
+    const userData = user as any;
+    const onboardingCompleted = userData.onboardingCompleted || userData.onboarding_completed;
+    const onboardingStep = userData.onboardingStep || userData.onboarding_step;
+    const preferredJurisdiction = userData.preferredJurisdiction || userData.preferred_jurisdiction;
+    const preferredSubjectAreas = userData.preferredSubjectAreas || userData.preferred_subject_areas;
+    const selectedGradeLevels = userData.selectedGradeLevels || userData.selected_grade_levels;
 
     console.log('[OnboardingCheck] User onboarding status:', {
       onboardingCompleted,
