@@ -585,6 +585,42 @@ export default function GoogleClassroomIntegration() {
               >
                 {syncAssignmentsMutation.isPending ? 'Syncing...' : 'Sync Assignments'}
               </Button>
+              {/* Show Configure Remaining button only if there are unconfigured classroom groups */}
+              {(() => {
+                const groupedClassrooms = groupClassrooms(classrooms);
+                const unconfiguredGroups = groupedClassrooms
+                  .filter(group => group.classrooms.some(c => 
+                    !c.sbgEnabled || !c.enabledStandards || c.enabledStandards.length === 0
+                  ))
+                  .map(group => ({
+                    coreCourseName: group.coreCourseName,
+                    classrooms: group.classrooms
+                      .filter(c => !c.sbgEnabled || !c.enabledStandards || c.enabledStandards.length === 0)
+                      .map(c => ({
+                        id: c.id,
+                        name: c.name,
+                        section: c.section
+                      })),
+                    count: group.classrooms.filter(c => 
+                      !c.sbgEnabled || !c.enabledStandards || c.enabledStandards.length === 0
+                    ).length
+                  }))
+                  .filter(group => group.count > 0);
+                
+                return unconfiguredGroups.length > 0 ? (
+                  <Button 
+                    onClick={() => {
+                      setBulkConfigSuggestions(unconfiguredGroups);
+                      setShowBulkConfigDialog(true);
+                    }}
+                    variant="outline"
+                    className="bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100"
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    Configure Remaining Courses
+                  </Button>
+                ) : null;
+              })()}
             </div>
           </div>
 
