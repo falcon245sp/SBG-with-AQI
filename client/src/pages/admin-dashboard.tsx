@@ -148,6 +148,57 @@ export default function AdminDashboard() {
     },
   });
 
+  // Clear classroom data mutation
+  const clearClassroomMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/admin/clear-classroom-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || 'Failed to clear classroom data');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Classroom Data Cleared",
+        description: `Successfully cleared ${data.tablesCleared} tables with ${data.totalRecordsBefore} total records`,
+      });
+      
+      // Refresh all queries to reflect the clean state
+      queryClient.invalidateQueries();
+    },
+    onError: (error) => {
+      toast({
+        title: "Clearing Failed",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleClearClassroomData = () => {
+    const confirmed = window.confirm(
+      '⚠️ WARNING: This will permanently delete all Google Classroom data including:\n\n' +
+      '• All classroom records and configurations\n' +
+      '• All student rosters\n' +
+      '• All assignment data\n' +
+      '• Google OAuth tokens (requires re-authentication)\n\n' +
+      'This is useful for fresh testing but cannot be undone.\n\n' +
+      'Are you sure you want to proceed?'
+    );
+
+    if (confirmed) {
+      clearClassroomMutation.mutate();
+    }
+  };
+
   const handleTruncateData = () => {
     const confirmed = window.confirm(
       '⚠️ DANGER: This will permanently delete ALL data including:\n\n' +
@@ -238,7 +289,7 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <Monitor className="h-4 w-4" />
               Overview
@@ -254,6 +305,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="dead-letter-queue" className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4" />
               Failed Exports
+            </TabsTrigger>
+            <TabsTrigger value="classroom-tools" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Classroom Tools
             </TabsTrigger>
             <TabsTrigger value="dev-tools" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
@@ -594,6 +649,71 @@ export default function AdminDashboard() {
                       </p>
                     </div>
                   )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="classroom-tools">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Google Classroom Tools
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      These tools manage Google Classroom data for testing purposes. Use carefully in production environments.
+                    </AlertDescription>
+                  </Alert>
+                  
+                  <div className="border-l-4 border-orange-500 bg-orange-50 p-6 rounded-r-lg">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2">
+                        <h3 className="text-lg font-semibold text-orange-800 flex items-center gap-2">
+                          <Trash2 className="h-5 w-5" />
+                          Clear Classroom Data
+                        </h3>
+                        <p className="text-orange-700 text-sm leading-relaxed">
+                          Remove all Google Classroom data including classrooms, students, and assignments. 
+                          Also clears Google authentication tokens to allow fresh classroom connections.
+                        </p>
+                        <div className="text-xs text-orange-600 mt-2">
+                          <p>⚠️ This action will delete:</p>
+                          <ul className="list-disc ml-4 mt-1 space-y-1">
+                            <li>All classroom records and configurations</li>
+                            <li>All student rosters</li>
+                            <li>All assignment data</li>
+                            <li>Google OAuth tokens (requires re-authentication)</li>
+                          </ul>
+                        </div>
+                      </div>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleClearClassroomData()}
+                        disabled={clearClassroomMutation.isPending}
+                        className="ml-4"
+                        data-testid="button-clear-classroom-data"
+                      >
+                        {clearClassroomMutation.isPending ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                            Clearing...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Clear Data
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>

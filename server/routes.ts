@@ -46,11 +46,12 @@ import {
   apiKeys,
   sessions,
   classrooms,
-  students
+  students,
+  assignments
 } from "@shared/schema";
 import { TeacherReviewStatus } from "@shared/businessEnums";
 import { z } from "zod";
-import { count } from "drizzle-orm";
+import { count, sql } from "drizzle-orm";
 import { db } from "./db";
 import multer from "multer";
 import { aiService } from "./services/aiService";
@@ -1827,6 +1828,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('[TruncateData] Truncation failed:', error);
       res.status(500).json({
         error: 'Data truncation failed',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Clear Google Classroom data endpoint - admin only
+  app.post('/api/admin/clear-classroom-data', async (req, res) => {
+    try {
+      console.log('[ClearClassroomData] Starting Google Classroom data clearing...');
+      
+      // Clear Google Classroom related data (order matters due to foreign key constraints)
+      const tablesToClear = [
+        { table: students, name: 'students' },
+        { table: assignments, name: 'assignments' },
+        { table: classrooms, name: 'classrooms' }
+      ];
+      
+      let tablesCleared = 0;
+      let totalRecordsBefore = 0;
+      
+      // Get count before deletion
+      for (const { table, name } of tablesToClear) {
+        try {
+          const [{ count: recordCount }] = await db.select({ count: count() }).from(table);
+          totalRecordsBefore += recordCount;
+          console.log(`[ClearClassroomData] ${name}: ${recordCount} records`);
+        } catch (error) {
+          console.warn(`[ClearClassroomData] Failed to count ${name}:`, error);
+        }
+      }
+      
+      // Clear tables in order
+      for (const { table, name } of tablesToClear) {
+        try {
+          await db.delete(table);
+          tablesCleared++;
+          console.log(`[ClearClassroomData] Cleared ${name}`);
+        } catch (error) {
+          console.error(`[ClearClassroomData] Failed to clear ${name}:`, error);
+          throw error;
+        }
+      }
+      
+      // Also clear Google Classroom auth data from users
+      try {
+        await db.update(users).set({
+          googleAccessToken: null,
+          googleRefreshToken: null,
+          googleTokenExpiry: null,
+          classroomConnected: false
+        }).where(sql`classroom_connected = true`);
+        console.log('[ClearClassroomData] Cleared Google auth tokens from users');
+      } catch (error) {
+        console.warn('[ClearClassroomData] Failed to clear auth tokens:', error);
+      }
+      
+      const response = {
+        success: true,
+        message: 'Google Classroom data cleared successfully',
+        tablesCleared,
+        totalRecordsBefore,
+        timestamp: new Date().toISOString()
+      };
+      
+      console.log(`[ClearClassroomData] Clearing complete:`, response);
+      res.json(response);
+      
+    } catch (error) {
+      console.error('[ClearClassroomData] Clearing failed:', error);
+      res.status(500).json({
+        error: 'Classroom data clearing failed',
         details: error instanceof Error ? error.message : 'Unknown error'
       });
     }
