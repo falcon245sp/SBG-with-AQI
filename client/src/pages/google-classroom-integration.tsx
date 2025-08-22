@@ -113,6 +113,9 @@ const extractCoreCourseName = (classroomName: string): string => {
     .replace(/\s*\([a-z0-9]+\)$/i, '') // Generic "(A)", "(1)" at end
     .trim();
   
+  // Debug logging (temporary)
+  console.log(`Grouping "${classroomName}" -> "${cleaned}"`);
+  
   return cleaned || classroomName; // Fallback to original name
 };
 
