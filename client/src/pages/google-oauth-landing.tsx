@@ -21,10 +21,10 @@ export default function GoogleOAuthLanding() {
       setAuthStatus('success');
       // Clean up URL
       window.history.replaceState({}, document.title, '/');
-      // Redirect to onboarding check after showing success message
+      // Redirect to role selection after showing success message
       const redirectDelay = parseInt(import.meta.env.VITE_STABLE_OAUTH_REDIRECT_DELAY_MS || '2000', 10);
       setTimeout(() => {
-        window.location.href = '/onboarding';
+        window.location.href = '/role-selection';
       }, redirectDelay);
     }
   }, []);

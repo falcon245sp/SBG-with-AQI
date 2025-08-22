@@ -30,12 +30,10 @@ export default function OnboardingCheck() {
       selectedGradeLevels
     });
 
-    // If onboarding is complete, go to role selection
-    if (onboardingCompleted) {
-      console.log('[OnboardingCheck] Onboarding complete, redirecting to role selection');
-      setLocation('/role-selection');
-      return;
-    }
+    // Skip onboarding entirely - go directly to role selection
+    console.log('[OnboardingCheck] Skipping onboarding, redirecting to role selection');
+    setLocation('/role-selection');
+    return;
 
     // Route user to their next onboarding step
     switch (onboardingStep) {
