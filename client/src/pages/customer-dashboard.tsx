@@ -1,24 +1,17 @@
-import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Sidebar } from "@/components/Sidebar";
-import { FileUploader } from "@/components/FileUploader";
 import { RigorBadge } from "@/components/RigorBadge";
 import { ProcessingStatus } from "@/components/ProcessingStatus";
 import { 
   FileText, 
   Upload, 
-  BarChart3, 
-  FolderOpen,
-  TrendingUp,
-  Shield,
   Eye,
   Download,
-  Settings
+  Shield
 } from "lucide-react";
 
 interface DocumentResult {
@@ -31,19 +24,8 @@ interface DocumentResult {
   processingTime: string;
 }
 
-interface DashboardStats {
-  totalDocuments: number;
-  documentsProcessed: number;
-  questionsAnalyzed: number;
-  standardsIdentified: number;
-  avgProcessingTime: string;
-  successRate: number;
-}
-
 export default function CustomerDashboard() {
   const { toast } = useToast();
-  const [useFocusStandards, setUseFocusStandards] = useState(false);
-  const [focusStandards, setFocusStandards] = useState("");
 
   // Check if current user has admin access
   const { data: user } = useQuery({
@@ -61,11 +43,6 @@ export default function CustomerDashboard() {
   
   const isAdmin = (user as any)?.email === getAdminEmail();
 
-  // Fetch customer statistics
-  const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
-    queryKey: ["/api/stats"],
-  });
-
   // Fetch recent documents with live polling for processing documents
   const { data: documents, isLoading: documentsLoading } = useQuery<DocumentResult[]>({
     queryKey: ["/api/documents"],
@@ -76,11 +53,11 @@ export default function CustomerDashboard() {
     },
     refetchIntervalInBackground: true,
     staleTime: 0, // Always treat data as stale for fresh status updates
-    cacheTime: 0, // Disable cache for real-time updates
+    gcTime: 0, // Disable cache for real-time updates
   });
 
   // Export functionality
-  const handleExport = async (documentId: string, format: 'rubric-markdown' | 'rubric-pdf' | 'csv' | 'student-cover-sheet') => {
+  const handleExport = async (documentId: string, format: 'student-cover-sheet') => {
     try {
       const response = await fetch(`/api/documents/${documentId}/export/${format}`, {
         method: 'POST',
@@ -95,7 +72,7 @@ export default function CustomerDashboard() {
       const a = document.createElement('a');
       a.style.display = 'none';
       a.href = url;
-      a.download = `document-${documentId}-${format}.${format.includes('pdf') ? 'pdf' : format.includes('csv') ? 'csv' : 'md'}`;
+      a.download = `document-${documentId}-${format}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -108,7 +85,7 @@ export default function CustomerDashboard() {
     } catch (error) {
       console.error('Export failed:', error);
       toast({
-        title: "Export Failed",
+        title: "Export Failed", 
         description: error instanceof Error ? error.message : 'Unknown error occurred',
         variant: "destructive",
       });
@@ -116,244 +93,122 @@ export default function CustomerDashboard() {
   };
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      <Sidebar />
-      <div className="flex-1 overflow-auto">
-        <div className="container mx-auto px-6 py-8">
-          {/* Header with Admin Access */}
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                Standards Sherpa
-              </h1>
-              <p className="text-gray-600 dark:text-gray-300">
-                AI-powered document analysis for educational standards
-              </p>
-            </div>
-            
-            {isAdmin && (
-              <Link href="/admin">
-                <Button variant="outline" className="flex items-center gap-2">
-                  <Shield className="h-4 w-4" />
-                  Admin Panel
-                </Button>
+    <div className="min-h-screen bg-white">
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Simple Header */}
+        <div className="flex justify-between items-center mb-12">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Standards Sherpa
+            </h1>
+            <p className="text-gray-600">
+              Document analysis and standards alignment
+            </p>
+          </div>
+          
+          {isAdmin && (
+            <Link href="/admin">
+              <Button variant="outline" className="flex items-center gap-2">
+                <Shield className="h-4 w-4" />
+                Admin
+              </Button>
+            </Link>
+          )}
+        </div>
+
+        {/* Core Action - Upload */}
+        <div className="mb-12">
+          <Link href="/upload">
+            <Card className="cursor-pointer hover:shadow-md transition-shadow border-2 border-dashed border-blue-200 hover:border-blue-300">
+              <CardContent className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <Upload className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+                  <h2 className="text-xl font-semibold text-gray-900 mb-2">Upload Document</h2>
+                  <p className="text-gray-600">Drop PDF or Word documents for AI analysis</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+
+        {/* Documents */}
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Your Documents</h2>
+            {(documents as DocumentResult[])?.length > 5 && (
+              <Link href="/results">
+                <Button variant="outline" size="sm">View All</Button>
               </Link>
             )}
           </div>
 
-          {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Documents</CardTitle>
-                <FileText className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {statsLoading ? '...' : stats?.totalDocuments || 0}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Documents uploaded
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Questions Analyzed</CardTitle>
-                <BarChart3 className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {statsLoading ? '...' : stats?.questionsAnalyzed || 0}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Individual questions processed
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Standards Found</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {statsLoading ? '...' : stats?.standardsIdentified || 0}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Educational standards identified
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {statsLoading ? '...' : stats?.successRate ? `${stats.successRate}%` : '0%'}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Processing success rate
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <Link href="/upload">
-              <Card className="cursor-pointer hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Upload className="h-5 w-5 text-blue-600" />
-                    Upload Documents
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-600 dark:text-gray-300 text-sm">
-                    Upload PDF or Word documents for AI analysis
-                  </p>
-                </CardContent>
-              </Card>
-            </Link>
-
-            <Link href="/file-cabinet">
-              <Card className="cursor-pointer hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FolderOpen className="h-5 w-5 text-green-600" />
-                    File Cabinet
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-600 dark:text-gray-300 text-sm">
-                    Organize uploaded, generated, and graded documents
-                  </p>
-                </CardContent>
-              </Card>
-            </Link>
-
-            <Link href="/results">
-              <Card className="cursor-pointer hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5 text-purple-600" />
-                    View Results
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-600 dark:text-gray-300 text-sm">
-                    Review analysis results and standards alignment
-                  </p>
-                </CardContent>
-              </Card>
-            </Link>
-          </div>
-
-          {/* Admin Access Section - Only visible to admin users */}
-          {isAdmin && (
-            <div className="mb-8">
-              <Card className="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-900/20">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-orange-800 dark:text-orange-200">
-                    <Settings className="h-5 w-5" />
-                    Admin Access
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-orange-700 dark:text-orange-300 text-sm mb-4">
-                    You have administrator privileges and can access system diagnostics.
-                  </p>
-                  <Link href="/admin">
-                    <Button variant="outline" className="border-orange-300 text-orange-800 hover:bg-orange-100 dark:border-orange-700 dark:text-orange-200 dark:hover:bg-orange-800/30">
-                      <Settings className="h-4 w-4 mr-2" />
-                      Open Admin Panel
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
+          {documentsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
-          )}
-
-          {/* Recent Documents */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Recent Documents</CardTitle>
-                <Link href="/results">
-                  <Button variant="outline" size="sm">View All</Button>
-                </Link>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {documentsLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                </div>
-              ) : documents && documents.length > 0 ? (
-                <div className="space-y-4">
-                  {documents.slice(0, 5).map((doc) => (
-                    <div key={doc.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-5 w-5 text-gray-400" />
-                        <div>
-                          <p className="font-medium text-gray-900 dark:text-white">
-                            {doc.fileName}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {new Date(doc.createdAt).toLocaleDateString()}
-                          </p>
-                        </div>
+          ) : (documents as DocumentResult[])?.length > 0 ? (
+            <div className="space-y-3">
+              {(documents as DocumentResult[]).slice(0, 10).map((doc: DocumentResult) => (
+                <Card key={doc.id} className="hover:shadow-sm transition-shadow">
+                  <CardContent className="flex items-center justify-between p-6">
+                    <div className="flex items-center gap-4">
+                      <FileText className="h-5 w-5 text-gray-400" />
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {doc.fileName}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {new Date(doc.createdAt).toLocaleDateString()}
+                        </p>
                       </div>
-                      <div className="flex items-center gap-3">
-                        {doc.status === 'processing' || doc.status === 'pending' ? (
-                          <ProcessingStatus status={doc.status} />
-                        ) : (
-                          <>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      {doc.status === 'processing' || doc.status === 'pending' ? (
+                        <ProcessingStatus status={doc.status} />
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-2">
                             <RigorBadge level={doc.rigorLevel} />
                             <Badge variant="secondary">
                               {doc.standardsCount} standards
                             </Badge>
-                            <div className="flex gap-1">
-                              <Link href={`/results/${doc.id}`}>
-                                <Button variant="outline" size="sm">
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                              </Link>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => handleExport(doc.id, 'student-cover-sheet')}
-                              >
-                                <Download className="h-4 w-4" />
+                          </div>
+                          <div className="flex gap-2">
+                            <Link href={`/results/${doc.id}`}>
+                              <Button variant="outline" size="sm">
+                                <Eye className="h-4 w-4 mr-1" />
+                                View
                               </Button>
-                            </div>
-                          </>
-                        )}
-                      </div>
+                            </Link>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleExport(doc.id, 'student-cover-sheet')}
+                            >
+                              <Download className="h-4 w-4 mr-1" />
+                              Export
+                            </Button>
+                          </div>
+                        </>
+                      )}
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12 text-gray-500">
-                  <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg mb-2">No documents uploaded yet</p>
-                  <p className="text-sm mb-4">Start by uploading a document to analyze</p>
-                  <Link href="/upload">
-                    <Button>
-                      <Upload className="h-4 w-4 mr-2" />
-                      Upload Document
-                    </Button>
-                  </Link>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16 text-gray-500">
+              <FileText className="h-16 w-16 mx-auto mb-4 opacity-30" />
+              <h3 className="text-lg font-medium mb-2">No documents yet</h3>
+              <p className="mb-6">Upload your first document to get started</p>
+              <Link href="/upload">
+                <Button>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload Document
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>
