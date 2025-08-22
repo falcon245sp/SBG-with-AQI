@@ -5,11 +5,21 @@ The Document Processing Service, "Standards Sherpa," is a full-stack web applica
 
 ## Version History
 
-### **v0.9 (August 22, 2025) - Google Classroom Integration Milestone** 
+### **v0.9 (August 22, 2025) - Google Classroom Integration Milestone** ✅
 - **Proactive Bulk Configuration**: Automatically presents bulk configuration dialog after configuring first classroom group, eliminating button hunting
 - **Mathematical Course Ordering**: Standards sets now sort by math progression (Algebra 1 → Geometry → Algebra 2 → Pre-Calculus) instead of alphabetically
 - **Seamless UX Flow**: Intelligent similarity detection with regex patterns for immediate configuration of related classroom groups
 - **Enhanced User Workflow**: System proactively guides users through configuring all similar courses without requiring UI discovery
+- **Intelligent Course Click Behavior**: Clicking any unconfigured course (single or grouped) immediately opens configuration dialog
+- **Contextual Configuration Access**: Eliminates button-hunting UX with natural, discovery-free workflow
+
+### **v1.0 (Planned) - Standards Accountability & SBG Gradebook**
+- **Accountability Matrix**: Year-long standards coverage tracking with visual rigor indicators (green/yellow/red for mild/medium/spicy)
+- **Standards Tracking System**: Automated capture of standards and maximum rigor levels from AI analysis
+- **Unit-Based Gradebook**: Progressive unlock of SBG entries as units are analyzed and standards identified  
+- **Three-Persona Onboarding**: Smart post-configuration flow for SBG converters, standards auditors, and curriculum builders
+- **Interactive Matrix**: Hover states with assessment dates and click-through to source rubrics and documents
+- **Manual Marking System**: Teacher symbol menu for marking standards without formal assessments
 
 ### **v0.8 (August 21, 2025) - Performance & Reliability Milestone**
 - **Critical Bug Fixed**: Resolved alphabetical vs numerical question sorting causing rigor level misalignment in generated documents
