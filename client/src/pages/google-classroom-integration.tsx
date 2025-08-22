@@ -388,7 +388,41 @@ export default function GoogleClassroomIntegration() {
       }
       
       // Refresh classroom list to show updated configurations
-      queryClient.invalidateQueries({ queryKey: ['/api/classrooms'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/classrooms'] }).then(() => {
+        // After refresh, check for other similar unconfigured courses
+        setTimeout(() => {
+          const currentClassrooms = queryClient.getQueryData(['/api/classrooms']) as Classroom[] || [];
+          const groupedClassrooms = groupClassrooms(currentClassrooms);
+          
+          // Find groups with unconfigured classrooms (only if not in bulk mode already)
+          if (bulkConfiguringClassrooms.length === 0) {
+            const unconfiguredGroups = groupedClassrooms
+              .filter(group => group.classrooms.some(c => 
+                !c.sbgEnabled || !c.enabledStandards || c.enabledStandards.length === 0
+              ))
+              .map(group => ({
+                coreCourseName: group.coreCourseName,
+                classrooms: group.classrooms
+                  .filter(c => !c.sbgEnabled || !c.enabledStandards || c.enabledStandards.length === 0)
+                  .map(c => ({
+                    id: c.id,
+                    name: c.name,
+                    section: c.section
+                  })),
+                count: group.classrooms.filter(c => 
+                  !c.sbgEnabled || !c.enabledStandards || c.enabledStandards.length === 0
+                ).length
+              }))
+              .filter(group => group.count > 0); // Only groups with unconfigured courses
+
+            // If there are unconfigured groups, proactively show bulk configuration
+            if (unconfiguredGroups.length > 0) {
+              setBulkConfigSuggestions(unconfiguredGroups);
+              setShowBulkConfigDialog(true);
+            }
+          }
+        }, 500); // Small delay to ensure data is refreshed
+      });
     },
     onError: (error: any) => {
       toast({
