@@ -53,7 +53,7 @@ export const queryClient = new QueryClient({
       refetchInterval: false,
       refetchOnWindowFocus: false,
       staleTime: 0, // Enable fresh data for status updates
-      cacheTime: 0, // Disable cache for real-time status updates
+      gcTime: 0, // Disable cache for real-time status updates (renamed from cacheTime in v5)
       retry: false,
     },
     mutations: {

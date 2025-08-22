@@ -20,6 +20,10 @@ import FileCabinet from "@/pages/file-cabinet";
 import DocumentInspector from "@/pages/document-inspector";
 import TestingDashboard from "@/pages/testing-dashboard";
 import GoogleClassroomIntegration from "@/pages/google-classroom-integration";
+import AccountabilityMatrix from "@/pages/accountability-matrix";
+import UnitManagement from "@/pages/unit-management";
+import OnboardingFlow from "@/pages/onboarding-flow";
+import SBGGradebook from "@/pages/sbg-gradebook";
 
 // Protected Route wrapper that redirects to landing page if not authenticated
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
@@ -79,6 +83,12 @@ function Router() {
       <Route path="/file-cabinet" component={() => <ProtectedRoute component={FileCabinet} />} />
       <Route path="/documents/:documentId/inspect" component={() => <ProtectedRoute component={DocumentInspector} />} />
       <Route path="/google-classroom" component={() => <ProtectedRoute component={GoogleClassroomIntegration} />} />
+      
+      {/* V1.0 Routes - Standards Accountability & SBG Gradebook */}
+      <Route path="/accountability-matrix/:classroomId" component={() => <ProtectedRoute component={AccountabilityMatrix} />} />
+      <Route path="/units/:classroomId" component={() => <ProtectedRoute component={UnitManagement} />} />
+      <Route path="/gradebook/:classroomId" component={() => <ProtectedRoute component={SBGGradebook} />} />
+      <Route path="/onboarding" component={() => <ProtectedRoute component={OnboardingFlow} />} />
       
       {/* Default catch-all */}
       <Route component={NotFound} />
