@@ -124,6 +124,8 @@ const groupClassrooms = (classrooms: Classroom[]): Array<{
   coreCourseName: string;
   classrooms: Classroom[];
 }> => {
+  console.log(`groupClassrooms called with ${classrooms.length} classrooms:`, classrooms.map(c => c.name));
+  
   const groups = new Map<string, Classroom[]>();
   
   classrooms.forEach(classroom => {
@@ -134,10 +136,14 @@ const groupClassrooms = (classrooms: Classroom[]): Array<{
     groups.get(coreCourseName)!.push(classroom);
   });
   
-  return Array.from(groups.entries()).map(([coreCourseName, classrooms]) => ({
+  const result = Array.from(groups.entries()).map(([coreCourseName, classrooms]) => ({
     coreCourseName,
     classrooms
   }));
+  
+  console.log(`groupClassrooms returning ${result.length} groups:`, result.map(g => `${g.coreCourseName} (${g.classrooms.length} sections)`));
+  
+  return result;
 };
 
 export default function GoogleClassroomIntegration() {

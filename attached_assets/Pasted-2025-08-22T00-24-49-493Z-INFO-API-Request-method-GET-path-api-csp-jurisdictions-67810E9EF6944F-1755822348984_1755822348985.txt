@@ -1,0 +1,67 @@
+2025-08-22T00:24:49.493Z [INFO] API Request | method=GET, path=/api/csp/jurisdictions/67810E9EF6944F9383DCC602A3484C23/courses, statusCode=200, duration=302, requestId=45d23dd1af0a53f409f231a7ff740ec2, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.4.168, sessionId=3YkX5mCDqS1oyPIefUZ-6c1DKOndxLx2
+2025-08-22T00:24:56.155Z [DEBUG] Request started | requestId=d6a0440491e87ee21f54ed32790c5b33, method=GET, path=/api/csp/courses/67810E9EF6944F9383DCC602A3484C23_D10003FB_high-school-number-and-quantity/standards, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.4.168, sessionId=3YkX5mCDqS1oyPIefUZ-6c1DKOndxLx2
+[CustomerLookupService] Looking up user and customer UUID for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+[CustomerLookupService] Found user and customer UUID: e9e41d64-44f6-4c77-b626-40487868c72d for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+[CommonStandardsProjectService] Returning cached standards for set 67810E9EF6944F9383DCC602A3484C23_D10003FB_high-school-number-and-quantity
+2025-08-22T00:24:56.514Z [INFO] API Request | method=GET, path=/api/csp/courses/67810E9EF6944F9383DCC602A3484C23_D10003FB_high-school-number-and-quantity/standards, statusCode=200, duration=359, requestId=d6a0440491e87ee21f54ed32790c5b33, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.4.168, sessionId=3YkX5mCDqS1oyPIefUZ-6c1DKOndxLx2
+2025-08-22T00:25:04.606Z [DEBUG] Request started | requestId=2b4b8daaf9b0d348f971551c235fdf17, method=POST, path=/api/classrooms/cb7dfbbe-53a5-4614-9892-574c29a5cfc4/standards-configuration, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.4.168, sessionId=3YkX5mCDqS1oyPIefUZ-6c1DKOndxLx2
+[CustomerLookupService] Looking up user and customer UUID for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+[CustomerLookupService] Found user and customer UUID: e9e41d64-44f6-4c77-b626-40487868c72d for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+2025-08-22T00:25:05.036Z [DEBUG] Request started | requestId=4dc85edfd58181ce832e3755f21759e6, method=POST, path=/api/classrooms/2fd1995e-1444-4655-8c85-641e2fb9419a/standards-configuration, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=3YkX5mCDqS1oyPIefUZ-6c1DKOndxLx2
+[CustomerLookupService] Looking up user and customer UUID for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+2025-08-22T00:25:05.039Z [DEBUG] Request started | requestId=33efb9c7ab1d00571c20edcd3850413d, method=POST, path=/api/classrooms/e7d74731-967c-497a-80d6-109aa75aa610/standards-configuration, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=3YkX5mCDqS1oyPIefUZ-6c1DKOndxLx2
+[CustomerLookupService] Looking up user and customer UUID for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+[StandardsConfig] Updated 3 classrooms: {
+  primary: 'Math Topics Adv - Fielder - 01',
+  similar: [
+    'Math Topics Adv - Fielder - 04',
+    'Math Topics Adv - Fielder - 05'
+  ],
+  configuration: {
+    jurisdiction: '67810E9EF6944F9383DCC602A3484C23',
+    courseTitle: 'Pre-Calculus',
+    standardsCount: 54
+  }
+}
+[CustomerLookupService] Found user and customer UUID: e9e41d64-44f6-4c77-b626-40487868c72d for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+2025-08-22T00:25:05.117Z [INFO] API Request | method=POST, path=/api/classrooms/cb7dfbbe-53a5-4614-9892-574c29a5cfc4/standards-configuration, statusCode=200, duration=511, requestId=2b4b8daaf9b0d348f971551c235fdf17, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.4.168, sessionId=3YkX5mCDqS1oyPIefUZ-6c1DKOndxLx2
+2025-08-22T00:25:05.285Z [DEBUG] Request started | requestId=02c00c615284d1adc1886ad84698495d, method=GET, path=/api/classrooms, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.4.168, sessionId=3YkX5mCDqS1oyPIefUZ-6c1DKOndxLx2
+[CustomerLookupService] Looking up user and customer UUID for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+[CustomerLookupService] Found user and customer UUID: e9e41d64-44f6-4c77-b626-40487868c72d for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+[CustomerLookupService] Found user and customer UUID: e9e41d64-44f6-4c77-b626-40487868c72d for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+[StandardsConfig] Updated 3 classrooms: {
+  primary: 'Math Topics Adv - Fielder - 04',
+  similar: [
+    'Math Topics Adv - Fielder - 01',
+    'Math Topics Adv - Fielder - 05'
+  ],
+  configuration: {
+    jurisdiction: '67810E9EF6944F9383DCC602A3484C23',
+    courseTitle: 'Pre-Calculus',
+    standardsCount: 54
+  }
+}
+2025-08-22T00:25:05.620Z [INFO] API Request | method=GET, path=/api/classrooms, statusCode=200, duration=335, requestId=02c00c615284d1adc1886ad84698495d, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.4.168, sessionId=3YkX5mCDqS1oyPIefUZ-6c1DKOndxLx2
+2025-08-22T00:25:05.685Z [INFO] API Request | method=POST, path=/api/classrooms/e7d74731-967c-497a-80d6-109aa75aa610/standards-configuration, statusCode=200, duration=646, requestId=33efb9c7ab1d00571c20edcd3850413d, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=3YkX5mCDqS1oyPIefUZ-6c1DKOndxLx2
+2025-08-22T00:25:05.851Z [DEBUG] Request started | requestId=613cbabfd5077f6a0a891c165eb75386, method=GET, path=/api/classrooms, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=3YkX5mCDqS1oyPIefUZ-6c1DKOndxLx2
+[CustomerLookupService] Looking up user and customer UUID for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+[StandardsConfig] Updated 3 classrooms: {
+  primary: 'Math Topics Adv - Fielder - 05',
+  similar: [
+    'Math Topics Adv - Fielder - 01',
+    'Math Topics Adv - Fielder - 04'
+  ],
+  configuration: {
+    jurisdiction: '67810E9EF6944F9383DCC602A3484C23',
+    courseTitle: 'Pre-Calculus',
+    standardsCount: 54
+  }
+}
+[CustomerLookupService] Found user and customer UUID: e9e41d64-44f6-4c77-b626-40487868c72d for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+2025-08-22T00:25:05.981Z [INFO] API Request | method=POST, path=/api/classrooms/2fd1995e-1444-4655-8c85-641e2fb9419a/standards-configuration, statusCode=200, duration=945, requestId=4dc85edfd58181ce832e3755f21759e6, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=3YkX5mCDqS1oyPIefUZ-6c1DKOndxLx2
+2025-08-22T00:25:06.066Z [INFO] API Request | method=GET, path=/api/classrooms, statusCode=200, duration=215, requestId=613cbabfd5077f6a0a891c165eb75386, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=3YkX5mCDqS1oyPIefUZ-6c1DKOndxLx2
+2025-08-22T00:25:06.146Z [DEBUG] Request started | requestId=77c6c00424856b17b0ce1703448de798, method=GET, path=/api/classrooms, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=3YkX5mCDqS1oyPIefUZ-6c1DKOndxLx2
+[CustomerLookupService] Looking up user and customer UUID for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+[CustomerLookupService] Found user and customer UUID: e9e41d64-44f6-4c77-b626-40487868c72d for session user: 04a7ba33-caa2-4b8e-808c-c159ed0d932d
+2025-08-22T00:25:06.360Z [INFO] API Request | method=GET, path=/api/classrooms, statusCode=200, duration=214, requestId=77c6c00424856b17b0ce1703448de798, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.7.238, sessionId=3YkX5mCDqS1oyPIefUZ-6c1DKOndxLx2
+[ExportProcessor] Found 0 pending exports
