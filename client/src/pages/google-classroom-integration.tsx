@@ -728,6 +728,48 @@ export default function GoogleClassroomIntegration() {
                                     </Badge>
                                   )}
                                 </div>
+
+                                {/* V1.0 Feature Access Buttons */}
+                                {classroom.sbgEnabled && classroom.enabledStandards && classroom.enabledStandards.length > 0 && (
+                                  <div className="mt-3 pt-3 border-t border-gray-200">
+                                    <p className="text-xs text-gray-600 mb-2">Standards Accountability Tools:</p>
+                                    <div className="flex flex-wrap gap-2">
+                                      <Link href={`/accountability-matrix/${classroom.id}`}>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="text-xs h-7"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          <Target className="w-3 h-3 mr-1" />
+                                          Matrix
+                                        </Button>
+                                      </Link>
+                                      <Link href={`/units/${classroom.id}`}>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="text-xs h-7"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          <Calendar className="w-3 h-3 mr-1" />
+                                          Units
+                                        </Button>
+                                      </Link>
+                                      <Link href={`/gradebook/${classroom.id}`}>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="text-xs h-7"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          <BookOpen className="w-3 h-3 mr-1" />
+                                          Gradebook
+                                        </Button>
+                                      </Link>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             ))}
                           </div>
