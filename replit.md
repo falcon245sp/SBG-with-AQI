@@ -5,6 +5,12 @@ The Document Processing Service, "Standards Sherpa," is a full-stack web applica
 
 ## Version History
 
+### **v0.9 (August 22, 2025) - Google Classroom Integration Milestone** 
+- **Proactive Bulk Configuration**: Automatically presents bulk configuration dialog after configuring first classroom group, eliminating button hunting
+- **Mathematical Course Ordering**: Standards sets now sort by math progression (Algebra 1 → Geometry → Algebra 2 → Pre-Calculus) instead of alphabetically
+- **Seamless UX Flow**: Intelligent similarity detection with regex patterns for immediate configuration of related classroom groups
+- **Enhanced User Workflow**: System proactively guides users through configuring all similar courses without requiring UI discovery
+
 ### **v0.8 (August 21, 2025) - Performance & Reliability Milestone**
 - **Critical Bug Fixed**: Resolved alphabetical vs numerical question sorting causing rigor level misalignment in generated documents
 - **Document Inspector**: Fixed 404 errors in "View All Questions" navigation links

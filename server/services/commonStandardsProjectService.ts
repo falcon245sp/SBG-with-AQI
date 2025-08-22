@@ -265,12 +265,54 @@ class CommonStandardsProjectService {
       });
     });
     
-    // Sort courses within each grade band
+    // Sort courses within each grade band using custom math progression order
     Object.values(gradeBands).forEach(band => {
-      band.courses.sort((a, b) => a.title.localeCompare(b.title));
+      band.courses.sort((a, b) => this.getMathCourseOrder(a.title, b.title));
     });
     
     return Object.values(gradeBands);
+  }
+
+  // Custom sorting for math courses by progression level (lower to higher)
+  private getMathCourseOrder(titleA: string, titleB: string): number {
+    const mathCourseOrder: Record<string, number> = {
+      // Elementary Mathematics (K-5)
+      'Kindergarten Mathematics': 1,
+      'Grade 1 Mathematics': 2,
+      'Grade 2 Mathematics': 3,
+      'Grade 3 Mathematics': 4,
+      'Grade 4 Mathematics': 5,
+      'Grade 5 Mathematics': 6,
+      
+      // Middle School Mathematics (6-8)
+      'Grade 6 Mathematics': 7,
+      'Grade 7 Mathematics': 8,
+      'Grade 8 Mathematics': 9,
+      
+      // High School Mathematics - Traditional Progression
+      'Algebra 1': 10,
+      'Geometry': 11,
+      'Algebra 2': 12,
+      'Pre-Calculus': 13,
+      'Statistics': 14,
+      'High School Mathematics (General)': 15,
+      
+      // Additional courses (if any)
+      'Calculus': 16,
+      'AP Calculus': 17,
+      'AP Statistics': 18
+    };
+
+    const orderA = mathCourseOrder[titleA] || 999; // Unknown courses go to end
+    const orderB = mathCourseOrder[titleB] || 999;
+    
+    // If both have defined order, use math progression
+    if (orderA !== 999 && orderB !== 999) {
+      return orderA - orderB;
+    }
+    
+    // If one or both are unknown, fall back to alphabetical for non-math or unknown courses
+    return titleA.localeCompare(titleB);
   }
 
   // Convert CSP standards to our internal format
