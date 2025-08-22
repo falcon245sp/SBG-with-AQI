@@ -678,51 +678,12 @@ export default function GoogleClassroomIntegration() {
                                     ? 'border-green-300 bg-green-50 hover:border-green-400'
                                     : 'border-gray-200 hover:border-gray-300'
                                 }`}
-                                onClick={() => {
-                                  try {
-                                    console.log('🔸 Clicked classroom:', classroom.name, 'ID:', classroom.id);
-                                    
-                                    // Check if the classroom is unconfigured
-                                    const isUnconfigured = !classroom.sbgEnabled || !classroom.enabledStandards || classroom.enabledStandards.length === 0;
-                                    console.log('🔸 Is unconfigured:', isUnconfigured, 'SBG:', classroom.sbgEnabled, 'Standards:', classroom.enabledStandards?.length);
-                                    
-                                    if (isUnconfigured) {
-                                      // Find other unconfigured classrooms in the same group
-                                      const allGroups = groupClassrooms(classrooms);
-                                      const myGroup = allGroups.find(g => g.classrooms.some(c => c.id === classroom.id));
-                                      console.log('🔸 Found group:', myGroup?.coreCourseName);
-                                      
-                                      if (myGroup) {
-                                        const unconfiguredInGroup = myGroup.classrooms.filter(c => 
-                                          !c.sbgEnabled || !c.enabledStandards || c.enabledStandards.length === 0
-                                        );
-                                        console.log('🔸 Unconfigured in group:', unconfiguredInGroup.length);
-                                        
-                                        // If there are multiple unconfigured courses, show bulk config
-                                        if (unconfiguredInGroup.length > 1) {
-                                          console.log('🔸 Showing bulk configuration dialog');
-                                          setBulkConfigSuggestions([{
-                                            coreCourseName: myGroup.coreCourseName,
-                                            classrooms: unconfiguredInGroup.map(c => ({
-                                              id: c.id,
-                                              name: c.name,
-                                              section: c.section
-                                            })),
-                                            count: unconfiguredInGroup.length
-                                          }]);
-                                          setShowBulkConfigDialog(true);
-                                          return;
-                                        }
-                                      }
-                                    }
-                                    
-                                    // Default: select the classroom
-                                    console.log('🔸 Selecting classroom:', classroom.id);
-                                    setSelectedClassroom(classroom.id);
-                                  } catch (error) {
-                                    console.error('🔸 Error in classroom click handler:', error);
-                                    setSelectedClassroom(classroom.id); // Fallback
-                                  }
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  console.log('🔸 CLICK TEST - Classroom clicked:', classroom.name);
+                                  alert('Clicked: ' + classroom.name);
+                                  setSelectedClassroom(classroom.id);
                                 }}
                               >
                                 <h4 className="font-medium text-gray-900">{classroom.name}</h4>
