@@ -12,6 +12,7 @@ The Document Processing Service, "Standards Sherpa," is a full-stack web applica
 - **Enhanced User Workflow**: System proactively guides users through configuring all similar courses without requiring UI discovery
 - **Intelligent Course Click Behavior**: Clicking any unconfigured course (single or grouped) immediately opens configuration dialog
 - **Contextual Configuration Access**: Eliminates button-hunting UX with natural, discovery-free workflow
+- **Admin Classroom Tools**: New admin dashboard tab with Google Classroom data clearing functionality for fresh testing in both DEV and PROD environments
 
 ### **v1.0 (Planned) - Standards Accountability & SBG Gradebook**
 - **Accountability Matrix**: Year-long standards coverage tracking with visual rigor indicators (green/yellow/red for mild/medium/spicy)
