@@ -679,11 +679,8 @@ export default function GoogleClassroomIntegration() {
                                     : 'border-gray-200 hover:border-gray-300'
                                 }`}
                                 onClick={() => {
-                                  console.log('🔸 Clicked:', classroom.name);
-                                  
                                   // Check if this classroom needs configuration
                                   const needsConfiguration = !classroom.sbgEnabled || !classroom.enabledStandards || classroom.enabledStandards.length === 0;
-                                  console.log('🔸 Needs configuration?', needsConfiguration);
                                   
                                   if (needsConfiguration) {
                                     // Find if there are similar courses that also need configuration
@@ -694,8 +691,6 @@ export default function GoogleClassroomIntegration() {
                                       const unconfiguredInGroup = myGroup.classrooms.filter(c => 
                                         !c.sbgEnabled || !c.enabledStandards || c.enabledStandards.length === 0
                                       );
-                                      
-                                      console.log('🔸 Group:', myGroup.coreCourseName, 'has', unconfiguredInGroup.length, 'unconfigured courses');
                                       
                                       // Always show configuration dialog for unconfigured courses
                                       // Whether it's 1 course or multiple, we present the configuration options
@@ -709,13 +704,11 @@ export default function GoogleClassroomIntegration() {
                                         count: unconfiguredInGroup.length
                                       }]);
                                       setShowBulkConfigDialog(true);
-                                      console.log('🔸 Opening configuration dialog');
                                       return;
                                     }
                                   }
                                   
                                   // For configured courses, just select normally
-                                  console.log('🔸 Selecting configured course normally');
                                   setSelectedClassroom(classroom.id);
                                 }}
                               >
