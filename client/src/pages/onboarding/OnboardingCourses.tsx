@@ -28,10 +28,24 @@ export default function OnboardingCourses() {
 
   const userPrefs = user as any;
 
+  // Handle snake_case to camelCase conversion
+  const preferredSubjectAreas = userPrefs?.preferredSubjectAreas || userPrefs?.preferred_subject_areas || [];
+  const selectedGradeLevels = userPrefs?.selectedGradeLevels || userPrefs?.selected_grade_levels || [];
+
   // Get available courses based on user's subject areas and grade levels
   const { data: availableCourses, isLoading: isLoadingCourses } = useQuery({
-    queryKey: ['/api/courses/available', userPrefs?.preferredSubjectAreas, userPrefs?.selectedGradeLevels],
-    enabled: !!userPrefs?.preferredSubjectAreas && !!userPrefs?.selectedGradeLevels
+    queryKey: [
+      '/api/courses/available', 
+      { preferredSubjectAreas: preferredSubjectAreas.join(','), selectedGradeLevels: selectedGradeLevels.join(',') }
+    ],
+    queryFn: () => {
+      const params = new URLSearchParams({
+        preferredSubjectAreas: preferredSubjectAreas.join(','),
+        selectedGradeLevels: selectedGradeLevels.join(',')
+      });
+      return fetch(`/api/courses/available?${params}`).then(res => res.json());
+    },
+    enabled: preferredSubjectAreas.length > 0 && selectedGradeLevels.length > 0
   });
 
   // Update user preferences and complete onboarding
@@ -129,12 +143,12 @@ export default function OnboardingCourses() {
         {/* Selected Subject Areas & Grade Levels */}
         <div className="text-center mb-6">
           <div className="flex flex-wrap justify-center gap-2 mb-2">
-            {(userPrefs?.preferredSubjectAreas || []).map((subject: string) => (
+            {preferredSubjectAreas.map((subject: string) => (
               <Badge key={subject} variant="outline" className="capitalize">
                 {subject.replace('_', ' ')}
               </Badge>
             ))}
-            {(userPrefs?.selectedGradeLevels || []).map((level: string) => (
+            {selectedGradeLevels.map((level: string) => (
               <Badge key={level} variant="secondary">
                 {level}
               </Badge>
