@@ -18,6 +18,10 @@ import {
   cachedJurisdictions,
   cachedStandardSets,
   cachedStandards,
+  units,
+  standardsCoverage,
+  manualStandardsMarks,
+  userPreferences,
   type User,
   type UpsertUser,
   type Classroom,
@@ -35,6 +39,10 @@ import {
   type ConfirmedAnalysis,
   type QrSequenceNumber,
   type GradeSubmission,
+  type Unit,
+  type StandardsCoverage,
+  type ManualStandardsMark,
+  type UserPreferences,
   type InsertUser,
   type InsertClassroom,
   type InsertStudent,
@@ -47,6 +55,10 @@ import {
   type InsertConfirmedAnalysis,
   type InsertQrSequenceNumber,
   type InsertGradeSubmission,
+  type InsertUnit,
+  type InsertStandardsCoverage,
+  type InsertManualStandardsMark,
+  type InsertUserPreferences,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, inArray, sql, like, or } from "drizzle-orm";
@@ -172,6 +184,33 @@ export interface IStorage {
   cacheStandardSetsForJurisdiction(jurisdictionId: string, standardSets: any[]): Promise<void>;
   getCachedStandardsForSet(standardSetId: string): Promise<any | null>;
   cacheStandardsForSet(standardSetId: string, standardsData: any): Promise<void>;
+
+  // Unit operations
+  createUnit(customerUuid: string, unit: InsertUnit): Promise<Unit>;
+  getClassroomUnits(classroomId: string): Promise<Unit[]>;
+  updateUnit(unitId: string, updates: Partial<Unit>): Promise<Unit>;
+  deleteUnit(unitId: string): Promise<void>;
+
+  // Standards coverage operations
+  upsertStandardsCoverage(customerUuid: string, coverage: InsertStandardsCoverage): Promise<StandardsCoverage>;
+  getClassroomStandardsCoverage(classroomId: string): Promise<StandardsCoverage[]>;
+  getStandardsCoverageMatrix(classroomId: string): Promise<{
+    units: Unit[];
+    standards: string[];
+    coverage: StandardsCoverage[];
+  }>;
+
+  // Manual standards marking operations
+  createManualStandardsMark(customerUuid: string, mark: InsertManualStandardsMark): Promise<ManualStandardsMark>;
+  getManualMarksForUnit(unitId: string): Promise<ManualStandardsMark[]>;
+  deleteManualStandardsMark(markId: string): Promise<void>;
+
+  // User preferences operations
+  getUserPreferences(customerUuid: string): Promise<UserPreferences | undefined>;
+  upsertUserPreferences(customerUuid: string, preferences: InsertUserPreferences): Promise<UserPreferences>;
+
+  // Standards tracking system - automatically populated from AI analysis
+  updateStandardsCoverageFromAnalysis(documentId: string, customerUuid: string, classroomId: string, unitId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1905,6 +1944,190 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date()
       }
     });
+  }
+
+  // Unit operations
+  async createUnit(customerUuid: string, unitData: InsertUnit): Promise<Unit> {
+    const [unit] = await db
+      .insert(units)
+      .values({ ...unitData, customerUuid })
+      .returning();
+    return unit;
+  }
+
+  async getClassroomUnits(classroomId: string): Promise<Unit[]> {
+    return await db
+      .select()
+      .from(units)
+      .where(eq(units.classroomId, classroomId))
+      .orderBy(units.unitNumber);
+  }
+
+  async updateUnit(unitId: string, updates: Partial<Unit>): Promise<Unit> {
+    const [unit] = await db
+      .update(units)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(units.id, unitId))
+      .returning();
+    return unit;
+  }
+
+  async deleteUnit(unitId: string): Promise<void> {
+    await db.delete(units).where(eq(units.id, unitId));
+  }
+
+  // Standards coverage operations
+  async upsertStandardsCoverage(customerUuid: string, coverageData: InsertStandardsCoverage): Promise<StandardsCoverage> {
+    const [coverage] = await db
+      .insert(standardsCoverage)
+      .values({ ...coverageData, customerUuid })
+      .onConflictDoUpdate({
+        target: [standardsCoverage.classroomId, standardsCoverage.unitId, standardsCoverage.standardCode],
+        set: {
+          maxRigorLevel: coverageData.maxRigorLevel,
+          sourceType: coverageData.sourceType,
+          sourceDocumentIds: coverageData.sourceDocumentIds,
+          lastAssessedDate: coverageData.lastAssessedDate,
+          updatedAt: new Date()
+        }
+      })
+      .returning();
+    return coverage;
+  }
+
+  async getClassroomStandardsCoverage(classroomId: string): Promise<StandardsCoverage[]> {
+    return await db
+      .select()
+      .from(standardsCoverage)
+      .where(eq(standardsCoverage.classroomId, classroomId))
+      .orderBy(standardsCoverage.standardCode);
+  }
+
+  async getStandardsCoverageMatrix(classroomId: string): Promise<{
+    units: Unit[];
+    standards: string[];
+    coverage: StandardsCoverage[];
+  }> {
+    // Get all units for this classroom
+    const classroomUnits = await this.getClassroomUnits(classroomId);
+    
+    // Get all standards coverage for this classroom
+    const coverage = await this.getClassroomStandardsCoverage(classroomId);
+    
+    // Extract unique standards from coverage
+    const standards = Array.from(new Set(coverage.map(c => c.standardCode))).sort();
+    
+    return {
+      units: classroomUnits,
+      standards,
+      coverage
+    };
+  }
+
+  // Manual standards marking operations
+  async createManualStandardsMark(customerUuid: string, markData: InsertManualStandardsMark): Promise<ManualStandardsMark> {
+    const [mark] = await db
+      .insert(manualStandardsMarks)
+      .values({ ...markData, customerUuid })
+      .returning();
+    return mark;
+  }
+
+  async getManualMarksForUnit(unitId: string): Promise<ManualStandardsMark[]> {
+    return await db
+      .select()
+      .from(manualStandardsMarks)
+      .where(eq(manualStandardsMarks.unitId, unitId))
+      .orderBy(manualStandardsMarks.standardCode);
+  }
+
+  async deleteManualStandardsMark(markId: string): Promise<void> {
+    await db.delete(manualStandardsMarks).where(eq(manualStandardsMarks.id, markId));
+  }
+
+  // User preferences operations
+  async getUserPreferences(customerUuid: string): Promise<UserPreferences | undefined> {
+    const [preferences] = await db
+      .select()
+      .from(userPreferences)
+      .where(eq(userPreferences.customerUuid, customerUuid));
+    return preferences;
+  }
+
+  async upsertUserPreferences(customerUuid: string, preferencesData: InsertUserPreferences): Promise<UserPreferences> {
+    const [preferences] = await db
+      .insert(userPreferences)
+      .values({ ...preferencesData, customerUuid })
+      .onConflictDoUpdate({
+        target: userPreferences.customerUuid,
+        set: {
+          onboardingPersona: preferencesData.onboardingPersona,
+          completedOnboarding: preferencesData.completedOnboarding,
+          preferredWorkflow: preferencesData.preferredWorkflow,
+          preferences: preferencesData.preferences,
+          updatedAt: new Date()
+        }
+      })
+      .returning();
+    return preferences;
+  }
+
+  // Standards tracking system - automatically populated from AI analysis
+  async updateStandardsCoverageFromAnalysis(documentId: string, customerUuid: string, classroomId: string, unitId: string): Promise<void> {
+    // Get all question results for the document
+    const documentResults = await this.getDocumentResults(documentId, customerUuid);
+    
+    for (const question of documentResults) {
+      if (question.result?.consensusStandards) {
+        const standards = Array.isArray(question.result.consensusStandards) 
+          ? question.result.consensusStandards 
+          : [question.result.consensusStandards];
+        
+        for (const standard of standards) {
+          const standardCode = typeof standard === 'string' ? standard : standard.code;
+          const rigorLevel = question.teacherOverride?.overriddenRigorLevel || question.result.consensusRigorLevel;
+          
+          if (standardCode && rigorLevel) {
+            // Check if we already have coverage for this standard in this unit
+            const existingCoverage = await db
+              .select()
+              .from(standardsCoverage)
+              .where(
+                and(
+                  eq(standardsCoverage.classroomId, classroomId),
+                  eq(standardsCoverage.unitId, unitId),
+                  eq(standardsCoverage.standardCode, standardCode)
+                )
+              );
+            
+            // Determine if this is a higher rigor level than what we have
+            const currentMaxRigor = existingCoverage[0]?.maxRigorLevel;
+            const newRigorLevel = this.getHigherRigorLevel(currentMaxRigor, rigorLevel);
+            
+            // Update or create coverage record
+            await this.upsertStandardsCoverage(customerUuid, {
+              customerUuid,
+              classroomId,
+              unitId,
+              standardCode,
+              maxRigorLevel: newRigorLevel,
+              sourceType: 'ai_analysis',
+              sourceDocumentIds: [documentId],
+              lastAssessedDate: new Date()
+            });
+          }
+        }
+      }
+    }
+  }
+
+  private getHigherRigorLevel(current: string | undefined, newLevel: string): RigorLevel {
+    const rigorOrder = { [RigorLevel.MILD]: 1, [RigorLevel.MEDIUM]: 2, [RigorLevel.SPICY]: 3 };
+    const currentValue = current ? rigorOrder[current as RigorLevel] || 1 : 1;
+    const newValue = rigorOrder[newLevel as RigorLevel] || 1;
+    
+    const maxValue = Math.max(currentValue, newValue);
+    return Object.keys(rigorOrder).find(key => rigorOrder[key as RigorLevel] === maxValue) as RigorLevel;
   }
 }
 

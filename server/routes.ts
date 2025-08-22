@@ -1943,6 +1943,264 @@ ${failed > 0 ? 'FAILED TESTS:\n' + testResults.filter(r => r.status === 'fail').
     }
   });
 
+  // ========================================
+  // V1.0 ROUTES - Standards Accountability & SBG Gradebook
+  // ========================================
+
+  // Unit management routes
+  app.post('/api/classrooms/:classroomId/units', async (req: any, res) => {
+    try {
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+      const { classroomId } = req.params;
+      
+      // Verify classroom ownership
+      const classroom = await storage.getClassroomById(classroomId);
+      if (!classroom || classroom.customerUuid !== customerUuid) {
+        return res.status(404).json({ message: 'Classroom not found' });
+      }
+
+      const unitData = {
+        customerUuid,
+        classroomId,
+        unitNumber: req.body.unitNumber,
+        name: req.body.name,
+        description: req.body.description,
+        startDate: req.body.startDate ? new Date(req.body.startDate) : undefined,
+        endDate: req.body.endDate ? new Date(req.body.endDate) : undefined,
+        isActive: req.body.isActive !== undefined ? req.body.isActive : true
+      };
+
+      const unit = await storage.createUnit(customerUuid, unitData);
+      res.json(unit);
+    } catch (error) {
+      console.error('Error creating unit:', error);
+      res.status(500).json({ message: 'Failed to create unit' });
+    }
+  });
+
+  app.get('/api/classrooms/:classroomId/units', async (req: any, res) => {
+    try {
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+      const { classroomId } = req.params;
+      
+      // Verify classroom ownership
+      const classroom = await storage.getClassroomById(classroomId);
+      if (!classroom || classroom.customerUuid !== customerUuid) {
+        return res.status(404).json({ message: 'Classroom not found' });
+      }
+
+      const units = await storage.getClassroomUnits(classroomId);
+      res.json(units);
+    } catch (error) {
+      console.error('Error fetching units:', error);
+      res.status(500).json({ message: 'Failed to fetch units' });
+    }
+  });
+
+  app.put('/api/units/:unitId', async (req: any, res) => {
+    try {
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+      const { unitId } = req.params;
+      
+      const updates = {
+        unitNumber: req.body.unitNumber,
+        name: req.body.name,
+        description: req.body.description,
+        startDate: req.body.startDate ? new Date(req.body.startDate) : undefined,
+        endDate: req.body.endDate ? new Date(req.body.endDate) : undefined,
+        isActive: req.body.isActive
+      };
+
+      const unit = await storage.updateUnit(unitId, updates);
+      res.json(unit);
+    } catch (error) {
+      console.error('Error updating unit:', error);
+      res.status(500).json({ message: 'Failed to update unit' });
+    }
+  });
+
+  app.delete('/api/units/:unitId', async (req: any, res) => {
+    try {
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+      const { unitId } = req.params;
+      
+      await storage.deleteUnit(unitId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting unit:', error);
+      res.status(500).json({ message: 'Failed to delete unit' });
+    }
+  });
+
+  // Standards coverage and accountability matrix routes
+  app.get('/api/classrooms/:classroomId/standards-coverage', async (req: any, res) => {
+    try {
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+      const { classroomId } = req.params;
+      
+      // Verify classroom ownership
+      const classroom = await storage.getClassroomById(classroomId);
+      if (!classroom || classroom.customerUuid !== customerUuid) {
+        return res.status(404).json({ message: 'Classroom not found' });
+      }
+
+      const coverage = await storage.getClassroomStandardsCoverage(classroomId);
+      res.json(coverage);
+    } catch (error) {
+      console.error('Error fetching standards coverage:', error);
+      res.status(500).json({ message: 'Failed to fetch standards coverage' });
+    }
+  });
+
+  app.get('/api/classrooms/:classroomId/accountability-matrix', async (req: any, res) => {
+    try {
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+      const { classroomId } = req.params;
+      
+      // Verify classroom ownership
+      const classroom = await storage.getClassroomById(classroomId);
+      if (!classroom || classroom.customerUuid !== customerUuid) {
+        return res.status(404).json({ message: 'Classroom not found' });
+      }
+
+      const matrix = await storage.getStandardsCoverageMatrix(classroomId);
+      
+      // Add classroom standards for comparison with actual coverage
+      const classroomStandards = classroom.enabledStandards || [];
+      
+      res.json({
+        ...matrix,
+        classroomStandards
+      });
+    } catch (error) {
+      console.error('Error fetching accountability matrix:', error);
+      res.status(500).json({ message: 'Failed to fetch accountability matrix' });
+    }
+  });
+
+  // Manual standards marking routes
+  app.post('/api/classrooms/:classroomId/manual-marks', async (req: any, res) => {
+    try {
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+      const { classroomId } = req.params;
+      
+      // Verify classroom ownership
+      const classroom = await storage.getClassroomById(classroomId);
+      if (!classroom || classroom.customerUuid !== customerUuid) {
+        return res.status(404).json({ message: 'Classroom not found' });
+      }
+
+      const markData = {
+        customerUuid,
+        classroomId,
+        unitId: req.body.unitId,
+        standardCode: req.body.standardCode,
+        rigorLevel: req.body.rigorLevel,
+        symbol: req.body.symbol,
+        notes: req.body.notes
+      };
+
+      const mark = await storage.createManualStandardsMark(customerUuid, markData);
+      
+      // Also update standards coverage based on manual mark
+      await storage.upsertStandardsCoverage(customerUuid, {
+        customerUuid,
+        classroomId,
+        unitId: req.body.unitId,
+        standardCode: req.body.standardCode,
+        maxRigorLevel: req.body.rigorLevel,
+        sourceType: 'manual_mark',
+        sourceDocumentIds: [],
+        lastAssessedDate: new Date()
+      });
+
+      res.json(mark);
+    } catch (error) {
+      console.error('Error creating manual mark:', error);
+      res.status(500).json({ message: 'Failed to create manual mark' });
+    }
+  });
+
+  app.get('/api/units/:unitId/manual-marks', async (req: any, res) => {
+    try {
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+      const { unitId } = req.params;
+      
+      const marks = await storage.getManualMarksForUnit(unitId);
+      res.json(marks);
+    } catch (error) {
+      console.error('Error fetching manual marks:', error);
+      res.status(500).json({ message: 'Failed to fetch manual marks' });
+    }
+  });
+
+  app.delete('/api/manual-marks/:markId', async (req: any, res) => {
+    try {
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+      const { markId } = req.params;
+      
+      await storage.deleteManualStandardsMark(markId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting manual mark:', error);
+      res.status(500).json({ message: 'Failed to delete manual mark' });
+    }
+  });
+
+  // User preferences and onboarding routes
+  app.get('/api/user/preferences', async (req: any, res) => {
+    try {
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+      
+      const preferences = await storage.getUserPreferences(customerUuid);
+      res.json(preferences || { completedOnboarding: false });
+    } catch (error) {
+      console.error('Error fetching user preferences:', error);
+      res.status(500).json({ message: 'Failed to fetch user preferences' });
+    }
+  });
+
+  app.put('/api/user/preferences', async (req: any, res) => {
+    try {
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+      
+      const preferencesData = {
+        customerUuid,
+        onboardingPersona: req.body.onboardingPersona,
+        completedOnboarding: req.body.completedOnboarding,
+        preferredWorkflow: req.body.preferredWorkflow,
+        preferences: req.body.preferences || {}
+      };
+
+      const preferences = await storage.upsertUserPreferences(customerUuid, preferencesData);
+      res.json(preferences);
+    } catch (error) {
+      console.error('Error updating user preferences:', error);
+      res.status(500).json({ message: 'Failed to update user preferences' });
+    }
+  });
+
+  // Update standards coverage when document analysis is confirmed
+  app.post('/api/documents/:documentId/update-coverage', async (req: any, res) => {
+    try {
+      const customerUuid = await ActiveUserService.requireActiveCustomerUuid(req);
+      const { documentId } = req.params;
+      const { classroomId, unitId } = req.body;
+      
+      // Verify document ownership
+      const document = await storage.getDocument(documentId);
+      if (!document || document.customerUuid !== customerUuid) {
+        return res.status(404).json({ message: 'Document not found' });
+      }
+
+      await storage.updateStandardsCoverageFromAnalysis(documentId, customerUuid, classroomId, unitId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error updating standards coverage:', error);
+      res.status(500).json({ message: 'Failed to update standards coverage' });
+    }
+  });
+
   // Handle 404 for API routes before Vite middleware
   app.use('/api/*', (req, res) => {
     res.status(404).json({ message: 'API endpoint not found' });

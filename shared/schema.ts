@@ -374,6 +374,71 @@ export const gradeSubmissions = pgTable("grade_submissions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Units for organizing curriculum into manageable sections
+export const units = pgTable("units", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  classroomId: varchar("classroom_id").notNull().references(() => classrooms.id),
+  customerUuid: varchar("customer_uuid").notNull().references(() => users.customerUuid),
+  unitNumber: integer("unit_number").notNull(), // 1, 2, 3, etc.
+  name: text("name").notNull(), // "Unit 1: Linear Equations"
+  description: text("description"),
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Source type enum for standards coverage tracking
+export const coverageSourceTypeEnum = pgEnum('coverage_source_type', [
+  'ai_analysis', 'manual_mark'
+]);
+
+// Standards coverage tracking - automatically populated from AI analysis and manual marks
+export const standardsCoverage = pgTable("standards_coverage", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  classroomId: varchar("classroom_id").notNull().references(() => classrooms.id),
+  customerUuid: varchar("customer_uuid").notNull().references(() => users.customerUuid),
+  unitId: varchar("unit_id").references(() => units.id), // Which unit this was assessed in
+  standardCode: varchar("standard_code").notNull(), // e.g., "A-APR.A.1"
+  maxRigorLevel: rigorLevelEnum("max_rigor_level").notNull(), // Highest rigor seen for this standard
+  sourceType: coverageSourceTypeEnum("source_type").notNull(), // "ai_analysis" or "manual_mark"
+  sourceDocumentIds: text("source_document_ids").array().default(sql`'{}'`), // Documents that assessed this standard
+  lastAssessedDate: timestamp("last_assessed_date").notNull(), // When it was last assessed
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  // Unique constraint: one record per classroom/unit/standard combination
+  uniqueCoveragePerUnit: index("idx_coverage_per_unit").on(table.classroomId, table.unitId, table.standardCode),
+}));
+
+// Manual standards markings by teachers with symbols
+export const manualStandardsMarks = pgTable("manual_standards_marks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  classroomId: varchar("classroom_id").notNull().references(() => classrooms.id),
+  customerUuid: varchar("customer_uuid").notNull().references(() => users.customerUuid),
+  unitId: varchar("unit_id").references(() => units.id),
+  standardCode: varchar("standard_code").notNull(),
+  rigorLevel: rigorLevelEnum("rigor_level").notNull(),
+  symbol: varchar("symbol"), // ✓, ⭐, 📝, 🎯, 📚, ⏳
+  notes: text("notes"),
+  markedDate: timestamp("marked_date").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// User preferences for onboarding persona and workflow
+export const userPreferences = pgTable("user_preferences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  customerUuid: varchar("customer_uuid").notNull().references(() => users.customerUuid),
+  onboardingPersona: varchar("onboarding_persona"), // "sbg_converter", "standards_auditor", "curriculum_builder"
+  completedOnboarding: boolean("completed_onboarding").default(false),
+  preferredWorkflow: varchar("preferred_workflow"),
+  preferences: jsonb("preferences").default(sql`'{}'`), // Additional preference storage
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   googleId: true,
@@ -533,6 +598,46 @@ export const insertGradeSubmissionSchema = createInsertSchema(gradeSubmissions).
   processedBy: true,
 });
 
+export const insertUnitSchema = createInsertSchema(units).pick({
+  classroomId: true,
+  customerUuid: true,
+  unitNumber: true,
+  name: true,
+  description: true,
+  startDate: true,
+  endDate: true,
+  isActive: true,
+});
+
+export const insertStandardsCoverageSchema = createInsertSchema(standardsCoverage).pick({
+  classroomId: true,
+  customerUuid: true,
+  unitId: true,
+  standardCode: true,
+  maxRigorLevel: true,
+  sourceType: true,
+  sourceDocumentIds: true,
+  lastAssessedDate: true,
+});
+
+export const insertManualStandardsMarkSchema = createInsertSchema(manualStandardsMarks).pick({
+  classroomId: true,
+  customerUuid: true,
+  unitId: true,
+  standardCode: true,
+  rigorLevel: true,
+  symbol: true,
+  notes: true,
+});
+
+export const insertUserPreferencesSchema = createInsertSchema(userPreferences).pick({
+  customerUuid: true,
+  onboardingPersona: true,
+  completedOnboarding: true,
+  preferredWorkflow: true,
+  preferences: true,
+});
+
 // Types
 export type UpsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -540,6 +645,10 @@ export type Classroom = typeof classrooms.$inferSelect;
 export type Student = typeof students.$inferSelect;
 export type Assignment = typeof assignments.$inferSelect;
 export type Document = typeof documents.$inferSelect;
+export type Unit = typeof units.$inferSelect;
+export type StandardsCoverage = typeof standardsCoverage.$inferSelect;
+export type ManualStandardsMark = typeof manualStandardsMarks.$inferSelect;
+export type UserPreferences = typeof userPreferences.$inferSelect;
 export type Question = typeof questions.$inferSelect;
 export type AiResponse = typeof aiResponses.$inferSelect;
 export type QuestionResult = typeof questionResults.$inferSelect;
@@ -564,3 +673,7 @@ export type InsertTeacherOverride = z.infer<typeof insertTeacherOverrideSchema>;
 export type InsertConfirmedAnalysis = z.infer<typeof insertConfirmedAnalysisSchema>;
 export type InsertQrSequenceNumber = z.infer<typeof insertQrSequenceNumberSchema>;
 export type InsertGradeSubmission = z.infer<typeof insertGradeSubmissionSchema>;
+export type InsertUnit = z.infer<typeof insertUnitSchema>;
+export type InsertStandardsCoverage = z.infer<typeof insertStandardsCoverageSchema>;
+export type InsertManualStandardsMark = z.infer<typeof insertManualStandardsMarkSchema>;
+export type InsertUserPreferences = z.infer<typeof insertUserPreferencesSchema>;

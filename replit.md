@@ -13,13 +13,15 @@ The Document Processing Service, "Standards Sherpa," is a full-stack web applica
 - **Intelligent Course Click Behavior**: Clicking any unconfigured course (single or grouped) immediately opens configuration dialog
 - **Contextual Configuration Access**: Eliminates button-hunting UX with natural, discovery-free workflow
 
-### **v1.0 (Planned) - Standards Accountability & SBG Gradebook**
-- **Accountability Matrix**: Year-long standards coverage tracking with visual rigor indicators (green/yellow/red for mild/medium/spicy)
-- **Standards Tracking System**: Automated capture of standards and maximum rigor levels from AI analysis
-- **Unit-Based Gradebook**: Progressive unlock of SBG entries as units are analyzed and standards identified  
-- **Three-Persona Onboarding**: Smart post-configuration flow for SBG converters, standards auditors, and curriculum builders
-- **Interactive Matrix**: Hover states with assessment dates and click-through to source rubrics and documents
-- **Manual Marking System**: Teacher symbol menu for marking standards without formal assessments
+### **v1.0 (August 22, 2025) - Standards Accountability & SBG Gradebook Backend** 🚧
+- **Complete Database Schema**: Units, standards coverage tracking, manual marks, and user preferences tables implemented
+- **Comprehensive API Layer**: 13+ new routes for unit management, accountability matrix data, and user preferences
+- **Standards Tracking System**: Automated capture of standards and maximum rigor levels from AI analysis with intelligent rigor level upgrading
+- **Unit-Based Organization**: Database architecture for progressive SBG gradebook workflow organization
+- **Manual Marking Infrastructure**: Backend support for teacher symbol menu and manual standards marking
+- **Integration Hooks**: Automatic standards coverage updates when document analysis is confirmed
+- **Three-Persona Framework**: User preferences system ready for SBG converters, standards auditors, and curriculum builders
+- **Year-Long Matrix Backend**: Database structure for accountability matrix with color-coded rigor tracking (green/yellow/red)
 
 ### **v0.8 (August 21, 2025) - Performance & Reliability Milestone**
 - **Critical Bug Fixed**: Resolved alphabetical vs numerical question sorting causing rigor level misalignment in generated documents
