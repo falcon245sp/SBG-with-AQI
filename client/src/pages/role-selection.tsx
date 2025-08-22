@@ -7,9 +7,9 @@ export default function RoleSelection() {
   const [, setLocation] = useLocation()
 
   const selectCustomerRole = () => {
-    // Set customer context and redirect to dashboard
+    // Set customer context and redirect to onboarding check first
     sessionStorage.setItem('userRole', 'customer')
-    setLocation('/dashboard')
+    setLocation('/onboarding')
   }
 
   const selectAdminRole = () => {
