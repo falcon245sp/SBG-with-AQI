@@ -681,8 +681,49 @@ export default function GoogleClassroomIntegration() {
                                 onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
-                                  console.log('🔸 CLICK TEST - Classroom clicked:', classroom.name);
-                                  alert('Clicked: ' + classroom.name);
+                                  
+                                  console.log('🔸 Clicked:', classroom.name);
+                                  
+                                  // Check if this classroom needs configuration
+                                  const needsConfig = !classroom.sbgEnabled || !classroom.enabledStandards || classroom.enabledStandards.length === 0;
+                                  
+                                  if (needsConfig) {
+                                    // Find all classroom groups
+                                    const groups = groupClassrooms(classrooms);
+                                    
+                                    // Find this classroom's group
+                                    const myGroup = groups.find(group => 
+                                      group.classrooms.some(c => c.id === classroom.id)
+                                    );
+                                    
+                                    if (myGroup) {
+                                      // Find all unconfigured classrooms in this group
+                                      const unconfiguredInGroup = myGroup.classrooms.filter(c => 
+                                        !c.sbgEnabled || !c.enabledStandards || c.enabledStandards.length === 0
+                                      );
+                                      
+                                      console.log('🔸 Group:', myGroup.coreCourseName, 'Unconfigured count:', unconfiguredInGroup.length);
+                                      
+                                      // If there are multiple unconfigured courses in this group, show bulk config
+                                      if (unconfiguredInGroup.length > 1) {
+                                        console.log('🔸 Showing bulk config for', unconfiguredInGroup.length, 'courses');
+                                        setBulkConfigSuggestions([{
+                                          coreCourseName: myGroup.coreCourseName,
+                                          classrooms: unconfiguredInGroup.map(c => ({
+                                            id: c.id,
+                                            name: c.name,
+                                            section: c.section
+                                          })),
+                                          count: unconfiguredInGroup.length
+                                        }]);
+                                        setShowBulkConfigDialog(true);
+                                        return; // Don't select classroom, show dialog instead
+                                      }
+                                    }
+                                  }
+                                  
+                                  // Default behavior: select the classroom
+                                  console.log('🔸 Selecting classroom normally');
                                   setSelectedClassroom(classroom.id);
                                 }}
                               >
