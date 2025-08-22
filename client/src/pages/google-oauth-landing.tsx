@@ -220,7 +220,7 @@ export default function GoogleOAuthLanding() {
                 <Button 
                   onClick={() => {
                     // Use the secure server endpoint instead of hardcoded credentials
-                    window.open('/api/auth/google', '_blank', 'width=500,height=600');
+                    window.open('/api/auth/google', '_blank');
                   }}
                   variant="outline" 
                   className="w-full text-sm"
@@ -272,7 +272,7 @@ export default function GoogleOAuthLanding() {
             <Button 
               onClick={() => {
                 // Use the secure server endpoint instead of hardcoded credentials
-                window.open('/api/auth/google', '_blank', 'width=500,height=600');
+                window.open('/api/auth/google', '_blank');
               }}
               variant="outline" 
               className="w-full mb-4"
