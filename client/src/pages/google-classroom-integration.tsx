@@ -392,56 +392,32 @@ export default function GoogleClassroomIntegration() {
         // After refresh, check for other similar unconfigured courses
         setTimeout(() => {
           const currentClassrooms = queryClient.getQueryData(['/api/classrooms']) as Classroom[] || [];
-          console.log('Proactive bulk config check:', {
-            totalClassrooms: currentClassrooms.length,
-            bulkModeActive: bulkConfiguringClassrooms.length > 0,
-            classrooms: currentClassrooms.map(c => ({
-              name: c.name,
-              sbgEnabled: c.sbgEnabled,
-              hasStandards: c.enabledStandards && c.enabledStandards.length > 0
-            }))
-          });
-          
           const groupedClassrooms = groupClassrooms(currentClassrooms);
-          console.log('Grouped classrooms:', groupedClassrooms.map(g => ({
-            coreCourseName: g.coreCourseName,
-            total: g.classrooms.length,
-            unconfigured: g.classrooms.filter(c => !c.sbgEnabled || !c.enabledStandards || c.enabledStandards.length === 0).length
-          })));
           
-          // Find groups with unconfigured classrooms (only if not in bulk mode already)
-          if (bulkConfiguringClassrooms.length === 0) {
-            const unconfiguredGroups = groupedClassrooms
-              .filter(group => group.classrooms.some(c => 
+          // Find groups with unconfigured classrooms (always check for other unconfigured groups)
+          const unconfiguredGroups = groupedClassrooms
+            .filter(group => group.classrooms.some(c => 
+              !c.sbgEnabled || !c.enabledStandards || c.enabledStandards.length === 0
+            ))
+            .map(group => ({
+              coreCourseName: group.coreCourseName,
+              classrooms: group.classrooms
+                .filter(c => !c.sbgEnabled || !c.enabledStandards || c.enabledStandards.length === 0)
+                .map(c => ({
+                  id: c.id,
+                  name: c.name,
+                  section: c.section
+                })),
+              count: group.classrooms.filter(c => 
                 !c.sbgEnabled || !c.enabledStandards || c.enabledStandards.length === 0
-              ))
-              .map(group => ({
-                coreCourseName: group.coreCourseName,
-                classrooms: group.classrooms
-                  .filter(c => !c.sbgEnabled || !c.enabledStandards || c.enabledStandards.length === 0)
-                  .map(c => ({
-                    id: c.id,
-                    name: c.name,
-                    section: c.section
-                  })),
-                count: group.classrooms.filter(c => 
-                  !c.sbgEnabled || !c.enabledStandards || c.enabledStandards.length === 0
-                ).length
-              }))
-              .filter(group => group.count > 0); // Only groups with unconfigured courses
+              ).length
+            }))
+            .filter(group => group.count > 0); // Only groups with unconfigured courses
 
-            console.log('Unconfigured groups found:', unconfiguredGroups.length, unconfiguredGroups);
-
-            // If there are unconfigured groups, proactively show bulk configuration
-            if (unconfiguredGroups.length > 0) {
-              console.log('Showing proactive bulk configuration dialog');
-              setBulkConfigSuggestions(unconfiguredGroups);
-              setShowBulkConfigDialog(true);
-            } else {
-              console.log('No unconfigured groups found - no proactive dialog');
-            }
-          } else {
-            console.log('Bulk mode already active - skipping proactive detection');
+          // If there are unconfigured groups, proactively show bulk configuration
+          if (unconfiguredGroups.length > 0) {
+            setBulkConfigSuggestions(unconfiguredGroups);
+            setShowBulkConfigDialog(true);
           }
         }, 500); // Small delay to ensure data is refreshed
       });
