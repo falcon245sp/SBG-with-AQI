@@ -236,6 +236,15 @@ export default function GoogleClassroomIntegration() {
   // Get selected classroom for standards configuration
   const configuringClassroomData = classrooms.find(c => c.id === configuringClassroom);
 
+  // Debug logging (proper way)
+  React.useEffect(() => {
+    console.log('Render state:', { 
+      classroomsLoading, 
+      classroomsLength: classrooms.length, 
+      classrooms: classrooms.map(c => c.name) 
+    });
+  }, [classroomsLoading, classrooms]);
+
   // Fetch assignments for selected classroom
   const { data: assignments = [] } = useQuery<Assignment[]>({
     queryKey: ['/api/classrooms', selectedClassroom, 'assignments'],
@@ -558,8 +567,6 @@ export default function GoogleClassroomIntegration() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {/* Debug logging */}
-                  {console.log('Render state:', { classroomsLoading, classroomsLength: classrooms.length, classrooms: classrooms.map(c => c.name) })}
                   {classroomsLoading ? (
                     <div className="text-center py-4">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
