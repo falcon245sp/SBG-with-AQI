@@ -19,9 +19,15 @@ export default function OnboardingJurisdiction() {
   const [selectedJurisdiction, setSelectedJurisdiction] = useState<string>('');
 
   // Fetch available jurisdictions
-  const { data: jurisdictions, isLoading: isLoadingJurisdictions } = useQuery({
+  const { data: jurisdictionData, isLoading: isLoadingJurisdictions } = useQuery({
     queryKey: ['/api/standards/jurisdictions'],
   });
+
+  // Handle the actual data structure from API
+  const jurisdictions = Array.isArray(jurisdictionData) ? jurisdictionData : (jurisdictionData?.jurisdictions || []);
+  
+  console.log('[OnboardingJurisdiction] Raw API data:', jurisdictionData);
+  console.log('[OnboardingJurisdiction] Processed jurisdictions:', jurisdictions);
 
   // Update user preferences mutation
   const updatePreferencesMutation = useMutation({
@@ -61,7 +67,7 @@ export default function OnboardingJurisdiction() {
     'ccss' // Common Core State Standards
   ];
 
-  const sortedJurisdictions = ((jurisdictions as Jurisdiction[]) || []).sort((a: Jurisdiction, b: Jurisdiction) => {
+  const sortedJurisdictions = (Array.isArray(jurisdictions) ? jurisdictions : []).sort((a: Jurisdiction, b: Jurisdiction) => {
     const aIsPriority = priorityJurisdictions.some(p => a.id.toLowerCase().includes(p) || a.title.toLowerCase().includes(p));
     const bIsPriority = priorityJurisdictions.some(p => b.id.toLowerCase().includes(p) || b.title.toLowerCase().includes(p));
     
