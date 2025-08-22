@@ -613,7 +613,11 @@ export default function GoogleClassroomIntegration() {
                                         const unconfiguredClassrooms = group.classrooms.filter(c => 
                                           !c.sbgEnabled || !c.enabledStandards || c.enabledStandards.length === 0
                                         );
-                                        setBulkConfigSuggestions(unconfiguredClassrooms);
+                                        setBulkConfigSuggestions([{
+                                          coreCourseName: group.coreCourseName,
+                                          classrooms: unconfiguredClassrooms,
+                                          count: unconfiguredClassrooms.length
+                                        }]);
                                         setShowBulkConfigDialog(true);
                                       }}
                                       className="text-xs"
