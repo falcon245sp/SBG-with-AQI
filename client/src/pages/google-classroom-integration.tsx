@@ -237,7 +237,7 @@ export default function GoogleClassroomIntegration() {
   const configuringClassroomData = classrooms.find(c => c.id === configuringClassroom);
 
   // Debug logging (proper way)
-  React.useEffect(() => {
+  useEffect(() => {
     console.log('Render state:', { 
       classroomsLoading, 
       classroomsLength: classrooms.length, 
