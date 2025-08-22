@@ -915,12 +915,12 @@ export default function GoogleClassroomIntegration() {
                       {suggestion.coreCourseName}
                     </h3>
                     <Badge variant="secondary" className="text-sm">
-                      {suggestion.count} sections
+                      {suggestion.count || (suggestion.classrooms ? suggestion.classrooms.length : 0)} sections
                     </Badge>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
-                    {suggestion.classrooms.map((classroom: any) => (
+                    {(suggestion.classrooms || []).map((classroom: any) => (
                       <div key={classroom.id} className="flex items-center gap-2 text-sm">
                         <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
                         <span className="font-medium">{classroom.name}</span>
@@ -934,8 +934,9 @@ export default function GoogleClassroomIntegration() {
                   <Button
                     onClick={() => {
                       // Set up bulk configuration for this group
-                      setBulkConfiguringClassrooms(suggestion.classrooms.map((c: any) => c.id));
-                      setConfiguringClassroom(suggestion.classrooms[0].id); // Use first classroom as primary
+                      const classrooms = suggestion.classrooms || [];
+                      setBulkConfiguringClassrooms(classrooms.map((c: any) => c.id));
+                      setConfiguringClassroom(classrooms[0]?.id); // Use first classroom as primary
                       setShowBulkConfigDialog(false);
                       setConfigurationStep('jurisdiction');
                       setSelectedJurisdiction(null);
@@ -945,7 +946,7 @@ export default function GoogleClassroomIntegration() {
                     className="bg-blue-600 hover:bg-blue-700"
                   >
                     <Settings className="w-4 h-4 mr-2" />
-                    Configure All {suggestion.count} Sections
+                    Configure All {suggestion.count || (suggestion.classrooms ? suggestion.classrooms.length : 0)} Sections
                   </Button>
                 </div>
               ))}
