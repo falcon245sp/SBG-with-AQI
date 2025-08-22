@@ -61,7 +61,7 @@ export default function OnboardingJurisdiction() {
     'ccss' // Common Core State Standards
   ];
 
-  const sortedJurisdictions = (jurisdictions || [] as Jurisdiction[]).sort((a: Jurisdiction, b: Jurisdiction) => {
+  const sortedJurisdictions = ((jurisdictions as Jurisdiction[]) || []).sort((a: Jurisdiction, b: Jurisdiction) => {
     const aIsPriority = priorityJurisdictions.some(p => a.id.toLowerCase().includes(p) || a.title.toLowerCase().includes(p));
     const bIsPriority = priorityJurisdictions.some(p => b.id.toLowerCase().includes(p) || b.title.toLowerCase().includes(p));
     
