@@ -558,6 +558,8 @@ export default function GoogleClassroomIntegration() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
+                  {/* Debug logging */}
+                  {console.log('Render state:', { classroomsLoading, classroomsLength: classrooms.length, classrooms: classrooms.map(c => c.name) })}
                   {classroomsLoading ? (
                     <div className="text-center py-4">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
