@@ -28,6 +28,7 @@ export default function OnboardingCheck() {
       preferredSubjectAreas,
       selectedGradeLevels
     });
+    console.log('[OnboardingCheck] Raw user data:', userData);
 
     // If onboarding is complete, go to dashboard (since role is already selected)
     if (onboardingCompleted) {

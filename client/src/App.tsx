@@ -29,7 +29,7 @@ import GoogleClassroomIntegration from "@/pages/google-classroom-integration";
 
 // Protected Route wrapper that redirects to landing page if not authenticated
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   
   if (isLoading) {
     return (
@@ -46,6 +46,23 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
     // Redirect to landing page
     window.location.href = '/';
     return null;
+  }
+
+  // Check if user needs onboarding (except for onboarding routes and role selection)
+  const currentPath = window.location.pathname;
+  const isOnboardingRoute = currentPath.startsWith('/onboarding') || currentPath === '/role-selection';
+  
+  if (!isOnboardingRoute && user) {
+    const userData = user as any;
+    const onboardingCompleted = userData.onboardingCompleted || userData.onboarding_completed;
+    
+    console.log('[ProtectedRoute] Checking onboarding status:', { currentPath, onboardingCompleted });
+    
+    if (!onboardingCompleted) {
+      console.log('[ProtectedRoute] Onboarding required, redirecting...');
+      window.location.href = '/onboarding';
+      return null;
+    }
   }
   
   return <Component />;
