@@ -20,7 +20,6 @@ export interface ProcessDocumentRequest {
   jurisdictions: string[];
   focusStandards?: string[];
   callbackUrl?: string;
-  classroomId?: string;
 }
 
 export interface ProcessDocumentResponse {
@@ -81,9 +80,6 @@ class WebServiceClient {
     }
     if (request.callbackUrl) {
       formData.append('callbackUrl', request.callbackUrl);
-    }
-    if (request.classroomId) {
-      formData.append('classroomId', request.classroomId);
     }
 
     const response = await fetch('/api/documents/upload', {

@@ -730,8 +730,8 @@ export class DatabaseWriteService {
         if (parseInt(question.questionNumber) <= 4) {
           console.log(`\n🔍 [MILD CHECK] Question ${question.questionNumber} (${question.id}) CONFIRMED creation:`);
           console.log(`🔍 [MILD CHECK] - Question Text: ${question.questionText?.substring(0, 50)}...`);
-          console.log(`🔍 [MILD CHECK] - AI DRAFT Result: Standards=${JSON.stringify(aiResult?.consensusStandards)}, Rigor=${aiResult?.consensusRigorLevel}`);
-          console.log(`🔍 [MILD CHECK] - Teacher Override: ${teacherOverride ? `Standards=${JSON.stringify(teacherOverride.overriddenStandards)}, Rigor=${teacherOverride.overriddenRigorLevel}` : 'NONE'}`);
+          console.log(`🔍 [MILD CHECK] - AI DRAFT Result: Standards=${JSON.stringify(aiResult?.consensusStandards?.slice(0, 1))}, Rigor=${aiResult?.consensusRigorLevel}`);
+          console.log(`🔍 [MILD CHECK] - Teacher Override: ${teacherOverride ? `Standards=${JSON.stringify(teacherOverride.overriddenStandards?.slice(0, 1))}, Rigor=${teacherOverride.overriddenRigorLevel}` : 'NONE'}`);
         } else {
           console.log(`[DEBUG] Question ${question.questionNumber} (${question.id}) data sources:`);
           console.log(`[DEBUG] - AI Result: Standards=${JSON.stringify(aiResult?.consensusStandards)}, Rigor=${aiResult?.consensusRigorLevel}`);
@@ -756,7 +756,7 @@ export class DatabaseWriteService {
         };
         
         if (parseInt(question.questionNumber) <= 4) {
-          console.log(`🔍 [MILD CHECK] - FINAL CONFIRMED Analysis: Standards=${JSON.stringify(finalAnalysis.finalStandards)}, Rigor=${finalAnalysis.finalRigorLevel}, HasOverride=${finalAnalysis.hasTeacherOverride}`);
+          console.log(`🔍 [MILD CHECK] - FINAL CONFIRMED Analysis: Standards=${JSON.stringify(finalAnalysis.finalStandards?.slice(0, 1))}, Rigor=${finalAnalysis.finalRigorLevel}, HasOverride=${finalAnalysis.hasTeacherOverride}`);
         } else {
           console.log(`[DEBUG] - Final Analysis: Standards=${JSON.stringify(finalAnalysis.finalStandards)}, Rigor=${finalAnalysis.finalRigorLevel}, HasOverride=${finalAnalysis.hasTeacherOverride}`);
         }
@@ -854,21 +854,6 @@ export class DatabaseWriteService {
     } catch (error) {
       console.error(`[DatabaseWriteService] Failed to detect and queue missing exports:`, error);
       throw new Error(`Failed to detect and queue missing exports: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }
-
-  /**
-   * Update document's classroom assignment
-   */
-  static async updateDocumentClassroomAssignment(documentId: string, classroomId: string | null): Promise<void> {
-    console.log(`[DatabaseWriteService] Updating classroom assignment for document ${documentId} to classroom ${classroomId}`);
-    
-    try {
-      await storage.updateDocumentClassroomAssignment(documentId, classroomId);
-      console.log(`[DatabaseWriteService] Successfully updated classroom assignment for document ${documentId}`);
-    } catch (error) {
-      console.error(`[DatabaseWriteService] Failed to update classroom assignment:`, error);
-      throw new Error(`Failed to update classroom assignment: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 }

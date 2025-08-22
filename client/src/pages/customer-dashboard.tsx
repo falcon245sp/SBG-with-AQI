@@ -76,7 +76,7 @@ export default function CustomerDashboard() {
     },
     refetchIntervalInBackground: true,
     staleTime: 0, // Always treat data as stale for fresh status updates
-    gcTime: 0, // Disable cache for real-time updates
+    cacheTime: 0, // Disable cache for real-time updates
   });
 
   // Export functionality
@@ -205,7 +205,7 @@ export default function CustomerDashboard() {
           </div>
 
           {/* Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <Link href="/upload">
               <Card className="cursor-pointer hover:shadow-lg transition-shadow">
                 <CardHeader>
@@ -249,22 +249,6 @@ export default function CustomerDashboard() {
                 <CardContent>
                   <p className="text-gray-600 dark:text-gray-300 text-sm">
                     Review analysis results and standards alignment
-                  </p>
-                </CardContent>
-              </Card>
-            </Link>
-
-            <Link href="/onboarding">
-              <Card className="cursor-pointer hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Settings className="h-5 w-5 text-indigo-600" />
-                    SBG Setup
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-600 dark:text-gray-300 text-sm">
-                    Set up Standards-Based Gradebook and accountability tools
                   </p>
                 </CardContent>
               </Card>
@@ -313,7 +297,7 @@ export default function CustomerDashboard() {
                 </div>
               ) : documents && documents.length > 0 ? (
                 <div className="space-y-4">
-                  {documents.slice(0, 5).map((doc: DocumentResult) => (
+                  {documents.slice(0, 5).map((doc) => (
                     <div key={doc.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
                       <div className="flex items-center gap-3">
                         <FileText className="h-5 w-5 text-gray-400" />
