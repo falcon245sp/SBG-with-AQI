@@ -21,6 +21,7 @@ export default function UploadPage() {
   const [jurisdictions, setJurisdictions] = useState("Common Core");
   const [focusStandards, setFocusStandards] = useState("");
   const [callbackUrl, setCallbackUrl] = useState("");
+  const [selectedClassroomId, setSelectedClassroomId] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [submittedJobs, setSubmittedJobs] = useState<Array<{
     jobId: string;
@@ -28,6 +29,11 @@ export default function UploadPage() {
     status: string;
     estimatedCompletion: string;
   }>>([]);
+
+  // Fetch classrooms for selection
+  const { data: classrooms = [] } = useQuery<any[]>({
+    queryKey: ["/api/classrooms"],
+  });
 
   // Poll for document status updates to show real-time progress
   const { data: documents } = useQuery<any[]>({
@@ -87,7 +93,8 @@ export default function UploadPage() {
         files,
         jurisdictions: jurisdictionList,
         focusStandards: focusStandardsList,
-        callbackUrl: callbackUrl || undefined
+        callbackUrl: callbackUrl || undefined,
+        classroomId: selectedClassroomId || undefined
       });
       
       // Add all jobs to submitted jobs list with initial status from API
@@ -215,6 +222,29 @@ export default function UploadPage() {
                   
                   {/* Form Fields */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Classroom Selection */}
+                    <div>
+                      <Label htmlFor="classroom-select">Assign to Classroom (Optional)</Label>
+                      <Select value={selectedClassroomId} onValueChange={setSelectedClassroomId}>
+                        <SelectTrigger className="mt-1" data-testid="select-classroom-upload">
+                          <SelectValue placeholder="Choose a classroom (can assign later)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">No classroom (assign later)</SelectItem>
+                          {classrooms.map((classroom: any) => (
+                            <SelectItem key={classroom.id} value={classroom.id}>
+                              {classroom.name}
+                              {classroom.section && ` - ${classroom.section}`}
+                              {classroom.sbgEnabled && " (SBG)"}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Documents can be assigned to classrooms now or later for standards tracking
+                      </p>
+                    </div>
+                    
                     <div>
                       <Label htmlFor="focusStandards">Focus Standards (Optional)</Label>
                       <Input
@@ -231,6 +261,9 @@ export default function UploadPage() {
                         Specific standards to focus analysis on (comma-separated)
                       </p>
                     </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div>
                       <Label htmlFor="callbackUrl">Callback URL (Optional)</Label>
                       <Input
