@@ -107,10 +107,14 @@ const extractCoreCourseName = (classroomName: string): string => {
     .replace(/\s*-\s*section\s*[a-z0-9]+.*$/i, '') // "- Section A"
     .replace(/\s*\(section\s*[a-z0-9]+[^)]*\)/i, '') // "(Section A)"
     .replace(/\s+section\s*[a-z0-9]+.*$/i, '') // "Section A"
-    .replace(/\s*-\s*[a-z0-9]+$/i, '') // Generic "- A", "- 1" at end
+    .replace(/\s*-\s*[^-]*\s*-\s*\d+$/i, '') // "- Fielder - 01" pattern (fixed to handle any text between dashes)
+    .replace(/\s*-\s*\d+$/i, '') // Generic "- 01", "- 1" at end
+    .replace(/\s*-\s*[a-z0-9]+$/i, '') // Generic "- A" at end
     .replace(/\s*\([a-z0-9]+\)$/i, '') // Generic "(A)", "(1)" at end
-    .replace(/\s*-\s*[^-]+\s*-\s*\d+$/i, '') // "- Fielder - 01" pattern
     .trim();
+  
+  // Debug logging (temporary)
+  console.log(`Grouping "${classroomName}" -> "${cleaned}"`);
   
   return cleaned || classroomName; // Fallback to original name
 };
