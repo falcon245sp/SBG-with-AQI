@@ -37,6 +37,8 @@ export default function OnboardingCheck() {
       standardsConfigurationCompleted
     });
 
+    console.log('[OnboardingCheck] Raw user object:', user);
+
     // If ALL onboarding is complete, go to dashboard
     if (onboardingCompleted && standardsConfigurationCompleted) {
       console.log('[OnboardingCheck] Complete onboarding finished, redirecting to dashboard');
@@ -69,7 +71,7 @@ export default function OnboardingCheck() {
         break;
       default:
         // Start from the beginning
-        console.log('[OnboardingCheck] Starting onboarding from jurisdiction step');
+        console.log('[OnboardingCheck] Starting onboarding from jurisdiction step - onboardingStep was:', onboardingStep);
         setLocation('/onboarding/jurisdiction');
         break;
     }
