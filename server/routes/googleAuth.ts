@@ -156,9 +156,19 @@ export async function handleGoogleCallback(req: Request, res: Response) {
     console.log('[OAuth] User authenticated successfully:', user.email);
     console.log('[OAuth] Session userId set to:', user.id);
     
-    // Redirect to dashboard on successful authentication
-    console.log('[OAuth] Authentication successful, redirecting to dashboard');
-    res.redirect('/dashboard');
+    // Check if user is in onboarding flow and redirect appropriately
+    if (user.onboardingCompleted) {
+      console.log('[OAuth] Authentication successful, user completed onboarding - redirecting to dashboard');
+      res.redirect('/dashboard');
+    } else {
+      console.log('[OAuth] Authentication successful, user in onboarding - redirecting to role selection');
+      // Update onboarding step to role selection since they just connected Google Classroom
+      await storage.updateUser(user.id, { 
+        onboardingStep: 'role-selection',
+        classroomIntegrationCompleted: true 
+      });
+      res.redirect('/onboarding/role-selection');
+    }
   } catch (error) {
     console.error('[OAuth] Error in Google callback:', error);
     res.redirect('/auth/error?error=auth_failed&description=Authentication process failed');
