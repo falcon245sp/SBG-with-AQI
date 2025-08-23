@@ -161,10 +161,9 @@ export async function handleGoogleCallback(req: Request, res: Response) {
       console.log('[OAuth] Authentication successful, user completed onboarding - redirecting to dashboard');
       res.redirect('/dashboard');
     } else {
-      console.log('[OAuth] Authentication successful, user in onboarding - redirecting to role selection');
-      // For users in onboarding, redirect to role selection
-      // The onboarding step will be updated by the frontend flow
-      res.redirect('/onboarding/role-selection');
+      console.log('[OAuth] Authentication successful, user in onboarding - redirecting to onboarding flow');
+      // For users in onboarding, redirect to onboarding and let OnboardingCheck determine the correct step
+      res.redirect('/onboarding');
     }
   } catch (error) {
     console.error('[OAuth] Error in Google callback:', error);
