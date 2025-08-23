@@ -162,11 +162,8 @@ export async function handleGoogleCallback(req: Request, res: Response) {
       res.redirect('/dashboard');
     } else {
       console.log('[OAuth] Authentication successful, user in onboarding - redirecting to role selection');
-      // Update onboarding step to role selection since they just connected Google Classroom
-      await storage.updateUserPreferences(user.id, { 
-        onboardingStep: 'role-selection',
-        classroomIntegrationCompleted: true 
-      });
+      // For users in onboarding, redirect to role selection
+      // The onboarding step will be updated by the frontend flow
       res.redirect('/onboarding/role-selection');
     }
   } catch (error) {
