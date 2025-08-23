@@ -49,10 +49,24 @@ export default function OnboardingClassroom() {
   };
 
   const handleSkipClassroom = () => {
-    completeOnboardingMutation.mutate({
-      onboardingCompleted: true,
-      classroomSkipped: true
-    });
+    // Don't complete onboarding yet - move to role selection
+    const progressToRoleSelection = async () => {
+      try {
+        await apiRequest('PUT', '/api/user/update-onboarding-step', { 
+          onboardingStep: 'role-selection'
+        });
+        queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+        setLocation('/onboarding/role-selection');
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to progress to next step",
+          variant: "destructive"
+        });
+      }
+    };
+    
+    progressToRoleSelection();
   };
 
   const handleBack = () => {

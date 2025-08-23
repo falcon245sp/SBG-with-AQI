@@ -20,19 +20,26 @@ export default function OnboardingCheck() {
     const preferredJurisdiction = userData.preferredJurisdiction || userData.preferred_jurisdiction;
     const preferredSubjectAreas = userData.preferredSubjectAreas || userData.preferred_subject_areas;
     const selectedGradeLevels = userData.selectedGradeLevels || userData.selected_grade_levels;
+    const selectedCourses = userData.selectedCourses || userData.selected_courses;
+    const onboardingRoleSelected = userData.onboardingRoleSelected || userData.onboarding_role_selected;
+    const selectedRole = userData.selectedRole || userData.selected_role;
+    const standardsConfigurationCompleted = userData.standardsConfigurationCompleted || userData.standards_configuration_completed;
 
     console.log('[OnboardingCheck] User onboarding status:', {
       onboardingCompleted,
       onboardingStep,
       preferredJurisdiction,
       preferredSubjectAreas,
-      selectedGradeLevels
+      selectedGradeLevels,
+      selectedCourses,
+      onboardingRoleSelected,
+      selectedRole,
+      standardsConfigurationCompleted
     });
-    console.log('[OnboardingCheck] Raw user data:', userData);
 
-    // If onboarding is complete, go to dashboard (since role is already selected)
-    if (onboardingCompleted) {
-      console.log('[OnboardingCheck] Onboarding complete, redirecting to dashboard');
+    // If ALL onboarding is complete, go to dashboard
+    if (onboardingCompleted && standardsConfigurationCompleted) {
+      console.log('[OnboardingCheck] Complete onboarding finished, redirecting to dashboard');
       setLocation('/dashboard');
       return;
     }
@@ -53,6 +60,12 @@ export default function OnboardingCheck() {
         break;
       case 'classroom':
         setLocation('/onboarding/classroom');
+        break;
+      case 'role-selection':
+        setLocation('/onboarding/role-selection');
+        break;
+      case 'standards-configuration':
+        setLocation('/onboarding/standards-configuration');
         break;
       default:
         // Start from the beginning

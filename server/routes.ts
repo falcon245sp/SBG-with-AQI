@@ -139,6 +139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'preferredJurisdiction', 
         'preferredSubjectAreas', 
         'selectedGradeLevels', 
+        'selectedCourses',
         'onboardingStep'
       ];
 
@@ -163,7 +164,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Complete onboarding process
+  // Update onboarding step
+  app.put('/api/user/update-onboarding-step', async (req: any, res) => {
+    try {
+      const { user, customerUuid } = await ActiveUserService.requireActiveUserAndCustomerUuid(req);
+      const { onboardingStep } = req.body;
+
+      await storage.updateUserPreferences(user.id, { onboardingStep });
+
+      res.json({ success: true, onboardingStep });
+    } catch (error) {
+      console.error('Error updating onboarding step:', error);
+      res.status(500).json({ error: 'Failed to update onboarding step' });
+    }
+  });
+
+  // Update role selection
+  app.put('/api/user/update-role-selection', async (req: any, res) => {
+    try {
+      const { user, customerUuid } = await ActiveUserService.requireActiveUserAndCustomerUuid(req);
+      const { selectedRole, onboardingRoleSelected, onboardingStep } = req.body;
+
+      const updates = {
+        selectedRole,
+        onboardingRoleSelected,
+        onboardingStep
+      };
+
+      await storage.updateUserPreferences(user.id, updates);
+
+      res.json({ success: true, updates });
+    } catch (error) {
+      console.error('Error updating role selection:', error);
+      res.status(500).json({ error: 'Failed to update role selection' });
+    }
+  });
+
+  // Complete standards configuration and full onboarding
+  app.put('/api/user/complete-standards-configuration', async (req: any, res) => {
+    try {
+      const { user, customerUuid } = await ActiveUserService.requireActiveUserAndCustomerUuid(req);
+      const { standardsConfigurationCompleted, onboardingCompleted, courseMappings } = req.body;
+
+      const updates = {
+        standardsConfigurationCompleted,
+        onboardingCompleted,
+        onboardingStep: null
+      };
+
+      // If course mappings provided, update classroom configurations
+      if (courseMappings && Array.isArray(courseMappings)) {
+        // Update each classroom with SBG and course mapping settings
+        for (const mapping of courseMappings) {
+          await storage.updateClassroom(mapping.classroomId, {
+            sbgEnabled: mapping.enableSBG,
+            courseTitle: mapping.selectedCourseId,
+            courseConfigurationCompleted: true
+          });
+        }
+      }
+
+      await storage.updateUserPreferences(user.id, updates);
+
+      res.json({ success: true, onboardingCompleted: true });
+    } catch (error) {
+      console.error('Error completing standards configuration:', error);
+      res.status(500).json({ error: 'Failed to complete standards configuration' });
+    }
+  });
+
+  // Complete onboarding process (legacy endpoint)
   app.put('/api/user/complete-onboarding', async (req: any, res) => {
     try {
       const { user, customerUuid } = await ActiveUserService.requireActiveUserAndCustomerUuid(req);

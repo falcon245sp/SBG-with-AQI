@@ -48,7 +48,13 @@ export const users = pgTable("users", {
   preferredJurisdiction: varchar("preferred_jurisdiction"), // Default jurisdiction for new courses
   preferredSubjectAreas: jsonb("preferred_subject_areas"), // Array of subject areas user works with
   selectedGradeLevels: jsonb("selected_grade_levels"), // Array of grade levels user teaches
+  selectedCourses: jsonb("selected_courses"), // Array of courses user teaches (from onboarding step 4)
   onboardingStep: varchar("onboarding_step"), // Track current step in onboarding flow
+  
+  // V1.0 Role Selection and Standards Configuration
+  selectedRole: varchar("selected_role"), // SBG converter, standards auditor, curriculum builder
+  standardsConfigurationCompleted: boolean("standards_configuration_completed").default(false),
+  onboardingRoleSelected: boolean("onboarding_role_selected").default(false),
   
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -441,7 +447,11 @@ export const insertUserSchema = createInsertSchema(users).pick({
   preferredJurisdiction: true,
   preferredSubjectAreas: true,
   selectedGradeLevels: true,
+  selectedCourses: true,
   onboardingStep: true,
+  selectedRole: true,
+  standardsConfigurationCompleted: true,
+  onboardingRoleSelected: true,
 });
 
 export const insertClassroomSchema = createInsertSchema(classrooms).pick({

@@ -18,6 +18,8 @@ import OnboardingSubject from "@/pages/onboarding/OnboardingSubject";
 import OnboardingGrades from "@/pages/onboarding/OnboardingGrades";
 import OnboardingCourses from "@/pages/onboarding/OnboardingCourses";
 import OnboardingClassroom from "@/pages/onboarding/OnboardingClassroom";
+import OnboardingRoleSelection from "@/pages/onboarding/OnboardingRoleSelection";
+import OnboardingStandardsConfiguration from "@/pages/onboarding/OnboardingStandardsConfiguration";
 import UploadPage from "@/pages/upload";
 import ResultsPage from "@/pages/results";
 import DocumentResults from "@/pages/document-results";
@@ -98,6 +100,8 @@ function Router() {
       <Route path="/onboarding/grades" component={() => <ProtectedRoute component={OnboardingGrades} />} />
       <Route path="/onboarding/courses" component={() => <ProtectedRoute component={OnboardingCourses} />} />
       <Route path="/onboarding/classroom" component={() => <ProtectedRoute component={OnboardingClassroom} />} />
+      <Route path="/onboarding/role-selection" component={() => <ProtectedRoute component={OnboardingRoleSelection} />} />
+      <Route path="/onboarding/standards-configuration" component={() => <ProtectedRoute component={OnboardingStandardsConfiguration} />} />
       <Route path="/role-selection" component={() => <ProtectedRoute component={RoleSelection} />} />
       <Route path="/dashboard" component={() => <ProtectedRoute component={CustomerDashboard} />} />
       <Route path="/admin" component={() => <ProtectedRoute component={AdminDashboard} />} />
