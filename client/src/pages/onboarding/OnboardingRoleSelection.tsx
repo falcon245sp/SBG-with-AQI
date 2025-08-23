@@ -56,8 +56,8 @@ export default function OnboardingRoleSelection() {
   const roles = [
     {
       id: 'sbg-converter',
-      title: 'SBG Converter',
-      description: 'Transitioning to Standards-Based Grading',
+      title: 'Transitioning to SBG from Traditional Grading',
+      description: 'Moving from points-based to standards-based assessment',
       icon: BookCheck,
       color: 'blue',
       benefits: [
