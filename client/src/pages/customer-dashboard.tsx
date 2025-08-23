@@ -35,10 +35,13 @@ export default function CustomerDashboard() {
   const syncClassroomsMutation = useMutation({
     mutationFn: () => apiRequest('POST', '/api/auth/sync-classroom', {}),
     onSuccess: (data: any) => {
+      console.log('Sync response data:', data); // Debug logging
       const classroomCount = data.classrooms?.length || 0;
+      const message = data.message || `Successfully synced ${classroomCount} classrooms from Google Classroom`;
+      
       toast({
-        title: "Sync Successful",
-        description: data.message || `Successfully synced ${classroomCount} classrooms from Google Classroom`,
+        title: "Google Classroom Sync Successful",
+        description: message,
       });
       queryClient.invalidateQueries({ queryKey: ['/api/classrooms'] });
     },
