@@ -36,8 +36,8 @@ export default function OnboardingClassroom() {
   const handleConnectClassroom = async () => {
     setIsConnecting(true);
     try {
-      // Redirect to Google Classroom OAuth
-      window.location.href = '/api/auth/google';
+      // Redirect to Google Classroom OAuth with classroom scopes
+      window.location.href = '/api/auth/google/classroom';
     } catch (error) {
       toast({
         title: "Connection Error",
