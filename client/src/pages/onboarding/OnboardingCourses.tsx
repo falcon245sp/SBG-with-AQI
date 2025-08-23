@@ -50,7 +50,7 @@ export default function OnboardingCourses() {
 
   // Update user preferences and continue to classroom
   const updateCoursesMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('PUT', '/api/user/update-preferences', data),
+    mutationFn: (data: any) => apiRequest('PUT', '/api/user/preferences', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       setLocation('/onboarding/classroom');
