@@ -48,9 +48,9 @@ export default function OnboardingCourses() {
     enabled: preferredSubjectAreas.length > 0 && selectedGradeLevels.length > 0
   });
 
-  // Update user preferences and complete onboarding
-  const completeOnboardingMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('PUT', '/api/user/complete-onboarding', data),
+  // Update user preferences and continue to classroom
+  const updateCoursesMutation = useMutation({
+    mutationFn: (data: any) => apiRequest('PUT', '/api/user/update-preferences', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       setLocation('/onboarding/classroom');
@@ -101,7 +101,7 @@ export default function OnboardingCourses() {
       return;
     }
 
-    completeOnboardingMutation.mutate({
+    updateCoursesMutation.mutate({
       selectedCourses,
       onboardingStep: 'classroom'
     });
@@ -273,11 +273,11 @@ export default function OnboardingCourses() {
           
           <Button 
             onClick={handleNext}
-            disabled={selectedCourses.length === 0 || completeOnboardingMutation.isPending}
+            disabled={selectedCourses.length === 0 || updateCoursesMutation.isPending}
             className="flex items-center gap-2"
             data-testid="button-next"
           >
-            {completeOnboardingMutation.isPending ? 'Saving...' : 'Continue'}
+            {updateCoursesMutation.isPending ? 'Saving...' : 'Continue'}
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
