@@ -86,32 +86,5 @@ export default function OnboardingCheck() {
     );
   }
 
-  // Temporary debug display
-  if (user) {
-    const userData = user as any;
-    const onboardingStep = userData.onboardingStep || userData.onboarding_step;
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="max-w-2xl w-full bg-white rounded-lg shadow-lg p-8">
-          <h1 className="text-2xl font-bold mb-4">🔍 Debug Info</h1>
-          <div className="space-y-2 text-sm">
-            <p><strong>Onboarding Step:</strong> {onboardingStep || 'null'}</p>
-            <p><strong>Onboarding Completed:</strong> {String(userData.onboardingCompleted || userData.onboarding_completed)}</p>
-            <p><strong>Standards Config Completed:</strong> {String(userData.standardsConfigurationCompleted || userData.standards_configuration_completed)}</p>
-            <p><strong>Email:</strong> {userData.email}</p>
-            <p><strong>Current URL:</strong> {window.location.pathname}</p>
-            <p><strong>Should redirect to:</strong> {onboardingStep ? `/onboarding/${onboardingStep}` : '/onboarding/jurisdiction'}</p>
-          </div>
-          <div className="mt-4">
-            <strong>Raw User Object:</strong>
-            <pre className="bg-gray-100 p-2 rounded mt-2 overflow-auto text-xs">
-              {JSON.stringify(user, null, 2)}
-            </pre>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return null;
 }
