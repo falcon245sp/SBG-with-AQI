@@ -44,6 +44,22 @@ export default function CustomerDashboard() {
         description: message,
       });
       queryClient.invalidateQueries({ queryKey: ['/api/classrooms'] });
+      
+      // Complete onboarding after successful classroom sync
+      const completeOnboarding = async () => {
+        try {
+          await apiRequest('PUT', '/api/user/complete-onboarding', { 
+            onboardingCompleted: true,
+            classroomConnected: true 
+          });
+          queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+          window.location.href = '/role-selection'; // Navigate to next step
+        } catch (error) {
+          console.error('Failed to complete onboarding:', error);
+        }
+      };
+      
+      completeOnboarding();
     },
     onError: (error: any) => {
       toast({
