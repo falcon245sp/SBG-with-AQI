@@ -106,8 +106,20 @@ export default function OnboardingStandardsConfiguration() {
   };
 
   const handleCompleteConfiguration = () => {
-    // Filter to only SBG-enabled courses
-    const sbgEnabledMappings = courseMappings.filter(mapping => mapping.enableSBG);
+    // Filter to only SBG-enabled courses with course mappings
+    const sbgEnabledMappings = courseMappings.filter(mapping => mapping.enableSBG && mapping.selectedCourseId);
+    
+    // Validate that all SBG-enabled classrooms have course mappings
+    const sbgWithoutMapping = courseMappings.filter(mapping => mapping.enableSBG && !mapping.selectedCourseId);
+    
+    if (sbgWithoutMapping.length > 0) {
+      toast({
+        title: "Course Mapping Required",
+        description: "Please select a course for all SBG-enabled classrooms.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     completeConfigurationMutation.mutate({
       standardsConfigurationCompleted: true,
@@ -195,35 +207,52 @@ export default function OnboardingStandardsConfiguration() {
                   {mapping?.enableSBG && (
                     <div className="space-y-3">
                       <label className="text-sm font-medium text-gray-700">
-                        Which course does this classroom represent?
+                        Which Standard Course does "{classroom.name}" represent?
                       </label>
-                      <div className="grid gap-2">
-                        {selectedCourses.map((course: any) => (
-                          <label
-                            key={course.id}
-                            className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
-                              mapping.selectedCourseId === course.id
-                                ? 'border-blue-500 bg-blue-50'
-                                : 'border-gray-200 hover:border-gray-300'
-                            }`}
-                          >
-                            <input
-                              type="radio"
-                              name={`course-${classroom.id}`}
-                              value={course.id}
-                              checked={mapping.selectedCourseId === course.id}
-                              onChange={() => handleCourseMapping(classroom.id, course.id)}
-                              className="mr-3"
-                            />
-                            <div className="flex items-center gap-2">
-                              <BookOpen className="h-4 w-4 text-gray-500" />
-                              <span className="font-medium">{course.title}</span>
-                              {course.description && (
-                                <span className="text-sm text-gray-500">• {course.description}</span>
-                              )}
-                            </div>
-                          </label>
-                        ))}
+                      <div className="space-y-2 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <BookOpen className="h-5 w-5 text-yellow-600" />
+                          <span className="font-medium text-yellow-800">
+                            Select from your onboarding courses:
+                          </span>
+                        </div>
+                        {selectedCourses && selectedCourses.length > 0 ? (
+                          <div className="grid gap-2">
+                            {selectedCourses.map((course: any) => (
+                              <label
+                                key={course.id}
+                                className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
+                                  mapping.selectedCourseId === course.id
+                                    ? 'border-blue-500 bg-blue-50'
+                                    : 'border-gray-200 hover:border-gray-300'
+                                }`}
+                              >
+                                <input
+                                  type="radio"
+                                  name={`course-${classroom.id}`}
+                                  value={course.id}
+                                  checked={mapping.selectedCourseId === course.id}
+                                  onChange={() => handleCourseMapping(classroom.id, course.id)}
+                                  className="mr-3"
+                                />
+                                <div className="flex items-center gap-2">
+                                  <BookOpen className="h-4 w-4 text-gray-500" />
+                                  <span className="font-medium">{course.title}</span>
+                                  {course.description && (
+                                    <span className="text-sm text-gray-500">• {course.description}</span>
+                                  )}
+                                </div>
+                              </label>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-4">
+                            <p className="text-gray-600 mb-2">No courses found from your onboarding.</p>
+                            <p className="text-sm text-gray-500">
+                              You may need to complete the courses step in onboarding first.
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
