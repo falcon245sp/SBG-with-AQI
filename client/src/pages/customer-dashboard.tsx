@@ -60,6 +60,12 @@ export default function CustomerDashboard() {
     retry: false,
   });
 
+  // Fetch classroom data 
+  const { data: classrooms, isLoading: classroomsLoading } = useQuery({
+    queryKey: ['/api/classrooms'],
+    enabled: !!user,
+  });
+
   // Environment-aware admin email configuration
   const getAdminEmail = () => {
     const isProduction = process.env.NODE_ENV === 'production';
@@ -173,6 +179,70 @@ export default function CustomerDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Synced Classrooms Display */}
+        {Array.isArray(classrooms) && classrooms.length > 0 && (
+          <div className="mb-8">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <Users className="h-6 w-6 text-blue-600" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">Your Google Classrooms</h3>
+                      <p className="text-sm text-gray-600">
+                        {classrooms.length} classes • {(classrooms as any[]).reduce((total: number, c: any) => total + (c.studentCount || 0), 0)} students
+                      </p>
+                    </div>
+                  </div>
+                  <Link href="/google-classroom-integration">
+                    <Button variant="outline" size="sm">
+                      <Eye className="h-4 w-4 mr-1" />
+                      View All Details
+                    </Button>
+                  </Link>
+                </div>
+                
+                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                  {classrooms.slice(0, 6).map((classroom: any) => (
+                    <div key={classroom.id} className="border rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-900 text-sm truncate" title={classroom.name}>
+                            {classroom.name}
+                          </h4>
+                          <div className="mt-1 space-y-1">
+                            <p className="text-xs text-gray-500">
+                              {classroom.section || 'No section'}
+                            </p>
+                            <p className="text-xs text-gray-600">
+                              👥 {classroom.studentCount || 0} students
+                            </p>
+                            {classroom.subjectArea && classroom.subjectArea !== 'other' && (
+                              <Badge variant="secondary" className="text-xs">
+                                {classroom.subjectArea === 'mathematics' ? 'Math' : classroom.subjectArea}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                {classrooms.length > 6 && (
+                  <div className="mt-4 text-center">
+                    <Link href="/google-classroom-integration">
+                      <Button variant="outline" size="sm">
+                        View {classrooms.length - 6} more classes →
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Core Action - Upload */}
         <div className="mb-12">
