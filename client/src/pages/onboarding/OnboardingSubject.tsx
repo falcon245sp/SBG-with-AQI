@@ -286,18 +286,6 @@ export default function OnboardingSubject() {
           </div>
         </div>
 
-        {/* DEBUG INFORMATION */}
-        <div className="bg-yellow-100 border border-yellow-400 rounded-lg p-4 mb-6 max-w-3xl mx-auto">
-          <h3 className="font-bold text-yellow-800 mb-2">🔍 DEBUG INFO</h3>
-          <div className="text-sm text-yellow-800 space-y-1">
-            <div><strong>Jurisdiction UUID:</strong> {(user as any)?.preferredJurisdiction || 'None'}</div>
-            <div><strong>Mapped Jurisdiction:</strong> {getJurisdictionEnum((user as any)?.preferredJurisdiction) || 'None'}</div>
-            <div><strong>NGSS Enum:</strong> {StandardsJurisdiction.NGSS}</div>
-            <div><strong>NGSS Mapping:</strong> {JSON.stringify(JURISDICTION_SUBJECT_MAPPING[StandardsJurisdiction.NGSS])}</div>
-            <div><strong>Total Subjects Available:</strong> {subjectAreas.length}</div>
-            <div><strong>Subject Titles:</strong> {subjectAreas.map(s => s.title).join(', ')}</div>
-          </div>
-        </div>
 
         {/* Subject Areas */}
         <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">

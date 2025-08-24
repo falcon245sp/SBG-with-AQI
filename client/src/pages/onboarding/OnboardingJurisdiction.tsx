@@ -181,17 +181,6 @@ export default function OnboardingJurisdiction() {
             </div>
           )}
 
-          {/* DEBUG INFORMATION */}
-          <div className="mt-4 p-4 bg-yellow-100 border border-yellow-400 rounded-lg">
-            <h3 className="font-bold text-yellow-800 mb-2">🔍 DEBUG INFO - Step 1</h3>
-            <div className="text-sm text-yellow-800 space-y-1">
-              <div><strong>Selected Jurisdiction ID:</strong> {selectedJurisdiction || 'None'}</div>
-              <div><strong>Selected Jurisdiction Title:</strong> {selectedJurisdiction ? sortedJurisdictions.find(j => j.id === selectedJurisdiction)?.title : 'None'}</div>
-              <div><strong>Total Jurisdictions Loaded:</strong> {sortedJurisdictions.length}</div>
-              <div><strong>NGSS Found:</strong> {sortedJurisdictions.some(j => j.title.toLowerCase().includes('ngss')) ? 'Yes' : 'No'}</div>
-              <div><strong>Will Save:</strong> {selectedJurisdiction ? `preferredJurisdiction: ${selectedJurisdiction}` : 'Nothing - no selection'}</div>
-            </div>
-          </div>
         </div>
 
         {/* Navigation */}

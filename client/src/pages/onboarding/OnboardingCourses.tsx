@@ -163,20 +163,6 @@ export default function OnboardingCourses() {
           </div>
         </div>
 
-        {/* DEBUG INFORMATION */}
-        <div className="bg-yellow-100 border border-yellow-400 rounded-lg p-4 mb-6 max-w-4xl mx-auto">
-          <h3 className="font-bold text-yellow-800 mb-2">🔍 DEBUG INFO - Courses</h3>
-          <div className="text-sm text-yellow-800 space-y-1">
-            <div><strong>Preferred Subject Areas:</strong> {JSON.stringify(preferredSubjectAreas)}</div>
-            <div><strong>Selected Grade Levels:</strong> {JSON.stringify(selectedGradeLevels)}</div>
-            <div><strong>Query Enabled:</strong> {preferredSubjectAreas.length > 0 && selectedGradeLevels.length > 0 ? 'Yes' : 'No'}</div>
-            <div><strong>Loading:</strong> {isLoadingCourses ? 'Yes' : 'No'}</div>
-            <div><strong>Error:</strong> {coursesError ? String(coursesError) : 'None'}</div>
-            <div><strong>Available Courses Response:</strong> {availableCourses ? JSON.stringify(availableCourses) : 'No data'}</div>
-            <div><strong>Courses Array Length:</strong> {Array.isArray(availableCourses) ? availableCourses.length : 'Not an array'}</div>
-            <div><strong>Raw Data Type:</strong> {typeof availableCourses}</div>
-          </div>
-        </div>
 
         {/* Available Courses */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-80 overflow-y-auto mb-6">
