@@ -390,8 +390,6 @@ class CommonStandardsProjectService {
       // Filter standard sets based on criteria
       let filteredSets = standardSets;
       
-      console.log(`[CommonStandardsProjectService] Starting with ${standardSets.length} standard sets`);
-      console.log(`[CommonStandardsProjectService] Sample standard set subjects:`, standardSets.slice(0, 3).map(s => s.subject));
       
       // Filter by grade levels if specified
       if (selectedGradeLevels.length > 0) {
@@ -419,26 +417,16 @@ class CommonStandardsProjectService {
       
       // Filter by subjects if specified
       if (selectedSubjects.length > 0) {
-        console.log(`[CommonStandardsProjectService] Filtering by subjects:`, selectedSubjects);
-        
         filteredSets = filteredSets.filter(set => 
           selectedSubjects.some(selectedSubject => {
             // Convert underscore format to space format for comparison
             const normalizedSelected = selectedSubject.replace(/_/g, ' ').toLowerCase();
             const normalizedSetSubject = set.subject.toLowerCase();
             
-            const matches = normalizedSetSubject.includes(normalizedSelected) ||
-                           normalizedSelected.includes(normalizedSetSubject);
-            
-            if (matches) {
-              console.log(`[CommonStandardsProjectService] Subject match: "${selectedSubject}" -> "${set.subject}"`);
-            }
-            
-            return matches;
+            return normalizedSetSubject.includes(normalizedSelected) ||
+                   normalizedSelected.includes(normalizedSetSubject);
           })
         );
-        
-        console.log(`[CommonStandardsProjectService] After subject filtering: ${filteredSets.length} standard sets`);
       }
       
       // Convert standard sets to course format

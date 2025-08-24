@@ -258,22 +258,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get available courses based on user preferences  
+  // Get available courses based on user preferences or query parameters
   app.get('/api/courses/available', async (req: any, res) => {
     try {
-      const { user } = await ActiveUserService.requireActiveUserAndCustomerUuid(req);
-      const { preferredSubjectAreas, selectedGradeLevels } = req.query;
+      const { jurisdiction, subjects, grades, preferredSubjectAreas, selectedGradeLevels } = req.query;
+      
+      let jurisdictionUuid: string | null = null;
+      let subjectAreas: string[] = [];
+      let gradeLevels: string[] = [];
 
-      // Parse the query parameters
-      const subjectAreas = preferredSubjectAreas ? preferredSubjectAreas.toString().split(',') : [];
-      const gradeLevels = selectedGradeLevels ? selectedGradeLevels.toString().split(',') : [];
-
-      // Get user's selected jurisdiction
-      const userRecord = await storage.getUser(user.id);
-      const jurisdictionUuid = userRecord?.preferredJurisdiction;
+      // Try to get from query parameters first (for onboarding)
+      if (jurisdiction && subjects && grades) {
+        jurisdictionUuid = jurisdiction.toString();
+        subjectAreas = subjects.toString().split(',');
+        gradeLevels = grades.toString().split(',');
+      } else {
+        // Fall back to user preferences (for authenticated users)
+        try {
+          const { user } = await ActiveUserService.requireActiveUserAndCustomerUuid(req);
+          const userRecord = await storage.getUser(user.id);
+          
+          jurisdictionUuid = userRecord?.preferredJurisdiction;
+          subjectAreas = preferredSubjectAreas ? preferredSubjectAreas.toString().split(',') : [];
+          gradeLevels = selectedGradeLevels ? selectedGradeLevels.toString().split(',') : [];
+        } catch (authError) {
+          // User not authenticated, return empty if no query params
+          if (!jurisdiction || !subjects || !grades) {
+            res.json([]);
+            return;
+          }
+        }
+      }
 
       if (!jurisdictionUuid) {
-        // If no jurisdiction is selected, return empty courses
+        // If no jurisdiction is available, return empty courses
         res.json([]);
         return;
       }

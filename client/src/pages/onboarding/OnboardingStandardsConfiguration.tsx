@@ -53,14 +53,58 @@ export default function OnboardingStandardsConfiguration() {
   const selectedCourses = userData?.selectedCourses || userData?.selected_courses || [];
   const preferredJurisdiction = userData?.preferredJurisdiction || userData?.preferred_jurisdiction;
 
-  // Fetch available courses if no courses from onboarding
+  // Fetch available courses with default parameters for users who haven't completed onboarding
   const { data: availableCourses } = useQuery({
-    queryKey: ['/api/courses/available'],
+    queryKey: ['/api/courses/available', { 
+      jurisdiction: preferredJurisdiction || '67810E9EF6944F9383DCC602A3484C23', // Default to Common Core State Standards
+      subjects: ['common_core_mathematics'],
+      grades: ['9', '10', '11', '12']
+    }],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        jurisdiction: preferredJurisdiction || '67810E9EF6944F9383DCC602A3484C23',
+        subjects: 'common_core_mathematics',
+        grades: '9-12'
+      });
+      const response = await fetch(`/api/courses/available?${params}`);
+      if (!response.ok) throw new Error('Failed to fetch courses');
+      return response.json();
+    },
     enabled: !!user && (!selectedCourses || selectedCourses.length === 0),
   });
 
   // Use onboarding courses if available, otherwise fall back to available courses
   const coursesToDisplay = selectedCourses && selectedCourses.length > 0 ? selectedCourses : (availableCourses || []);
+
+  // Intelligent course matching based on classroom names
+  const suggestCourseForClassroom = (classroomName: string): string | null => {
+    if (!coursesToDisplay || coursesToDisplay.length === 0) return null;
+    
+    const name = classroomName.toLowerCase();
+    
+    // Define course matching patterns
+    const coursePatterns = [
+      { keywords: ['algebra 1', 'algebra i', 'alg 1', 'alg i'], courseTitle: 'Algebra 1' },
+      { keywords: ['algebra 2', 'algebra ii', 'alg 2', 'alg ii'], courseTitle: 'Algebra 2' },
+      { keywords: ['geometry', 'geom'], courseTitle: 'Geometry' },
+      { keywords: ['pre-calculus', 'precalculus', 'pre calc', 'precalc'], courseTitle: 'Pre-Calculus' },
+      { keywords: ['statistics', 'stats'], courseTitle: 'Statistics' },
+      { keywords: ['calculus', 'calc'], courseTitle: 'Calculus' },
+      { keywords: ['trigonometry', 'trig'], courseTitle: 'Trigonometry' }
+    ];
+    
+    // Find matching course
+    for (const pattern of coursePatterns) {
+      if (pattern.keywords.some(keyword => name.includes(keyword))) {
+        const matchingCourse = coursesToDisplay.find((course: any) => 
+          course.title && course.title.toLowerCase().includes(pattern.courseTitle.toLowerCase())
+        );
+        return matchingCourse?.id || null;
+      }
+    }
+    
+    return null;
+  };
 
   // Complete standards configuration mutation
   const completeConfigurationMutation = useMutation({
@@ -128,11 +172,26 @@ export default function OnboardingStandardsConfiguration() {
 
   const handleSBGToggle = (classroomId: string, enabled: boolean) => {
     setCourseMappings(prev => 
-      prev.map(mapping => 
-        mapping.classroomId === classroomId 
-          ? { ...mapping, enableSBG: enabled }
-          : mapping
-      )
+      prev.map(mapping => {
+        if (mapping.classroomId === classroomId) {
+          let suggestedCourseId = mapping.selectedCourseId;
+          
+          // Auto-suggest course when enabling SBG
+          if (enabled && !suggestedCourseId) {
+            const classroom = classrooms?.find((c: Classroom) => c.id === classroomId);
+            if (classroom) {
+              suggestedCourseId = suggestCourseForClassroom(classroom.name) || '';
+            }
+          }
+          
+          return { 
+            ...mapping, 
+            enableSBG: enabled, 
+            selectedCourseId: suggestedCourseId 
+          };
+        }
+        return mapping;
+      })
     );
   };
 
