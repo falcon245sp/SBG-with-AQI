@@ -42,6 +42,7 @@ export default function OnboardingStandardsConfiguration() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [courseMappings, setCourseMappings] = useState<CourseMapping[]>([]);
+  const [configurationPhase, setConfigurationPhase] = useState<'mapping' | 'standards'>('mapping');
 
   // Fetch classrooms
   const { data: classrooms, isLoading: classroomsLoading } = useQuery({
@@ -60,12 +61,6 @@ export default function OnboardingStandardsConfiguration() {
   const gradeString = selectedGrades.join(',');
   const subjectString = selectedSubjects.join(',');
 
-  console.log('🔧 [STANDARDS-CONFIG] User onboarding data:', {
-    jurisdiction: preferredJurisdiction,
-    subjects: selectedSubjects,
-    grades: selectedGrades,
-    courses: selectedCourses
-  });
 
   // Validate that user has completed required onboarding steps
   const hasRequiredData = preferredJurisdiction && selectedSubjects.length > 0 && selectedGrades.length > 0;
@@ -89,7 +84,6 @@ export default function OnboardingStandardsConfiguration() {
         subjects: subjectString,
         grades: gradeString
       });
-      console.log('🔧 [STANDARDS-CONFIG] Fetching courses with params:', params.toString());
       const response = await fetch(`/api/courses/available?${params}`);
       if (!response.ok) throw new Error('Failed to fetch courses');
       return response.json();
@@ -250,6 +244,32 @@ export default function OnboardingStandardsConfiguration() {
   const completedMappings = courseMappings.filter(m => m.enableSBG && m.selectedCourseId).length;
   const totalSBGEnabled = courseMappings.filter(m => m.enableSBG).length;
 
+  // Group classrooms by course for standards configuration
+  const courseGroups = courseMappings
+    .filter(m => m.enableSBG && m.selectedCourseId)
+    .reduce((groups, mapping) => {
+      const course = coursesToDisplay.find(c => c.id === mapping.selectedCourseId);
+      if (!course) return groups;
+      
+      if (!groups[course.id]) {
+        groups[course.id] = {
+          course,
+          classrooms: [],
+          selectedStandards: []
+        };
+      }
+      
+      const classroom = classrooms?.find(c => c.id === mapping.classroomId);
+      if (classroom) {
+        groups[course.id].classrooms.push(classroom);
+      }
+      
+      return groups;
+    }, {} as Record<string, { course: any, classrooms: any[], selectedStandards: string[] }>);
+
+  // Check if ready to advance to standards phase
+  const readyForStandards = totalSBGEnabled > 0 && completedMappings === totalSBGEnabled;
+
   // Show incomplete onboarding error
   if (!hasRequiredData) {
     return (
@@ -362,8 +382,54 @@ export default function OnboardingStandardsConfiguration() {
 
         {/* Configuration Cards */}
         <div className="space-y-6 mb-8">
+          {configurationPhase === 'standards' && (
+            <div className="text-center mb-6">
+              <Button
+                variant="outline"
+                onClick={() => setConfigurationPhase('mapping')}
+                className="mb-4"
+              >
+                ← Back to Course Mapping
+              </Button>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Select Standards to Assess
+              </h2>
+              <p className="text-gray-600">
+                Choose which specific standards you'll assess for each course
+              </p>
+            </div>
+          )}
+
+          {configurationPhase === 'standards' && Object.entries(courseGroups).map(([courseId, group]) => (
+            <Card key={courseId} className="border-2 border-blue-200">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Target className="h-6 w-6 text-blue-600" />
+                    <div>
+                      <CardTitle className="text-xl">{group.course.title}</CardTitle>
+                      <CardDescription>
+                        {group.classrooms.length} section{group.classrooms.length !== 1 ? 's' : ''}: {group.classrooms.map(c => c.name).join(', ')}
+                      </CardDescription>
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-sm text-blue-800 mb-3">
+                    <BookOpen className="h-4 w-4 inline mr-2" />
+                    Standards available for this course will be loaded here
+                  </p>
+                  <p className="text-xs text-blue-600">
+                    Note: Standards fetching functionality to be implemented
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
           {/* No Classrooms Found - Show Import Options */}
-          {Array.isArray(classrooms) && classrooms.length === 0 && (
+          {configurationPhase === 'mapping' && Array.isArray(classrooms) && classrooms.length === 0 && (
             <Card className="border-yellow-200 bg-yellow-50">
               <CardHeader>
                 <div className="flex items-center gap-3">
@@ -410,7 +476,7 @@ export default function OnboardingStandardsConfiguration() {
             </Card>
           )}
 
-          {Array.isArray(classrooms) && classrooms.map((classroom: Classroom) => {
+          {configurationPhase === 'mapping' && Array.isArray(classrooms) && classrooms.map((classroom: Classroom) => {
             const mapping = courseMappings.find(m => m.classroomId === classroom.id);
             
             return (
@@ -524,17 +590,28 @@ export default function OnboardingStandardsConfiguration() {
               </div>
             </div>
             
-            <Button
-              onClick={handleCompleteConfiguration}
-              disabled={completeConfigurationMutation.isPending || totalSBGEnabled === 0}
-              className="w-full bg-green-600 hover:bg-green-700"
-              data-testid="button-complete-configuration"
-            >
-              {completeConfigurationMutation.isPending 
-                ? 'Completing Setup...' 
-                : 'Complete Setup & Go to Dashboard'
-              }
-            </Button>
+            {configurationPhase === 'mapping' ? (
+              <Button
+                onClick={() => setConfigurationPhase('standards')}
+                disabled={!readyForStandards}
+                className="w-full bg-blue-600 hover:bg-blue-700"
+                data-testid="button-configure-standards"
+              >
+                Configure Standards for Each Course →
+              </Button>
+            ) : (
+              <Button
+                onClick={handleCompleteConfiguration}
+                disabled={completeConfigurationMutation.isPending}
+                className="w-full bg-green-600 hover:bg-green-700"
+                data-testid="button-complete-configuration"
+              >
+                {completeConfigurationMutation.isPending 
+                  ? 'Completing Setup...' 
+                  : 'Complete Setup & Go to Dashboard'
+                }
+              </Button>
+            )}
           </CardContent>
         </Card>
 
