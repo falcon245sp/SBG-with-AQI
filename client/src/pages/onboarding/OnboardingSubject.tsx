@@ -178,7 +178,7 @@ export default function OnboardingSubject() {
 
   // Filter subject areas based on selected jurisdiction and add dynamic descriptions
   const getAvailableSubjectAreas = (): SubjectAreaUI[] => {
-    const jurisdictionUuid = (user as any)?.preferred_jurisdiction;
+    const jurisdictionUuid = (user as any)?.preferredJurisdiction;
     const jurisdiction = getJurisdictionEnum(jurisdictionUuid);
     
     // Debug logging
@@ -290,8 +290,8 @@ export default function OnboardingSubject() {
         <div className="bg-yellow-100 border border-yellow-400 rounded-lg p-4 mb-6 max-w-3xl mx-auto">
           <h3 className="font-bold text-yellow-800 mb-2">🔍 DEBUG INFO</h3>
           <div className="text-sm text-yellow-800 space-y-1">
-            <div><strong>Jurisdiction UUID:</strong> {(user as any)?.preferred_jurisdiction || 'None'}</div>
-            <div><strong>Mapped Jurisdiction:</strong> {getJurisdictionEnum((user as any)?.preferred_jurisdiction) || 'None'}</div>
+            <div><strong>Jurisdiction UUID:</strong> {(user as any)?.preferredJurisdiction || 'None'}</div>
+            <div><strong>Mapped Jurisdiction:</strong> {getJurisdictionEnum((user as any)?.preferredJurisdiction) || 'None'}</div>
             <div><strong>NGSS Enum:</strong> {StandardsJurisdiction.NGSS}</div>
             <div><strong>NGSS Mapping:</strong> {JSON.stringify(JURISDICTION_SUBJECT_MAPPING[StandardsJurisdiction.NGSS])}</div>
             <div><strong>Total Subjects Available:</strong> {subjectAreas.length}</div>
