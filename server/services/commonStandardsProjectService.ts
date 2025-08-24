@@ -345,6 +345,26 @@ class CommonStandardsProjectService {
         // Keep only individual assessable standards
         if (!code || !description) return false;
         
+        // Filter out items that are just ID numbers (like "S1143557") without proper standard designators
+        if (/^S?\d+$/.test(code.trim())) {
+          return false; // Just an ID number, not a standard designator
+        }
+        
+        // Must contain actual standard designator patterns
+        const hasValidStandardFormat = 
+          // Common Core format: CCSS.Math.Content.HSA-SSE.A.1
+          /CCSS\..*\.\d+$/.test(code) ||
+          // NGSS format: 5-PS1-1, HS-PS1-1  
+          /^\d*-?[A-Z]{2,3}\d+-\d+$/.test(code) ||
+          // State standards with proper numbering
+          /[A-Z]+\..*\.\d+/.test(code) ||
+          // Standards with proper domain.cluster.standard format
+          /\w+\.\w+\.\d+/.test(code);
+        
+        if (!hasValidStandardFormat) {
+          return false;
+        }
+        
         // Common Core: Filter out cluster headers (ends with single letter like .A, .B)
         // Keep individual standards (ends with numbers like .A.1, .A.2, .B.3)
         if (code.includes('CCSS') || code.includes('HSA') || code.includes('HSG') || code.includes('HSF')) {
@@ -358,7 +378,7 @@ class CommonStandardsProjectService {
           return /\d+-\d+$/.test(code);
         }
         
-        // General filters for category/domain items
+        // General filters for category/domain items in descriptions
         const isCategory = description.toLowerCase().includes('category') ||
                           description.toLowerCase().includes('domain') ||
                           description.toLowerCase().includes('cluster') ||
