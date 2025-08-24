@@ -336,15 +336,46 @@ class CommonStandardsProjectService {
 
   // Convert CSP standards to our internal format
   convertToInternalFormat(cspStandards: CSPStandard[]): any[] {
-    return cspStandards.map(standard => ({
-      id: standard.id,
-      code: standard.statementNotation || standard.asnIdentifier,
-      title: standard.statementLabel || 'Standard',
-      description: standard.description,
-      gradeLevel: 'varies', // Will be set based on standard set
-      majorDomain: standard.ancestorDescriptions?.[0] || 'General',
-      cluster: standard.ancestorDescriptions?.[1] || standard.ancestorDescriptions?.[0] || 'General'
-    }));
+    return cspStandards
+      .filter(standard => {
+        const code = standard.statementNotation || standard.asnIdentifier;
+        const description = standard.description || '';
+        
+        // Filter out domain/cluster headers and category items
+        // Keep only individual assessable standards
+        if (!code || !description) return false;
+        
+        // Common Core: Filter out cluster headers (ends with single letter like .A, .B)
+        // Keep individual standards (ends with numbers like .A.1, .A.2, .B.3)
+        if (code.includes('CCSS') || code.includes('HSA') || code.includes('HSG') || code.includes('HSF')) {
+          // Must end with a number to be an individual standard
+          return /\.\d+$/.test(code);
+        }
+        
+        // NGSS: Filter out domain headers, keep performance expectations
+        if (code.includes('NGSS') || code.includes('-PS') || code.includes('-LS') || code.includes('-ESS') || code.includes('-ETS')) {
+          // NGSS performance expectations typically end with numbers
+          return /\d+-\d+$/.test(code);
+        }
+        
+        // General filters for category/domain items
+        const isCategory = description.toLowerCase().includes('category') ||
+                          description.toLowerCase().includes('domain') ||
+                          description.toLowerCase().includes('cluster') ||
+                          description.toLowerCase().includes('this domain includes') ||
+                          description.toLowerCase().includes('students who demonstrate understanding can');
+        
+        return !isCategory;
+      })
+      .map(standard => ({
+        id: standard.id,
+        code: standard.statementNotation || standard.asnIdentifier,
+        title: standard.statementLabel || 'Standard',
+        description: standard.description,
+        gradeLevel: 'varies', // Will be set based on standard set
+        majorDomain: standard.ancestorDescriptions?.[0] || 'General',
+        cluster: standard.ancestorDescriptions?.[1] || standard.ancestorDescriptions?.[0] || 'General'
+      }));
   }
 
   // Get available grade levels for a jurisdiction dynamically

@@ -476,31 +476,11 @@ export default function OnboardingStandardsConfiguration() {
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="text-sm font-medium text-gray-900">Select Standards to Assess</h4>
                       <span className="text-xs text-gray-500">
-                        {selectedStandards[courseId]?.length || 0} of {courseStandards[courseId]?.filter((standard: any) => {
-                          // Only count actual assessable standards, not category headers
-                          return standard.code && 
-                                 standard.code.trim() !== '' && 
-                                 standard.description && 
-                                 standard.description.trim() !== '' &&
-                                 !standard.code.toLowerCase().includes('category') &&
-                                 !standard.code.toLowerCase().includes('domain') &&
-                                 !standard.description.toLowerCase().includes('category') &&
-                                 !standard.description.toLowerCase().includes('this domain includes');
-                        }).length || 0} selected
+                        {selectedStandards[courseId]?.length || 0} of {courseStandards[courseId]?.length || 0} selected
                       </span>
                     </div>
                     <div className="max-h-48 overflow-y-auto border rounded-lg bg-gray-50">
-                      {courseStandards[courseId]?.filter((standard: any) => {
-                        // Only show actual assessable standards, not category headers
-                        return standard.code && 
-                               standard.code.trim() !== '' && 
-                               standard.description && 
-                               standard.description.trim() !== '' &&
-                               !standard.code.toLowerCase().includes('category') &&
-                               !standard.code.toLowerCase().includes('domain') &&
-                               !standard.description.toLowerCase().includes('category') &&
-                               !standard.description.toLowerCase().includes('this domain includes');
-                      }).map((standard: any, index: number) => (
+                      {courseStandards[courseId]?.map((standard: any, index: number) => (
                         <label key={standard.code || index} className="flex items-start gap-3 p-3 hover:bg-gray-100 cursor-pointer border-b last:border-b-0">
                           <input
                             type="checkbox"
