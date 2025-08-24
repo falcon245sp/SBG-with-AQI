@@ -77,17 +77,33 @@ export default function OnboardingSubject() {
     queryFn: async () => {
       console.log('🔵 [ONBOARDING-STEP-2] Making subjects API call for jurisdiction:', jurisdictionId);
       try {
-        const response = await apiRequest('GET', `/api/csp/jurisdictions/${jurisdictionId}/subjects`);
-        console.log('🔵 [ONBOARDING-STEP-2] Raw API response:', response);
-        return response;
+        const response = await fetch(`/api/csp/jurisdictions/${jurisdictionId}/subjects`, {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        console.log('🔵 [ONBOARDING-STEP-2] Fetch response status:', response.status);
+        console.log('🔵 [ONBOARDING-STEP-2] Fetch response ok:', response.ok);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('🔵 [ONBOARDING-STEP-2] Raw API response:', data);
+        console.log('🔵 [ONBOARDING-STEP-2] Subjects in response:', data.subjects?.length || 0);
+        return data;
       } catch (error) {
         console.error('🔵 [ONBOARDING-STEP-2] API call failed:', error);
         throw error;
       }
     },
     enabled: !!jurisdictionId,
-    staleTime: 0,        // Always fetch fresh data
-    cacheTime: 0,        // Don't cache at all
+    staleTime: 0,        // Always fetch fresh data  
+    refetchOnMount: true, // Always refetch when component mounts
     retry: 1             // Retry once on failure
   });
   
@@ -178,6 +194,9 @@ export default function OnboardingSubject() {
               <p><strong>User Data Present:</strong> {user ? '✅ YES' : '❌ NO'}</p>
               <p><strong>Subjects Response Present:</strong> {subjectsResponse ? '✅ YES' : '❌ NO'}</p>
               <p><strong>Query Enabled:</strong> {!!jurisdictionId ? '✅ YES' : '❌ NO'}</p>
+              <p><strong>Response Type:</strong> {subjectsResponse ? typeof subjectsResponse : 'N/A'}</p>
+              <p><strong>Response Keys:</strong> {subjectsResponse ? Object.keys(subjectsResponse as any).join(', ') : 'N/A'}</p>
+              <p><strong>Subjects Count:</strong> {(subjectsResponse as any)?.subjects?.length || 0}</p>
               {userError && <p><strong>User Error:</strong> {JSON.stringify(userError, null, 2)}</p>}
               {subjectsError && <p><strong>Subjects Error:</strong> {JSON.stringify(subjectsError, null, 2)}</p>}
             </div>
