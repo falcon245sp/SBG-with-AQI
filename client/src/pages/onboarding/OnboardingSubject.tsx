@@ -9,6 +9,23 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { toast } from "@/hooks/use-toast";
 import { SubjectArea, StandardsJurisdiction } from "@shared/businessEnums";
 
+// Map jurisdiction UUIDs to StandardsJurisdiction enum values
+const JURISDICTION_UUID_MAPPING: Record<string, StandardsJurisdiction> = {
+  // NGSS (Next Generation Science Standards)
+  '71E5AA409D894EB0B43A8CD82F727BFE': StandardsJurisdiction.NGSS,
+  
+  // Common Core Math - will need to add UUID when we see it
+  // Common Core ELA - will need to add UUID when we see it
+  
+  // Add more mappings as we discover UUIDs
+};
+
+// Convert jurisdiction UUID to enum value
+const getJurisdictionEnum = (jurisdictionUuid: string | null | undefined): StandardsJurisdiction | null => {
+  if (!jurisdictionUuid) return null;
+  return JURISDICTION_UUID_MAPPING[jurisdictionUuid] || null;
+};
+
 interface SubjectAreaUI {
   id: SubjectArea;
   title: string;
@@ -161,16 +178,18 @@ export default function OnboardingSubject() {
 
   // Filter subject areas based on selected jurisdiction and add dynamic descriptions
   const getAvailableSubjectAreas = (): SubjectAreaUI[] => {
-    const jurisdiction = (user as any)?.preferred_jurisdiction as StandardsJurisdiction;
+    const jurisdictionUuid = (user as any)?.preferred_jurisdiction;
+    const jurisdiction = getJurisdictionEnum(jurisdictionUuid);
     
     // Debug logging
     console.log('🔍 DEBUG - User object:', user);
-    console.log('🔍 DEBUG - Jurisdiction:', jurisdiction);
+    console.log('🔍 DEBUG - Jurisdiction UUID:', jurisdictionUuid);
+    console.log('🔍 DEBUG - Mapped Jurisdiction:', jurisdiction);
     console.log('🔍 DEBUG - NGSS enum value:', StandardsJurisdiction.NGSS);
     console.log('🔍 DEBUG - Jurisdiction mapping for NGSS:', JURISDICTION_SUBJECT_MAPPING[StandardsJurisdiction.NGSS]);
     
     if (!jurisdiction) {
-      console.log('🔍 DEBUG - No jurisdiction, showing all subjects');
+      console.log('🔍 DEBUG - No jurisdiction or unknown UUID, showing all subjects');
       // If no jurisdiction selected, show all with default descriptions
       return BASE_SUBJECT_AREAS.map(subject => ({
         ...subject,
@@ -271,8 +290,8 @@ export default function OnboardingSubject() {
         <div className="bg-yellow-100 border border-yellow-400 rounded-lg p-4 mb-6 max-w-3xl mx-auto">
           <h3 className="font-bold text-yellow-800 mb-2">🔍 DEBUG INFO</h3>
           <div className="text-sm text-yellow-800 space-y-1">
-            <div><strong>User Object:</strong> {user ? JSON.stringify(user, null, 2) : 'Loading...'}</div>
-            <div><strong>Jurisdiction:</strong> {(user as any)?.preferred_jurisdiction || 'None'}</div>
+            <div><strong>Jurisdiction UUID:</strong> {(user as any)?.preferred_jurisdiction || 'None'}</div>
+            <div><strong>Mapped Jurisdiction:</strong> {getJurisdictionEnum((user as any)?.preferred_jurisdiction) || 'None'}</div>
             <div><strong>NGSS Enum:</strong> {StandardsJurisdiction.NGSS}</div>
             <div><strong>NGSS Mapping:</strong> {JSON.stringify(JURISDICTION_SUBJECT_MAPPING[StandardsJurisdiction.NGSS])}</div>
             <div><strong>Total Subjects Available:</strong> {subjectAreas.length}</div>
