@@ -73,12 +73,22 @@ export default function OnboardingSubject() {
   }, [user, jurisdictionId, setLocation]);
   
   const { data: subjectsResponse, isLoading: isLoadingSubjects, error: subjectsError } = useQuery({
-    queryKey: ['/api/csp/jurisdictions', jurisdictionId, 'subjects'],
-    queryFn: () => {
+    queryKey: ['/api/csp/jurisdictions', jurisdictionId, 'subjects', Date.now()], // Cache bust
+    queryFn: async () => {
       console.log('🔵 [ONBOARDING-STEP-2] Making subjects API call for jurisdiction:', jurisdictionId);
-      return apiRequest('GET', `/api/csp/jurisdictions/${jurisdictionId}/subjects`);
+      try {
+        const response = await apiRequest('GET', `/api/csp/jurisdictions/${jurisdictionId}/subjects`);
+        console.log('🔵 [ONBOARDING-STEP-2] Raw API response:', response);
+        return response;
+      } catch (error) {
+        console.error('🔵 [ONBOARDING-STEP-2] API call failed:', error);
+        throw error;
+      }
     },
-    enabled: !!jurisdictionId
+    enabled: !!jurisdictionId,
+    staleTime: 0,        // Always fetch fresh data
+    cacheTime: 0,        // Don't cache at all
+    retry: 1             // Retry once on failure
   });
   
   console.log('🔵 [ONBOARDING-STEP-2] Subjects API call status:');
