@@ -80,80 +80,29 @@ export default function OnboardingSubject() {
   const { data: subjectsResponse, isLoading: isLoadingSubjects, error: subjectsError } = useQuery({
     queryKey: ['/api/csp/jurisdictions', jurisdictionId, 'subjects', Date.now()], // Cache bust
     queryFn: async () => {
-      console.log('🔵 [ONBOARDING-STEP-2] Starting subjects API call for jurisdiction:', jurisdictionId);
-      console.log('🔵 [ONBOARDING-STEP-2] Full URL:', `/api/csp/jurisdictions/${jurisdictionId}/subjects`);
+      console.log('🔵 [ONBOARDING-STEP-2] Making subjects API call for jurisdiction:', jurisdictionId);
       
       try {
-        console.log('🔵 [ONBOARDING-STEP-2] About to make fetch request...');
-        const response = await fetch(`/api/csp/jurisdictions/${jurisdictionId}/subjects`, {
+        const response = await fetch(`/api/csp/jurisdictions/${jurisdictionId}/subjects?t=${Date.now()}`, {
           method: 'GET',
           credentials: 'include',
           headers: {
-            'Content-Type': 'application/json',
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
+            'Content-Type': 'application/json'
           }
         });
         
-        console.log('🔵 [ONBOARDING-STEP-2] Fetch completed!');
-        console.log('🔵 [ONBOARDING-STEP-2] Response object:', response);
-        console.log('🔵 [ONBOARDING-STEP-2] Status:', response.status);
-        console.log('🔵 [ONBOARDING-STEP-2] Status Text:', response.statusText);
-        console.log('🔵 [ONBOARDING-STEP-2] Headers:', Object.fromEntries(response.headers.entries()));
-        console.log('🔵 [ONBOARDING-STEP-2] Response OK:', response.ok);
+        console.log('🔵 [ONBOARDING-STEP-2] Response status:', response.status);
         
-        if (!response.ok && response.status !== 304) {
-          const errorText = await response.text();
-          console.error('🔵 [ONBOARDING-STEP-2] Error response body:', errorText);
-          throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         
-        // Handle 304 Not Modified - browser should use cached data
-        if (response.status === 304) {
-          console.log('🔵 [ONBOARDING-STEP-2] Got 304 Not Modified - this is a browser caching issue');
-          // Force a new request with different URL to bypass cache
-          const bypassResponse = await fetch(`/api/csp/jurisdictions/${jurisdictionId}/subjects?t=${Date.now()}`, {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-              'Content-Type': 'application/json',
-              'Cache-Control': 'no-cache, no-store, must-revalidate',
-              'Pragma': 'no-cache',
-              'Expires': '0'
-            }
-          });
-          
-          if (!bypassResponse.ok) {
-            throw new Error(`HTTP ${bypassResponse.status}: ${bypassResponse.statusText}`);
-          }
-          
-          const bypassData = await bypassResponse.json();
-          console.log('🔵 [ONBOARDING-STEP-2] Cache bypass successful, got data:', bypassData);
-          return bypassData;
-        }
-        
-        console.log('🔵 [ONBOARDING-STEP-2] About to parse JSON...');
         const data = await response.json();
-        console.log('🔵 [ONBOARDING-STEP-2] JSON parsed successfully!');
-        console.log('🔵 [ONBOARDING-STEP-2] Raw data object:', data);
-        console.log('🔵 [ONBOARDING-STEP-2] Data type:', typeof data);
-        console.log('🔵 [ONBOARDING-STEP-2] Data keys:', Object.keys(data || {}));
-        console.log('🔵 [ONBOARDING-STEP-2] Subjects property:', data.subjects);
-        console.log('🔵 [ONBOARDING-STEP-2] Subjects count:', data.subjects?.length || 0);
-        
-        if (!data.subjects || !Array.isArray(data.subjects)) {
-          console.warn('🔵 [ONBOARDING-STEP-2] ⚠️ Invalid subjects data structure!');
-        }
+        console.log('🔵 [ONBOARDING-STEP-2] Received data with', data.subjects?.length || 0, 'subjects');
         
         return data;
       } catch (error) {
-        const err = error as Error;
-        console.error('🔵 [ONBOARDING-STEP-2] ❌ Complete error details:');
-        console.error('🔵 [ONBOARDING-STEP-2] Error type:', typeof error);
-        console.error('🔵 [ONBOARDING-STEP-2] Error message:', err.message);
-        console.error('🔵 [ONBOARDING-STEP-2] Error stack:', err.stack);
-        console.error('🔵 [ONBOARDING-STEP-2] Full error object:', error);
+        console.error('🔵 [ONBOARDING-STEP-2] API call failed:', error);
         throw error;
       }
     },
