@@ -130,19 +130,6 @@ export default function OnboardingStandardsConfiguration() {
     }));
   };
 
-  // Fetch standards for all courses when entering standards configuration phase
-  useEffect(() => {
-    if (configurationPhase === 'standards') {
-      const coursesToFetch = Object.entries(courseGroups).map(([courseId, group]) => ({
-        id: courseId,
-        standardSetId: group.course.standardSetId
-      })).filter(course => course.standardSetId);
-
-      coursesToFetch.forEach(course => {
-        fetchStandardsForCourse(course.id, course.standardSetId);
-      });
-    }
-  }, [configurationPhase, courseGroups]);
 
   // Intelligent course matching based on classroom names
   const suggestCourseForClassroom = (classroomName: string): string | null => {
@@ -318,6 +305,20 @@ export default function OnboardingStandardsConfiguration() {
 
   // Check if ready to advance to standards phase
   const readyForStandards = totalSBGEnabled > 0 && completedMappings === totalSBGEnabled;
+
+  // Fetch standards for all courses when entering standards configuration phase
+  useEffect(() => {
+    if (configurationPhase === 'standards') {
+      const coursesToFetch = Object.entries(courseGroups).map(([courseId, group]) => ({
+        id: courseId,
+        standardSetId: group.course.standardSetId
+      })).filter(course => course.standardSetId);
+
+      coursesToFetch.forEach(course => {
+        fetchStandardsForCourse(course.id, course.standardSetId);
+      });
+    }
+  }, [configurationPhase, courseGroups]);
 
   // Show incomplete onboarding error
   if (!hasRequiredData) {
