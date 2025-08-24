@@ -390,26 +390,55 @@ class CommonStandardsProjectService {
       // Filter standard sets based on criteria
       let filteredSets = standardSets;
       
+      console.log(`[CommonStandardsProjectService] Starting with ${standardSets.length} standard sets`);
+      console.log(`[CommonStandardsProjectService] Sample standard set subjects:`, standardSets.slice(0, 3).map(s => s.subject));
+      
       // Filter by grade levels if specified
       if (selectedGradeLevels.length > 0) {
         filteredSets = filteredSets.filter(set => 
           set.educationLevels && set.educationLevels.some(level => 
-            selectedGradeLevels.some(selectedLevel => 
-              level.toLowerCase().includes(selectedLevel.toLowerCase()) ||
-              selectedLevel.toLowerCase().includes(level.toLowerCase())
-            )
+            selectedGradeLevels.some(selectedLevel => {
+              // Handle grade range format like "9-12"
+              if (selectedLevel.includes('-')) {
+                const [start, end] = selectedLevel.split('-').map(Number);
+                const levelNum = parseInt(level);
+                return !isNaN(levelNum) && levelNum >= start && levelNum <= end;
+              }
+              
+              // Handle direct level matching (handle both "9" and "09" formats)
+              const normalizedLevel = level.padStart(2, '0');
+              const normalizedSelected = selectedLevel.padStart(2, '0');
+              
+              return normalizedLevel === normalizedSelected ||
+                     level.toLowerCase().includes(selectedLevel.toLowerCase()) ||
+                     selectedLevel.toLowerCase().includes(level.toLowerCase());
+            })
           )
         );
       }
       
       // Filter by subjects if specified
       if (selectedSubjects.length > 0) {
+        console.log(`[CommonStandardsProjectService] Filtering by subjects:`, selectedSubjects);
+        
         filteredSets = filteredSets.filter(set => 
-          selectedSubjects.some(selectedSubject => 
-            set.subject.toLowerCase().includes(selectedSubject.toLowerCase()) ||
-            selectedSubject.toLowerCase().includes(set.subject.toLowerCase())
-          )
+          selectedSubjects.some(selectedSubject => {
+            // Convert underscore format to space format for comparison
+            const normalizedSelected = selectedSubject.replace(/_/g, ' ').toLowerCase();
+            const normalizedSetSubject = set.subject.toLowerCase();
+            
+            const matches = normalizedSetSubject.includes(normalizedSelected) ||
+                           normalizedSelected.includes(normalizedSetSubject);
+            
+            if (matches) {
+              console.log(`[CommonStandardsProjectService] Subject match: "${selectedSubject}" -> "${set.subject}"`);
+            }
+            
+            return matches;
+          })
         );
+        
+        console.log(`[CommonStandardsProjectService] After subject filtering: ${filteredSets.length} standard sets`);
       }
       
       // Convert standard sets to course format
