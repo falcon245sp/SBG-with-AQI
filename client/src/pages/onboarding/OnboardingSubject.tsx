@@ -3,39 +3,128 @@ import { useLocation } from 'wouter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { BookOpen, Calculator, ChevronRight, ChevronLeft } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
+import { BookOpen, Calculator, ChevronRight, ChevronLeft, Microscope, Globe, Monitor, Languages, Heart, Palette, Wrench, HelpCircle } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { toast } from "@/hooks/use-toast";
+import { SubjectArea, StandardsJurisdiction } from "@shared/businessEnums";
 
-interface SubjectArea {
-  id: string;
+interface SubjectAreaUI {
+  id: SubjectArea;
   title: string;
   description: string;
   icon: React.ReactNode;
   color: string;
 }
 
-const subjectAreas: SubjectArea[] = [
+// Complete mapping of all subject areas with proper UI metadata
+const ALL_SUBJECT_AREAS: SubjectAreaUI[] = [
   {
-    id: 'mathematics',
+    id: SubjectArea.MATHEMATICS,
     title: 'Mathematics',
     description: 'Math courses including Algebra, Geometry, Statistics, and more',
     icon: <Calculator className="h-8 w-8" />,
     color: 'blue'
   },
   {
-    id: 'english_language_arts',
+    id: SubjectArea.ENGLISH_LANGUAGE_ARTS,
     title: 'English Language Arts',
     description: 'Reading, Writing, Speaking, Listening, and Language standards',
     icon: <BookOpen className="h-8 w-8" />,
     color: 'green'
+  },
+  {
+    id: SubjectArea.SCIENCE,
+    title: 'Science',
+    description: 'Biology, Chemistry, Physics, Earth Science, and Environmental Science',
+    icon: <Microscope className="h-8 w-8" />,
+    color: 'purple'
+  },
+  {
+    id: SubjectArea.SOCIAL_STUDIES,
+    title: 'Social Studies',
+    description: 'History, Geography, Government, Economics, and Civics',
+    icon: <Globe className="h-8 w-8" />,
+    color: 'orange'
+  },
+  {
+    id: SubjectArea.COMPUTER_SCIENCE,
+    title: 'Computer Science',
+    description: 'Programming, Software Development, and Information Technology',
+    icon: <Monitor className="h-8 w-8" />,
+    color: 'cyan'
+  },
+  {
+    id: SubjectArea.FOREIGN_LANGUAGE,
+    title: 'Foreign Language',
+    description: 'Spanish, French, German, and other world languages',
+    icon: <Languages className="h-8 w-8" />,
+    color: 'pink'
+  },
+  {
+    id: SubjectArea.HEALTH_PHYSICAL_EDUCATION,
+    title: 'Health & Physical Education',
+    description: 'Physical fitness, health education, and wellness',
+    icon: <Heart className="h-8 w-8" />,
+    color: 'red'
+  },
+  {
+    id: SubjectArea.ARTS,
+    title: 'Arts',
+    description: 'Visual Arts, Music, Drama, and Creative Expression',
+    icon: <Palette className="h-8 w-8" />,
+    color: 'indigo'
+  },
+  {
+    id: SubjectArea.CAREER_TECHNICAL_EDUCATION,
+    title: 'Career & Technical Education',
+    description: 'Vocational training and career preparation',
+    icon: <Wrench className="h-8 w-8" />,
+    color: 'yellow'
+  },
+  {
+    id: SubjectArea.OTHER,
+    title: 'Other',
+    description: 'Specialized subjects and interdisciplinary courses',
+    icon: <HelpCircle className="h-8 w-8" />,
+    color: 'gray'
   }
 ];
+
+// Jurisdiction to subject area mapping
+const JURISDICTION_SUBJECT_MAPPING = {
+  [StandardsJurisdiction.NGSS]: [SubjectArea.SCIENCE],
+  [StandardsJurisdiction.COMMON_CORE_MATH]: [SubjectArea.MATHEMATICS],
+  [StandardsJurisdiction.COMMON_CORE_ELA]: [SubjectArea.ENGLISH_LANGUAGE_ARTS],
+  [StandardsJurisdiction.STATE_SPECIFIC]: ALL_SUBJECT_AREAS.map(s => s.id),
+  [StandardsJurisdiction.AP_STANDARDS]: ALL_SUBJECT_AREAS.map(s => s.id),
+  [StandardsJurisdiction.IB_STANDARDS]: ALL_SUBJECT_AREAS.map(s => s.id),
+  [StandardsJurisdiction.CUSTOM]: ALL_SUBJECT_AREAS.map(s => s.id)
+};
 
 export default function OnboardingSubject() {
   const [, setLocation] = useLocation();
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+
+  // Get user data to determine selected jurisdiction
+  const { data: user, isLoading: isLoadingUser } = useQuery({
+    queryKey: ['/api/auth/user'],
+    queryFn: () => apiRequest('GET', '/api/auth/user')
+  });
+
+  // Filter subject areas based on selected jurisdiction
+  const getAvailableSubjectAreas = (): SubjectAreaUI[] => {
+    const jurisdiction = (user as any)?.preferred_jurisdiction as StandardsJurisdiction;
+    if (!jurisdiction) {
+      // If no jurisdiction selected, show all
+      return ALL_SUBJECT_AREAS;
+    }
+
+    const allowedSubjects = JURISDICTION_SUBJECT_MAPPING[jurisdiction] || ALL_SUBJECT_AREAS.map(s => s.id);
+    return ALL_SUBJECT_AREAS.filter(subject => allowedSubjects.includes(subject.id));
+  };
+
+  const subjectAreas = getAvailableSubjectAreas();
 
   // Update user preferences mutation
   const updatePreferencesMutation = useMutation({
@@ -80,6 +169,17 @@ export default function OnboardingSubject() {
   const handleBack = () => {
     setLocation('/onboarding/jurisdiction');
   };
+
+  if (isLoadingUser) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading subject areas...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
