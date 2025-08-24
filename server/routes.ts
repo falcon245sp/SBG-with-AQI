@@ -581,7 +581,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No files uploaded" });
       }
 
-      const { jurisdictions, focusStandards, callbackUrl } = req.body;
+      const { jurisdictions, focusStandards, callbackUrl, courseId } = req.body;
       
       // Parse jurisdictions with Common Core as default
       let parsedJurisdictions: string[] = ['Common Core'];
@@ -602,6 +602,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             mimeType: file.mimetype,
             fileSize: file.size,
             jurisdictions: parsedJurisdictions,
+            ...(courseId && { classroomId: courseId }), // V1.0 Course context for file organization
           };
           console.log(`[Upload] Validating document data:`, documentData);
           const validationResult = insertDocumentSchema.safeParse(documentData);

@@ -18,6 +18,7 @@ export default function UploadPage() {
   // Use authenticated user data
   const { user } = useAuth();
   const customerId = (user as any)?.customerUuid || "";
+  const [selectedCourseId, setSelectedCourseId] = useState<string>("");
   const [jurisdictions, setJurisdictions] = useState("Common Core");
   const [focusStandards, setFocusStandards] = useState("");
   const [callbackUrl, setCallbackUrl] = useState("");
@@ -28,6 +29,12 @@ export default function UploadPage() {
     status: string;
     estimatedCompletion: string;
   }>>([]);
+
+  // Fetch user's configured classrooms for course selection
+  const { data: classrooms } = useQuery<any[]>({
+    queryKey: ["/api/classrooms"],
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
 
   // Poll for document status updates to show real-time progress
   const { data: documents } = useQuery<any[]>({
@@ -72,6 +79,15 @@ export default function UploadPage() {
       return;
     }
 
+    if (!selectedCourseId) {
+      toast({
+        title: "Course Required",
+        description: "Please select a course before uploading documents.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsUploading(true);
 
     try {
@@ -81,10 +97,11 @@ export default function UploadPage() {
         focusStandards.split(',').map(s => s.trim()).filter(Boolean) : 
         undefined;
 
-      // Submit to web service
+      // Submit to web service with course context
       const result = await webServiceClient.submitDocuments({
         customerId,
         files,
+        courseId: selectedCourseId,
         jurisdictions: jurisdictionList,
         focusStandards: focusStandardsList,
         callbackUrl: callbackUrl || undefined
@@ -128,7 +145,7 @@ export default function UploadPage() {
         });
       }
 
-      // Clear form
+      // Clear form (but keep course selection for convenience)
       setFocusStandards("");
       setCallbackUrl("");
     } catch (error) {
@@ -174,6 +191,34 @@ export default function UploadPage() {
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                  {/* Course Selection */}
+                  <div>
+                    <Label htmlFor="courseSelection" className="text-base font-medium">Select Course</Label>
+                    <p className="text-sm text-slate-500 mb-2">
+                      Choose which course these documents belong to
+                    </p>
+                    <Select value={selectedCourseId} onValueChange={setSelectedCourseId}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a course..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {classrooms
+                          ?.filter(classroom => classroom.courseConfigurationCompleted)
+                          ?.map((classroom) => (
+                            <SelectItem key={classroom.id} value={classroom.id}>
+                              {classroom.courseTitle || classroom.name}
+                              {classroom.section && ` (${classroom.section})`}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                    {(!classrooms || classrooms.filter(c => c.courseConfigurationCompleted).length === 0) && (
+                      <p className="text-sm text-amber-600 mt-2">
+                        No configured courses found. Please complete the onboarding process first.
+                      </p>
+                    )}
+                  </div>
+
                   {/* File Upload Area */}
                   <div>
                     <Label className="text-base font-medium">Document Files</Label>
@@ -184,8 +229,14 @@ export default function UploadPage() {
                       <FileUploader 
                         onFilesUpload={handleFileUpload}
                         multiple={true}
+                        disabled={!selectedCourseId}
                       />
                     </div>
+                    {!selectedCourseId && (
+                      <p className="text-sm text-slate-500 mt-2">
+                        Please select a course before uploading files.
+                      </p>
+                    )}
                   </div>
 
                   {/* User Configuration */}
