@@ -61,7 +61,7 @@ export default function OnboardingSubject() {
   });
 
   // Convert API subjects to UI format with icons and colors
-  const subjectAreas: SubjectAreaUI[] = (subjectsResponse?.subjects || []).map((subject: APISubject) => {
+  const subjectAreas: SubjectAreaUI[] = ((subjectsResponse as any)?.subjects || []).map((subject: APISubject) => {
     const { icon, color } = getSubjectIcon(subject.title);
     return {
       id: subject.id,
@@ -128,7 +128,7 @@ export default function OnboardingSubject() {
   }
 
   // Show error state if no subjects found
-  if (!isLoadingSubjects && (!subjectsResponse?.subjects || subjectsResponse.subjects.length === 0)) {
+  if (!isLoadingSubjects && (!(subjectsResponse as any)?.subjects || (subjectsResponse as any).subjects.length === 0)) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">

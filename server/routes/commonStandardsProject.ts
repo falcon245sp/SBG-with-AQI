@@ -69,10 +69,16 @@ export async function getSubjectsForJurisdiction(req: Request, res: Response) {
       return res.status(400).json({ error: 'Jurisdiction ID is required' });
     }
 
-    // Verify authenticated user
-    await ActiveUserService.requireActiveUserAndCustomerUuid(req);
-
     console.log(`[getSubjectsForJurisdiction] Getting subjects for jurisdiction: ${jurisdictionId}`);
+
+    // Verify authenticated user
+    try {
+      await ActiveUserService.requireActiveUserAndCustomerUuid(req);
+      console.log(`[getSubjectsForJurisdiction] Authentication successful for jurisdiction: ${jurisdictionId}`);
+    } catch (authError) {
+      console.error(`[getSubjectsForJurisdiction] Authentication failed for jurisdiction ${jurisdictionId}:`, authError);
+      return res.status(401).json({ error: 'Authentication required' });
+    }
 
     // For Common Core State Standards, provide known subjects as fallback
     if (jurisdictionId === '67810E9EF6944F9383DCC602A3484C23') {
