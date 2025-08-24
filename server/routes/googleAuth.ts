@@ -101,7 +101,7 @@ export async function initiateFullIntegration(req: Request, res: Response) {
 export async function initiateClassroomAuth(req: Request, res: Response) {
   try {
     console.log('[OAuth] Initiating Google authentication with Classroom scopes');
-    const authUrl = googleAuth.getClassroomAuthUrl();
+    const authUrl = googleAuth.getClassroomAuthUrl('classroom_auth');
     console.log('[OAuth] Redirecting to:', authUrl);
     res.redirect(authUrl);
   } catch (error) {
@@ -161,9 +161,21 @@ export async function handleGoogleCallback(req: Request, res: Response) {
       console.log('[OAuth] Authentication successful, user completed onboarding - redirecting to dashboard');
       res.redirect('/dashboard');
     } else {
-      console.log('[OAuth] Authentication successful, user in onboarding - redirecting to onboarding flow');
-      // For users in onboarding, redirect to onboarding and let OnboardingCheck determine the correct step
-      res.redirect('/onboarding');
+      console.log('[OAuth] Authentication successful, user in onboarding - checking state for next step');
+      
+      // If this was classroom authentication, progress to role selection
+      if (state === 'classroom_auth') {
+        console.log('[OAuth] Classroom authentication complete, progressing to role selection');
+        // Update user's onboarding step to role-selection
+        await storage.updateUserPreferences(user.id, { 
+          onboardingStep: 'role-selection' 
+        });
+        res.redirect('/onboarding/role-selection');
+      } else {
+        console.log('[OAuth] General authentication, redirecting to onboarding flow');
+        // For general authentication, redirect to onboarding and let OnboardingCheck determine the correct step
+        res.redirect('/onboarding');
+      }
     }
   } catch (error) {
     console.error('[OAuth] Error in Google callback:', error);
