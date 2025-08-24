@@ -181,9 +181,9 @@ export default function OnboardingClassroom() {
         <div className="text-center mt-8">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-2xl mx-auto">
             <p className="text-sm text-blue-800">
-              <strong>Note:</strong> Google Classroom integration is completely optional. 
-              You can use all of Standards Sherpa's features without connecting to Classroom, 
-              and you can always connect later from your dashboard settings.
+              <strong>Note:</strong> Google Classroom connection is <strong>required for the Standards-Based Gradebook</strong> to import student rosters and sync grades. 
+              You can still process documents and view AI analysis without connecting, but gradebook features need Classroom integration. 
+              You can always connect later from your dashboard settings.
             </p>
           </div>
         </div>
