@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import * as React from 'react';
 import { useLocation } from 'wouter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,18 +55,19 @@ export default function OnboardingSubject() {
   // Get subjects for selected jurisdiction dynamically
   const jurisdictionId = (user as any)?.preferredJurisdiction;
   
-  console.log('[OnboardingSubject] User data:', user);
-  console.log('[OnboardingSubject] Jurisdiction ID:', jurisdictionId);
+  // If user hasn't selected a jurisdiction yet, redirect to jurisdiction selection
+  React.useEffect(() => {
+    if (user && !jurisdictionId) {
+      console.log('[OnboardingSubject] No jurisdiction selected, redirecting to jurisdiction selection');
+      setLocation('/onboarding/jurisdiction');
+    }
+  }, [user, jurisdictionId, setLocation]);
   
   const { data: subjectsResponse, isLoading: isLoadingSubjects, error: subjectsError } = useQuery({
     queryKey: ['/api/csp/jurisdictions', jurisdictionId, 'subjects'],
     queryFn: () => apiRequest('GET', `/api/csp/jurisdictions/${jurisdictionId}/subjects`),
     enabled: !!jurisdictionId
   });
-
-  console.log('[OnboardingSubject] Subjects response:', subjectsResponse);
-  console.log('[OnboardingSubject] Subjects loading:', isLoadingSubjects);
-  console.log('[OnboardingSubject] Subjects error:', subjectsError);
 
   // Convert API subjects to UI format with icons and colors
   const subjectAreas: SubjectAreaUI[] = ((subjectsResponse as any)?.subjects || []).map((subject: APISubject) => {
@@ -78,8 +80,6 @@ export default function OnboardingSubject() {
       color
     };
   });
-
-  console.log('[OnboardingSubject] Subject areas for UI:', subjectAreas);
 
   // Update user preferences mutation
   const updatePreferencesMutation = useMutation({
