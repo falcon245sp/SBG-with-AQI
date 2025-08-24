@@ -14,8 +14,8 @@ const JURISDICTION_UUID_MAPPING: Record<string, StandardsJurisdiction> = {
   // NGSS (Next Generation Science Standards)
   '71E5AA409D894EB0B43A8CD82F727BFE': StandardsJurisdiction.NGSS,
   
-  // Common Core Math - will need to add UUID when we see it
-  // Common Core ELA - will need to add UUID when we see it
+  // Common Core State Standards (combined Math + ELA)
+  '67810E9EF6944F9383DCC602A3484C23': StandardsJurisdiction.COMMON_CORE_MATH, // We'll use this as identifier for combined Common Core
   
   // Add more mappings as we discover UUIDs
 };
@@ -158,7 +158,7 @@ const BASE_SUBJECT_AREAS = [
 // Jurisdiction to subject area mapping
 const JURISDICTION_SUBJECT_MAPPING = {
   [StandardsJurisdiction.NGSS]: [SubjectArea.SCIENCE],
-  [StandardsJurisdiction.COMMON_CORE_MATH]: [SubjectArea.MATHEMATICS],
+  [StandardsJurisdiction.COMMON_CORE_MATH]: [SubjectArea.MATHEMATICS, SubjectArea.ENGLISH_LANGUAGE_ARTS], // Common Core State Standards shows both Math and ELA
   [StandardsJurisdiction.COMMON_CORE_ELA]: [SubjectArea.ENGLISH_LANGUAGE_ARTS],
   [StandardsJurisdiction.STATE_SPECIFIC]: BASE_SUBJECT_AREAS.map(s => s.id),
   [StandardsJurisdiction.AP_STANDARDS]: BASE_SUBJECT_AREAS.map(s => s.id),
