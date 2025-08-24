@@ -89,7 +89,10 @@ export default function OnboardingSubject() {
           method: 'GET',
           credentials: 'include',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
           }
         });
         
@@ -100,10 +103,34 @@ export default function OnboardingSubject() {
         console.log('🔵 [ONBOARDING-STEP-2] Headers:', Object.fromEntries(response.headers.entries()));
         console.log('🔵 [ONBOARDING-STEP-2] Response OK:', response.ok);
         
-        if (!response.ok) {
+        if (!response.ok && response.status !== 304) {
           const errorText = await response.text();
           console.error('🔵 [ONBOARDING-STEP-2] Error response body:', errorText);
           throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+        }
+        
+        // Handle 304 Not Modified - browser should use cached data
+        if (response.status === 304) {
+          console.log('🔵 [ONBOARDING-STEP-2] Got 304 Not Modified - this is a browser caching issue');
+          // Force a new request with different URL to bypass cache
+          const bypassResponse = await fetch(`/api/csp/jurisdictions/${jurisdictionId}/subjects?t=${Date.now()}`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            }
+          });
+          
+          if (!bypassResponse.ok) {
+            throw new Error(`HTTP ${bypassResponse.status}: ${bypassResponse.statusText}`);
+          }
+          
+          const bypassData = await bypassResponse.json();
+          console.log('🔵 [ONBOARDING-STEP-2] Cache bypass successful, got data:', bypassData);
+          return bypassData;
         }
         
         console.log('🔵 [ONBOARDING-STEP-2] About to parse JSON...');

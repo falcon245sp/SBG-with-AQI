@@ -101,6 +101,11 @@ export async function getSubjectsForJurisdiction(req: Request, res: Response) {
 
       console.log(`[getSubjectsForJurisdiction] Final subjects response:`, subjects);
 
+      // Set cache control headers to prevent 304 responses during development
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+
       res.json({
         jurisdiction: jurisdictionId,
         subjects,
