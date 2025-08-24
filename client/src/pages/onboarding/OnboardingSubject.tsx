@@ -184,24 +184,6 @@ export default function OnboardingSubject() {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600 text-lg">Loading available subjects...</p>
           
-          {/* TEMPORARY DEBUG INFO */}
-          <div className="mt-8 p-4 bg-white rounded-lg shadow-lg max-w-2xl mx-auto text-left text-sm">
-            <h3 className="font-bold mb-3 text-blue-600">🔍 DEBUG INFO:</h3>
-            <div className="space-y-2">
-              <p><strong>User Loading:</strong> {isLoadingUser ? '✅ YES' : '❌ NO'}</p>
-              <p><strong>Subjects Loading:</strong> {isLoadingSubjects ? '✅ YES' : '❌ NO'}</p>
-              <p><strong>Jurisdiction ID:</strong> {jurisdictionId || '❌ NOT SET'}</p>
-              <p><strong>User Data Present:</strong> {user ? '✅ YES' : '❌ NO'}</p>
-              <p><strong>Subjects Response Present:</strong> {subjectsResponse ? '✅ YES' : '❌ NO'}</p>
-              <p><strong>Query Enabled:</strong> {!!jurisdictionId ? '✅ YES' : '❌ NO'}</p>
-              <p><strong>Response Type:</strong> {subjectsResponse ? typeof subjectsResponse : 'N/A'}</p>
-              <p><strong>Response Keys:</strong> {subjectsResponse ? Object.keys(subjectsResponse as any).join(', ') : 'N/A'}</p>
-              <p><strong>Subjects Count:</strong> {(subjectsResponse as any)?.subjects?.length || 0}</p>
-              <p><strong>Raw Response:</strong> {subjectsResponse ? JSON.stringify(subjectsResponse).substring(0, 200) + '...' : 'N/A'}</p>
-              {userError && <p><strong>User Error:</strong> {JSON.stringify(userError, null, 2)}</p>}
-              {subjectsError && <p><strong>Subjects Error:</strong> {JSON.stringify(subjectsError, null, 2)}</p>}
-            </div>
-          </div>
         </div>
       </div>
     );
@@ -255,6 +237,16 @@ export default function OnboardingSubject() {
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Select Your Subject Areas</h1>
           <p className="text-xl text-gray-600">Which subjects do you teach or work with?</p>
+          
+          {/* Jurisdiction Context */}
+          <div className="mt-4 mb-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-700">
+              <span className="font-medium">Standards for your jurisdiction:</span> {jurisdictionId}
+            </p>
+            <p className="text-xs text-blue-600 mt-1">
+              The standards shown below are officially adopted by your selected jurisdiction
+            </p>
+          </div>
           
           {/* Progress Indicator */}
           <div className="mt-6 mb-4">
