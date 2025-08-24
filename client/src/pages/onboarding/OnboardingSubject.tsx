@@ -54,11 +54,18 @@ export default function OnboardingSubject() {
   // Get subjects for selected jurisdiction dynamically
   const jurisdictionId = (user as any)?.preferredJurisdiction;
   
-  const { data: subjectsResponse, isLoading: isLoadingSubjects } = useQuery({
+  console.log('[OnboardingSubject] User data:', user);
+  console.log('[OnboardingSubject] Jurisdiction ID:', jurisdictionId);
+  
+  const { data: subjectsResponse, isLoading: isLoadingSubjects, error: subjectsError } = useQuery({
     queryKey: ['/api/csp/jurisdictions', jurisdictionId, 'subjects'],
     queryFn: () => apiRequest('GET', `/api/csp/jurisdictions/${jurisdictionId}/subjects`),
     enabled: !!jurisdictionId
   });
+
+  console.log('[OnboardingSubject] Subjects response:', subjectsResponse);
+  console.log('[OnboardingSubject] Subjects loading:', isLoadingSubjects);
+  console.log('[OnboardingSubject] Subjects error:', subjectsError);
 
   // Convert API subjects to UI format with icons and colors
   const subjectAreas: SubjectAreaUI[] = ((subjectsResponse as any)?.subjects || []).map((subject: APISubject) => {
@@ -71,6 +78,8 @@ export default function OnboardingSubject() {
       color
     };
   });
+
+  console.log('[OnboardingSubject] Subject areas for UI:', subjectAreas);
 
   // Update user preferences mutation
   const updatePreferencesMutation = useMutation({
