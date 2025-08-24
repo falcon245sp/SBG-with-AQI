@@ -165,7 +165,43 @@ export async function handleGoogleCallback(req: Request, res: Response) {
       
       // If this was classroom authentication, progress to standards configuration
       if (state === 'classroom_auth') {
-        console.log('[OAuth] Classroom authentication complete, progressing to standards configuration');
+        console.log('[OAuth] Classroom authentication complete, importing classrooms and progressing to standards configuration');
+        
+        try {
+          // Import classrooms immediately after successful authentication
+          const googleClassrooms = await googleAuth.getClassrooms(user.googleAccessToken!, user.googleRefreshToken || undefined);
+          console.log(`[OAuth] Found ${googleClassrooms.length} classrooms to import`);
+          
+          // Import the classifier
+          const { ClassroomClassifier } = await import('../services/classroomClassifier.js');
+          
+          // Classify and save/update classrooms in database with subject area detection
+          const classifiedClassrooms = googleClassrooms.map((classroom: any) => {
+            const classification = ClassroomClassifier.classifyClassroom({
+              name: classroom.name,
+              section: classroom.section,
+              description: classroom.description
+            });
+
+            console.log(`[OAuth] Classifying "${classroom.name}":`, classification);
+
+            return {
+              ...classroom,
+              detectedSubjectArea: classification.subjectArea,
+              standardsJurisdiction: classification.suggestedJurisdiction,
+              _classificationData: classification
+            };
+          });
+
+          // Save/update classrooms using the syncClassrooms method
+          const savedClassrooms = await storage.syncClassrooms(user.customerUuid, classifiedClassrooms);
+          console.log(`[OAuth] Successfully imported ${savedClassrooms.length} classrooms`);
+          
+        } catch (error) {
+          console.error('[OAuth] Error importing classrooms:', error);
+          // Continue anyway - user can manually sync later from dashboard
+        }
+        
         // Update user's onboarding step to standards-configuration
         await storage.updateUserPreferences(user.id, { 
           onboardingStep: 'standards-configuration' 
