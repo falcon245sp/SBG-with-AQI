@@ -33,17 +33,24 @@ export default function OnboardingCourses() {
   const selectedGradeLevels = userPrefs?.selectedGradeLevels || userPrefs?.selected_grade_levels || [];
 
   // Get available courses based on user's subject areas and grade levels
-  const { data: availableCourses, isLoading: isLoadingCourses } = useQuery({
+  const { data: availableCourses, isLoading: isLoadingCourses, error: coursesError } = useQuery({
     queryKey: [
       '/api/courses/available', 
       { preferredSubjectAreas: preferredSubjectAreas.join(','), selectedGradeLevels: selectedGradeLevels.join(',') }
     ],
-    queryFn: () => {
+    queryFn: async () => {
       const params = new URLSearchParams({
         preferredSubjectAreas: preferredSubjectAreas.join(','),
         selectedGradeLevels: selectedGradeLevels.join(',')
       });
-      return fetch(`/api/courses/available?${params}`).then(res => res.json());
+      console.log('🔍 Making API call to:', `/api/courses/available?${params}`);
+      const response = await fetch(`/api/courses/available?${params}`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      const data = await response.json();
+      console.log('🔍 API Response received:', data);
+      return data;
     },
     enabled: preferredSubjectAreas.length > 0 && selectedGradeLevels.length > 0
   });
@@ -163,9 +170,11 @@ export default function OnboardingCourses() {
             <div><strong>Preferred Subject Areas:</strong> {JSON.stringify(preferredSubjectAreas)}</div>
             <div><strong>Selected Grade Levels:</strong> {JSON.stringify(selectedGradeLevels)}</div>
             <div><strong>Query Enabled:</strong> {preferredSubjectAreas.length > 0 && selectedGradeLevels.length > 0 ? 'Yes' : 'No'}</div>
+            <div><strong>Loading:</strong> {isLoadingCourses ? 'Yes' : 'No'}</div>
+            <div><strong>Error:</strong> {coursesError ? String(coursesError) : 'None'}</div>
             <div><strong>Available Courses Response:</strong> {availableCourses ? JSON.stringify(availableCourses) : 'No data'}</div>
             <div><strong>Courses Array Length:</strong> {Array.isArray(availableCourses) ? availableCourses.length : 'Not an array'}</div>
-            <div><strong>Loading:</strong> {isLoadingCourses ? 'Yes' : 'No'}</div>
+            <div><strong>Raw Data Type:</strong> {typeof availableCourses}</div>
           </div>
         </div>
 
