@@ -46,6 +46,8 @@ The Document Processing Service, "Standards Sherpa," is a full-stack web applica
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
+**IMPORTANT CONSTRAINT**: User does not have access to browser Developer Console (F12) in Replit projects. All debugging must rely on server-side logs, workflow console outputs, and alternative debugging methods that don't require browser dev tools.
+
 ## System Architecture
 
 ### Frontend Architecture

@@ -157,6 +157,21 @@ export default function OnboardingSubject() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600 text-lg">Loading available subjects...</p>
+          
+          {/* TEMPORARY DEBUG INFO */}
+          <div className="mt-8 p-4 bg-white rounded-lg shadow-lg max-w-2xl mx-auto text-left text-sm">
+            <h3 className="font-bold mb-3 text-blue-600">🔍 DEBUG INFO:</h3>
+            <div className="space-y-2">
+              <p><strong>User Loading:</strong> {isLoadingUser ? '✅ YES' : '❌ NO'}</p>
+              <p><strong>Subjects Loading:</strong> {isLoadingSubjects ? '✅ YES' : '❌ NO'}</p>
+              <p><strong>Jurisdiction ID:</strong> {jurisdictionId || '❌ NOT SET'}</p>
+              <p><strong>User Data Present:</strong> {user ? '✅ YES' : '❌ NO'}</p>
+              <p><strong>Subjects Response Present:</strong> {subjectsResponse ? '✅ YES' : '❌ NO'}</p>
+              <p><strong>Query Enabled:</strong> {!!jurisdictionId ? '✅ YES' : '❌ NO'}</p>
+              {userError && <p><strong>User Error:</strong> {JSON.stringify(userError, null, 2)}</p>}
+              {subjectsError && <p><strong>Subjects Error:</strong> {JSON.stringify(subjectsError, null, 2)}</p>}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -168,7 +183,20 @@ export default function OnboardingSubject() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <div className="text-red-600 text-lg mb-4">No subjects available for the selected jurisdiction</div>
-          <Button onClick={() => setLocation('/onboarding/jurisdiction')} variant="outline">
+          
+          {/* TEMPORARY DEBUG INFO */}
+          <div className="mt-6 p-4 bg-white rounded-lg shadow-lg max-w-2xl mx-auto text-left text-sm">
+            <h3 className="font-bold mb-3 text-red-600">🚨 ERROR STATE DEBUG:</h3>
+            <div className="space-y-2">
+              <p><strong>Jurisdiction ID:</strong> {jurisdictionId || '❌ NOT SET'}</p>
+              <p><strong>Subjects Response:</strong> {JSON.stringify(subjectsResponse, null, 2)}</p>
+              <p><strong>Subjects Error:</strong> {subjectsError ? JSON.stringify(subjectsError, null, 2) : '✅ NO ERROR'}</p>
+              <p><strong>Subject Areas Processed:</strong> {subjectAreas.length}</p>
+              <p><strong>Raw Subject Areas:</strong> {JSON.stringify(subjectAreas, null, 2)}</p>
+            </div>
+          </div>
+          
+          <Button onClick={() => setLocation('/onboarding/jurisdiction')} variant="outline" className="mt-4">
             Go Back to Jurisdiction Selection
           </Button>
         </div>
