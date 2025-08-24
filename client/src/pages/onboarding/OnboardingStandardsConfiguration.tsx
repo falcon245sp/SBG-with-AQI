@@ -17,7 +17,8 @@ import {
   Settings,
   Target,
   RefreshCw,
-  AlertCircle
+  AlertCircle,
+  X
 } from 'lucide-react';
 
 interface Classroom {
@@ -66,21 +67,34 @@ export default function OnboardingStandardsConfiguration() {
     courses: selectedCourses
   });
 
-  // Fetch courses using user's actual onboarding selections
-  const { data: availableCourses, isLoading: coursesLoading } = useQuery({
+  // Validate that user has completed required onboarding steps
+  const hasRequiredData = preferredJurisdiction && selectedSubjects.length > 0 && selectedGrades.length > 0;
+
+  // Fetch courses using user's actual onboarding selections - NO FALLBACKS
+  const { data: availableCourses, isLoading: coursesLoading, error: coursesError } = useQuery({
     queryKey: ['/api/courses/available', preferredJurisdiction, subjectString, gradeString],
     queryFn: async () => {
+      if (!preferredJurisdiction) {
+        throw new Error('Jurisdiction not selected - please complete onboarding step 1');
+      }
+      if (!subjectString) {
+        throw new Error('Subjects not selected - please complete onboarding step 2');
+      }
+      if (!gradeString) {
+        throw new Error('Grade levels not selected - please complete onboarding step 3');
+      }
+
       const params = new URLSearchParams({
-        jurisdiction: preferredJurisdiction || '67810E9EF6944F9383DCC602A3484C23', // Fallback to Common Core
-        subjects: subjectString || 'common_core_mathematics', // Fallback to math
-        grades: gradeString || '9-12' // Fallback to high school
+        jurisdiction: preferredJurisdiction,
+        subjects: subjectString,
+        grades: gradeString
       });
       console.log('🔧 [STANDARDS-CONFIG] Fetching courses with params:', params.toString());
       const response = await fetch(`/api/courses/available?${params}`);
       if (!response.ok) throw new Error('Failed to fetch courses');
       return response.json();
     },
-    enabled: !!user,
+    enabled: !!user && hasRequiredData,
   });
 
   // Use onboarding courses if available, otherwise fall back to available courses
@@ -235,12 +249,93 @@ export default function OnboardingStandardsConfiguration() {
   const completedMappings = courseMappings.filter(m => m.enableSBG && m.selectedCourseId).length;
   const totalSBGEnabled = courseMappings.filter(m => m.enableSBG).length;
 
+  // Show incomplete onboarding error
+  if (!hasRequiredData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="text-center max-w-2xl">
+          <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+            <AlertCircle className="h-8 w-8 text-red-600" />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Incomplete Onboarding</h1>
+          <p className="text-lg text-gray-600 mb-6">
+            Please complete all onboarding steps before configuring classrooms.
+          </p>
+          <div className="bg-white rounded-lg p-6 mb-6 text-left">
+            <h3 className="font-semibold text-gray-900 mb-3">Missing Information:</h3>
+            <ul className="space-y-2">
+              {!preferredJurisdiction && (
+                <li className="flex items-center text-red-600">
+                  <X className="h-4 w-4 mr-2" />
+                  Standards jurisdiction not selected (Step 1)
+                </li>
+              )}
+              {selectedSubjects.length === 0 && (
+                <li className="flex items-center text-red-600">
+                  <X className="h-4 w-4 mr-2" />
+                  Subject areas not selected (Step 2)
+                </li>
+              )}
+              {selectedGrades.length === 0 && (
+                <li className="flex items-center text-red-600">
+                  <X className="h-4 w-4 mr-2" />
+                  Grade levels not selected (Step 3)
+                </li>
+              )}
+            </ul>
+          </div>
+          <Button 
+            onClick={() => setLocation('/onboarding/jurisdiction')}
+            className="mr-4"
+          >
+            Complete Onboarding
+          </Button>
+          <Button 
+            variant="outline"
+            onClick={() => setLocation('/dashboard')}
+          >
+            Return to Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (classroomsLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading your classrooms...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show courses API error
+  if (coursesError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="text-center max-w-2xl">
+          <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+            <AlertCircle className="h-8 w-8 text-red-600" />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Error Loading Courses</h1>
+          <p className="text-lg text-gray-600 mb-6">
+            {coursesError.message}
+          </p>
+          <Button 
+            onClick={() => setLocation('/onboarding/jurisdiction')}
+            className="mr-4"
+          >
+            Review Onboarding
+          </Button>
+          <Button 
+            variant="outline"
+            onClick={() => setLocation('/dashboard')}
+          >
+            Return to Dashboard
+          </Button>
         </div>
       </div>
     );
