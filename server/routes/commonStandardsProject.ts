@@ -81,25 +81,38 @@ export async function getSubjectsForJurisdiction(req: Request, res: Response) {
     }
 
     // Get standard sets from the Common Standards Project API
-    const standardSets = await commonStandardsProjectService.getStandardSetsForJurisdiction(jurisdictionId);
-    
-    console.log(`[getSubjectsForJurisdiction] Found ${standardSets.length} standard sets`);
-    
-    // Extract unique subjects from standard sets
-    const uniqueSubjects = Array.from(new Set(standardSets.map(set => set.subject))).filter(Boolean);
-    
-    // Map to consistent subject format
-    const subjects = uniqueSubjects.map(subject => ({
-      id: subject.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z_]/g, ''),
-      title: subject,
-      description: `Standards and curricula for ${subject}`
-    }));
+    try {
+      const standardSets = await commonStandardsProjectService.getStandardSetsForJurisdiction(jurisdictionId);
+      
+      console.log(`[getSubjectsForJurisdiction] Found ${standardSets.length} standard sets`);
+      console.log(`[getSubjectsForJurisdiction] Raw standard sets:`, JSON.stringify(standardSets.slice(0, 3), null, 2));
+      
+      // Extract unique subjects from standard sets
+      const uniqueSubjects = Array.from(new Set(standardSets.map(set => set.subject))).filter(Boolean);
+      
+      console.log(`[getSubjectsForJurisdiction] Unique subjects found:`, uniqueSubjects);
+      
+      // Map to consistent subject format
+      const subjects = uniqueSubjects.map(subject => ({
+        id: subject.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z_]/g, ''),
+        title: subject,
+        description: `Standards and curricula for ${subject}`
+      }));
 
-    res.json({
-      jurisdiction: jurisdictionId,
-      subjects,
-      totalStandardSets: standardSets.length
-    });
+      console.log(`[getSubjectsForJurisdiction] Final subjects response:`, subjects);
+
+      res.json({
+        jurisdiction: jurisdictionId,
+        subjects,
+        totalStandardSets: standardSets.length
+      });
+    } catch (apiError) {
+      console.error(`[getSubjectsForJurisdiction] Common Standards Project API failed for jurisdiction ${jurisdictionId}:`, apiError);
+      res.status(500).json({ 
+        error: 'Failed to fetch subjects from Common Standards Project API',
+        details: apiError instanceof Error ? apiError.message : String(apiError)
+      });
+    }
 
   } catch (error) {
     console.error(`[getSubjectsForJurisdiction] Error getting subjects for jurisdiction ${req.params.jurisdictionId}:`, error);
