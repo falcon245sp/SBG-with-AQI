@@ -95,7 +95,17 @@ const COMMON_CORE_COURSE_MAPPING: Record<string, string> = {
 
 class CommonStandardsProjectService {
   private async makeApiRequest<T>(endpoint: string): Promise<T> {
-    const response = await fetch(`${CSP_API_BASE}${endpoint}`);
+    const apiKey = process.env.COMMON_STANDARDS_PROJECT_API_KEY;
+    if (!apiKey) {
+      throw new Error('COMMON_STANDARDS_PROJECT_API_KEY environment variable is required');
+    }
+
+    const headers: Record<string, string> = {
+      'Api-Key': apiKey,
+      'Content-Type': 'application/json'
+    };
+
+    const response = await fetch(`${CSP_API_BASE}${endpoint}`, { headers });
     if (!response.ok) {
       throw new Error(`Common Standards Project API error: ${response.status} ${response.statusText}`);
     }
