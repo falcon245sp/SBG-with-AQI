@@ -10,8 +10,21 @@ export default function OnboardingCheck() {
   const { user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
 
+  console.log('🟡 [ONBOARDING-STEP-0] OnboardingCheck component mounted');
+  console.log('🟡 [ONBOARDING-STEP-0] User loading status:', isLoading);
+  console.log('🟡 [ONBOARDING-STEP-0] User data:', user);
+
   useEffect(() => {
-    if (isLoading || !user) return;
+    console.log('🟡 [ONBOARDING-STEP-0] useEffect triggered - isLoading:', isLoading, 'user:', !!user);
+    if (isLoading) {
+      console.log('🟡 [ONBOARDING-STEP-0] Still loading, waiting...');
+      return;
+    }
+    if (!user) {
+      console.log('🟡 [ONBOARDING-STEP-0] No user found, waiting for authentication...');
+      return;
+    }
+    console.log('🟡 [ONBOARDING-STEP-0] Processing user onboarding status...');
 
     // Check onboarding completion status (handle both camelCase and snake_case)
     const userData = user as any;
@@ -45,11 +58,14 @@ export default function OnboardingCheck() {
     }
 
     // Route user to their next onboarding step
+    console.log('🟡 [ONBOARDING-STEP-0] Routing user based on onboardingStep:', onboardingStep);
     switch (onboardingStep) {
       case 'jurisdiction':
+        console.log('🟡 [ONBOARDING-STEP-0] → Redirecting to jurisdiction selection');
         setLocation('/onboarding/jurisdiction');
         break;
       case 'subject':
+        console.log('🟡 [ONBOARDING-STEP-0] → Redirecting to subject selection');
         setLocation('/onboarding/subject');
         break;
       case 'grades':

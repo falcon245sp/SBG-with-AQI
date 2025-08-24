@@ -46,28 +46,46 @@ export default function OnboardingSubject() {
   const [, setLocation] = useLocation();
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
 
+  console.log('🔵 [ONBOARDING-STEP-2] OnboardingSubject component mounted');
+
   // Get user data to determine selected jurisdiction
-  const { data: user, isLoading: isLoadingUser } = useQuery({
+  const { data: user, isLoading: isLoadingUser, error: userError } = useQuery({
     queryKey: ['/api/auth/user'],
     queryFn: () => apiRequest('GET', '/api/auth/user')
   });
+  
+  console.log('🔵 [ONBOARDING-STEP-2] User API call status:');
+  console.log('🔵 [ONBOARDING-STEP-2] - Loading:', isLoadingUser);
+  console.log('🔵 [ONBOARDING-STEP-2] - Data:', user);
+  console.log('🔵 [ONBOARDING-STEP-2] - Error:', userError);
 
   // Get subjects for selected jurisdiction dynamically
   const jurisdictionId = (user as any)?.preferredJurisdiction;
   
+  console.log('🔵 [ONBOARDING-STEP-2] Jurisdiction from user:', jurisdictionId);
+  
   // If user hasn't selected a jurisdiction yet, redirect to jurisdiction selection
   React.useEffect(() => {
     if (user && !jurisdictionId) {
-      console.log('[OnboardingSubject] No jurisdiction selected, redirecting to jurisdiction selection');
+      console.log('🔵 [ONBOARDING-STEP-2] ⚠️  No jurisdiction selected, redirecting to jurisdiction selection');
       setLocation('/onboarding/jurisdiction');
     }
   }, [user, jurisdictionId, setLocation]);
   
   const { data: subjectsResponse, isLoading: isLoadingSubjects, error: subjectsError } = useQuery({
     queryKey: ['/api/csp/jurisdictions', jurisdictionId, 'subjects'],
-    queryFn: () => apiRequest('GET', `/api/csp/jurisdictions/${jurisdictionId}/subjects`),
+    queryFn: () => {
+      console.log('🔵 [ONBOARDING-STEP-2] Making subjects API call for jurisdiction:', jurisdictionId);
+      return apiRequest('GET', `/api/csp/jurisdictions/${jurisdictionId}/subjects`);
+    },
     enabled: !!jurisdictionId
   });
+  
+  console.log('🔵 [ONBOARDING-STEP-2] Subjects API call status:');
+  console.log('🔵 [ONBOARDING-STEP-2] - Loading:', isLoadingSubjects);
+  console.log('🔵 [ONBOARDING-STEP-2] - Data:', subjectsResponse);
+  console.log('🔵 [ONBOARDING-STEP-2] - Error:', subjectsError);
+  console.log('🔵 [ONBOARDING-STEP-2] - Enabled:', !!jurisdictionId);
 
   // Convert API subjects to UI format with icons and colors
   const subjectAreas: SubjectAreaUI[] = ((subjectsResponse as any)?.subjects || []).map((subject: APISubject) => {
@@ -80,11 +98,19 @@ export default function OnboardingSubject() {
       color
     };
   });
+  
+  console.log('🔵 [ONBOARDING-STEP-2] Processed subjects for UI:', subjectAreas);
+  console.log('🔵 [ONBOARDING-STEP-2] Subject count:', subjectAreas.length);
 
   // Update user preferences mutation
   const updatePreferencesMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('PUT', '/api/user/preferences', data),
+    mutationFn: (data: any) => {
+      console.log('🔵 [ONBOARDING-STEP-2] Saving subject preferences:', data);
+      return apiRequest('PUT', '/api/user/preferences', data);
+    },
     onSuccess: () => {
+      console.log('🔵 [ONBOARDING-STEP-2] ✅ Subject preferences saved successfully');
+      console.log('🔵 [ONBOARDING-STEP-2] → Redirecting to grade selection');
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       setLocation('/onboarding/grades');
     },

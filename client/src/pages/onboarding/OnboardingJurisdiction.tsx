@@ -23,10 +23,17 @@ export default function OnboardingJurisdiction() {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
+  console.log('🟢 [ONBOARDING-STEP-1] OnboardingJurisdiction component mounted');
+  
   // Fetch available jurisdictions
-  const { data: jurisdictionData, isLoading: isLoadingJurisdictions } = useQuery({
+  const { data: jurisdictionData, isLoading: isLoadingJurisdictions, error: jurisdictionsError } = useQuery({
     queryKey: ['/api/standards/jurisdictions'],
   });
+  
+  console.log('🟢 [ONBOARDING-STEP-1] Jurisdictions API call status:');
+  console.log('🟢 [ONBOARDING-STEP-1] - Loading:', isLoadingJurisdictions);
+  console.log('🟢 [ONBOARDING-STEP-1] - Data:', jurisdictionData);
+  console.log('🟢 [ONBOARDING-STEP-1] - Error:', jurisdictionsError);
 
   // Handle the actual data structure from API
   const jurisdictions = Array.isArray(jurisdictionData) ? jurisdictionData : ((jurisdictionData as any)?.jurisdictions || []);
@@ -34,12 +41,18 @@ export default function OnboardingJurisdiction() {
 
   // Update user preferences mutation
   const updatePreferencesMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('PUT', '/api/user/preferences', data),
+    mutationFn: (data: any) => {
+      console.log('🟢 [ONBOARDING-STEP-1] Saving jurisdiction preference:', data);
+      return apiRequest('PUT', '/api/user/preferences', data);
+    },
     onSuccess: () => {
+      console.log('🟢 [ONBOARDING-STEP-1] ✅ Jurisdiction preference saved successfully');
+      console.log('🟢 [ONBOARDING-STEP-1] → Redirecting to subject selection');
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       setLocation('/onboarding/subject');
     },
     onError: (error: any) => {
+      console.error('🟢 [ONBOARDING-STEP-1] ❌ Error saving jurisdiction preference:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to save preferences",
