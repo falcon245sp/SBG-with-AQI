@@ -121,10 +121,11 @@ export default function OnboardingSubject() {
         
         return data;
       } catch (error) {
+        const err = error as Error;
         console.error('🔵 [ONBOARDING-STEP-2] ❌ Complete error details:');
         console.error('🔵 [ONBOARDING-STEP-2] Error type:', typeof error);
-        console.error('🔵 [ONBOARDING-STEP-2] Error message:', error.message);
-        console.error('🔵 [ONBOARDING-STEP-2] Error stack:', error.stack);
+        console.error('🔵 [ONBOARDING-STEP-2] Error message:', err.message);
+        console.error('🔵 [ONBOARDING-STEP-2] Error stack:', err.stack);
         console.error('🔵 [ONBOARDING-STEP-2] Full error object:', error);
         throw error;
       }
