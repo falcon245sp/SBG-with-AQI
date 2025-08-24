@@ -53,16 +53,13 @@ export default function OnboardingStandardsConfiguration() {
   const selectedCourses = userData?.selectedCourses || userData?.selected_courses || [];
   const preferredJurisdiction = userData?.preferredJurisdiction || userData?.preferred_jurisdiction;
 
-  // Fetch available courses with default parameters for users who haven't completed onboarding
-  const { data: availableCourses } = useQuery({
-    queryKey: ['/api/courses/available', { 
-      jurisdiction: preferredJurisdiction || '67810E9EF6944F9383DCC602A3484C23', // Default to Common Core State Standards
-      subjects: ['common_core_mathematics'],
-      grades: ['9', '10', '11', '12']
-    }],
+  // Always fetch available courses for classroom configuration
+  // During onboarding, use Common Core Math 9-12 as the standard configuration
+  const { data: availableCourses, isLoading: coursesLoading } = useQuery({
+    queryKey: ['/api/courses/available', 'common-core-math-9-12'],
     queryFn: async () => {
       const params = new URLSearchParams({
-        jurisdiction: preferredJurisdiction || '67810E9EF6944F9383DCC602A3484C23',
+        jurisdiction: '67810E9EF6944F9383DCC602A3484C23', // Common Core State Standards
         subjects: 'common_core_mathematics',
         grades: '9-12'
       });
@@ -70,7 +67,7 @@ export default function OnboardingStandardsConfiguration() {
       if (!response.ok) throw new Error('Failed to fetch courses');
       return response.json();
     },
-    enabled: !!user && (!selectedCourses || selectedCourses.length === 0),
+    enabled: !!user,
   });
 
   // Use onboarding courses if available, otherwise fall back to available courses
@@ -354,7 +351,11 @@ export default function OnboardingStandardsConfiguration() {
                             Select from your onboarding courses:
                           </span>
                         </div>
-                        {coursesToDisplay && coursesToDisplay.length > 0 ? (
+                        {coursesLoading ? (
+                          <div className="text-center py-4">
+                            <p className="text-gray-600">Loading available courses...</p>
+                          </div>
+                        ) : coursesToDisplay && coursesToDisplay.length > 0 ? (
                           <div className="grid gap-2">
                             {coursesToDisplay.map((course: any) => (
                               <label
