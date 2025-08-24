@@ -159,36 +159,6 @@ export default function CustomerDashboard() {
           )}
         </div>
 
-        {/* Google Classroom Sync Section */}
-        <div className="mb-8">
-          <Card className="border-green-200 bg-green-50">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Users className="h-8 w-8 text-green-600" />
-                  <div>
-                    <h3 className="text-lg font-semibold text-green-900">Google Classroom</h3>
-                    <p className="text-sm text-green-700">
-                      {(user as any)?.classroomConnected || (user as any)?.classroom_connected
-                        ? "Connected - Click to sync your latest classroom data" 
-                        : "Connect to import your classes and student rosters"
-                      }
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  onClick={() => syncClassroomsMutation.mutate()}
-                  disabled={syncClassroomsMutation.isPending || !((user as any)?.classroomConnected || (user as any)?.classroom_connected)}
-                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
-                  data-testid="button-sync-classrooms"
-                >
-                  <RefreshCw className={`h-4 w-4 ${syncClassroomsMutation.isPending ? 'animate-spin' : ''}`} />
-                  {syncClassroomsMutation.isPending ? 'Syncing...' : 'Sync Classrooms'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Core Action - Upload */}
         <div className="mb-12">
