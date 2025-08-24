@@ -366,6 +366,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/standards/course-suggestions', getSuggestedCourses);
   app.get('/api/classrooms/:classroomId/standards', getClassroomStandards);
   
+  // Common Standards Project API routes
+  app.get('/api/standards/course/:standardSetId', getStandardsForCourse);
+  
   // V1.0 Standards and Jurisdictions
   app.get('/api/standards/jurisdictions', getJurisdictions);
   
