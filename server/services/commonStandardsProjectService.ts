@@ -327,6 +327,121 @@ class CommonStandardsProjectService {
       cluster: standard.ancestorDescriptions?.[1] || standard.ancestorDescriptions?.[0] || 'General'
     }));
   }
+
+  // Get available grade levels for a jurisdiction dynamically
+  async getGradeLevelsForJurisdiction(jurisdictionId: string): Promise<string[]> {
+    console.log(`[CommonStandardsProjectService] Fetching grade levels for jurisdiction ${jurisdictionId}`);
+    
+    try {
+      const standardSets = await this.getStandardSetsForJurisdiction(jurisdictionId);
+      
+      // Extract all education levels from standard sets
+      const allEducationLevels = standardSets.flatMap(set => set.educationLevels || []);
+      
+      // Get unique grade levels and sort them
+      const uniqueGradeLevels = Array.from(new Set(allEducationLevels))
+        .filter(level => level && level.trim())
+        .sort((a, b) => {
+          // Custom sort to handle grade levels properly
+          const gradeOrder = ['K', 'Kindergarten', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', 'High School'];
+          const aIndex = gradeOrder.findIndex(grade => a.includes(grade));
+          const bIndex = gradeOrder.findIndex(grade => b.includes(grade));
+          
+          if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+          if (aIndex !== -1) return -1;
+          if (bIndex !== -1) return 1;
+          return a.localeCompare(b);
+        });
+      
+      console.log(`[CommonStandardsProjectService] Found ${uniqueGradeLevels.length} grade levels for jurisdiction ${jurisdictionId}:`, uniqueGradeLevels);
+      return uniqueGradeLevels;
+    } catch (error) {
+      console.error(`[CommonStandardsProjectService] Error fetching grade levels for jurisdiction ${jurisdictionId}:`, error);
+      throw error;
+    }
+  }
+
+  // Get available courses for a jurisdiction and selected grade levels
+  async getCoursesForJurisdiction(jurisdictionId: string, selectedGradeLevels: string[] = [], selectedSubjects: string[] = []): Promise<any[]> {
+    console.log(`[CommonStandardsProjectService] Fetching courses for jurisdiction ${jurisdictionId}, grades: ${selectedGradeLevels.join(',')}, subjects: ${selectedSubjects.join(',')}`);
+    
+    try {
+      const standardSets = await this.getStandardSetsForJurisdiction(jurisdictionId);
+      
+      // Filter standard sets based on criteria
+      let filteredSets = standardSets;
+      
+      // Filter by grade levels if specified
+      if (selectedGradeLevels.length > 0) {
+        filteredSets = filteredSets.filter(set => 
+          set.educationLevels && set.educationLevels.some(level => 
+            selectedGradeLevels.some(selectedLevel => 
+              level.toLowerCase().includes(selectedLevel.toLowerCase()) ||
+              selectedLevel.toLowerCase().includes(level.toLowerCase())
+            )
+          )
+        );
+      }
+      
+      // Filter by subjects if specified
+      if (selectedSubjects.length > 0) {
+        filteredSets = filteredSets.filter(set => 
+          selectedSubjects.some(selectedSubject => 
+            set.subject.toLowerCase().includes(selectedSubject.toLowerCase()) ||
+            selectedSubject.toLowerCase().includes(set.subject.toLowerCase())
+          )
+        );
+      }
+      
+      // Convert standard sets to course format
+      const courses = filteredSets.map(set => ({
+        id: set.id,
+        title: this.mapToCourseName(set.title, set.subject),
+        description: `${set.subject} course covering ${set.educationLevels?.join(', ') || 'various'} grade levels`,
+        gradeLevels: set.educationLevels || [],
+        subject: set.subject,
+        standardSetId: set.id
+      }));
+      
+      // Remove duplicates by title and sort
+      const uniqueCourses = courses.filter((course, index, self) => 
+        index === self.findIndex(c => c.title === course.title)
+      ).sort((a, b) => a.title.localeCompare(b.title));
+      
+      console.log(`[CommonStandardsProjectService] Found ${uniqueCourses.length} courses for jurisdiction ${jurisdictionId}`);
+      return uniqueCourses;
+    } catch (error) {
+      console.error(`[CommonStandardsProjectService] Error fetching courses for jurisdiction ${jurisdictionId}:`, error);
+      throw error;
+    }
+  }
+
+  // Helper method to map standard set titles to user-friendly course names
+  private mapToCourseName(title: string, subject: string): string {
+    // Check if we have a mapping for this title
+    if (COMMON_CORE_COURSE_MAPPING[title]) {
+      return COMMON_CORE_COURSE_MAPPING[title];
+    }
+    
+    // For NGSS and other standards, create descriptive course names
+    if (subject.toLowerCase().includes('science')) {
+      // NGSS course naming
+      if (title.toLowerCase().includes('k-2')) return 'Elementary Science (K-2)';
+      if (title.toLowerCase().includes('3-5')) return 'Elementary Science (3-5)';
+      if (title.toLowerCase().includes('middle')) return 'Middle School Science';
+      if (title.toLowerCase().includes('high')) return 'High School Science';
+      if (title.toLowerCase().includes('physics')) return 'Physics';
+      if (title.toLowerCase().includes('chemistry')) return 'Chemistry';
+      if (title.toLowerCase().includes('biology')) return 'Biology';
+      if (title.toLowerCase().includes('earth')) return 'Earth Science';
+    }
+    
+    // Default: clean up the title for display
+    return title
+      .replace(/^\w+\s*-\s*/, '') // Remove prefix like "NGSS - "
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
 }
 
 export const commonStandardsProjectService = new CommonStandardsProjectService();
