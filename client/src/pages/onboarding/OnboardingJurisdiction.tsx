@@ -25,9 +25,11 @@ export default function OnboardingJurisdiction() {
 
   console.log('🟢 [ONBOARDING-STEP-1] OnboardingJurisdiction component mounted');
   
-  // Fetch available jurisdictions
+  // Fetch available jurisdictions from Common Standards Project API
   const { data: jurisdictionData, isLoading: isLoadingJurisdictions, error: jurisdictionsError } = useQuery({
-    queryKey: ['/api/standards/jurisdictions'],
+    queryKey: ['/api/csp/jurisdictions'],
+    staleTime: 0,
+    refetchOnMount: true
   });
   
   console.log('🟢 [ONBOARDING-STEP-1] Jurisdictions API call status:');
