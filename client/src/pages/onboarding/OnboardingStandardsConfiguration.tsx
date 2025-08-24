@@ -53,6 +53,15 @@ export default function OnboardingStandardsConfiguration() {
   const selectedCourses = userData?.selectedCourses || userData?.selected_courses || [];
   const preferredJurisdiction = userData?.preferredJurisdiction || userData?.preferred_jurisdiction;
 
+  // Fetch available courses if no courses from onboarding
+  const { data: availableCourses } = useQuery({
+    queryKey: ['/api/courses/available'],
+    enabled: !!user && (!selectedCourses || selectedCourses.length === 0),
+  });
+
+  // Use onboarding courses if available, otherwise fall back to available courses
+  const coursesToDisplay = selectedCourses && selectedCourses.length > 0 ? selectedCourses : (availableCourses || []);
+
   // Complete standards configuration mutation
   const completeConfigurationMutation = useMutation({
     mutationFn: (data: any) => apiRequest('PUT', '/api/user/complete-standards-configuration', data),
@@ -286,9 +295,9 @@ export default function OnboardingStandardsConfiguration() {
                             Select from your onboarding courses:
                           </span>
                         </div>
-                        {selectedCourses && selectedCourses.length > 0 ? (
+                        {coursesToDisplay && coursesToDisplay.length > 0 ? (
                           <div className="grid gap-2">
-                            {selectedCourses.map((course: any) => (
+                            {coursesToDisplay.map((course: any) => (
                               <label
                                 key={course.id}
                                 className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
