@@ -15,7 +15,9 @@ import {
   Users,
   BookOpen,
   Settings,
-  Target
+  Target,
+  RefreshCw,
+  AlertCircle
 } from 'lucide-react';
 
 interface Classroom {
@@ -67,6 +69,26 @@ export default function OnboardingStandardsConfiguration() {
       toast({
         title: "Error",
         description: error.message || "Failed to complete configuration",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Retry classroom import mutation
+  const retryImportMutation = useMutation({
+    mutationFn: () => apiRequest('POST', '/api/auth/sync-classroom'),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/classrooms'] });
+      toast({
+        title: "Import Successful!",
+        description: `Successfully imported ${data.classrooms?.length || 0} classrooms from Google Classroom.`,
+        variant: "default"
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Import Failed",
+        description: error.message || "Failed to import classrooms. Please try again or contact support.",
         variant: "destructive"
       });
     }
@@ -166,6 +188,54 @@ export default function OnboardingStandardsConfiguration() {
 
         {/* Configuration Cards */}
         <div className="space-y-6 mb-8">
+          {/* No Classrooms Found - Show Import Options */}
+          {Array.isArray(classrooms) && classrooms.length === 0 && (
+            <Card className="border-yellow-200 bg-yellow-50">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="h-6 w-6 text-yellow-600" />
+                  <div>
+                    <CardTitle className="text-yellow-900">No Classrooms Found</CardTitle>
+                    <CardDescription className="text-yellow-700">
+                      We couldn't find any Google Classroom classes in your account.
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="bg-white p-4 rounded-lg border border-yellow-200">
+                  <p className="text-sm text-gray-700 mb-4">
+                    This can happen if:
+                  </p>
+                  <ul className="list-disc list-inside text-sm text-gray-600 space-y-1 mb-4">
+                    <li>You don't have any active classes in Google Classroom</li>
+                    <li>Your classes are archived or inactive</li>
+                    <li>There was a temporary issue during the import</li>
+                  </ul>
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={() => retryImportMutation.mutate()}
+                      disabled={retryImportMutation.isPending}
+                      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+                      data-testid="button-retry-import"
+                    >
+                      <RefreshCw className={`h-4 w-4 ${retryImportMutation.isPending ? 'animate-spin' : ''}`} />
+                      {retryImportMutation.isPending ? 'Importing...' : 'Retry Import'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={handleCompleteConfiguration}
+                      disabled={completeConfigurationMutation.isPending}
+                      data-testid="button-skip-classroom-setup"
+                    >
+                      Skip & Complete Setup
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {Array.isArray(classrooms) && classrooms.map((classroom: Classroom) => {
             const mapping = courseMappings.find(m => m.classroomId === classroom.id);
             
