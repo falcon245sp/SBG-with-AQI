@@ -105,7 +105,7 @@ export default function OnboardingJurisdiction() {
           {/* Progress Indicator */}
           <div className="mt-6 mb-4">
             <Progress value={20} className="w-full max-w-md mx-auto" />
-            <p className="text-sm text-gray-500 mt-2">Step 1 of 5</p>
+            <p className="text-sm text-gray-500 mt-2">Step 1 of 6</p>
           </div>
         </div>
 
