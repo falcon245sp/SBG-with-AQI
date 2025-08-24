@@ -162,7 +162,15 @@ export default function OnboardingSubject() {
   // Filter subject areas based on selected jurisdiction and add dynamic descriptions
   const getAvailableSubjectAreas = (): SubjectAreaUI[] => {
     const jurisdiction = (user as any)?.preferred_jurisdiction as StandardsJurisdiction;
+    
+    // Debug logging
+    console.log('🔍 DEBUG - User object:', user);
+    console.log('🔍 DEBUG - Jurisdiction:', jurisdiction);
+    console.log('🔍 DEBUG - NGSS enum value:', StandardsJurisdiction.NGSS);
+    console.log('🔍 DEBUG - Jurisdiction mapping for NGSS:', JURISDICTION_SUBJECT_MAPPING[StandardsJurisdiction.NGSS]);
+    
     if (!jurisdiction) {
+      console.log('🔍 DEBUG - No jurisdiction, showing all subjects');
       // If no jurisdiction selected, show all with default descriptions
       return BASE_SUBJECT_AREAS.map(subject => ({
         ...subject,
@@ -171,12 +179,17 @@ export default function OnboardingSubject() {
     }
 
     const allowedSubjects = JURISDICTION_SUBJECT_MAPPING[jurisdiction] || BASE_SUBJECT_AREAS.map(s => s.id);
-    return BASE_SUBJECT_AREAS
+    console.log('🔍 DEBUG - Allowed subjects for', jurisdiction, ':', allowedSubjects);
+    
+    const filteredSubjects = BASE_SUBJECT_AREAS
       .filter(subject => allowedSubjects.includes(subject.id))
       .map(subject => ({
         ...subject,
         description: getSubjectDescription(subject.id, jurisdiction)
       }));
+      
+    console.log('🔍 DEBUG - Final filtered subjects:', filteredSubjects.map(s => s.title));
+    return filteredSubjects;
   };
 
   const subjectAreas = getAvailableSubjectAreas();
