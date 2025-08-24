@@ -48,21 +48,34 @@ export default function OnboardingStandardsConfiguration() {
     enabled: !!user,
   });
 
-  // Get user's selected courses from onboarding
+  // Get user's saved onboarding data
   const userData = user as any;
   const selectedCourses = userData?.selectedCourses || userData?.selected_courses || [];
   const preferredJurisdiction = userData?.preferredJurisdiction || userData?.preferred_jurisdiction;
+  const selectedSubjects = userData?.preferredSubjectAreas || userData?.preferred_subject_areas || [];
+  const selectedGrades = userData?.selectedGradeLevels || userData?.selected_grade_levels || [];
 
-  // Always fetch available courses for classroom configuration
-  // During onboarding, use Common Core Math 9-12 as the standard configuration
+  // Convert grade levels to the format expected by API (e.g., ["9-12"] -> "9-12")
+  const gradeString = selectedGrades.join(',');
+  const subjectString = selectedSubjects.join(',');
+
+  console.log('🔧 [STANDARDS-CONFIG] User onboarding data:', {
+    jurisdiction: preferredJurisdiction,
+    subjects: selectedSubjects,
+    grades: selectedGrades,
+    courses: selectedCourses
+  });
+
+  // Fetch courses using user's actual onboarding selections
   const { data: availableCourses, isLoading: coursesLoading } = useQuery({
-    queryKey: ['/api/courses/available', 'common-core-math-9-12'],
+    queryKey: ['/api/courses/available', preferredJurisdiction, subjectString, gradeString],
     queryFn: async () => {
       const params = new URLSearchParams({
-        jurisdiction: '67810E9EF6944F9383DCC602A3484C23', // Common Core State Standards
-        subjects: 'common_core_mathematics',
-        grades: '9-12'
+        jurisdiction: preferredJurisdiction || '67810E9EF6944F9383DCC602A3484C23', // Fallback to Common Core
+        subjects: subjectString || 'common_core_mathematics', // Fallback to math
+        grades: gradeString || '9-12' // Fallback to high school
       });
+      console.log('🔧 [STANDARDS-CONFIG] Fetching courses with params:', params.toString());
       const response = await fetch(`/api/courses/available?${params}`);
       if (!response.ok) throw new Error('Failed to fetch courses');
       return response.json();
