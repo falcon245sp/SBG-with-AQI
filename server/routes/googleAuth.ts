@@ -173,7 +173,7 @@ export async function handleGoogleCallback(req: Request, res: Response) {
           console.log(`[OAuth] Found ${googleClassrooms.length} classrooms to import`);
           
           // Get the complete user record with customerUuid (fixes timing issue with auto-generated field)
-          const completeUser = await storage.getUserById(user.id);
+          const completeUser = await storage.getUserByGoogleId(user.googleId!);
           if (!completeUser?.customerUuid) {
             throw new Error('Customer UUID not found for user - database timing issue');
           }
