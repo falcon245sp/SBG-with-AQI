@@ -9,22 +9,12 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { toast } from "@/hooks/use-toast";
 import { SubjectArea, StandardsJurisdiction } from "@shared/businessEnums";
 
-// Map jurisdiction UUIDs to StandardsJurisdiction enum values
-const JURISDICTION_UUID_MAPPING: Record<string, StandardsJurisdiction> = {
-  // NGSS (Next Generation Science Standards)
-  '71E5AA409D894EB0B43A8CD82F727BFE': StandardsJurisdiction.NGSS,
-  
-  // Common Core State Standards (combined Math + ELA)
-  '67810E9EF6944F9383DCC602A3484C23': StandardsJurisdiction.COMMON_CORE_MATH, // We'll use this as identifier for combined Common Core
-  
-  // Add more mappings as we discover UUIDs
-};
-
-// Convert jurisdiction UUID to enum value
-const getJurisdictionEnum = (jurisdictionUuid: string | null | undefined): StandardsJurisdiction | null => {
-  if (!jurisdictionUuid) return null;
-  return JURISDICTION_UUID_MAPPING[jurisdictionUuid] || null;
-};
+// Dynamic subject interface for API-based subjects
+interface APISubject {
+  id: string;
+  title: string;
+  description: string;
+}
 
 interface SubjectAreaUI {
   id: SubjectArea;
@@ -34,137 +24,22 @@ interface SubjectAreaUI {
   color: string;
 }
 
-// Jurisdiction-specific descriptions for subject areas
-const getSubjectDescription = (subjectId: SubjectArea, jurisdiction: StandardsJurisdiction): string => {
-  const descriptions = {
-    [SubjectArea.MATHEMATICS]: {
-      [StandardsJurisdiction.COMMON_CORE_MATH]: 'Common Core Mathematics: Problem-solving, reasoning, and modeling across all grade levels',
-      [StandardsJurisdiction.COMMON_CORE_ELA]: 'Math courses including Algebra, Geometry, Statistics, and more',
-      [StandardsJurisdiction.NGSS]: 'Mathematics integration within NGSS: Quantitative reasoning and data analysis in science contexts',
-      [StandardsJurisdiction.STATE_SPECIFIC]: 'State-aligned mathematics standards and curricula',
-      [StandardsJurisdiction.AP_STANDARDS]: 'Advanced Placement Mathematics: Calculus, Statistics, and rigorous college-level content',
-      [StandardsJurisdiction.IB_STANDARDS]: 'International Baccalaureate Mathematics: Analysis, Applications, and Global perspectives',
-      [StandardsJurisdiction.CUSTOM]: 'Custom mathematics standards and specialized curricula'
-    },
-    [SubjectArea.ENGLISH_LANGUAGE_ARTS]: {
-      [StandardsJurisdiction.COMMON_CORE_ELA]: 'Common Core ELA: Reading, Writing, Speaking, Listening, and Language standards',
-      [StandardsJurisdiction.COMMON_CORE_MATH]: 'English Language Arts courses supporting mathematical communication and literacy',
-      [StandardsJurisdiction.NGSS]: 'Scientific literacy and communication: Technical writing and analysis in science contexts',
-      [StandardsJurisdiction.STATE_SPECIFIC]: 'State-aligned English Language Arts standards and assessments',
-      [StandardsJurisdiction.AP_STANDARDS]: 'Advanced Placement English: Literature, Composition, and college-level analysis',
-      [StandardsJurisdiction.IB_STANDARDS]: 'International Baccalaureate Language Arts: Global literature and critical thinking',
-      [StandardsJurisdiction.CUSTOM]: 'Custom language arts standards and specialized literacy curricula'
-    },
-    [SubjectArea.SCIENCE]: {
-      [StandardsJurisdiction.NGSS]: 'Next Generation Science Standards: 3-dimensional learning with disciplinary core ideas, practices, and crosscutting concepts',
-      [StandardsJurisdiction.COMMON_CORE_MATH]: 'Science courses with mathematical modeling and quantitative analysis',
-      [StandardsJurisdiction.COMMON_CORE_ELA]: 'Science education emphasizing scientific literacy and evidence-based communication',
-      [StandardsJurisdiction.STATE_SPECIFIC]: 'State-aligned science standards covering Biology, Chemistry, Physics, and Earth Science',
-      [StandardsJurisdiction.AP_STANDARDS]: 'Advanced Placement Sciences: College-level Biology, Chemistry, Physics, and Environmental Science',
-      [StandardsJurisdiction.IB_STANDARDS]: 'International Baccalaureate Sciences: Inquiry-based learning with global perspectives',
-      [StandardsJurisdiction.CUSTOM]: 'Custom science standards and specialized STEM curricula'
-    },
-    [SubjectArea.SOCIAL_STUDIES]: {
-      [StandardsJurisdiction.STATE_SPECIFIC]: 'State-aligned Social Studies: History, Geography, Government, Economics, and Civics',
-      [StandardsJurisdiction.AP_STANDARDS]: 'Advanced Placement Social Studies: College-level History, Government, and Economics',
-      [StandardsJurisdiction.IB_STANDARDS]: 'International Baccalaureate Social Studies: Global perspectives on history and society',
-      [StandardsJurisdiction.NGSS]: 'Social studies integration with NGSS: Human impact on environment and society',
-      [StandardsJurisdiction.COMMON_CORE_MATH]: 'Social Studies with data analysis and quantitative reasoning',
-      [StandardsJurisdiction.COMMON_CORE_ELA]: 'Social Studies emphasizing historical thinking and argumentative writing',
-      [StandardsJurisdiction.CUSTOM]: 'Custom social studies standards and specialized humanities curricula'
-    }
-  };
-
-  const defaultDescriptions = {
-    [SubjectArea.MATHEMATICS]: 'Math courses including Algebra, Geometry, Statistics, and more',
-    [SubjectArea.ENGLISH_LANGUAGE_ARTS]: 'Reading, Writing, Speaking, Listening, and Language standards',
-    [SubjectArea.SCIENCE]: 'Biology, Chemistry, Physics, Earth Science, and Environmental Science',
-    [SubjectArea.SOCIAL_STUDIES]: 'History, Geography, Government, Economics, and Civics',
-    [SubjectArea.COMPUTER_SCIENCE]: 'Programming, Software Development, and Information Technology',
-    [SubjectArea.FOREIGN_LANGUAGE]: 'Spanish, French, German, and other world languages',
-    [SubjectArea.HEALTH_PHYSICAL_EDUCATION]: 'Physical fitness, health education, and wellness',
-    [SubjectArea.ARTS]: 'Visual Arts, Music, Drama, and Creative Expression',
-    [SubjectArea.CAREER_TECHNICAL_EDUCATION]: 'Vocational training and career preparation',
-    [SubjectArea.OTHER]: 'Specialized subjects and interdisciplinary courses'
-  };
-
-  return (descriptions as any)[subjectId]?.[jurisdiction] || (defaultDescriptions as any)[subjectId] || 'Standards-aligned curriculum and instruction';
+// Map subject titles to icons and colors
+const getSubjectIcon = (title: string) => {
+  const titleLower = title.toLowerCase();
+  if (titleLower.includes('math')) return { icon: <Calculator className="h-8 w-8" />, color: 'blue' };
+  if (titleLower.includes('english') || titleLower.includes('language')) return { icon: <BookOpen className="h-8 w-8" />, color: 'green' };
+  if (titleLower.includes('science')) return { icon: <Microscope className="h-8 w-8" />, color: 'purple' };
+  if (titleLower.includes('social') || titleLower.includes('history')) return { icon: <Globe className="h-8 w-8" />, color: 'orange' };
+  if (titleLower.includes('computer')) return { icon: <Monitor className="h-8 w-8" />, color: 'cyan' };
+  if (titleLower.includes('foreign') || titleLower.includes('language')) return { icon: <Languages className="h-8 w-8" />, color: 'pink' };
+  if (titleLower.includes('health') || titleLower.includes('physical')) return { icon: <Heart className="h-8 w-8" />, color: 'red' };
+  if (titleLower.includes('art')) return { icon: <Palette className="h-8 w-8" />, color: 'indigo' };
+  if (titleLower.includes('career') || titleLower.includes('technical')) return { icon: <Wrench className="h-8 w-8" />, color: 'yellow' };
+  return { icon: <HelpCircle className="h-8 w-8" />, color: 'gray' };
 };
 
-// Base subject area definitions with icons and colors
-const BASE_SUBJECT_AREAS = [
-  {
-    id: SubjectArea.MATHEMATICS,
-    title: 'Mathematics',
-    icon: <Calculator className="h-8 w-8" />,
-    color: 'blue'
-  },
-  {
-    id: SubjectArea.ENGLISH_LANGUAGE_ARTS,
-    title: 'English Language Arts',
-    icon: <BookOpen className="h-8 w-8" />,
-    color: 'green'
-  },
-  {
-    id: SubjectArea.SCIENCE,
-    title: 'Science',
-    icon: <Microscope className="h-8 w-8" />,
-    color: 'purple'
-  },
-  {
-    id: SubjectArea.SOCIAL_STUDIES,
-    title: 'Social Studies',
-    icon: <Globe className="h-8 w-8" />,
-    color: 'orange'
-  },
-  {
-    id: SubjectArea.COMPUTER_SCIENCE,
-    title: 'Computer Science',
-    icon: <Monitor className="h-8 w-8" />,
-    color: 'cyan'
-  },
-  {
-    id: SubjectArea.FOREIGN_LANGUAGE,
-    title: 'Foreign Language',
-    icon: <Languages className="h-8 w-8" />,
-    color: 'pink'
-  },
-  {
-    id: SubjectArea.HEALTH_PHYSICAL_EDUCATION,
-    title: 'Health & Physical Education',
-    icon: <Heart className="h-8 w-8" />,
-    color: 'red'
-  },
-  {
-    id: SubjectArea.ARTS,
-    title: 'Arts',
-    icon: <Palette className="h-8 w-8" />,
-    color: 'indigo'
-  },
-  {
-    id: SubjectArea.CAREER_TECHNICAL_EDUCATION,
-    title: 'Career & Technical Education',
-    icon: <Wrench className="h-8 w-8" />,
-    color: 'yellow'
-  },
-  {
-    id: SubjectArea.OTHER,
-    title: 'Other',
-    icon: <HelpCircle className="h-8 w-8" />,
-    color: 'gray'
-  }
-];
 
-// Jurisdiction to subject area mapping
-const JURISDICTION_SUBJECT_MAPPING = {
-  [StandardsJurisdiction.NGSS]: [SubjectArea.SCIENCE],
-  [StandardsJurisdiction.COMMON_CORE_MATH]: [SubjectArea.MATHEMATICS, SubjectArea.ENGLISH_LANGUAGE_ARTS], // Common Core State Standards shows both Math and ELA
-  [StandardsJurisdiction.COMMON_CORE_ELA]: [SubjectArea.ENGLISH_LANGUAGE_ARTS],
-  [StandardsJurisdiction.STATE_SPECIFIC]: BASE_SUBJECT_AREAS.map(s => s.id),
-  [StandardsJurisdiction.AP_STANDARDS]: BASE_SUBJECT_AREAS.map(s => s.id),
-  [StandardsJurisdiction.IB_STANDARDS]: BASE_SUBJECT_AREAS.map(s => s.id),
-  [StandardsJurisdiction.CUSTOM]: BASE_SUBJECT_AREAS.map(s => s.id)
-};
 
 export default function OnboardingSubject() {
   const [, setLocation] = useLocation();
@@ -176,42 +51,26 @@ export default function OnboardingSubject() {
     queryFn: () => apiRequest('GET', '/api/auth/user')
   });
 
-  // Filter subject areas based on selected jurisdiction and add dynamic descriptions
-  const getAvailableSubjectAreas = (): SubjectAreaUI[] => {
-    const jurisdictionUuid = (user as any)?.preferredJurisdiction;
-    const jurisdiction = getJurisdictionEnum(jurisdictionUuid);
-    
-    // Debug logging
-    console.log('🔍 DEBUG - User object:', user);
-    console.log('🔍 DEBUG - Jurisdiction UUID:', jurisdictionUuid);
-    console.log('🔍 DEBUG - Mapped Jurisdiction:', jurisdiction);
-    console.log('🔍 DEBUG - NGSS enum value:', StandardsJurisdiction.NGSS);
-    console.log('🔍 DEBUG - Jurisdiction mapping for NGSS:', JURISDICTION_SUBJECT_MAPPING[StandardsJurisdiction.NGSS]);
-    
-    if (!jurisdiction) {
-      console.log('🔍 DEBUG - No jurisdiction or unknown UUID, showing all subjects');
-      // If no jurisdiction selected, show all with default descriptions
-      return BASE_SUBJECT_AREAS.map(subject => ({
-        ...subject,
-        description: getSubjectDescription(subject.id, StandardsJurisdiction.STATE_SPECIFIC)
-      }));
-    }
+  // Get subjects for selected jurisdiction dynamically
+  const jurisdictionId = (user as any)?.preferredJurisdiction;
+  
+  const { data: subjectsResponse, isLoading: isLoadingSubjects } = useQuery({
+    queryKey: ['/api/csp/jurisdictions', jurisdictionId, 'subjects'],
+    queryFn: () => apiRequest('GET', `/api/csp/jurisdictions/${jurisdictionId}/subjects`),
+    enabled: !!jurisdictionId
+  });
 
-    const allowedSubjects = JURISDICTION_SUBJECT_MAPPING[jurisdiction] || BASE_SUBJECT_AREAS.map(s => s.id);
-    console.log('🔍 DEBUG - Allowed subjects for', jurisdiction, ':', allowedSubjects);
-    
-    const filteredSubjects = BASE_SUBJECT_AREAS
-      .filter(subject => allowedSubjects.includes(subject.id))
-      .map(subject => ({
-        ...subject,
-        description: getSubjectDescription(subject.id, jurisdiction)
-      }));
-      
-    console.log('🔍 DEBUG - Final filtered subjects:', filteredSubjects.map(s => s.title));
-    return filteredSubjects;
-  };
-
-  const subjectAreas = getAvailableSubjectAreas();
+  // Convert API subjects to UI format with icons and colors
+  const subjectAreas: SubjectAreaUI[] = (subjectsResponse?.subjects || []).map((subject: APISubject) => {
+    const { icon, color } = getSubjectIcon(subject.title);
+    return {
+      id: subject.id,
+      title: subject.title,
+      description: subject.description,
+      icon,
+      color
+    };
+  });
 
   // Update user preferences mutation
   const updatePreferencesMutation = useMutation({
@@ -256,6 +115,31 @@ export default function OnboardingSubject() {
   const handleBack = () => {
     setLocation('/onboarding/jurisdiction');
   };
+
+  if (isLoadingUser || isLoadingSubjects) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-lg">Loading available subjects...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if no subjects found
+  if (!isLoadingSubjects && (!subjectsResponse?.subjects || subjectsResponse.subjects.length === 0)) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-600 text-lg mb-4">No subjects available for the selected jurisdiction</div>
+          <Button onClick={() => setLocation('/onboarding/jurisdiction')} variant="outline">
+            Go Back to Jurisdiction Selection
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoadingUser) {
     return (

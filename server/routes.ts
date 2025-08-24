@@ -24,6 +24,7 @@ import {
 import {
   getJurisdictions,
   getCoursesForJurisdiction,
+  getSubjectsForJurisdiction,
   getStandardsForCourse,
   searchStandards
 } from "./routes/commonStandardsProject";
@@ -458,6 +459,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Common Standards Project routes (new - dynamic API-based)
   app.get('/api/csp/jurisdictions', getJurisdictions);
+  app.get('/api/csp/jurisdictions/:jurisdictionId/subjects', getSubjectsForJurisdiction);
   app.get('/api/csp/jurisdictions/:jurisdictionId/courses', getCoursesForJurisdiction);
   app.get('/api/csp/courses/:standardSetId/standards', getStandardsForCourse);
   app.get('/api/csp/search', searchStandards);

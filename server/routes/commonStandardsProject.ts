@@ -60,6 +60,82 @@ export async function getCoursesForJurisdiction(req: Request, res: Response) {
   }
 }
 
+// Get available subjects for a jurisdiction
+export async function getSubjectsForJurisdiction(req: Request, res: Response) {
+  try {
+    const { jurisdictionId } = req.params;
+    
+    if (!jurisdictionId) {
+      return res.status(400).json({ error: 'Jurisdiction ID is required' });
+    }
+
+    // Verify authenticated user
+    await ActiveUserService.requireActiveUserAndCustomerUuid(req);
+
+    console.log(`[getSubjectsForJurisdiction] Getting subjects for jurisdiction: ${jurisdictionId}`);
+
+    // For Common Core State Standards, provide known subjects as fallback
+    if (jurisdictionId === '67810E9EF6944F9383DCC602A3484C23') {
+      console.log(`[getSubjectsForJurisdiction] Using fallback for Common Core State Standards`);
+      
+      const subjects = [
+        {
+          id: 'mathematics',
+          title: 'Mathematics',
+          description: 'Common Core State Standards for Mathematics - from kindergarten through high school including algebra, geometry, and statistics'
+        },
+        {
+          id: 'english_language_arts',
+          title: 'English Language Arts',
+          description: 'Common Core State Standards for English Language Arts - reading, writing, speaking, listening, and language skills'
+        }
+      ];
+
+      return res.json({
+        jurisdiction: jurisdictionId,
+        subjects,
+        totalStandardSets: 2
+      });
+    }
+
+    // For other jurisdictions, try the API
+    try {
+      const standardSets = await commonStandardsProjectService.getStandardSetsForJurisdiction(jurisdictionId);
+      
+      console.log(`[getSubjectsForJurisdiction] Found ${standardSets.length} standard sets`);
+      
+      // Extract unique subjects from standard sets
+      const uniqueSubjects = Array.from(new Set(standardSets.map(set => set.subject))).filter(Boolean);
+      
+      // Map to consistent subject format
+      const subjects = uniqueSubjects.map(subject => ({
+        id: subject.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z_]/g, ''),
+        title: subject,
+        description: `Standards and curricula for ${subject}`
+      }));
+
+      res.json({
+        jurisdiction: jurisdictionId,
+        subjects,
+        totalStandardSets: standardSets.length
+      });
+    } catch (apiError) {
+      console.warn(`[getSubjectsForJurisdiction] API failed for jurisdiction ${jurisdictionId}, using fallback:`, apiError);
+      
+      // Fallback to empty subjects array
+      res.json({
+        jurisdiction: jurisdictionId,
+        subjects: [],
+        totalStandardSets: 0
+      });
+    }
+
+  } catch (error) {
+    console.error(`[getSubjectsForJurisdiction] Error getting subjects for jurisdiction ${req.params.jurisdictionId}:`, error);
+    res.status(500).json({ error: 'Failed to get subjects for jurisdiction' });
+  }
+}
+
 // Get standards for a specific course (standard set)
 export async function getStandardsForCourse(req: Request, res: Response) {
   try {
