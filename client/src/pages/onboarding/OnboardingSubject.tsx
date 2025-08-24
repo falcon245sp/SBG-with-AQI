@@ -80,8 +80,11 @@ export default function OnboardingSubject() {
   const { data: subjectsResponse, isLoading: isLoadingSubjects, error: subjectsError } = useQuery({
     queryKey: ['/api/csp/jurisdictions', jurisdictionId, 'subjects', Date.now()], // Cache bust
     queryFn: async () => {
-      console.log('🔵 [ONBOARDING-STEP-2] Making subjects API call for jurisdiction:', jurisdictionId);
+      console.log('🔵 [ONBOARDING-STEP-2] Starting subjects API call for jurisdiction:', jurisdictionId);
+      console.log('🔵 [ONBOARDING-STEP-2] Full URL:', `/api/csp/jurisdictions/${jurisdictionId}/subjects`);
+      
       try {
+        console.log('🔵 [ONBOARDING-STEP-2] About to make fetch request...');
         const response = await fetch(`/api/csp/jurisdictions/${jurisdictionId}/subjects`, {
           method: 'GET',
           credentials: 'include',
@@ -90,19 +93,39 @@ export default function OnboardingSubject() {
           }
         });
         
-        console.log('🔵 [ONBOARDING-STEP-2] Fetch response status:', response.status);
-        console.log('🔵 [ONBOARDING-STEP-2] Fetch response ok:', response.ok);
+        console.log('🔵 [ONBOARDING-STEP-2] Fetch completed!');
+        console.log('🔵 [ONBOARDING-STEP-2] Response object:', response);
+        console.log('🔵 [ONBOARDING-STEP-2] Status:', response.status);
+        console.log('🔵 [ONBOARDING-STEP-2] Status Text:', response.statusText);
+        console.log('🔵 [ONBOARDING-STEP-2] Headers:', Object.fromEntries(response.headers.entries()));
+        console.log('🔵 [ONBOARDING-STEP-2] Response OK:', response.ok);
         
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          const errorText = await response.text();
+          console.error('🔵 [ONBOARDING-STEP-2] Error response body:', errorText);
+          throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
         }
         
+        console.log('🔵 [ONBOARDING-STEP-2] About to parse JSON...');
         const data = await response.json();
-        console.log('🔵 [ONBOARDING-STEP-2] Raw API response:', data);
-        console.log('🔵 [ONBOARDING-STEP-2] Subjects in response:', data.subjects?.length || 0);
+        console.log('🔵 [ONBOARDING-STEP-2] JSON parsed successfully!');
+        console.log('🔵 [ONBOARDING-STEP-2] Raw data object:', data);
+        console.log('🔵 [ONBOARDING-STEP-2] Data type:', typeof data);
+        console.log('🔵 [ONBOARDING-STEP-2] Data keys:', Object.keys(data || {}));
+        console.log('🔵 [ONBOARDING-STEP-2] Subjects property:', data.subjects);
+        console.log('🔵 [ONBOARDING-STEP-2] Subjects count:', data.subjects?.length || 0);
+        
+        if (!data.subjects || !Array.isArray(data.subjects)) {
+          console.warn('🔵 [ONBOARDING-STEP-2] ⚠️ Invalid subjects data structure!');
+        }
+        
         return data;
       } catch (error) {
-        console.error('🔵 [ONBOARDING-STEP-2] API call failed:', error);
+        console.error('🔵 [ONBOARDING-STEP-2] ❌ Complete error details:');
+        console.error('🔵 [ONBOARDING-STEP-2] Error type:', typeof error);
+        console.error('🔵 [ONBOARDING-STEP-2] Error message:', error.message);
+        console.error('🔵 [ONBOARDING-STEP-2] Error stack:', error.stack);
+        console.error('🔵 [ONBOARDING-STEP-2] Full error object:', error);
         throw error;
       }
     },
@@ -202,6 +225,7 @@ export default function OnboardingSubject() {
               <p><strong>Response Type:</strong> {subjectsResponse ? typeof subjectsResponse : 'N/A'}</p>
               <p><strong>Response Keys:</strong> {subjectsResponse ? Object.keys(subjectsResponse as any).join(', ') : 'N/A'}</p>
               <p><strong>Subjects Count:</strong> {(subjectsResponse as any)?.subjects?.length || 0}</p>
+              <p><strong>Raw Response:</strong> {subjectsResponse ? JSON.stringify(subjectsResponse).substring(0, 200) + '...' : 'N/A'}</p>
               {userError && <p><strong>User Error:</strong> {JSON.stringify(userError, null, 2)}</p>}
               {subjectsError && <p><strong>Subjects Error:</strong> {JSON.stringify(subjectsError, null, 2)}</p>}
             </div>
