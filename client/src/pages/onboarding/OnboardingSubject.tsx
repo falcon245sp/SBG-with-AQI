@@ -78,38 +78,33 @@ export default function OnboardingSubject() {
   }, [user, jurisdictionId, setLocation]);
   
   const { data: subjectsResponse, isLoading: isLoadingSubjects, error: subjectsError } = useQuery({
-    queryKey: ['/api/csp/jurisdictions', jurisdictionId, 'subjects', Date.now()], // Cache bust
+    queryKey: ['/api/csp/jurisdictions', jurisdictionId, 'subjects'],
     queryFn: async () => {
       console.log('🔵 [ONBOARDING-STEP-2] Making subjects API call for jurisdiction:', jurisdictionId);
       
-      try {
-        const response = await fetch(`/api/csp/jurisdictions/${jurisdictionId}/subjects?t=${Date.now()}`, {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        console.log('🔵 [ONBOARDING-STEP-2] Response status:', response.status);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      const response = await fetch(`/api/csp/jurisdictions/${jurisdictionId}/subjects`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
         }
-        
-        const data = await response.json();
-        console.log('🔵 [ONBOARDING-STEP-2] Received data with', data.subjects?.length || 0, 'subjects');
-        
-        return data;
-      } catch (error) {
-        console.error('🔵 [ONBOARDING-STEP-2] API call failed:', error);
-        throw error;
+      });
+      
+      console.log('🔵 [ONBOARDING-STEP-2] Response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
+      
+      const data = await response.json();
+      console.log('🔵 [ONBOARDING-STEP-2] Received data with', data.subjects?.length || 0, 'subjects');
+      
+      return data;
     },
     enabled: !!jurisdictionId,
-    staleTime: 0,        // Always fetch fresh data  
-    refetchOnMount: true, // Always refetch when component mounts
-    retry: 1             // Retry once on failure
+    staleTime: 0,
+    refetchOnMount: true,
+    retry: 1
   });
   
   console.log('🔵 [ONBOARDING-STEP-2] Subjects API call status:');
