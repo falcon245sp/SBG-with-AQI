@@ -172,6 +172,13 @@ export async function handleGoogleCallback(req: Request, res: Response) {
           const googleClassrooms = await googleAuth.getClassrooms(user.googleAccessToken!, user.googleRefreshToken || undefined);
           console.log(`[OAuth] Found ${googleClassrooms.length} classrooms to import`);
           
+          // Get the complete user record with customerUuid (fixes timing issue with auto-generated field)
+          const completeUser = await storage.getUserById(user.id);
+          if (!completeUser?.customerUuid) {
+            throw new Error('Customer UUID not found for user - database timing issue');
+          }
+          console.log(`[OAuth] Using customerUuid: ${completeUser.customerUuid} for classroom import`);
+          
           // Import the classifier
           const { ClassroomClassifier } = await import('../services/classroomClassifier.js');
           
@@ -193,8 +200,8 @@ export async function handleGoogleCallback(req: Request, res: Response) {
             };
           });
 
-          // Save/update classrooms using the syncClassrooms method
-          const savedClassrooms = await storage.syncClassrooms(user.customerUuid, classifiedClassrooms);
+          // Save/update classrooms using the syncClassrooms method with proper customerUuid
+          const savedClassrooms = await storage.syncClassrooms(completeUser.customerUuid, classifiedClassrooms);
           console.log(`[OAuth] Successfully imported ${savedClassrooms.length} classrooms`);
           
         } catch (error) {
