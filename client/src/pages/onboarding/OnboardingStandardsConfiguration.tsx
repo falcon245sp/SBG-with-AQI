@@ -95,6 +95,55 @@ export default function OnboardingStandardsConfiguration() {
   // selectedCourses is just IDs, availableCourses has the actual course data with titles
   const coursesToDisplay = availableCourses || [];
 
+  // State for standards selection
+  const [courseStandards, setCourseStandards] = useState<Record<string, any[]>>({});
+  const [selectedStandards, setSelectedStandards] = useState<Record<string, string[]>>({});
+  const [loadingStandards, setLoadingStandards] = useState<Record<string, boolean>>({});
+
+  // Fetch standards for a course
+  const fetchStandardsForCourse = async (courseId: string, standardSetId: string) => {
+    if (courseStandards[courseId] || loadingStandards[courseId]) return;
+    
+    setLoadingStandards(prev => ({ ...prev, [courseId]: true }));
+    
+    try {
+      const response = await fetch(`/api/standards/course/${standardSetId}`);
+      if (!response.ok) throw new Error('Failed to fetch standards');
+      
+      const data = await response.json();
+      setCourseStandards(prev => ({ ...prev, [courseId]: data.standards }));
+      setSelectedStandards(prev => ({ ...prev, [courseId]: data.defaultEnabled || [] }));
+    } catch (error) {
+      console.error(`Error fetching standards for course ${courseId}:`, error);
+    } finally {
+      setLoadingStandards(prev => ({ ...prev, [courseId]: false }));
+    }
+  };
+
+  // Handle standards selection toggle
+  const toggleStandardSelection = (courseId: string, standardCode: string) => {
+    setSelectedStandards(prev => ({
+      ...prev,
+      [courseId]: prev[courseId]?.includes(standardCode)
+        ? prev[courseId].filter(code => code !== standardCode)
+        : [...(prev[courseId] || []), standardCode]
+    }));
+  };
+
+  // Fetch standards for all courses when entering standards configuration phase
+  useEffect(() => {
+    if (configurationPhase === 'standards') {
+      const coursesToFetch = Object.entries(courseGroups).map(([courseId, group]) => ({
+        id: courseId,
+        standardSetId: group.course.standardSetId
+      })).filter(course => course.standardSetId);
+
+      coursesToFetch.forEach(course => {
+        fetchStandardsForCourse(course.id, course.standardSetId);
+      });
+    }
+  }, [configurationPhase, courseGroups]);
+
   // Intelligent course matching based on classroom names
   const suggestCourseForClassroom = (classroomName: string): string | null => {
     if (!coursesToDisplay || coursesToDisplay.length === 0) return null;
@@ -416,15 +465,41 @@ export default function OnboardingStandardsConfiguration() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <p className="text-sm text-blue-800 mb-3">
-                    <BookOpen className="h-4 w-4 inline mr-2" />
-                    Standards available for this course will be loaded here
-                  </p>
-                  <p className="text-xs text-blue-600">
-                    Note: Standards fetching functionality to be implemented
-                  </p>
-                </div>
+                {loadingStandards[courseId] ? (
+                  <div className="p-4 bg-gray-50 rounded-lg flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-sm text-gray-600">Loading standards...</span>
+                  </div>
+                ) : courseStandards[courseId] ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-medium text-gray-900">Select Standards to Assess</h4>
+                      <span className="text-xs text-gray-500">
+                        {selectedStandards[courseId]?.length || 0} of {courseStandards[courseId]?.length || 0} selected
+                      </span>
+                    </div>
+                    <div className="max-h-48 overflow-y-auto border rounded-lg bg-gray-50">
+                      {courseStandards[courseId]?.map((standard: any, index: number) => (
+                        <label key={standard.code || index} className="flex items-start gap-3 p-3 hover:bg-gray-100 cursor-pointer border-b last:border-b-0">
+                          <input
+                            type="checkbox"
+                            checked={selectedStandards[courseId]?.includes(standard.code) || false}
+                            onChange={() => toggleStandardSelection(courseId, standard.code)}
+                            className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-gray-900">{standard.code}</div>
+                            <div className="text-sm text-gray-600 line-clamp-2">{standard.description}</div>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p className="text-sm text-yellow-800">No standards available for this course</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
