@@ -97,8 +97,9 @@ export default function OnboardingStandardsConfiguration() {
     enabled: !!user && hasRequiredData,
   });
 
-  // Use onboarding courses if available, otherwise fall back to available courses
-  const coursesToDisplay = selectedCourses && selectedCourses.length > 0 ? selectedCourses : (availableCourses || []);
+  // Always use the full course objects from API for display (they have titles)
+  // selectedCourses is just IDs, availableCourses has the actual course data with titles
+  const coursesToDisplay = availableCourses || [];
 
   // Intelligent course matching based on classroom names
   const suggestCourseForClassroom = (classroomName: string): string | null => {
