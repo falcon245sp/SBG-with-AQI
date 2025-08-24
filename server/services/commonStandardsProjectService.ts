@@ -141,13 +141,15 @@ class CommonStandardsProjectService {
     } catch (error) {
       console.error('[CommonStandardsProjectService] Error fetching jurisdictions:', error);
       
-      // Fallback to cached data even if stale
+      // Fallback to cached jurisdictions data (if available)
       if (cached.length > 0) {
-        console.log('[CommonStandardsProjectService] Using stale cached jurisdictions as fallback');
+        console.log(`[CommonStandardsProjectService] API failed, using cached jurisdictions data (${cached.length} jurisdictions)`);
         return cached.map((j: any) => j.data as CSPJurisdiction);
       }
       
-      throw error;
+      // No cached data available - throw transparent error
+      console.error('[CommonStandardsProjectService] No cached jurisdictions available for fallback');
+      throw new Error(`Common Standards Project API unavailable and no cached data exists for jurisdictions: ${error.message}`);
     }
   }
 
@@ -178,13 +180,15 @@ class CommonStandardsProjectService {
     } catch (error) {
       console.error(`[CommonStandardsProjectService] Error fetching standard sets for jurisdiction ${jurisdictionId}:`, error);
       
-      // Fallback to cached data even if stale
+      // Fallback to cached data for THIS SPECIFIC JURISDICTION only
       if (cached.length > 0) {
-        console.log(`[CommonStandardsProjectService] Using stale cached standard sets for jurisdiction ${jurisdictionId} as fallback`);
+        console.log(`[CommonStandardsProjectService] API failed, using cached data for jurisdiction ${jurisdictionId} (${cached.length} standard sets)`);
         return cached.map((s: any) => s.data as CSPStandardSet);
       }
       
-      throw error;
+      // No cached data available for this jurisdiction - throw transparent error
+      console.error(`[CommonStandardsProjectService] No cached data available for jurisdiction ${jurisdictionId}`);
+      throw new Error(`Common Standards Project API unavailable and no cached data exists for jurisdiction ${jurisdictionId}: ${error.message}`);
     }
   }
 
@@ -213,14 +217,17 @@ class CommonStandardsProjectService {
     } catch (error) {
       console.error(`[CommonStandardsProjectService] Error fetching standards for set ${standardSetId}:`, error);
       
-      // Fallback to cached data even if stale
+      // Fallback to cached data for THIS SPECIFIC STANDARD SET only
       if (cached) {
-        console.log(`[CommonStandardsProjectService] Using stale cached standards for set ${standardSetId} as fallback`);
         const standardsData = cached.standardsData as Record<string, CSPStandard>;
+        const standardsCount = Object.keys(standardsData).length;
+        console.log(`[CommonStandardsProjectService] API failed, using cached data for standard set ${standardSetId} (${standardsCount} standards)`);
         return Object.values(standardsData).sort((a, b) => a.position - b.position);
       }
       
-      throw error;
+      // No cached data available for this standard set - throw transparent error
+      console.error(`[CommonStandardsProjectService] No cached data available for standard set ${standardSetId}`);
+      throw new Error(`Common Standards Project API unavailable and no cached data exists for standard set ${standardSetId}: ${error.message}`);
     }
   }
 
