@@ -163,14 +163,14 @@ export async function handleGoogleCallback(req: Request, res: Response) {
     } else {
       console.log('[OAuth] Authentication successful, user in onboarding - checking state for next step');
       
-      // If this was classroom authentication, progress to role selection
+      // If this was classroom authentication, progress to standards configuration
       if (state === 'classroom_auth') {
-        console.log('[OAuth] Classroom authentication complete, progressing to role selection');
-        // Update user's onboarding step to role-selection
+        console.log('[OAuth] Classroom authentication complete, progressing to standards configuration');
+        // Update user's onboarding step to standards-configuration
         await storage.updateUserPreferences(user.id, { 
-          onboardingStep: 'role-selection' 
+          onboardingStep: 'standards-configuration' 
         });
-        res.redirect('/onboarding/role-selection');
+        res.redirect('/onboarding/standards-configuration');
       } else {
         console.log('[OAuth] General authentication, redirecting to onboarding flow');
         // For general authentication, redirect to onboarding and let OnboardingCheck determine the correct step
