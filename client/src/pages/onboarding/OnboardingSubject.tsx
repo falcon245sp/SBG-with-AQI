@@ -66,10 +66,15 @@ export default function OnboardingSubject() {
   
   // If user hasn't selected a jurisdiction yet, redirect to jurisdiction selection
   React.useEffect(() => {
-    if (user && !jurisdictionId) {
-      console.log('🔵 [ONBOARDING-STEP-2] ⚠️  No jurisdiction selected, redirecting to jurisdiction selection');
-      setLocation('/onboarding/jurisdiction');
-    }
+    // Add delay to allow for cache updates from previous step
+    const timer = setTimeout(() => {
+      if (user && !jurisdictionId) {
+        console.log('🔵 [ONBOARDING-STEP-2] ⚠️  No jurisdiction selected, redirecting to jurisdiction selection');
+        setLocation('/onboarding/jurisdiction');
+      }
+    }, 200);
+    
+    return () => clearTimeout(timer);
   }, [user, jurisdictionId, setLocation]);
   
   const { data: subjectsResponse, isLoading: isLoadingSubjects, error: subjectsError } = useQuery({

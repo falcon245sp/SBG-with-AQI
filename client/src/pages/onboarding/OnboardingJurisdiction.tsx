@@ -47,11 +47,26 @@ export default function OnboardingJurisdiction() {
       console.log('🟢 [ONBOARDING-STEP-1] Saving jurisdiction preference:', data);
       return apiRequest('PUT', '/api/user/preferences', data);
     },
-    onSuccess: () => {
+    onSuccess: async (response, variables) => {
       console.log('🟢 [ONBOARDING-STEP-1] ✅ Jurisdiction preference saved successfully');
-      console.log('🟢 [ONBOARDING-STEP-1] → Redirecting to subject selection');
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      setLocation('/onboarding/subject');
+      console.log('🟢 [ONBOARDING-STEP-1] → Updating cache and redirecting to subject selection');
+      
+      // Optimistically update the user cache immediately
+      queryClient.setQueryData(['/api/auth/user'], (oldData: any) => {
+        return {
+          ...oldData,
+          preferredJurisdiction: variables.preferredJurisdiction,
+          onboardingStep: variables.onboardingStep
+        };
+      });
+      
+      // Invalidate to ensure fresh data on next fetch
+      await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      
+      // Small delay to ensure cache update is processed
+      setTimeout(() => {
+        setLocation('/onboarding/subject');
+      }, 100);
     },
     onError: (error: any) => {
       console.error('🟢 [ONBOARDING-STEP-1] ❌ Error saving jurisdiction preference:', error);
