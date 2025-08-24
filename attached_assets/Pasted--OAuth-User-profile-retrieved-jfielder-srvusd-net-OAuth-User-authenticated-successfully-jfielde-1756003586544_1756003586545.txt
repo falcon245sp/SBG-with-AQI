@@ -1,0 +1,12 @@
+[OAuth] User profile retrieved: jfielder@srvusd.net
+[OAuth] User authenticated successfully: jfielder@srvusd.net
+[OAuth] Session userId set to: 2ff38d43-c3a4-440b-97c9-e33eb88f4880
+[OAuth] Authentication successful, user in onboarding - checking state for next step
+[OAuth] General authentication, redirecting to onboarding flow
+2025-08-24T02:43:25.542Z [INFO] API Request | method=GET, path=/api/auth/google/callback, statusCode=302, duration=723, requestId=00405499181caeb285122ee6ff5b3a8f, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.2.7, sessionId=nXRJVvnYXlniZ4OzW91HUjiGnLi8AusM
+2025-08-24T02:43:25.706Z [DEBUG] Request started | requestId=1a8fb477db8f33c953ebcfa88913926b, method=GET, path=/onboarding, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.2.7, sessionId=nXRJVvnYXlniZ4OzW91HUjiGnLi8AusM
+2025-08-24T02:43:25.906Z [DEBUG] Request started | requestId=83d4a22730e2478c1c62fce8a273d365, method=GET, path=/@vite/client, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.57, sessionId=nXRJVvnYXlniZ4OzW91HUjiGnLi8AusM
+2025-08-24T02:43:26.177Z [DEBUG] Request started | requestId=5cd2384dc0516a7ca2161e37e16cf088, method=GET, path=/src/main.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.57, sessionId=nXRJVvnYXlniZ4OzW91HUjiGnLi8AusM
+2025-08-24T02:43:26.352Z [DEBUG] Request started | requestId=de1f8398705c1a9113484def7a696ddf, method=GET, path=/@fs/home/runner/workspace/node_modules/vite/dist/client/env.mjs, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.57, sessionId=nXRJVvnYXlniZ4OzW91HUjiGnLi8AusM
+2025-08-24T02:43:26.457Z [DEBUG] Request started | requestId=f2806d5be9bc7a7cc3da021b7dda69d3, method=GET, path=/@react-refresh, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.2.7, sessionId=nXRJVvnYXlniZ4OzW91HUjiGnLi8AusM
+2025-08-24T02:43:26.847Z [DEBUG] Request started | requestId=0616de7f64e3eee8e931d4df556132ac, method=GET, path=/src/App.tsx, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like 
