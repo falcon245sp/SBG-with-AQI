@@ -387,15 +387,26 @@ class CommonStandardsProjectService {
         
         return !isCategory;
       })
-      .map(standard => ({
-        id: standard.id,
-        code: standard.statementNotation || standard.asnIdentifier,
-        title: standard.statementLabel || 'Standard',
-        description: standard.description,
-        gradeLevel: 'varies', // Will be set based on standard set
-        majorDomain: standard.ancestorDescriptions?.[0] || 'General',
-        cluster: standard.ancestorDescriptions?.[1] || standard.ancestorDescriptions?.[0] || 'General'
-      }));
+      .map(standard => {
+        let code = standard.statementNotation || standard.asnIdentifier;
+        
+        // Clean up CCSS codes by removing verbose prefix
+        if (code.startsWith('CCSS.Math.Content.')) {
+          code = code.replace('CCSS.Math.Content.', '');
+        } else if (code.startsWith('CCSS.ELA-Literacy.')) {
+          code = code.replace('CCSS.ELA-Literacy.', '');
+        }
+        
+        return {
+          id: standard.id,
+          code: code,
+          title: standard.statementLabel || 'Standard',
+          description: standard.description,
+          gradeLevel: 'varies', // Will be set based on standard set
+          majorDomain: standard.ancestorDescriptions?.[0] || 'General',
+          cluster: standard.ancestorDescriptions?.[1] || standard.ancestorDescriptions?.[0] || 'General'
+        };
+      });
   }
 
   // Get available grade levels for a jurisdiction dynamically
