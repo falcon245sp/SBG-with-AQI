@@ -259,12 +259,12 @@ export default function DocumentResults() {
     const sourceQuestion = docResult?.results?.find(r => r.questionNumber.toString() === sourceQuestionNumber);
     if (!sourceQuestion) return;
     
-    // Populate form fields with copied data
+    // Populate form fields with copied data - use comma format for standards
     setOverrideFormData({
       rigorLevel: sourceQuestion.finalRigorLevel as 'mild' | 'medium' | 'spicy',
       standards: sourceQuestion.finalStandards?.map(s => 
-        typeof s === 'string' ? s : `${s.code}: ${s.description || ''}`
-      ).join('\n') || '',
+        typeof s === 'string' ? s : s.code
+      ).join(', ') || '',
       justification: `Copied from Question ${sourceQuestionNumber}`,
       confidence: sourceQuestion.confidenceScore || 5
     });
