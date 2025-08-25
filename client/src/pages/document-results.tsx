@@ -139,6 +139,154 @@ export default function DocumentResults() {
     staleTime: 0, // Always refetch to ensure fresh status
   });
 
+  // Accept and proceed mutation with loading state
+  const acceptAndProceedMutation = useMutation({
+    mutationFn: async () => {
+      if (!docId) {
+        throw new Error('No doc ID available');
+      }
+      
+      console.log(`[Accept] Starting accept process for doc: ${docId}`);
+      
+      const response = await fetch(`/api/documents/${docId}/accept`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include'
+      });
+
+      console.log(`[Accept] Response received - Status: ${response.status}, OK: ${response.ok}`);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('[Accept] Error data:', errorData);
+        throw new Error(errorData.error || `Server error: ${response.status}`);
+      }
+
+      const responseData = await response.json();
+      console.log('[Accept] Success response:', responseData);
+      return responseData;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: [`/api/documents/${docId}/results`] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/file-cabinet'] });
+      
+      toast({
+        title: "Analysis Accepted",
+        description: "Cover sheets and rubrics are now being generated and will appear in the File Cabinet.",
+        variant: "default",
+      });
+    },
+    onError: (error: Error) => {
+      console.error('[Accept] Error in accept mutation:', error);
+      toast({
+        title: "Error",
+        description: error.message || 'Failed to accept analysis',
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation for reverting to Sherpa analysis
+  const revertToAiMutation = useMutation({
+    mutationFn: async (questionId: string) => {
+      console.log('Reverting to Sherpa for question:', questionId);
+      const response = await apiRequest('POST', `/api/questions/${questionId}/revert-to-ai`);
+      console.log('Revert response:', response);
+      return response;
+    },
+    onSuccess: async (data, questionId) => {
+      console.log('Revert successful, invalidating queries...');
+      // Invalidate and refetch the queries
+      await queryClient.invalidateQueries({ queryKey: [`/api/documents/${docId}/results`] });
+      await queryClient.refetchQueries({ queryKey: [`/api/documents/${docId}/results`] });
+      console.log('Query refetch completed');
+      toast({
+        title: "Reverted to Sherpa Analysis",
+        description: "Successfully restored the original Sherpa analysis results.",
+        variant: "default",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: "Failed to revert to Sherpa analysis. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Save override mutation
+  const saveOverrideMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const processStandards = (standardsInput: string) => {
+        if (!standardsInput || typeof standardsInput !== 'string') {
+          return [];
+        }
+        
+        const codes = standardsInput
+          .split(',')
+          .map((code: string) => code.trim())
+          .filter((code: string) => code.length > 0);
+          
+        return codes.map((code: string) => ({
+          code,
+          description: '',
+          jurisdiction: 'Unknown'
+        }));
+      };
+      
+      const processedStandards = processStandards(data.standards);
+      
+      const payload = {
+        ...data,
+        overriddenStandards: processedStandards
+      };
+      
+      const response = await apiRequest('POST', `/api/questions/${data.questionId}/teacher-override`, payload);
+      return { response, questionId: data.questionId };
+    },
+    onSuccess: async (data, variables) => {
+      console.log('Override saved, invalidating cache for doc:', docId);
+      await queryClient.invalidateQueries({ queryKey: [`/api/documents/${docId}/results`] });
+      await queryClient.refetchQueries({ queryKey: [`/api/documents/${docId}/results`] });
+      console.log('Cache refetch completed');
+      
+      try {
+        console.log('Triggering rubric regeneration after teacher override...');
+        const response = await fetch(`/api/documents/${docId}/accept`, {
+          method: 'POST',
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          console.log('Rubric regeneration triggered successfully');
+          await queryClient.invalidateQueries({ queryKey: ['/api/file-cabinet'] });
+        } else {
+          console.warn('Failed to trigger rubric regeneration:', response.status);
+        }
+      } catch (error) {
+        console.error('Error triggering rubric regeneration:', error);
+      }
+      
+      toast({
+        title: "Teacher Override Saved",
+        description: "Your changes have been saved and rubrics are being regenerated.",
+        variant: "default",
+      });
+    },
+    onError: (error: any) => {
+      console.error('Failed to save override:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save teacher override. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // If loading, show loading state
   if (isLoading) {
     return (
@@ -220,97 +368,15 @@ export default function DocumentResults() {
     );
   }
 
-  // Accept and proceed mutation with loading state
-  const acceptAndProceedMutation = useMutation({
-    mutationFn: async () => {
-      if (!docId) {
-        throw new Error('No doc ID available');
-      }
-      
-      console.log(`[Accept] Starting accept process for doc: ${docId}`);
-      
-      const response = await fetch(`/api/documents/${docId}/accept`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        credentials: 'include'
-      });
-
-      console.log(`[Accept] Response received - Status: ${response.status}, OK: ${response.ok}`);
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        console.error('[Accept] Error data:', errorData);
-        throw new Error(errorData.error || `Server error: ${response.status}`);
-      }
-
-      const responseData = await response.json();
-      console.log('[Accept] Success response:', responseData);
-      return responseData;
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: [`/api/documents/${docId}/results`] });
-      await queryClient.invalidateQueries({ queryKey: ['/api/file-cabinet'] });
-      
-      toast({
-        title: "Analysis Accepted",
-        description: "Cover sheets and rubrics are now being generated and will appear in the File Cabinet.",
-        variant: "default",
-      });
-    },
-    onError: (error: Error) => {
-      console.error('[Accept] Error in accept mutation:', error);
-      toast({
-        title: "Error",
-        description: error.message || 'Failed to accept analysis',
-        variant: "destructive",
-      });
-    },
-  });
-
   const handleAcceptAndProceed = () => {
     acceptAndProceedMutation.mutate();
   };
-
-  // Mutation for reverting to Sherpa analysis
-  const revertToAiMutation = useMutation({
-    mutationFn: async (questionId: string) => {
-      console.log('Reverting to Sherpa for question:', questionId);
-      const response = await apiRequest('POST', `/api/questions/${questionId}/revert-to-ai`);
-      console.log('Revert response:', response);
-      return response;
-    },
-    onSuccess: async (data, questionId) => {
-      console.log('Revert successful, invalidating queries...');
-      // Invalidate and refetch the queries
-      await queryClient.invalidateQueries({ queryKey: [`/api/documents/${docId}/results`] });
-      await queryClient.refetchQueries({ queryKey: [`/api/documents/${docId}/results`] });
-      console.log('Query refetch completed');
-      toast({
-        title: "Reverted to Sherpa Analysis",
-        description: "Successfully restored the original Sherpa analysis results.",
-        variant: "default",
-      });
-    },
-    onError: (error: Error) => {
-      console.error('Revert failed:', error);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-      toast({
-        title: "Error",
-        description: `Failed to revert to Sherpa analysis: ${error.message}`,
-        variant: "destructive",
-      });
-    },
-  });
 
   // Export functions
   const exportRubric = (format: 'rubric-markdown' | 'rubric-pdf' | 'csv' | 'student-cover-sheet') => {
     if (!docResult) return;
     
-    const doc = docResult.doc;
+    const doc = docResult.document;
     const results = docResult.results;
     
     switch (format) {
@@ -336,12 +402,12 @@ export default function DocumentResults() {
     // Download as markdown file
     const blob = new Blob([markdownContent], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
-    const a = window.doc.createElement('a');
+    const a = document.createElement('a');
     a.href = url;
     a.download = `${doc.fileName.replace(/\.[^/.]+$/, '')}_rubric.md`;
-    window.doc.body.appendChild(a);
+    document.body.appendChild(a);
     a.click();
-    window.doc.body.removeChild(a);
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
     toast({
@@ -1519,98 +1585,7 @@ function TeacherOverrideForm({
     changes: string[];
   } | null>(null);
   
-  const saveOverrideMutation = useMutation({
-    mutationFn: async (data: any) => {
-      // Safely process and validate standards input
-      const processStandards = (standardsInput: string) => {
-        if (!standardsInput || typeof standardsInput !== 'string') {
-          return [];
-        }
-        
-        const codes = standardsInput
-          .split(',')
-          .map((code: string) => code.trim())
-          .filter((code: string) => code.length > 0);
-        
-        const validation = validateStandardsList(codes);
-        
-        // For valid standards, use the full Common Core information
-        const validStandards = validation.valid.map(standard => ({
-          code: standard.code,
-          description: standard.description,
-          jurisdiction: 'Common Core',
-          gradeLevel: standard.gradeLevel,
-          subject: standard.subject
-        }));
-        
-        // For invalid standards, still include them but mark as teacher-specified
-        const invalidStandards = validation.invalid.map(code => ({
-          code,
-          description: `Teacher-specified standard: ${code} (not validated)`,
-          jurisdiction: 'Common Core',
-          gradeLevel: '9-12',
-          subject: 'Mathematics'
-        }));
-        
-        return [...validStandards, ...invalidStandards];
-      };
-
-      const payload = {
-        overriddenRigorLevel: data.rigorLevel,
-        overriddenStandards: processStandards(data.standards),
-        teacherJustification: data.justification || '',
-        confidenceLevel: data.confidence || 5,
-        hasDomainChange: domainChangeWarning?.hasSignificantChange || false,
-        domainChangeDetails: domainChangeWarning || null
-      };
-      
-      return await apiRequest('POST', `/api/questions/${questionId}/override`, payload);
-    },
-    onSuccess: async (data, variables) => {
-      console.log('Override saved, invalidating cache for doc:', docId);
-      // Use the same pattern as the revert mutation that works
-      await queryClient.invalidateQueries({ queryKey: [`/api/documents/${docId}/results`] });
-      await queryClient.refetchQueries({ queryKey: [`/api/documents/${docId}/results`] });
-      console.log('Cache refetch completed');
-      
-      // Trigger regeneration of rubrics and cover sheets with teacher overrides
-      try {
-        console.log('Triggering rubric regeneration after teacher override...');
-        const response = await fetch(`/api/documents/${docId}/accept`, {
-          method: 'POST',
-          credentials: 'include'
-        });
-        
-        if (response.ok) {
-          console.log('Rubric regeneration triggered successfully');
-          toast({
-            title: "Override Saved & Rubrics Regenerating",
-            description: "Your changes have been saved and new rubrics are being generated with your corrections.",
-            variant: "default",
-          });
-        } else {
-          throw new Error('Failed to trigger regeneration');
-        }
-      } catch (error) {
-        console.error('Failed to trigger rubric regeneration:', error);
-        toast({
-          title: "Override Saved",
-          description: "Changes saved but rubric regeneration failed. Use Accept & Proceed to manually regenerate.",
-          variant: "default",
-        });
-      }
-      
-      onSuccess();
-    },
-    onError: (error) => {
-      console.error('Teacher override submission error:', error);
-      toast({ 
-        title: "Error saving override", 
-        description: error instanceof Error ? error.message : "Failed to save your changes. Please try again.",
-        variant: "destructive" 
-      });
-    }
-  });
+  // This mutation was moved to the top of the parent component
 
   // Validate standards and detect domain changes whenever input changes
   const validateStandards = (standardsInput: string, originalStandards?: string[]) => {
