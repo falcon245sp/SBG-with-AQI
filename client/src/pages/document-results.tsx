@@ -779,7 +779,7 @@ export default function DocumentResults() {
               </Link>
               <FileText className="w-6 h-6 text-blue-600 mr-3" />
               <h2 className="text-2xl font-semibold text-slate-800">
-                Analysis Results: {doc.fileName}
+                Analysis Results: {docResult?.document?.fileName}
               </h2>
             </div>
             
@@ -1129,7 +1129,7 @@ export default function DocumentResults() {
               </Link>
               <FileText className="w-6 h-6 text-blue-600 mr-3" />
               <h2 className="text-2xl font-semibold text-slate-800">
-                Analysis Results: {doc.fileName}
+                Analysis Results: {docResult?.document?.fileName}
               </h2>
             </div>
             
