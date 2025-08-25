@@ -1,0 +1,275 @@
+[CustomerLookupService] Found user and customer UUID: 4f789a87-7a23-45cc-a0c6-1cb0ac4ebcff for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+🎓 [STANDARDS-CONFIG] Complete standards configuration request: {
+  userId: 'c960f3b7-9c8a-4a74-b80b-6094d3f8d899',
+  customerUuid: '4f789a87-7a23-45cc-a0c6-1cb0ac4ebcff',
+  standardsConfigurationCompleted: true,
+  onboardingCompleted: true,
+  courseMappingsCount: 5
+}
+🏫 [STANDARDS-CONFIG] Processing course mappings: 5
+🏫 [STANDARDS-CONFIG] Processing mapping: {
+  classroomId: '1ade5174-e43f-4464-98ab-5ed89bd0eaa4',
+  selectedCourseId: '67810E9EF6944F9383DCC602A3484C23_D10003FB_high-school-algebra',
+  enableSBG: true
+}
+🏫 [STANDARDS-CONFIG] Updating classroom: {
+  classroomId: '1ade5174-e43f-4464-98ab-5ed89bd0eaa4',
+  courseTitle: 'Algebra 1',
+  sbgEnabled: true,
+  courseConfigurationCompleted: true
+}
+🏫 [CLASSROOM-UPDATE] Updating classroom: {
+  classroomId: '1ade5174-e43f-4464-98ab-5ed89bd0eaa4',
+  updates: {
+    sbgEnabled: true,
+    courseTitle: 'Algebra 1',
+    courseConfigurationCompleted: true
+  },
+  updatesKeys: [ 'sbgEnabled', 'courseTitle', 'courseConfigurationCompleted' ]
+}
+🏫 [CLASSROOM-UPDATE] Classroom updated successfully: {
+  classroomId: '1ade5174-e43f-4464-98ab-5ed89bd0eaa4',
+  name: 'Algebra 1 - Fielder - 02',
+  courseTitle: 'Algebra 1',
+  course_title: undefined,
+  courseConfigurationCompleted: true,
+  course_configuration_completed: undefined,
+  sbgEnabled: true,
+  sbg_enabled: undefined
+}
+🏫 [STANDARDS-CONFIG] Processing mapping: {
+  classroomId: '1bb4d3c9-ce44-488a-a8f3-21fffabcb30a',
+  selectedCourseId: '67810E9EF6944F9383DCC602A3484C23_D10003FB_high-school-algebra',
+  enableSBG: true
+}
+🏫 [STANDARDS-CONFIG] Updating classroom: {
+  classroomId: '1bb4d3c9-ce44-488a-a8f3-21fffabcb30a',
+  courseTitle: 'Algebra 1',
+  sbgEnabled: true,
+  courseConfigurationCompleted: true
+}
+🏫 [CLASSROOM-UPDATE] Updating classroom: {
+  classroomId: '1bb4d3c9-ce44-488a-a8f3-21fffabcb30a',
+  updates: {
+    sbgEnabled: true,
+    courseTitle: 'Algebra 1',
+    courseConfigurationCompleted: true
+  },
+  updatesKeys: [ 'sbgEnabled', 'courseTitle', 'courseConfigurationCompleted' ]
+}
+🏫 [CLASSROOM-UPDATE] Classroom updated successfully: {
+  classroomId: '1bb4d3c9-ce44-488a-a8f3-21fffabcb30a',
+  name: 'Algebra 1 - Fielder - 06',
+  courseTitle: 'Algebra 1',
+  course_title: undefined,
+  courseConfigurationCompleted: true,
+  course_configuration_completed: undefined,
+  sbgEnabled: true,
+  sbg_enabled: undefined
+}
+🏫 [STANDARDS-CONFIG] Processing mapping: {
+  classroomId: '089e61c0-83fe-48bb-a64d-8908ea337599',
+  selectedCourseId: '67810E9EF6944F9383DCC602A3484C23_D10003FB_high-school-number-and-quantity',
+  enableSBG: true
+}
+🏫 [STANDARDS-CONFIG] Updating classroom: {
+  classroomId: '089e61c0-83fe-48bb-a64d-8908ea337599',
+  courseTitle: 'Pre-Calculus',
+  sbgEnabled: true,
+  courseConfigurationCompleted: true
+}
+🏫 [CLASSROOM-UPDATE] Updating classroom: {
+  classroomId: '089e61c0-83fe-48bb-a64d-8908ea337599',
+  updates: {
+    sbgEnabled: true,
+    courseTitle: 'Pre-Calculus',
+    courseConfigurationCompleted: true
+  },
+  updatesKeys: [ 'sbgEnabled', 'courseTitle', 'courseConfigurationCompleted' ]
+}
+🏫 [CLASSROOM-UPDATE] Classroom updated successfully: {
+  classroomId: '089e61c0-83fe-48bb-a64d-8908ea337599',
+  name: 'Math Topics Adv - Fielder - 01',
+  courseTitle: 'Pre-Calculus',
+  course_title: undefined,
+  courseConfigurationCompleted: true,
+  course_configuration_completed: undefined,
+  sbgEnabled: true,
+  sbg_enabled: undefined
+}
+🏫 [STANDARDS-CONFIG] Processing mapping: {
+  classroomId: '5e2b59d1-e2c9-491e-8ce5-be09ad9075ed',
+  selectedCourseId: '67810E9EF6944F9383DCC602A3484C23_D10003FB_high-school-number-and-quantity',
+  enableSBG: true
+}
+🏫 [STANDARDS-CONFIG] Updating classroom: {
+  classroomId: '5e2b59d1-e2c9-491e-8ce5-be09ad9075ed',
+  courseTitle: 'Pre-Calculus',
+  sbgEnabled: true,
+  courseConfigurationCompleted: true
+}
+🏫 [CLASSROOM-UPDATE] Updating classroom: {
+  classroomId: '5e2b59d1-e2c9-491e-8ce5-be09ad9075ed',
+  updates: {
+    sbgEnabled: true,
+    courseTitle: 'Pre-Calculus',
+    courseConfigurationCompleted: true
+  },
+  updatesKeys: [ 'sbgEnabled', 'courseTitle', 'courseConfigurationCompleted' ]
+}
+🏫 [CLASSROOM-UPDATE] Classroom updated successfully: {
+  classroomId: '5e2b59d1-e2c9-491e-8ce5-be09ad9075ed',
+  name: 'Math Topics Adv - Fielder - 04',
+  courseTitle: 'Pre-Calculus',
+  course_title: undefined,
+  courseConfigurationCompleted: true,
+  course_configuration_completed: undefined,
+  sbgEnabled: true,
+  sbg_enabled: undefined
+}
+🏫 [STANDARDS-CONFIG] Processing mapping: {
+  classroomId: '2f1fcd06-e3f4-469e-bd7c-0d7790223795',
+  selectedCourseId: '67810E9EF6944F9383DCC602A3484C23_D10003FB_high-school-number-and-quantity',
+  enableSBG: true
+}
+🏫 [STANDARDS-CONFIG] Updating classroom: {
+  classroomId: '2f1fcd06-e3f4-469e-bd7c-0d7790223795',
+  courseTitle: 'Pre-Calculus',
+  sbgEnabled: true,
+  courseConfigurationCompleted: true
+}
+🏫 [CLASSROOM-UPDATE] Updating classroom: {
+  classroomId: '2f1fcd06-e3f4-469e-bd7c-0d7790223795',
+  updates: {
+    sbgEnabled: true,
+    courseTitle: 'Pre-Calculus',
+    courseConfigurationCompleted: true
+  },
+  updatesKeys: [ 'sbgEnabled', 'courseTitle', 'courseConfigurationCompleted' ]
+}
+🏫 [CLASSROOM-UPDATE] Classroom updated successfully: {
+  classroomId: '2f1fcd06-e3f4-469e-bd7c-0d7790223795',
+  name: 'Math Topics Adv - Fielder - 05',
+  courseTitle: 'Pre-Calculus',
+  course_title: undefined,
+  courseConfigurationCompleted: true,
+  course_configuration_completed: undefined,
+  sbgEnabled: true,
+  sbg_enabled: undefined
+}
+👤 [STANDARDS-CONFIG] Updating user preferences: {
+  standardsConfigurationCompleted: true,
+  onboardingCompleted: true,
+  onboardingStep: null
+}
+✅ [STANDARDS-CONFIG] Standards configuration completed successfully
+2025-08-25T05:26:30.404Z [INFO] API Request | method=PUT, path=/api/user/complete-standards-configuration, statusCode=200, duration=576, requestId=12ea209ee54ede699f78f83343e3b609, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.8.17, sessionId=XAZ-UF2_IrnYL6jLvGpbkWfqHX8nTvh8
+2025-08-25T05:26:30.769Z [INFO] API Request | method=GET, path=/api/auth/user, statusCode=200, duration=143, requestId=5f15c1e23476c40f3d12c0c11d9b86e6, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.8.17, sessionId=XAZ-UF2_IrnYL6jLvGpbkWfqHX8nTvh8
+[ExportProcessor] Found 0 pending exports
+[CustomerLookupService] Looking up customer UUID for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+[CustomerLookupService] Found customer UUID: 4f789a87-7a23-45cc-a0c6-1cb0ac4ebcff for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+Document not found: ffa843af-a960-42d0-9b63-7e376d4128ce
+2025-08-25T05:26:32.927Z [INFO] API Request | method=GET, path=/api/documents/ffa843af-a960-42d0-9b63-7e376d4128ce/results, statusCode=404, duration=213, requestId=994ce7d86bc2e23665714583323fdeed, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.5.104, sessionId=XAZ-UF2_IrnYL6jLvGpbkWfqHX8nTvh8
+[CustomerLookupService] Looking up customer UUID for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+[CustomerLookupService] Found customer UUID: 4f789a87-7a23-45cc-a0c6-1cb0ac4ebcff for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+Document not found: ffa843af-a960-42d0-9b63-7e376d4128ce
+2025-08-25T05:26:36.941Z [INFO] API Request | method=GET, path=/api/documents/ffa843af-a960-42d0-9b63-7e376d4128ce/results, statusCode=404, duration=215, requestId=903ae65480c73be641e3f1b7c85afb7d, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.5.104, sessionId=XAZ-UF2_IrnYL6jLvGpbkWfqHX8nTvh8
+[CustomerLookupService] Looking up customer UUID for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+[CustomerLookupService] Found customer UUID: 4f789a87-7a23-45cc-a0c6-1cb0ac4ebcff for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+Document not found: ffa843af-a960-42d0-9b63-7e376d4128ce
+2025-08-25T05:26:40.932Z [INFO] API Request | method=GET, path=/api/documents/ffa843af-a960-42d0-9b63-7e376d4128ce/results, statusCode=404, duration=218, requestId=b0c15e5fd7229db51a26c930779cab83, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.5.104, sessionId=XAZ-UF2_IrnYL6jLvGpbkWfqHX8nTvh8
+[CustomerLookupService] Looking up customer UUID for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+[CustomerLookupService] Found customer UUID: 4f789a87-7a23-45cc-a0c6-1cb0ac4ebcff for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+Document not found: ffa843af-a960-42d0-9b63-7e376d4128ce
+2025-08-25T05:26:44.986Z [INFO] API Request | method=GET, path=/api/documents/ffa843af-a960-42d0-9b63-7e376d4128ce/results, statusCode=404, duration=214, requestId=3784154a69dcd961c1a060bc9cf1f9f6, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.5.104, sessionId=XAZ-UF2_IrnYL6jLvGpbkWfqHX8nTvh8
+[CustomerLookupService] Looking up customer UUID for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+[CustomerLookupService] Found customer UUID: 4f789a87-7a23-45cc-a0c6-1cb0ac4ebcff for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+Document not found: ffa843af-a960-42d0-9b63-7e376d4128ce
+2025-08-25T05:26:48.941Z [INFO] API Request | method=GET, path=/api/documents/ffa843af-a960-42d0-9b63-7e376d4128ce/results, statusCode=404, duration=214, requestId=38cd54f26d8ffa0070756aa38d04e036, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.5.104, sessionId=XAZ-UF2_IrnYL6jLvGpbkWfqHX8nTvh8
+[CustomerLookupService] Looking up customer UUID for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+[CustomerLookupService] Found customer UUID: 4f789a87-7a23-45cc-a0c6-1cb0ac4ebcff for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+Document not found: ffa843af-a960-42d0-9b63-7e376d4128ce
+2025-08-25T05:26:52.927Z [INFO] API Request | method=GET, path=/api/documents/ffa843af-a960-42d0-9b63-7e376d4128ce/results, statusCode=404, duration=214, requestId=03ae6d0fdb95bcceb2a450d0b46d3819, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.5.104, sessionId=XAZ-UF2_IrnYL6jLvGpbkWfqHX8nTvh8
+[CustomerLookupService] Looking up customer UUID for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+[CustomerLookupService] Found customer UUID: 4f789a87-7a23-45cc-a0c6-1cb0ac4ebcff for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+Document not found: ffa843af-a960-42d0-9b63-7e376d4128ce
+2025-08-25T05:26:56.928Z [INFO] API Request | method=GET, path=/api/documents/ffa843af-a960-42d0-9b63-7e376d4128ce/results, statusCode=404, duration=214, requestId=3ffc22c8a14740350eb621ef81e0a1c8, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.5.104, sessionId=XAZ-UF2_IrnYL6jLvGpbkWfqHX8nTvh8
+[CustomerLookupService] Looking up customer UUID for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+[CustomerLookupService] Found customer UUID: 4f789a87-7a23-45cc-a0c6-1cb0ac4ebcff for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+Document not found: ffa843af-a960-42d0-9b63-7e376d4128ce
+2025-08-25T05:27:00.931Z [INFO] API Request | method=GET, path=/api/documents/ffa843af-a960-42d0-9b63-7e376d4128ce/results, statusCode=404, duration=213, requestId=5003d09940e7f7e47d4481a607271f5c, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.5.104, sessionId=XAZ-UF2_IrnYL6jLvGpbkWfqHX8nTvh8
+[ExportProcessor] Found 0 pending exports
+[CustomerLookupService] Looking up customer UUID for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+[CustomerLookupService] Found customer UUID: 4f789a87-7a23-45cc-a0c6-1cb0ac4ebcff for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+Document not found: ffa843af-a960-42d0-9b63-7e376d4128ce
+2025-08-25T05:27:04.927Z [INFO] API Request | method=GET, path=/api/documents/ffa843af-a960-42d0-9b63-7e376d4128ce/results, statusCode=404, duration=215, requestId=8508d6804436a5051068b1bd823da9fe, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.5.104, sessionId=XAZ-UF2_IrnYL6jLvGpbkWfqHX8nTvh8
+[CustomerLookupService] Looking up customer UUID for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+[CustomerLookupService] Found customer UUID: 4f789a87-7a23-45cc-a0c6-1cb0ac4ebcff for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+Document not found: ffa843af-a960-42d0-9b63-7e376d4128ce
+2025-08-25T05:27:09.098Z [INFO] API Request | method=GET, path=/api/documents/ffa843af-a960-42d0-9b63-7e376d4128ce/results, statusCode=404, duration=215, requestId=94aa5ea2f7e4202e55ea0d7c0b15fe28, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.5.104, sessionId=XAZ-UF2_IrnYL6jLvGpbkWfqHX8nTvh8
+[CustomerLookupService] Looking up customer UUID for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+[CustomerLookupService] Found customer UUID: 4f789a87-7a23-45cc-a0c6-1cb0ac4ebcff for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+Document not found: ffa843af-a960-42d0-9b63-7e376d4128ce
+2025-08-25T05:27:12.928Z [INFO] API Request | method=GET, path=/api/documents/ffa843af-a960-42d0-9b63-7e376d4128ce/results, statusCode=404, duration=210, requestId=618df080ed2539d3ea928391b1ca3c5f, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.5.104, sessionId=XAZ-UF2_IrnYL6jLvGpbkWfqHX8nTvh8
+[CustomerLookupService] Looking up customer UUID for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+[CustomerLookupService] Found customer UUID: 4f789a87-7a23-45cc-a0c6-1cb0ac4ebcff for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+Document not found: ffa843af-a960-42d0-9b63-7e376d4128ce
+2025-08-25T05:27:16.926Z [INFO] API Request | method=GET, path=/api/documents/ffa843af-a960-42d0-9b63-7e376d4128ce/results, statusCode=404, duration=213, requestId=479bafff7db11527f77ffad8f4d34a77, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.5.104, sessionId=XAZ-UF2_IrnYL6jLvGpbkWfqHX8nTvh8
+[CustomerLookupService] Looking up customer UUID for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+[CustomerLookupService] Found customer UUID: 4f789a87-7a23-45cc-a0c6-1cb0ac4ebcff for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+Document not found: ffa843af-a960-42d0-9b63-7e376d4128ce
+2025-08-25T05:27:20.925Z [INFO] API Request | method=GET, path=/api/documents/ffa843af-a960-42d0-9b63-7e376d4128ce/results, statusCode=404, duration=211, requestId=bf0d851e15c068493d6f9ec94f868cd3, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.5.104, sessionId=XAZ-UF2_IrnYL6jLvGpbkWfqHX8nTvh8
+[CustomerLookupService] Looking up customer UUID for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+[CustomerLookupService] Found customer UUID: 4f789a87-7a23-45cc-a0c6-1cb0ac4ebcff for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+Document not found: ffa843af-a960-42d0-9b63-7e376d4128ce
+2025-08-25T05:27:24.935Z [INFO] API Request | method=GET, path=/api/documents/ffa843af-a960-42d0-9b63-7e376d4128ce/results, statusCode=404, duration=211, requestId=82e7086d76a89e5ff47332c44c2f6fef, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.5.104, sessionId=XAZ-UF2_IrnYL6jLvGpbkWfqHX8nTvh8
+[CustomerLookupService] Looking up customer UUID for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+[CustomerLookupService] Found customer UUID: 4f789a87-7a23-45cc-a0c6-1cb0ac4ebcff for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+Document not found: ffa843af-a960-42d0-9b63-7e376d4128ce
+2025-08-25T05:27:28.928Z [INFO] API Request | method=GET, path=/api/documents/ffa843af-a960-42d0-9b63-7e376d4128ce/results, statusCode=404, duration=210, requestId=cbd34fa850700c1519545deb82e879d7, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.5.104, sessionId=XAZ-UF2_IrnYL6jLvGpbkWfqHX8nTvh8
+[ExportProcessor] Found 0 pending exports
+[CustomerLookupService] Looking up customer UUID for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+[CustomerLookupService] Found customer UUID: 4f789a87-7a23-45cc-a0c6-1cb0ac4ebcff for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+Document not found: ffa843af-a960-42d0-9b63-7e376d4128ce
+2025-08-25T05:27:32.939Z [INFO] API Request | method=GET, path=/api/documents/ffa843af-a960-42d0-9b63-7e376d4128ce/results, statusCode=404, duration=214, requestId=f502bd8daa5e037cad017794ad71d3ef, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.5.104, sessionId=XAZ-UF2_IrnYL6jLvGpbkWfqHX8nTvh8
+[CustomerLookupService] Looking up customer UUID for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+[CustomerLookupService] Found customer UUID: 4f789a87-7a23-45cc-a0c6-1cb0ac4ebcff for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+Document not found: ffa843af-a960-42d0-9b63-7e376d4128ce
+2025-08-25T05:27:36.943Z [INFO] API Request | method=GET, path=/api/documents/ffa843af-a960-42d0-9b63-7e376d4128ce/results, statusCode=404, duration=215, requestId=43c6bdb69c8c336e0c1fc64435bd8270, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.5.104, sessionId=XAZ-UF2_IrnYL6jLvGpbkWfqHX8nTvh8
+[CustomerLookupService] Looking up customer UUID for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+[CustomerLookupService] Found customer UUID: 4f789a87-7a23-45cc-a0c6-1cb0ac4ebcff for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+Document not found: ffa843af-a960-42d0-9b63-7e376d4128ce
+2025-08-25T05:27:40.929Z [INFO] API Request | method=GET, path=/api/documents/ffa843af-a960-42d0-9b63-7e376d4128ce/results, statusCode=404, duration=213, requestId=00661a6f1c69aa12c3ebe9d4365c44e1, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.5.104, sessionId=XAZ-UF2_IrnYL6jLvGpbkWfqHX8nTvh8
+[CustomerLookupService] Looking up customer UUID for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+[CustomerLookupService] Found customer UUID: 4f789a87-7a23-45cc-a0c6-1cb0ac4ebcff for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+Document not found: ffa843af-a960-42d0-9b63-7e376d4128ce
+2025-08-25T05:27:44.930Z [INFO] API Request | method=GET, path=/api/documents/ffa843af-a960-42d0-9b63-7e376d4128ce/results, statusCode=404, duration=214, requestId=c8dce443e08e5a7648ff4143304dfb78, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.5.104, sessionId=XAZ-UF2_IrnYL6jLvGpbkWfqHX8nTvh8
+[CustomerLookupService] Looking up customer UUID for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+[CustomerLookupService] Found customer UUID: 4f789a87-7a23-45cc-a0c6-1cb0ac4ebcff for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+Document not found: ffa843af-a960-42d0-9b63-7e376d4128ce
+2025-08-25T05:27:48.939Z [INFO] API Request | method=GET, path=/api/documents/ffa843af-a960-42d0-9b63-7e376d4128ce/results, statusCode=404, duration=214, requestId=ec778205c71b43b5bca0c9951906d46e, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.5.104, sessionId=XAZ-UF2_IrnYL6jLvGpbkWfqHX8nTvh8
+[CustomerLookupService] Looking up customer UUID for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+[CustomerLookupService] Found customer UUID: 4f789a87-7a23-45cc-a0c6-1cb0ac4ebcff for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+Document not found: ffa843af-a960-42d0-9b63-7e376d4128ce
+2025-08-25T05:27:52.926Z [INFO] API Request | method=GET, path=/api/documents/ffa843af-a960-42d0-9b63-7e376d4128ce/results, statusCode=404, duration=213, requestId=590a4b1a75420c6656a0ea0797b6adff, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.5.104, sessionId=XAZ-UF2_IrnYL6jLvGpbkWfqHX8nTvh8
+[CustomerLookupService] Looking up customer UUID for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+[CustomerLookupService] Found customer UUID: 4f789a87-7a23-45cc-a0c6-1cb0ac4ebcff for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+Document not found: ffa843af-a960-42d0-9b63-7e376d4128ce
+2025-08-25T05:27:56.930Z [INFO] API Request | method=GET, path=/api/documents/ffa843af-a960-42d0-9b63-7e376d4128ce/results, statusCode=404, duration=213, requestId=a52310c2003e88db42107991aaf0e060, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.5.104, sessionId=XAZ-UF2_IrnYL6jLvGpbkWfqHX8nTvh8
+[CustomerLookupService] Looking up customer UUID for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+[CustomerLookupService] Found customer UUID: 4f789a87-7a23-45cc-a0c6-1cb0ac4ebcff for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+Document not found: ffa843af-a960-42d0-9b63-7e376d4128ce
+2025-08-25T05:28:00.940Z [INFO] API Request | method=GET, path=/api/documents/ffa843af-a960-42d0-9b63-7e376d4128ce/results, statusCode=404, duration=214, requestId=2a39e4bb57b5bc665d73ed69128d220f, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.5.104, sessionId=XAZ-UF2_IrnYL6jLvGpbkWfqHX8nTvh8
+[ExportProcessor] Found 0 pending exports
+[CustomerLookupService] Looking up customer UUID for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+[CustomerLookupService] Found customer UUID: 4f789a87-7a23-45cc-a0c6-1cb0ac4ebcff for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+Document not found: ffa843af-a960-42d0-9b63-7e376d4128ce
+2025-08-25T05:28:04.929Z [INFO] API Request | method=GET, path=/api/documents/ffa843af-a960-42d0-9b63-7e376d4128ce/results, statusCode=404, duration=213, requestId=90f6cf78ffce0f05096acfd42d9a79be, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.5.104, sessionId=XAZ-UF2_IrnYL6jLvGpbkWfqHX8nTvh8
+[CustomerLookupService] Looking up customer UUID for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+[CustomerLookupService] Found customer UUID: 4f789a87-7a23-45cc-a0c6-1cb0ac4ebcff for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+Document not found: ffa843af-a960-42d0-9b63-7e376d4128ce
+2025-08-25T05:28:08.991Z [INFO] API Request | method=GET, path=/api/documents/ffa843af-a960-42d0-9b63-7e376d4128ce/results, statusCode=404, duration=281, requestId=3d88ed42f3e9931a95d273df9bae0602, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.5.104, sessionId=XAZ-UF2_IrnYL6jLvGpbkWfqHX8nTvh8
+[CustomerLookupService] Looking up customer UUID for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+[CustomerLookupService] Found customer UUID: 4f789a87-7a23-45cc-a0c6-1cb0ac4ebcff for session user: c960f3b7-9c8a-4a74-b80b-6094d3f8d899
+Document not found: ffa843af-a960-42d0-9b63-7e376d4128ce
+2025-08-25T05:28:12.939Z [INFO] API Request | method=GET, path=/api/documents/ffa843af-a960-42d0-9b63-7e376d4128ce/results, statusCode=404, duration=216, requestId=9b0d9348263bb9ee18fcf721177356b3, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.5.104, sessionId=XAZ-UF2_IrnYL6jLvGpbkWfqHX8nTvh8
