@@ -81,18 +81,22 @@ interface QuestionOverrideFormProps {
   questionText: string;
   initialRigor?: string;
   initialStandards: string;
-  onSuccess: () => void;
+  isOverridden: boolean;
+  onSaveOverride: (payload: any) => void;
   onCancel?: () => void;
+  onRevert?: () => void;
+  onCopyFrom?: (questionNumber: string) => void;
+  allQuestions?: Array<{ questionNumber: number; finalRigorLevel: string; finalStandards: any[]; isOverridden: boolean; }>;
+  isSaving?: boolean;
 }
 
-function QuestionOverrideForm({ questionId, questionNumber, questionText, initialRigor, initialStandards, onSuccess, onCancel }: QuestionOverrideFormProps) {
+function QuestionOverrideForm({ questionId, questionNumber, questionText, initialRigor, initialStandards, isOverridden, onSaveOverride, onCancel, onRevert, onCopyFrom, allQuestions, isSaving }: QuestionOverrideFormProps) {
   const [rigor, setRigor] = useState(initialRigor || '');
   const [standards, setStandards] = useState(initialStandards);
   const [notes, setNotes] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!rigor) {
       toast({
         title: "Error",
@@ -102,51 +106,32 @@ function QuestionOverrideForm({ questionId, questionNumber, questionText, initia
       return;
     }
 
-    setIsSaving(true);
-    try {
-      const processStandards = (standardsInput: string) => {
-        if (!standardsInput || typeof standardsInput !== 'string') {
-          return [];
-        }
-        const codes = standardsInput
-          .split(',')
-          .map((code: string) => code.trim())
-          .filter((code: string) => code.length > 0);
-          
-        return codes.map((code: string) => ({
-          code,
-          description: '',
-          jurisdiction: 'Unknown'
-        }));
-      };
+    const processStandards = (standardsInput: string) => {
+      if (!standardsInput || typeof standardsInput !== 'string') {
+        return [];
+      }
+      const codes = standardsInput
+        .split(',')
+        .map((code: string) => code.trim())
+        .filter((code: string) => code.length > 0);
+        
+      return codes.map((code: string) => ({
+        code,
+        description: '',
+        jurisdiction: 'Unknown'
+      }));
+    };
 
-      const payload = {
-        questionId,
-        overriddenRigorLevel: rigor,
-        overriddenStandards: processStandards(standards),
-        notes,
-        confidenceScore: 5, // Default confidence
-        editReason: 'Teacher override from document results'
-      };
+    const payload = {
+      questionId,
+      overriddenRigorLevel: rigor,
+      overriddenStandards: processStandards(standards),
+      notes,
+      confidenceScore: 5, // Default confidence
+      editReason: 'Teacher override from document results'
+    };
 
-      await apiRequest('POST', `/api/questions/${questionId}/override`, payload);
-      
-      toast({
-        title: "Success",
-        description: "Question override saved successfully.",
-        variant: "default",
-      });
-      onSuccess();
-    } catch (error) {
-      console.error('Error saving override:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save override. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSaving(false);
-    }
+    onSaveOverride(payload);
   };
 
   return (
@@ -193,21 +178,58 @@ function QuestionOverrideForm({ questionId, questionNumber, questionText, initia
           />
         </div>
 
-        <div className="flex justify-end space-x-2">
-          <Button 
-            type="button" 
-            variant="outline"
-            onClick={onCancel}
-          >
-            Cancel
-          </Button>
-          <Button 
-            type="button"
-            onClick={handleSave}
-            disabled={isSaving}
-          >
-            {isSaving ? 'Saving...' : 'Save Override'}
-          </Button>
+        {/* Copy from another question */}
+        {allQuestions && allQuestions.length > 0 && (
+          <div>
+            <Label className="text-sm font-medium">Copy from Question</Label>
+            <Select onValueChange={(value) => onCopyFrom?.(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Copy analysis from another question..." />
+              </SelectTrigger>
+              <SelectContent>
+                {allQuestions
+                  .filter(q => q.questionNumber.toString() !== questionNumber)
+                  .map((q) => (
+                    <SelectItem key={q.questionNumber} value={q.questionNumber.toString()}>
+                      Question {q.questionNumber} ({q.finalRigorLevel?.toUpperCase() || 'No analysis'})
+                      {q.isOverridden && " [EDITED]"}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        <div className="flex justify-between">
+          <div className="space-x-2">
+            {isOverridden && onRevert && (
+              <Button 
+                type="button" 
+                variant="outline"
+                onClick={onRevert}
+                className="text-blue-600 hover:text-blue-700"
+              >
+                <RotateCcw className="w-4 h-4 mr-1" />
+                Revert to Sherpa
+              </Button>
+            )}
+          </div>
+          <div className="space-x-2 flex">
+            <Button 
+              type="button" 
+              variant="outline"
+              onClick={onCancel}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="button"
+              onClick={handleSave}
+              disabled={isSaving}
+            >
+              {isSaving ? 'Saving...' : 'Save Override'}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -227,6 +249,29 @@ export default function DocumentResults() {
     justification: string;
     confidence: number;
   }>({ rigorLevel: 'mild', standards: '', justification: '', confidence: 5 });
+  
+  // Copy/paste functionality
+  const handleCopyFromQuestion = (targetQuestionId: string, sourceQuestionNumber: string) => {
+    const sourceQuestion = docResult?.results?.find(r => r.questionNumber.toString() === sourceQuestionNumber);
+    if (!sourceQuestion) return;
+    
+    // Copy the analysis from source to target
+    const payload = {
+      questionId: targetQuestionId,
+      overriddenRigorLevel: sourceQuestion.finalRigorLevel,
+      overriddenStandards: sourceQuestion.finalStandards?.map(s => ({
+        code: typeof s === 'string' ? s : s.code,
+        description: '',
+        jurisdiction: 'Unknown'
+      })) || [],
+      notes: `Copied from Question ${sourceQuestionNumber}`,
+      confidenceScore: 5,
+      editReason: `Copied analysis from Question ${sourceQuestionNumber}`
+    };
+    
+    saveOverrideMutation.mutate(payload);
+  };
+
 
   const { data: docResult, isLoading, error } = useQuery<DocumentResult>({
     queryKey: [`/api/documents/${docId}/results`],
@@ -301,7 +346,15 @@ export default function DocumentResults() {
     },
     onSuccess: async (data, questionId) => {
       console.log('Revert successful, invalidating queries...');
-      // Invalidate and refetch the queries
+      
+      // Close any open dialogs
+      const openDialog = document.querySelector('[data-state="open"][role="dialog"]');
+      if (openDialog) {
+        const closeButton = openDialog.querySelector('[aria-label="Close"]') as HTMLElement;
+        if (closeButton) closeButton.click();
+      }
+      
+      // Force immediate data refresh
       await queryClient.invalidateQueries({ queryKey: [`/api/documents/${docId}/results`] });
       await queryClient.refetchQueries({ queryKey: [`/api/documents/${docId}/results`] });
       console.log('Query refetch completed');
@@ -352,6 +405,15 @@ export default function DocumentResults() {
     },
     onSuccess: async (data, variables) => {
       console.log('Override saved, invalidating cache for doc:', docId);
+      
+      // Close any open dialogs
+      const openDialog = document.querySelector('[data-state="open"][role="dialog"]');
+      if (openDialog) {
+        const closeButton = openDialog.querySelector('[aria-label="Close"]') as HTMLElement;
+        if (closeButton) closeButton.click();
+      }
+      
+      // Force immediate data refresh
       await queryClient.invalidateQueries({ queryKey: [`/api/documents/${docId}/results`] });
       await queryClient.refetchQueries({ queryKey: [`/api/documents/${docId}/results`] });
       console.log('Cache refetch completed');
@@ -1097,10 +1159,23 @@ export default function DocumentResults() {
                                         questionText={result.questionText}
                                         initialRigor={result.finalRigorLevel || ''}
                                         initialStandards={result.finalStandards?.map((s: any) => typeof s === 'string' ? s : s.code).join(', ') || ''}
-                                        onSuccess={() => {
-                                          // Refetch data after successful save
-                                          queryClient.invalidateQueries({ queryKey: [`/api/documents/${docId}/results`] });
+                                        isOverridden={result.isOverridden}
+                                        allQuestions={docResult?.results?.map(r => ({
+                                          questionNumber: r.questionNumber,
+                                          finalRigorLevel: r.finalRigorLevel || '',
+                                          finalStandards: r.finalStandards || [],
+                                          isOverridden: r.isOverridden
+                                        }))}
+                                        onSaveOverride={(payload) => {
+                                          saveOverrideMutation.mutate(payload);
                                         }}
+                                        onRevert={() => {
+                                          revertToAiMutation.mutate(result.id);
+                                        }}
+                                        onCopyFrom={(sourceQuestionNumber) => {
+                                          handleCopyFromQuestion(result.id, sourceQuestionNumber);
+                                        }}
+                                        isSaving={saveOverrideMutation.isPending}
                                       />
                                     </DialogContent>
                                   </Dialog>
