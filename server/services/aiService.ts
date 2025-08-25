@@ -504,7 +504,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
                 console.log(`⚠️ No description found for standard: ${problem.standardCode}`);
               }
             } catch (error) {
-              console.log(`⚠️ Error looking up standard ${problem.standardCode}:`, error.message);
+              console.log(`⚠️ Error looking up standard ${problem.standardCode}:`, (error as Error).message);
             }
             
             return {
@@ -567,7 +567,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
                       console.log(`⚠️ No description found for standard: ${standard.code}`);
                     }
                   } catch (error) {
-                    console.log(`⚠️ Error looking up standard ${standard.code}:`, error.message);
+                    console.log(`⚠️ Error looking up standard ${standard.code}:`, (error as Error).message);
                   }
                   
                   return {
@@ -626,7 +626,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
                 console.log(`⚠️ No description found for standard: ${standard.code}`);
               }
             } catch (error) {
-              console.log(`⚠️ Error looking up standard ${standard.code}:`, error.message);
+              console.log(`⚠️ Error looking up standard ${standard.code}:`, (error as Error).message);
             }
             
             return {
