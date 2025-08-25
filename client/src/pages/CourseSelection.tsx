@@ -57,20 +57,20 @@ export default function CourseSelection() {
     setCourseContextMutation.mutate();
   };
 
-  const configuredClassrooms = classrooms?.filter(c => c.courseConfigurationCompleted) || [];
+  const configuredClassrooms = classrooms?.filter(c => c.course_configuration_completed) || [];
   
   // Debug: Check what we have after filtering
   console.log('[CourseSelection] All classrooms:', classrooms?.length || 0);
   console.log('[CourseSelection] Configured classrooms:', configuredClassrooms.length);
   console.log('[CourseSelection] Configured classroom details:', configuredClassrooms.map(c => ({
     name: c.name,
-    courseTitle: c.courseTitle,
-    configured: c.courseConfigurationCompleted
+    courseTitle: c.course_title,
+    configured: c.course_configuration_completed
   })));
   
   // Group classrooms by course (courseTitle) to show courses, not individual sections
   const courseGroups = configuredClassrooms.reduce((groups: any, classroom: any) => {
-    const courseTitle = classroom.courseTitle || 'Unknown Course';
+    const courseTitle = classroom.course_title || 'Unknown Course';
     if (!groups[courseTitle]) {
       groups[courseTitle] = {
         courseTitle,
