@@ -1,0 +1,66 @@
+[CustomerLookupService] Found user and customer UUID: e57aea91-4122-46fa-b98f-86ed5df38ebf for session user: 79146a31-dd8d-4ba9-a58f-3f32a8bd008e
+🎓 [STANDARDS-CONFIG] Complete standards configuration request: {
+  userId: '79146a31-dd8d-4ba9-a58f-3f32a8bd008e',
+  customerUuid: 'e57aea91-4122-46fa-b98f-86ed5df38ebf',
+  standardsConfigurationCompleted: true,
+  onboardingCompleted: true,
+  courseMappingsCount: 5
+}
+🏫 [STANDARDS-CONFIG] Processing course mappings: 5
+🏫 [STANDARDS-CONFIG] Processing mapping: {
+  classroomId: '7e837397-39c1-48cd-8a69-3a01debd695c',
+  selectedCourseId: '67810E9EF6944F9383DCC602A3484C23_D10003FB_high-school-algebra',
+  enableSBG: true
+}
+🏫 [STANDARDS-CONFIG] Updating classroom: {
+  classroomId: '7e837397-39c1-48cd-8a69-3a01debd695c',
+  courseTitle: 'Algebra 1',
+  sbgEnabled: true,
+  courseConfigurationCompleted: true
+}
+🏫 [STANDARDS-CONFIG] Processing mapping: {
+  classroomId: '9f8da2c9-49fa-45fe-ad8c-a0c8cfc767cb',
+  selectedCourseId: '67810E9EF6944F9383DCC602A3484C23_D10003FB_high-school-algebra',
+  enableSBG: true
+}
+🏫 [STANDARDS-CONFIG] Updating classroom: {
+  classroomId: '9f8da2c9-49fa-45fe-ad8c-a0c8cfc767cb',
+  courseTitle: 'Algebra 1',
+  sbgEnabled: true,
+  courseConfigurationCompleted: true
+}
+🏫 [STANDARDS-CONFIG] Processing mapping: {
+  classroomId: 'b6caa372-4b36-4d95-9a57-afedb14d961c',
+  selectedCourseId: '67810E9EF6944F9383DCC602A3484C23_D10003FB_high-school-number-and-quantity',
+  enableSBG: true
+}
+🏫 [STANDARDS-CONFIG] Updating classroom: {
+  classroomId: 'b6caa372-4b36-4d95-9a57-afedb14d961c',
+  courseTitle: 'Pre-Calculus',
+  sbgEnabled: true,
+  courseConfigurationCompleted: true
+}
+🏫 [STANDARDS-CONFIG] Processing mapping: {
+  classroomId: '5339d3df-475d-4763-9cff-75f63918984a',
+  selectedCourseId: '67810E9EF6944F9383DCC602A3484C23_D10003FB_high-school-number-and-quantity',
+  enableSBG: true
+}
+🏫 [STANDARDS-CONFIG] Updating classroom: {
+  classroomId: '5339d3df-475d-4763-9cff-75f63918984a',
+  courseTitle: 'Pre-Calculus',
+  sbgEnabled: true,
+  courseConfigurationCompleted: true
+}
+🏫 [STANDARDS-CONFIG] Processing mapping: {
+  classroomId: '1587b6fe-d7d7-4e16-b34f-fac22031a721',
+  selectedCourseId: '67810E9EF6944F9383DCC602A3484C23_D10003FB_high-school-number-and-quantity',
+  enableSBG: true
+}
+🏫 [STANDARDS-CONFIG] Updating classroom: {
+  classroomId: '1587b6fe-d7d7-4e16-b34f-fac22031a721',
+  courseTitle: 'Pre-Calculus',
+  sbgEnabled: true,
+  courseConfigurationCompleted: true
+}
+2025-08-25T05:06:58.193Z [INFO] API Request | method=PUT, path=/api/user/complete-standards-configuration, statusCode=200, duration=595, requestId=bca5d8d98a14bedabf0a2f37d3a96b9d, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.57, sessionId=Udp-bjkgBLmBB2Cb_3ApPh349ObWl0ta
+2025-08-25T05:06:58.513Z [INFO] API Request | method=GET, path=/api/auth/user, statusCode=200, duration=147, requestId=d119673624274b9598c8e1e63d12a687, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.1.57, sessionId=Udp-bjkgBLmBB2Cb_3ApPh349ObWl0ta
