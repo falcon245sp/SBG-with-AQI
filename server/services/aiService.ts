@@ -429,7 +429,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         console.log(`✅ NEW FORMAT: Creating ${parsedGrokResponse.length} individual question entries from parsed JSON array`);
         
         // Import the commonStandardsProjectService for standard lookups
-        const { default: commonStandardsProjectService } = await import('./commonStandardsProjectService');
+        const { commonStandardsProjectService } = await import('./commonStandardsProjectService');
         
         // Process each problem and lookup standard descriptions
         const questionsWithStandardDescriptions = await Promise.all(
@@ -446,7 +446,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
                 console.log(`⚠️ No description found for standard: ${problem.standard}`);
               }
             } catch (error) {
-              console.log(`⚠️ Error looking up standard ${problem.standard}:`, error.message);
+              console.log(`⚠️ Error looking up standard ${problem.standard}:`, (error as Error).message);
             }
             
             return {
@@ -487,7 +487,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         console.log(`Creating ${grokResult.jsonResponse.problems.length} individual question entries from JSON response`);
         
         // Import the commonStandardsProjectService for standard lookups
-        const { default: commonStandardsProjectService } = await import('./commonStandardsProjectService');
+        const { commonStandardsProjectService } = await import('./commonStandardsProjectService');
         
         // Process each problem and lookup standard descriptions
         const questionsWithStandardDescriptions = await Promise.all(
@@ -545,7 +545,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         console.log(`Creating ${grokResult.allQuestions.length} individual question entries from parsed response`);
         
         // Import the commonStandardsProjectService for standard lookups
-        const { default: commonStandardsProjectService } = await import('./commonStandardsProjectService');
+        const { commonStandardsProjectService } = await import('./commonStandardsProjectService');
         
         // Process each question and lookup standard descriptions
         const questionsWithStandardDescriptions = await Promise.all(
@@ -609,7 +609,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       console.log('Creating individual questions from detected standards for teacher use');
       if (grokResult.standards && grokResult.standards.length > 0) {
         // Import the commonStandardsProjectService for standard lookups
-        const { default: commonStandardsProjectService } = await import('./commonStandardsProjectService');
+        const { commonStandardsProjectService } = await import('./commonStandardsProjectService');
         
         // Process each standard and lookup descriptions
         const questionsWithStandardDescriptions = await Promise.all(
