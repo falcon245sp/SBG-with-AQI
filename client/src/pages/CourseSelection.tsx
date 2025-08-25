@@ -59,10 +59,8 @@ export default function CourseSelection() {
 
   const configuredClassrooms = classrooms?.filter(c => c.courseConfigurationCompleted) || [];
   
-  // Debug: log the classroom data to see the actual structure
-  console.log('[CourseSelection] Raw classrooms data:', classrooms);
-  console.log('[CourseSelection] Configured classrooms:', configuredClassrooms);
-  console.log('[CourseSelection] First classroom keys:', classrooms?.[0] ? Object.keys(classrooms[0]) : 'no classrooms');
+  // Debug: Remove this after confirming the fix works
+  // console.log('[CourseSelection] Raw classrooms data:', classrooms);
 
   if (isLoading) {
     return (
@@ -116,7 +114,7 @@ export default function CourseSelection() {
                       <RadioGroupItem value={classroom.id} id={classroom.id} />
                       <Label htmlFor={classroom.id} className="flex-1 cursor-pointer">
                         <div className="font-medium">
-                          {classroom.courseTitle || classroom.name}
+                          {classroom.name}
                         </div>
                         {classroom.section && (
                           <div className="text-sm text-slate-500">

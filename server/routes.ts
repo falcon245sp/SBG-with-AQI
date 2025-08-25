@@ -218,9 +218,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (courseMappings && Array.isArray(courseMappings)) {
         // Update each classroom with SBG and course mapping settings
         for (const mapping of courseMappings) {
+          // Extract course name from the technical ID
+          // Format: "67810E9EF6944F9383DCC602A3484C23_D10003FB_high-school-algebra"
+          // We want the part after the last underscore: "high-school-algebra"
+          let readableCourseName = 'Course';
+          if (mapping.selectedCourseId) {
+            const parts = mapping.selectedCourseId.split('_');
+            const coursePart = parts[parts.length - 1]; // "high-school-algebra"
+            
+            // Convert to readable format
+            if (coursePart.includes('algebra')) {
+              readableCourseName = 'Algebra 1';
+            } else if (coursePart.includes('geometry')) {
+              readableCourseName = 'Geometry';
+            } else if (coursePart.includes('number-and-quantity')) {
+              readableCourseName = 'Pre-Calculus';
+            } else if (coursePart.includes('statistics')) {
+              readableCourseName = 'Statistics';
+            } else if (coursePart.includes('functions')) {
+              readableCourseName = 'Algebra 2';
+            } else {
+              // Fallback: clean up the technical name
+              readableCourseName = coursePart
+                .replace(/-/g, ' ')
+                .replace(/\b\w/g, l => l.toUpperCase());
+            }
+          }
+          
           await storage.updateClassroom(mapping.classroomId, {
             sbgEnabled: mapping.enableSBG,
-            courseTitle: mapping.selectedCourseId,
+            courseTitle: readableCourseName, // ✅ Store readable name instead of technical ID
             courseConfigurationCompleted: true
           });
         }
@@ -425,10 +452,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Prepare the standards configuration
       const enabledStandardIds = selectedStandards || [];
       
+      // Convert technical course ID to readable name if needed
+      let readableCourseName = courseTitle;
+      if (courseTitle && courseTitle.includes('_')) {
+        const parts = courseTitle.split('_');
+        const coursePart = parts[parts.length - 1];
+        
+        if (coursePart.includes('algebra')) {
+          readableCourseName = 'Algebra 1';
+        } else if (coursePart.includes('geometry')) {
+          readableCourseName = 'Geometry';
+        } else if (coursePart.includes('number-and-quantity')) {
+          readableCourseName = 'Pre-Calculus';
+        } else if (coursePart.includes('statistics')) {
+          readableCourseName = 'Statistics';
+        } else if (coursePart.includes('functions')) {
+          readableCourseName = 'Algebra 2';
+        } else {
+          readableCourseName = coursePart
+            .replace(/-/g, ' ')
+            .replace(/\b\w/g, l => l.toUpperCase());
+        }
+      }
+      
       // Configuration to apply
       const standardsConfig = {
         standardsJurisdiction: jurisdictionId,
-        courseTitle: courseTitle,
+        courseTitle: readableCourseName, // ✅ Store readable name
         enabledStandards: enabledStandardIds,
         sbgEnabled: autoEnableSBG, // Auto-enable SBG when configuring standards
         updatedAt: new Date()
