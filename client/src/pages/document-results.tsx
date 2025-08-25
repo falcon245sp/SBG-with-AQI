@@ -818,7 +818,7 @@ export default function DocumentResults() {
 
         {/* Main Content - Two-Pane Layout for Review, Single-Pane for Accepted */}
         <main className="flex-1 relative overflow-hidden focus:outline-none">
-          {doc.status === 'completed' && doc.teacherReviewStatus === 'not_reviewed' ? (
+          {docResult?.document?.status === 'completed' && docResult?.document?.teacherReviewStatus === 'not_reviewed' ? (
             /* TWO-PANE LAYOUT: Original doc + AI analysis side by side */
             <ResizablePanelGroup direction="horizontal" className="h-full">
               {/* LEFT PANE: Original Document */}
@@ -830,7 +830,7 @@ export default function DocumentResults() {
                       <Eye className="w-4 h-4 text-slate-600 mr-2" />
                       <h3 className="text-sm font-medium text-slate-900">Original Document</h3>
                       <Badge variant="outline" className="ml-2 text-xs">
-                        {doc.fileName}
+                        {docResult?.document?.fileName}
                       </Badge>
                     </div>
                   </div>
@@ -840,7 +840,7 @@ export default function DocumentResults() {
                     <iframe
                       src={`/api/documents/${docId}/content`}
                       className="w-full h-full border-0"
-                      title={`PDF: ${doc.fileName}`}
+                      title={`PDF: ${docResult?.document?.fileName}`}
                       data-testid="doc-viewer-iframe"
                     />
                   </div>
@@ -1168,7 +1168,7 @@ export default function DocumentResults() {
 
         {/* Main Content - Two-Pane Layout for Review, Single-Pane for Accepted */}
         <main className="flex-1 relative overflow-hidden focus:outline-none">
-          {doc.status === 'completed' && doc.teacherReviewStatus === 'not_reviewed' ? (
+          {docResult?.document?.status === 'completed' && docResult?.document?.teacherReviewStatus === 'not_reviewed' ? (
             /* TWO-PANE LAYOUT: Original doc + AI analysis side by side */
             <ResizablePanelGroup direction="horizontal" className="h-full">
               {/* LEFT PANE: Original Document */}
@@ -1180,7 +1180,7 @@ export default function DocumentResults() {
                       <Eye className="w-4 h-4 text-slate-600 mr-2" />
                       <h3 className="text-sm font-medium text-slate-900">Original Document</h3>
                       <Badge variant="outline" className="ml-2 text-xs">
-                        {doc.fileName}
+                        {docResult?.document?.fileName}
                       </Badge>
                     </div>
                   </div>
@@ -1190,7 +1190,7 @@ export default function DocumentResults() {
                     <iframe
                       src={`/api/documents/${docId}/content`}
                       className="w-full h-full border-0"
-                      title={`PDF: ${doc.fileName}`}
+                      title={`PDF: ${docResult?.document?.fileName}`}
                       data-testid="doc-viewer-iframe"
                     />
                   </div>
