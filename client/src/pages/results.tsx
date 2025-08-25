@@ -263,7 +263,7 @@ export default function ResultsPage() {
                                     onClick={() => window.location.href = `/results/${doc.id}`}
                                   >
                                     <Eye className="w-4 h-4 mr-1" />
-                                    View Analysis
+                                    {doc.assetType === 'generated' ? 'View' : 'View Analysis'}
                                   </Button>
                                 )}
                               </td>
