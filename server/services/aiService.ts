@@ -218,13 +218,23 @@ Return a JSON array where each element represents one individual question/proble
   }
 ]
 
+CRITICAL JSON FORMATTING REQUIREMENTS:
+- Return ONLY the JSON array - no additional text, explanations, or markdown
+- Use clean, unescaped JSON that can be parsed directly
+- Do NOT escape quotes or add backslashes to the JSON
+- Do NOT wrap the response in markdown code blocks or backticks
+- The response must start with [ and end with ]
+
 IMPORTANT: 
 - If you find multiple questions, return an array with multiple objects
 - If you find only one question, return an array with one object
 - Each question must have its own complete analysis
 - Extract the actual question text, don't use generic descriptions
 - Use standards from the TARGET JURISDICTIONS listed above (${primaryJurisdiction})
-- Base analysis solely on the provided document content`;
+- Base analysis solely on the provided document content
+
+RESPONSE FORMAT EXAMPLE (clean JSON only):
+[{"problemNumber":1,"questionText":"Problem text","standardCode":"6.NS.B.4","rigor":"mild"}]`;
     
     return prompt;
   }
