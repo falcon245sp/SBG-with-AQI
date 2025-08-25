@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { useToast } from "@/hooks/use-toast";
 import { Sidebar } from "@/components/Sidebar";
 import { RigorBadge } from "@/components/RigorBadge";
@@ -32,7 +33,8 @@ import {
   RotateCcw,
   History,
   Download,
-  ChevronDown
+  ChevronDown,
+  Eye
 } from "lucide-react";
 import { Link } from "wouter";
 import jsPDF from 'jspdf';
@@ -614,14 +616,349 @@ export default function DocumentResults() {
     );
   }
 
-  const { document, results } = documentResult;
+  // Remove duplicate - already declared later in the component
 
-  // Sort results by numeric value only (extract number from 3A, 11B, etc.)
-  const sortedResults = results.sort((a, b) => {
-    const extractNumber = (num: string | number) => {
-      const str = String(num);
-      const match = str.match(/^(\d+)/);
-      return match ? parseInt(match[1], 10) : 0;
+  return (
+    <div className="flex h-screen bg-slate-50">
+      <Sidebar />
+      
+      <div className="flex flex-col w-0 flex-1 overflow-hidden">
+        {/* Header */}
+        <div className="relative z-10 flex-shrink-0 flex h-16 bg-white shadow border-b border-slate-200">
+          <div className="flex-1 px-4 flex justify-between items-center">
+            <div className="flex items-center">
+              <Link href="/results">
+                <Button variant="ghost" size="sm" className="mr-4">
+                  <ArrowLeft className="w-4 h-4" />
+                </Button>
+              </Link>
+              <FileText className="w-6 h-6 text-blue-600 mr-3" />
+              <h2 className="text-2xl font-semibold text-slate-800">
+                Analysis Results: {document.fileName}
+              </h2>
+            </div>
+            
+            {/* Export Dropdown */}
+            <div className="flex items-center space-x-3">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Download className="w-4 h-4 mr-2" />
+                    Export
+                    <ChevronDown className="w-4 h-4 ml-1" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => exportRubric('rubric-markdown')}>
+                    <FileText className="w-4 h-4 mr-2" />
+                    Rubric (Markdown for Google Docs)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => exportRubric('rubric-pdf')}>
+                    <FileText className="w-4 h-4 mr-2" />
+                    Rubric (PDF)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => exportRubric('csv')}>
+                    <Download className="w-4 h-4 mr-2" />
+                    CSV Data Export
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => exportRubric('student-cover-sheet')}>
+                    <Target className="w-4 h-4 mr-2" />
+                    Student Facing Test Cover Sheet
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content - Two-Pane Layout for Review, Single-Pane for Accepted */}
+        <main className="flex-1 relative overflow-hidden focus:outline-none">
+          {document.status === 'completed' && document.teacherReviewStatus === 'not_reviewed' ? (
+            /* TWO-PANE LAYOUT: Original document + AI analysis side by side */
+            <ResizablePanelGroup direction="horizontal" className="h-full">
+              {/* LEFT PANE: Original Document */}
+              <ResizablePanel defaultSize={50} minSize={30} maxSize={70}>
+                <div className="h-full flex flex-col bg-white">
+                  {/* Document Header */}
+                  <div className="flex-shrink-0 px-4 py-3 border-b border-slate-200 bg-slate-50">
+                    <div className="flex items-center">
+                      <Eye className="w-4 h-4 text-slate-600 mr-2" />
+                      <h3 className="text-sm font-medium text-slate-900">Original Document</h3>
+                      <Badge variant="outline" className="ml-2 text-xs">
+                        {document.fileName}
+                      </Badge>
+                    </div>
+                  </div>
+                  
+                  {/* Document Viewer */}
+                  <div className="flex-1 overflow-hidden">
+                    <iframe
+                      src={`/api/documents/${documentId}/content`}
+                      className="w-full h-full border-0"
+                      title={`PDF: ${document.fileName}`}
+                      data-testid="document-viewer-iframe"
+                    />
+                  </div>
+                </div>
+              </ResizablePanel>
+
+              {/* RESIZABLE HANDLE */}
+              <ResizableHandle withHandle />
+
+              {/* RIGHT PANE: AI Analysis */}
+              <ResizablePanel defaultSize={50} minSize={30} maxSize={70}>
+                <div className="h-full flex flex-col bg-slate-50">
+                  {/* Analysis Header */}
+                  <div className="flex-shrink-0 px-4 py-3 border-b border-slate-200 bg-white">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <Brain className="w-4 h-4 text-blue-600 mr-2" />
+                        <h3 className="text-sm font-medium text-slate-900">AI Analysis Results</h3>
+                        <Badge variant="secondary" className="ml-2 bg-yellow-100 text-yellow-800">
+                          Awaiting Review
+                        </Badge>
+                      </div>
+                      
+                      {/* Accept & Proceed Button */}
+                      <Button
+                        onClick={() => {
+                          console.log('[Button] Accept & Proceed button clicked');
+                          handleAcceptAndProceed();
+                        }}
+                        className={`${
+                          acceptAndProceedMutation.isPending 
+                            ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed' 
+                            : 'bg-green-600 hover:bg-green-700'
+                        } text-white`}
+                        size="sm"
+                        disabled={acceptAndProceedMutation.isPending}
+                        data-testid="accept-proceed-button"
+                      >
+                        {acceptAndProceedMutation.isPending ? '⏳ Processing...' : '✅ Accept & Proceed'}
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {/* Analysis Content - Scrollable */}
+                  <div className="flex-1 overflow-y-auto">
+                    <div className="p-4 space-y-6">
+                      {/* Ready for Review Message */}
+                      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <h4 className="text-lg font-semibold text-blue-900">Ready for Teacher Review</h4>
+                        <p className="text-sm text-blue-700 mt-1">
+                          Standards Sherpa has completed its analysis. Review the results below and click "Accept & Proceed" to generate documents, or use "Override" buttons to edit specific questions.
+                        </p>
+                      </div>
+
+                      {/* Document Overview Compact */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center text-lg">
+                            <FileText className="w-5 h-5 mr-2" />
+                            Document Overview
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-sm font-medium text-slate-500">Status</p>
+                              <ProcessingStatus status={document.status} />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-slate-500">File Size</p>
+                              <p className="text-lg font-semibold text-slate-900">
+                                {(document.fileSize / 1024 / 1024).toFixed(1)} MB
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-slate-500">Processing Time</p>
+                              <p className="text-lg font-semibold text-slate-900 flex items-center">
+                                <Clock className="w-4 h-4 mr-1" />
+                                {formatProcessingTime(document.processingStarted, document.processingCompleted)}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-slate-500">Jurisdictions</p>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {document.jurisdictions?.map((jurisdiction, index) => (
+                                  <Badge key={index} variant="outline" className="text-xs">
+                                    {jurisdiction}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+                </div>
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          ) : (
+            /* SINGLE-PANE LAYOUT: Standard view for accepted documents */
+            <div className="h-full overflow-y-auto">
+              <div className="py-6">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+                  
+                  {/* Document Overview */}
+                  <Card className="mb-8">
+                    <CardHeader>
+                      <CardTitle className="flex items-center">
+                        <FileText className="w-5 h-5 mr-2" />
+                        Document Overview
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                        <div>
+                          <p className="text-sm font-medium text-slate-500">Status</p>
+                          <ProcessingStatus status={document.status} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-slate-500">Teacher Review</p>
+                          <div className="flex items-center space-x-2">
+                            {document.teacherReviewStatus === 'not_reviewed' && (
+                              <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                                Awaiting Review
+                              </Badge>
+                            )}
+                            {document.teacherReviewStatus === 'reviewed_and_accepted' && (
+                              <Badge variant="secondary" className="bg-green-100 text-green-800">
+                                ✓ Accepted
+                              </Badge>
+                            )}
+                            {document.teacherReviewStatus === 'reviewed_and_overridden' && (
+                              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                                ✓ Reviewed with Edits
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-slate-500">File Size</p>
+                          <p className="text-lg font-semibold text-slate-900">
+                            {(document.fileSize / 1024 / 1024).toFixed(1)} MB
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-slate-500">Processing Time</p>
+                          <p className="text-lg font-semibold text-slate-900 flex items-center">
+                            <Clock className="w-4 h-4 mr-1" />
+                            {formatProcessingTime(document.processingStarted, document.processingCompleted)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-slate-500">Jurisdictions</p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {document.jurisdictions?.map((jurisdiction, index) => (
+                              <Badge key={index} variant="outline" className="text-xs">
+                                {jurisdiction}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
+    </div>
+  );
+
+  // If loading, show loading state
+  if (isLoading) {
+    return (
+      <div className="flex h-screen bg-slate-50">
+        <Sidebar />
+        
+        <div className="flex flex-col w-0 flex-1 overflow-hidden">
+          <div className="relative z-10 flex-shrink-0 flex h-16 bg-white shadow border-b border-slate-200">
+            <div className="flex-1 px-4 flex justify-between items-center">
+              <div className="flex items-center">
+                <Link href="/results">
+                  <Button variant="ghost" size="sm" className="mr-4">
+                    <ArrowLeft className="w-4 h-4" />
+                  </Button>
+                </Link>
+                <FileText className="w-6 h-6 text-blue-600 mr-3" />
+                <h2 className="text-2xl font-semibold text-slate-800">Loading Analysis...</h2>
+              </div>
+            </div>
+          </div>
+          
+          <main className="flex-1 relative overflow-y-auto focus:outline-none">
+            <div className="py-6">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+                <div className="animate-pulse">
+                  <div className="h-8 bg-slate-200 rounded mb-4"></div>
+                  <div className="h-64 bg-slate-200 rounded"></div>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  // If error, show error state
+  if (error || !documentResult) {
+    return (
+      <div className="flex h-screen bg-slate-50">
+        <Sidebar />
+        
+        <div className="flex flex-col w-0 flex-1 overflow-hidden">
+          <div className="relative z-10 flex-shrink-0 flex h-16 bg-white shadow border-b border-slate-200">
+            <div className="flex-1 px-4 flex justify-between items-center">
+              <div className="flex items-center">
+                <Link href="/results">
+                  <Button variant="ghost" size="sm" className="mr-4">
+                    <ArrowLeft className="w-4 h-4" />
+                  </Button>
+                </Link>
+                <FileText className="w-6 h-6 text-blue-600 mr-3" />
+                <h2 className="text-2xl font-semibold text-slate-800">Error Loading Analysis</h2>
+              </div>
+            </div>
+          </div>
+          
+          <main className="flex-1 relative overflow-y-auto focus:outline-none">
+            <div className="py-6">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="text-center">
+                      <AlertCircle className="mx-auto h-12 w-12 text-red-400" />
+                      <h3 className="mt-2 text-sm font-medium text-slate-900">
+                        Unable to load document analysis
+                      </h3>
+                      <p className="mt-1 text-sm text-slate-500">
+                        {error?.message || 'An error occurred while loading the analysis.'}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  // Extract data from query result
+  const { document, results } = documentResult;
+  const sortedResults = results?.slice().sort((a, b) => {
+    // Custom sorting to handle mixed numeric/string question numbers
+    const extractNumber = (str: string | number): number => {
+      if (typeof str === 'number') return str;
+      const match = str.toString().match(/\d+/);
+      return match ? parseInt(match[0], 10) : 0;
     };
 
     const numA = extractNumber(a.questionNumber);
@@ -683,107 +1020,129 @@ export default function DocumentResults() {
           </div>
         </div>
 
-        {/* Main Content */}
-        <main className="flex-1 relative overflow-y-auto focus:outline-none">
-          <div className="py-6">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-              
-              {/* Document Overview */}
-              <Card className="mb-8">
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <FileText className="w-5 h-5 mr-2" />
-                    Document Overview
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                    <div>
-                      <p className="text-sm font-medium text-slate-500">Status</p>
-                      <ProcessingStatus status={document.status} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-slate-500">Teacher Review</p>
-                      <div className="flex items-center space-x-2">
-                        {document.teacherReviewStatus === 'not_reviewed' && (
-                          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-                            Awaiting Review
-                          </Badge>
-                        )}
-                        {document.teacherReviewStatus === 'reviewed_and_accepted' && (
-                          <Badge variant="secondary" className="bg-green-100 text-green-800">
-                            ✓ Accepted
-                          </Badge>
-                        )}
-                        {document.teacherReviewStatus === 'reviewed_and_overridden' && (
-                          <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                            ✓ Reviewed with Edits
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-slate-500">File Size</p>
-                      <p className="text-lg font-semibold text-slate-900">
-                        {(document.fileSize / 1024 / 1024).toFixed(1)} MB
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-slate-500">Processing Time</p>
-                      <p className="text-lg font-semibold text-slate-900 flex items-center">
-                        <Clock className="w-4 h-4 mr-1" />
-                        {formatProcessingTime(document.processingStarted, document.processingCompleted)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-slate-500">Jurisdictions</p>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {document.jurisdictions?.map((jurisdiction, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {jurisdiction}
-                          </Badge>
-                        ))}
-                      </div>
+        {/* Main Content - Two-Pane Layout for Review, Single-Pane for Accepted */}
+        <main className="flex-1 relative overflow-hidden focus:outline-none">
+          {document.status === 'completed' && document.teacherReviewStatus === 'not_reviewed' ? (
+            /* TWO-PANE LAYOUT: Original document + AI analysis side by side */
+            <ResizablePanelGroup direction="horizontal" className="h-full">
+              {/* LEFT PANE: Original Document */}
+              <ResizablePanel defaultSize={50} minSize={30} maxSize={70}>
+                <div className="h-full flex flex-col bg-white">
+                  {/* Document Header */}
+                  <div className="flex-shrink-0 px-4 py-3 border-b border-slate-200 bg-slate-50">
+                    <div className="flex items-center">
+                      <Eye className="w-4 h-4 text-slate-600 mr-2" />
+                      <h3 className="text-sm font-medium text-slate-900">Original Document</h3>
+                      <Badge variant="outline" className="ml-2 text-xs">
+                        {document.fileName}
+                      </Badge>
                     </div>
                   </div>
+                  
+                  {/* Document Viewer */}
+                  <div className="flex-1 overflow-hidden">
+                    <iframe
+                      src={`/api/documents/${documentId}/content`}
+                      className="w-full h-full border-0"
+                      title={`PDF: ${document.fileName}`}
+                      data-testid="document-viewer-iframe"
+                    />
+                  </div>
+                </div>
+              </ResizablePanel>
 
+              {/* RESIZABLE HANDLE */}
+              <ResizableHandle withHandle />
 
-                  {/* Teacher Review Actions - conditional display */}
-                  {document.status === 'completed' && document.teacherReviewStatus === 'not_reviewed' && (
-                    <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h4 className="text-lg font-semibold text-blue-900">Ready for Teacher Review</h4>
-                          <p className="text-sm text-blue-700 mt-1">
-                            Standards Sherpa has completed its analysis. Review the results below and click "Accept & Proceed" to generate documents, or use "Override" buttons to edit specific questions.
-                          </p>
-                        </div>
-                        <div className="flex space-x-3 ml-4">
-                          <Button
-                            onClick={() => {
-                              console.log('[Button] Accept & Proceed button clicked');
-                              handleAcceptAndProceed();
-                            }}
-                            className={`${
-                              acceptAndProceedMutation.isPending 
-                                ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed' 
-                                : 'bg-green-600 hover:bg-green-700'
-                            } text-white`}
-                            size="sm"
-                            disabled={acceptAndProceedMutation.isPending}
-                          >
-                            {acceptAndProceedMutation.isPending ? '⏳ Processing...' : '✅ Accept & Proceed'}
-                          </Button>
-                        </div>
+              {/* RIGHT PANE: AI Analysis */}
+              <ResizablePanel defaultSize={50} minSize={30} maxSize={70}>
+                <div className="h-full flex flex-col bg-slate-50">
+                  {/* Analysis Header */}
+                  <div className="flex-shrink-0 px-4 py-3 border-b border-slate-200 bg-white">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <Brain className="w-4 h-4 text-blue-600 mr-2" />
+                        <h3 className="text-sm font-medium text-slate-900">AI Analysis Results</h3>
+                        <Badge variant="secondary" className="ml-2 bg-yellow-100 text-yellow-800">
+                          Awaiting Review
+                        </Badge>
                       </div>
+                      
+                      {/* Accept & Proceed Button */}
+                      <Button
+                        onClick={() => {
+                          console.log('[Button] Accept & Proceed button clicked');
+                          handleAcceptAndProceed();
+                        }}
+                        className={`${
+                          acceptAndProceedMutation.isPending 
+                            ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed' 
+                            : 'bg-green-600 hover:bg-green-700'
+                        } text-white`}
+                        size="sm"
+                        disabled={acceptAndProceedMutation.isPending}
+                        data-testid="accept-proceed-button"
+                      >
+                        {acceptAndProceedMutation.isPending ? '⏳ Processing...' : '✅ Accept & Proceed'}
+                      </Button>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+                  </div>
+                  
+                  {/* Analysis Content - Scrollable */}
+                  <div className="flex-1 overflow-y-auto">
+                    <div className="p-4 space-y-6">
+                      {/* Ready for Review Message */}
+                      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <h4 className="text-lg font-semibold text-blue-900">Ready for Teacher Review</h4>
+                        <p className="text-sm text-blue-700 mt-1">
+                          Standards Sherpa has completed its analysis. Review the results below and click "Accept & Proceed" to generate documents, or use "Override" buttons to edit specific questions.
+                        </p>
+                      </div>
 
-              {/* Simple Three-Column Analysis */}
-              {sortedResults && sortedResults.length > 0 ? (
-                <TooltipProvider>
+                      {/* Document Overview Compact */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="flex items-center text-lg">
+                            <FileText className="w-5 h-5 mr-2" />
+                            Document Overview
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-sm font-medium text-slate-500">Status</p>
+                              <ProcessingStatus status={document.status} />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-slate-500">File Size</p>
+                              <p className="text-lg font-semibold text-slate-900">
+                                {(document.fileSize / 1024 / 1024).toFixed(1)} MB
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-slate-500">Processing Time</p>
+                              <p className="text-lg font-semibold text-slate-900 flex items-center">
+                                <Clock className="w-4 h-4 mr-1" />
+                                {formatProcessingTime(document.processingStarted, document.processingCompleted)}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-slate-500">Jurisdictions</p>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {document.jurisdictions?.map((jurisdiction, index) => (
+                                  <Badge key={index} variant="outline" className="text-xs">
+                                    {jurisdiction}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Question-by-Question Analysis */}
+                      {sortedResults && sortedResults.length > 0 && (
+                        <TooltipProvider>
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center">
@@ -1014,20 +1373,32 @@ export default function DocumentResults() {
                     </div>
                   </CardContent>
                 </Card>
-                </TooltipProvider>
-              ) : (
-                <Card>
-                  <CardContent className="py-12 text-center">
-                    <Brain className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-slate-900 mb-2">No Analysis Results</h3>
-                    <p className="text-slate-500">
-                      This document hasn't been fully analyzed yet or no questions were found.
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
+                        </TooltipProvider>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          ) : (
+            /* SINGLE-PANE LAYOUT: Standard view for accepted documents */
+            <div className="h-full overflow-y-auto">
+              <div className="py-6">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+                  {/* Single-pane document overview and analysis would go here */}
+                  <Card>
+                    <CardContent className="py-12 text-center">
+                      <Brain className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-slate-900 mb-2">Analysis Complete</h3>
+                      <p className="text-slate-500">
+                        This document has been accepted and processed. View the generated documents in the File Cabinet.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </main>
       </div>
     </div>
