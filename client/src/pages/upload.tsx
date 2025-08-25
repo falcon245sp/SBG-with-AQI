@@ -243,13 +243,14 @@ export default function UploadPage() {
                       <FileUploader 
                         onFilesUpload={handleFileUpload}
                         multiple={true}
-                        disabled={!selectedCourseId}
                       />
                     </div>
                     {!selectedCourseId && (
-                      <p className="text-sm text-slate-500 mt-2">
-                        Please select a course before uploading files.
-                      </p>
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mt-2">
+                        <p className="text-sm text-gray-600">
+                          ⚠️ Please select a course above before uploading files.
+                        </p>
+                      </div>
                     )}
                   </div>
 
