@@ -1058,32 +1058,16 @@ export default function DocumentResults() {
                                   )}
                                 </CardTitle>
                                 <div className="flex items-center space-x-2">
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Badge 
-                                          variant={
-                                            result.finalRigorLevel === 'spicy' ? 'destructive' :
-                                            result.finalRigorLevel === 'medium' ? 'default' : 'secondary'
-                                          }
-                                          className="text-xs cursor-help"
-                                        >
-                                          {result.finalRigorLevel?.toUpperCase() || 'PENDING'}
-                                        </Badge>
-                                      </TooltipTrigger>
-                                      <TooltipContent className="max-w-md">
-                                        <div className="space-y-2">
-                                          <p className="font-medium">Sherpa's Reasoning:</p>
-                                          <p className="text-sm">
-                                            {result.rigorJustification || 'Reasoning not available yet'}
-                                          </p>
-                                          <p className="text-xs text-gray-500">
-                                            Debug: {JSON.stringify({ hasJustification: !!result.rigorJustification, fieldExists: 'rigorJustification' in result })}
-                                          </p>
-                                        </div>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
+                                  <Badge 
+                                    variant={
+                                      result.finalRigorLevel === 'spicy' ? 'destructive' :
+                                      result.finalRigorLevel === 'medium' ? 'default' : 'secondary'
+                                    }
+                                    className="text-xs cursor-help"
+                                    title={`Sherpa's Reasoning: ${(result as any).rigorJustification || 'Reasoning available on hover'}`}
+                                  >
+                                    {result.finalRigorLevel?.toUpperCase() || 'PENDING'}
+                                  </Badge>
                                   <Dialog>
                                     <DialogTrigger asChild>
                                       <Button
