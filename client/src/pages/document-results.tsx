@@ -114,7 +114,7 @@ interface DocumentResult {
 
 export default function DocumentResults() {
   const params = useParams<{ id: string }>();
-  const documentId = params?.id;
+  const docId = params?.id;
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
@@ -126,13 +126,13 @@ export default function DocumentResults() {
     confidence: number;
   }>({ rigorLevel: 'mild', standards: '', justification: '', confidence: 5 });
 
-  const { data: documentResult, isLoading, error } = useQuery<DocumentResult>({
-    queryKey: [`/api/documents/${documentId}/results`],
-    enabled: !!documentId,
+  const { data: docResult, isLoading, error } = useQuery<DocumentResult>({
+    queryKey: [`/api/docs/${docId}/results`],
+    enabled: !!docId,
     refetchInterval: (query) => {
-      // Poll every 3 seconds if the document is still processing or needs review
-      const docStatus = query.state.data?.document.status;
-      const reviewStatus = query.state.data?.document.teacherReviewStatus;
+      // Poll every 3 seconds if the doc is still processing or needs review
+      const docStatus = query.state.data?.doc.status;
+      const reviewStatus = query.state.data?.doc.teacherReviewStatus;
       return (docStatus === 'processing' || docStatus === 'pending' || reviewStatus === 'not_reviewed') ? 3000 : false;
     },
     refetchIntervalInBackground: true,
@@ -176,7 +176,7 @@ export default function DocumentResults() {
   }
 
   // If error, show error state
-  if (error || !documentResult) {
+  if (error || !docResult) {
     return (
       <div className="flex h-screen bg-slate-50">
         <Sidebar />
@@ -204,7 +204,7 @@ export default function DocumentResults() {
                     <div className="text-center">
                       <AlertCircle className="mx-auto h-12 w-12 text-red-400" />
                       <h3 className="mt-2 text-sm font-medium text-slate-900">
-                        Unable to load document analysis
+                        Unable to load doc analysis
                       </h3>
                       <p className="mt-1 text-sm text-slate-500">
                         {error?.message || 'An error occurred while loading the analysis.'}
@@ -223,13 +223,13 @@ export default function DocumentResults() {
   // Accept and proceed mutation with loading state
   const acceptAndProceedMutation = useMutation({
     mutationFn: async () => {
-      if (!documentId) {
-        throw new Error('No document ID available');
+      if (!docId) {
+        throw new Error('No doc ID available');
       }
       
-      console.log(`[Accept] Starting accept process for document: ${documentId}`);
+      console.log(`[Accept] Starting accept process for doc: ${docId}`);
       
-      const response = await fetch(`/api/documents/${documentId}/accept`, {
+      const response = await fetch(`/api/docs/${docId}/accept`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -251,7 +251,7 @@ export default function DocumentResults() {
       return responseData;
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: [`/api/documents/${documentId}/results`] });
+      await queryClient.invalidateQueries({ queryKey: [`/api/docs/${docId}/results`] });
       await queryClient.invalidateQueries({ queryKey: ['/api/file-cabinet'] });
       
       toast({
@@ -285,8 +285,8 @@ export default function DocumentResults() {
     onSuccess: async (data, questionId) => {
       console.log('Revert successful, invalidating queries...');
       // Invalidate and refetch the queries
-      await queryClient.invalidateQueries({ queryKey: [`/api/documents/${documentId}/results`] });
-      await queryClient.refetchQueries({ queryKey: [`/api/documents/${documentId}/results`] });
+      await queryClient.invalidateQueries({ queryKey: [`/api/docs/${docId}/results`] });
+      await queryClient.refetchQueries({ queryKey: [`/api/docs/${docId}/results`] });
       console.log('Query refetch completed');
       toast({
         title: "Reverted to Sherpa Analysis",
@@ -308,22 +308,23 @@ export default function DocumentResults() {
 
   // Export functions
   const exportRubric = (format: 'rubric-markdown' | 'rubric-pdf' | 'csv' | 'student-cover-sheet') => {
-    if (!documentResult) return;
+    if (!docResult) return;
     
-    const { document, results } = documentResult;
+    const doc = docResult.doc;
+    const results = docResult.results;
     
     switch (format) {
       case 'rubric-markdown':
-        generateMarkdownRubric(document, results);
+        generateMarkdownRubric(doc, results);
         break;
       case 'rubric-pdf':
-        generatePdfRubric(document, results);
+        generatePdfRubric(doc, results);
         break;
       case 'csv':
-        generateCSVExport(document, results);
+        generateCSVExport(doc, results);
         break;
       case 'student-cover-sheet':
-        generateStudentCoverSheet(document, results);
+        generateStudentCoverSheet(doc, results);
         break;
     }
   };
@@ -335,12 +336,12 @@ export default function DocumentResults() {
     // Download as markdown file
     const blob = new Blob([markdownContent], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
-    const a = window.document.createElement('a');
+    const a = window.doc.createElement('a');
     a.href = url;
     a.download = `${doc.fileName.replace(/\.[^/.]+$/, '')}_rubric.md`;
-    window.document.body.appendChild(a);
+    window.doc.body.appendChild(a);
     a.click();
-    window.document.body.removeChild(a);
+    window.doc.body.removeChild(a);
     URL.revokeObjectURL(url);
     
     toast({
@@ -368,7 +369,7 @@ export default function DocumentResults() {
             confidence: question.confirmedData.aiConfidenceScore || 'N/A'
           };
         } else {
-          // Fallback to old scattered logic for documents without CONFIRMED analysis
+          // Fallback to old scattered logic for docs without CONFIRMED analysis
           return {
             standards: question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [],
             rigor: question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild',
@@ -403,12 +404,12 @@ export default function DocumentResults() {
     const csvContent = csvRows.map(row => row.join(',')).join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
-    const a = window.document.createElement('a');
+    const a = window.doc.createElement('a');
     a.href = url;
     a.download = `${doc.fileName.replace(/\.[^/.]+$/, '')}_analysis.csv`;
-    window.document.body.appendChild(a);
+    window.doc.body.appendChild(a);
     a.click();
-    window.document.body.removeChild(a);
+    window.doc.body.removeChild(a);
     URL.revokeObjectURL(url);
     
     toast({
@@ -669,7 +670,7 @@ export default function DocumentResults() {
     );
   }
 
-  if (error || !documentResult) {
+  if (error || !docResult) {
     return (
       <div className="flex h-screen">
         <Sidebar />
@@ -681,7 +682,7 @@ export default function DocumentResults() {
                 Results Not Found
               </h3>
               <p className="text-slate-600 mb-4">
-                Unable to load the analysis results for this document.
+                Unable to load the analysis results for this doc.
               </p>
               <Link href="/results">
                 <Button>
@@ -712,7 +713,7 @@ export default function DocumentResults() {
               </Link>
               <FileText className="w-6 h-6 text-blue-600 mr-3" />
               <h2 className="text-2xl font-semibold text-slate-800">
-                Analysis Results: {document.fileName}
+                Analysis Results: {doc.fileName}
               </h2>
             </div>
             
@@ -751,8 +752,8 @@ export default function DocumentResults() {
 
         {/* Main Content - Two-Pane Layout for Review, Single-Pane for Accepted */}
         <main className="flex-1 relative overflow-hidden focus:outline-none">
-          {document.status === 'completed' && document.teacherReviewStatus === 'not_reviewed' ? (
-            /* TWO-PANE LAYOUT: Original document + AI analysis side by side */
+          {doc.status === 'completed' && doc.teacherReviewStatus === 'not_reviewed' ? (
+            /* TWO-PANE LAYOUT: Original doc + AI analysis side by side */
             <ResizablePanelGroup direction="horizontal" className="h-full">
               {/* LEFT PANE: Original Document */}
               <ResizablePanel defaultSize={50} minSize={30} maxSize={70}>
@@ -763,7 +764,7 @@ export default function DocumentResults() {
                       <Eye className="w-4 h-4 text-slate-600 mr-2" />
                       <h3 className="text-sm font-medium text-slate-900">Original Document</h3>
                       <Badge variant="outline" className="ml-2 text-xs">
-                        {document.fileName}
+                        {doc.fileName}
                       </Badge>
                     </div>
                   </div>
@@ -771,10 +772,10 @@ export default function DocumentResults() {
                   {/* Document Viewer */}
                   <div className="flex-1 overflow-hidden">
                     <iframe
-                      src={`/api/documents/${documentId}/content`}
+                      src={`/api/docs/${docId}/content`}
                       className="w-full h-full border-0"
-                      title={`PDF: ${document.fileName}`}
-                      data-testid="document-viewer-iframe"
+                      title={`PDF: ${doc.fileName}`}
+                      data-testid="doc-viewer-iframe"
                     />
                   </div>
                 </div>
@@ -824,7 +825,7 @@ export default function DocumentResults() {
                       <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                         <h4 className="text-lg font-semibold text-blue-900">Ready for Teacher Review</h4>
                         <p className="text-sm text-blue-700 mt-1">
-                          Standards Sherpa has completed its analysis. Review the results below and click "Accept & Proceed" to generate documents, or use "Override" buttons to edit specific questions.
+                          Standards Sherpa has completed its analysis. Review the results below and click "Accept & Proceed" to generate docs, or use "Override" buttons to edit specific questions.
                         </p>
                       </div>
 
@@ -840,25 +841,25 @@ export default function DocumentResults() {
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <p className="text-sm font-medium text-slate-500">Status</p>
-                              <ProcessingStatus status={document.status} />
+                              <ProcessingStatus status={doc.status} />
                             </div>
                             <div>
                               <p className="text-sm font-medium text-slate-500">File Size</p>
                               <p className="text-lg font-semibold text-slate-900">
-                                {(document.fileSize / 1024 / 1024).toFixed(1)} MB
+                                {(doc.fileSize / 1024 / 1024).toFixed(1)} MB
                               </p>
                             </div>
                             <div>
                               <p className="text-sm font-medium text-slate-500">Processing Time</p>
                               <p className="text-lg font-semibold text-slate-900 flex items-center">
                                 <Clock className="w-4 h-4 mr-1" />
-                                {formatProcessingTime(document.processingStarted, document.processingCompleted)}
+                                {formatProcessingTime(doc.processingStarted, doc.processingCompleted)}
                               </p>
                             </div>
                             <div>
                               <p className="text-sm font-medium text-slate-500">Jurisdictions</p>
                               <div className="flex flex-wrap gap-1 mt-1">
-                                {document.jurisdictions?.map((jurisdiction, index) => (
+                                {doc.jurisdictions?.map((jurisdiction, index) => (
                                   <Badge key={index} variant="outline" className="text-xs">
                                     {jurisdiction}
                                   </Badge>
@@ -874,7 +875,7 @@ export default function DocumentResults() {
               </ResizablePanel>
             </ResizablePanelGroup>
           ) : (
-            /* SINGLE-PANE LAYOUT: Standard view for accepted documents */
+            /* SINGLE-PANE LAYOUT: Standard view for accepted docs */
             <div className="h-full overflow-y-auto">
               <div className="py-6">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
@@ -891,22 +892,22 @@ export default function DocumentResults() {
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                         <div>
                           <p className="text-sm font-medium text-slate-500">Status</p>
-                          <ProcessingStatus status={document.status} />
+                          <ProcessingStatus status={doc.status} />
                         </div>
                         <div>
                           <p className="text-sm font-medium text-slate-500">Teacher Review</p>
                           <div className="flex items-center space-x-2">
-                            {document.teacherReviewStatus === 'not_reviewed' && (
+                            {doc.teacherReviewStatus === 'not_reviewed' && (
                               <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
                                 Awaiting Review
                               </Badge>
                             )}
-                            {document.teacherReviewStatus === 'reviewed_and_accepted' && (
+                            {doc.teacherReviewStatus === 'reviewed_and_accepted' && (
                               <Badge variant="secondary" className="bg-green-100 text-green-800">
                                 ✓ Accepted
                               </Badge>
                             )}
-                            {document.teacherReviewStatus === 'reviewed_and_overridden' && (
+                            {doc.teacherReviewStatus === 'reviewed_and_overridden' && (
                               <Badge variant="secondary" className="bg-blue-100 text-blue-800">
                                 ✓ Reviewed with Edits
                               </Badge>
@@ -916,20 +917,20 @@ export default function DocumentResults() {
                         <div>
                           <p className="text-sm font-medium text-slate-500">File Size</p>
                           <p className="text-lg font-semibold text-slate-900">
-                            {(document.fileSize / 1024 / 1024).toFixed(1)} MB
+                            {(doc.fileSize / 1024 / 1024).toFixed(1)} MB
                           </p>
                         </div>
                         <div>
                           <p className="text-sm font-medium text-slate-500">Processing Time</p>
                           <p className="text-lg font-semibold text-slate-900 flex items-center">
                             <Clock className="w-4 h-4 mr-1" />
-                            {formatProcessingTime(document.processingStarted, document.processingCompleted)}
+                            {formatProcessingTime(doc.processingStarted, doc.processingCompleted)}
                           </p>
                         </div>
                         <div>
                           <p className="text-sm font-medium text-slate-500">Jurisdictions</p>
                           <div className="flex flex-wrap gap-1 mt-1">
-                            {document.jurisdictions?.map((jurisdiction, index) => (
+                            {doc.jurisdictions?.map((jurisdiction, index) => (
                               <Badge key={index} variant="outline" className="text-xs">
                                 {jurisdiction}
                               </Badge>
@@ -985,7 +986,7 @@ export default function DocumentResults() {
   }
 
   // If error, show error state
-  if (error || !documentResult) {
+  if (error || !docResult) {
     return (
       <div className="flex h-screen bg-slate-50">
         <Sidebar />
@@ -1013,7 +1014,7 @@ export default function DocumentResults() {
                     <div className="text-center">
                       <AlertCircle className="mx-auto h-12 w-12 text-red-400" />
                       <h3 className="mt-2 text-sm font-medium text-slate-900">
-                        Unable to load document analysis
+                        Unable to load doc analysis
                       </h3>
                       <p className="mt-1 text-sm text-slate-500">
                         {error?.message || 'An error occurred while loading the analysis.'}
@@ -1029,9 +1030,10 @@ export default function DocumentResults() {
     );
   }
 
-  // Extract data from query result
-  const { document, results } = documentResult;
-  const sortedResults = results?.slice().sort((a, b) => {
+  // Extract data from query result  
+  const doc = docResult.doc;
+  const results = docResult.results;
+  const sortedResults = results?.slice().sort((a: any, b: any) => {
     // Custom sorting to handle mixed numeric/string question numbers
     const extractNumber = (str: string | number): number => {
       if (typeof str === 'number') return str;
@@ -1061,7 +1063,7 @@ export default function DocumentResults() {
               </Link>
               <FileText className="w-6 h-6 text-blue-600 mr-3" />
               <h2 className="text-2xl font-semibold text-slate-800">
-                Analysis Results: {document.fileName}
+                Analysis Results: {doc.fileName}
               </h2>
             </div>
             
@@ -1100,8 +1102,8 @@ export default function DocumentResults() {
 
         {/* Main Content - Two-Pane Layout for Review, Single-Pane for Accepted */}
         <main className="flex-1 relative overflow-hidden focus:outline-none">
-          {document.status === 'completed' && document.teacherReviewStatus === 'not_reviewed' ? (
-            /* TWO-PANE LAYOUT: Original document + AI analysis side by side */
+          {doc.status === 'completed' && doc.teacherReviewStatus === 'not_reviewed' ? (
+            /* TWO-PANE LAYOUT: Original doc + AI analysis side by side */
             <ResizablePanelGroup direction="horizontal" className="h-full">
               {/* LEFT PANE: Original Document */}
               <ResizablePanel defaultSize={50} minSize={30} maxSize={70}>
@@ -1112,7 +1114,7 @@ export default function DocumentResults() {
                       <Eye className="w-4 h-4 text-slate-600 mr-2" />
                       <h3 className="text-sm font-medium text-slate-900">Original Document</h3>
                       <Badge variant="outline" className="ml-2 text-xs">
-                        {document.fileName}
+                        {doc.fileName}
                       </Badge>
                     </div>
                   </div>
@@ -1120,10 +1122,10 @@ export default function DocumentResults() {
                   {/* Document Viewer */}
                   <div className="flex-1 overflow-hidden">
                     <iframe
-                      src={`/api/documents/${documentId}/content`}
+                      src={`/api/docs/${docId}/content`}
                       className="w-full h-full border-0"
-                      title={`PDF: ${document.fileName}`}
-                      data-testid="document-viewer-iframe"
+                      title={`PDF: ${doc.fileName}`}
+                      data-testid="doc-viewer-iframe"
                     />
                   </div>
                 </div>
@@ -1173,7 +1175,7 @@ export default function DocumentResults() {
                       <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                         <h4 className="text-lg font-semibold text-blue-900">Ready for Teacher Review</h4>
                         <p className="text-sm text-blue-700 mt-1">
-                          Standards Sherpa has completed its analysis. Review the results below and click "Accept & Proceed" to generate documents, or use "Override" buttons to edit specific questions.
+                          Standards Sherpa has completed its analysis. Review the results below and click "Accept & Proceed" to generate docs, or use "Override" buttons to edit specific questions.
                         </p>
                       </div>
 
@@ -1189,25 +1191,25 @@ export default function DocumentResults() {
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <p className="text-sm font-medium text-slate-500">Status</p>
-                              <ProcessingStatus status={document.status} />
+                              <ProcessingStatus status={doc.status} />
                             </div>
                             <div>
                               <p className="text-sm font-medium text-slate-500">File Size</p>
                               <p className="text-lg font-semibold text-slate-900">
-                                {(document.fileSize / 1024 / 1024).toFixed(1)} MB
+                                {(doc.fileSize / 1024 / 1024).toFixed(1)} MB
                               </p>
                             </div>
                             <div>
                               <p className="text-sm font-medium text-slate-500">Processing Time</p>
                               <p className="text-lg font-semibold text-slate-900 flex items-center">
                                 <Clock className="w-4 h-4 mr-1" />
-                                {formatProcessingTime(document.processingStarted, document.processingCompleted)}
+                                {formatProcessingTime(doc.processingStarted, doc.processingCompleted)}
                               </p>
                             </div>
                             <div>
                               <p className="text-sm font-medium text-slate-500">Jurisdictions</p>
                               <div className="flex flex-wrap gap-1 mt-1">
-                                {document.jurisdictions?.map((jurisdiction, index) => (
+                                {doc.jurisdictions?.map((jurisdiction, index) => (
                                   <Badge key={index} variant="outline" className="text-xs">
                                     {jurisdiction}
                                   </Badge>
@@ -1228,7 +1230,7 @@ export default function DocumentResults() {
                       Question-by-Question Analysis
                     </CardTitle>
                     <p className="text-sm text-slate-500">
-                      Standards and rigor levels for each question in the document
+                      Standards and rigor levels for each question in the doc
                     </p>
                   </CardHeader>
                   <CardContent>
@@ -1459,17 +1461,17 @@ export default function DocumentResults() {
               </ResizablePanel>
             </ResizablePanelGroup>
           ) : (
-            /* SINGLE-PANE LAYOUT: Standard view for accepted documents */
+            /* SINGLE-PANE LAYOUT: Standard view for accepted docs */
             <div className="h-full overflow-y-auto">
               <div className="py-6">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-                  {/* Single-pane document overview and analysis would go here */}
+                  {/* Single-pane doc overview and analysis would go here */}
                   <Card>
                     <CardContent className="py-12 text-center">
                       <Brain className="w-12 h-12 text-slate-400 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-slate-900 mb-2">Analysis Complete</h3>
                       <p className="text-slate-500">
-                        This document has been accepted and processed. View the generated documents in the File Cabinet.
+                        This doc has been accepted and processed. View the generated docs in the File Cabinet.
                       </p>
                     </CardContent>
                   </Card>
@@ -1504,7 +1506,7 @@ function TeacherOverrideForm({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const params = useParams<{ id: string }>();
-  const documentId = params?.id;
+  const docId = params?.id;
   const [standardsValidation, setStandardsValidation] = useState<{
     valid: CommonCoreStandard[];
     invalid: string[];
@@ -1565,16 +1567,16 @@ function TeacherOverrideForm({
       return await apiRequest('POST', `/api/questions/${questionId}/override`, payload);
     },
     onSuccess: async (data, variables) => {
-      console.log('Override saved, invalidating cache for document:', documentId);
+      console.log('Override saved, invalidating cache for doc:', docId);
       // Use the same pattern as the revert mutation that works
-      await queryClient.invalidateQueries({ queryKey: [`/api/documents/${documentId}/results`] });
-      await queryClient.refetchQueries({ queryKey: [`/api/documents/${documentId}/results`] });
+      await queryClient.invalidateQueries({ queryKey: [`/api/docs/${docId}/results`] });
+      await queryClient.refetchQueries({ queryKey: [`/api/docs/${docId}/results`] });
       console.log('Cache refetch completed');
       
       // Trigger regeneration of rubrics and cover sheets with teacher overrides
       try {
         console.log('Triggering rubric regeneration after teacher override...');
-        const response = await fetch(`/api/documents/${documentId}/accept`, {
+        const response = await fetch(`/api/docs/${docId}/accept`, {
           method: 'POST',
           credentials: 'include'
         });
