@@ -449,11 +449,8 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
               console.log(`⚠️ Error looking up standard ${problem.standard}:`, error.message);
             }
             
-            // Use the actual question text from the AI response, not the generic description
-            const actualQuestionText = problem.questionText || problem.text || problem.content || `Question ${problem.question}: ${problem.standard}`;
-            
             return {
-              text: actualQuestionText,
+              text: standardDescription,
               context: `Question ${problem.question}: Mathematics problem analyzing ${problem.standard}`,
               problemNumber: problem.question || problem.problemNumber, // Handle both field names
               aiResults: {
@@ -490,7 +487,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         console.log(`Creating ${grokResult.jsonResponse.problems.length} individual question entries from JSON response`);
         return {
           questions: grokResult.jsonResponse.problems.map((problem: any) => ({
-            text: problem.questionText || problem.text || problem.content || `Problem ${problem.problemNumber}: ${problem.standardDescription}`,
+            text: `Problem ${problem.problemNumber}: ${problem.standardDescription}`,
             context: `Question ${problem.problemNumber}: Analyzing ${problem.standardCode}`,
             problemNumber: problem.problemNumber, // Include the actual problem number
             aiResults: {
