@@ -208,13 +208,7 @@ export default function ResultsPage() {
                               Status
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                              Customer ID
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                               Jurisdictions
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                              Processing Time
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                               Created
@@ -243,9 +237,6 @@ export default function ResultsPage() {
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <ProcessingStatus status={doc.status} />
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
-                                {doc.customerId}
-                              </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="flex flex-wrap gap-1">
                                   {doc.jurisdictions?.map((jurisdiction: string, index: number) => (
@@ -254,9 +245,6 @@ export default function ResultsPage() {
                                     </Badge>
                                   )) || <span className="text-slate-400">None</span>}
                                 </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                                {formatProcessingTime(doc.processingStarted, doc.processingCompleted)}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                                 <div className="flex items-center">
