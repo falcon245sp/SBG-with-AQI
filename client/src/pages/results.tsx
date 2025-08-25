@@ -220,7 +220,7 @@ export default function ResultsPage() {
                               Created
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                              View
+                              View Analysis
                             </th>
                           </tr>
                         </thead>
@@ -275,7 +275,7 @@ export default function ResultsPage() {
                                     onClick={() => window.location.href = `/results/${doc.id}`}
                                   >
                                     <Eye className="w-4 h-4 mr-1" />
-                                    View
+                                    View Analysis
                                   </Button>
                                 )}
                               </td>
