@@ -223,12 +223,18 @@ CRITICAL JSON FORMATTING REQUIREMENTS:
 - Do NOT wrap the response in markdown code blocks or backticks
 - The response must start with [ and end with ]
 
+CRITICAL FIELD REQUIREMENTS:
+- "question": Question number (required)
+- "questionSummary": Brief 3-5 word description (REQUIRED - e.g., "Prime factorization problem", "Integer addition problem", "Order of operations problem")
+- "standard": Educational standard code (required)
+- "rigor": mild/medium/spicy (required)  
+- "justification": Reasoning for rigor level (required)
+
 IMPORTANT: 
 - If you find multiple questions, return an array with multiple objects
 - If you find only one question, return an array with one object
 - Each question must have its own complete analysis
-- Extract the actual question text, don't use generic descriptions
-- For "questionSummary", provide a brief, general description of what the question asks (e.g., "Word problem about ratios", "Graphing linear equations", "Solving quadratic equations")
+- EVERY object MUST include "questionSummary" field with a brief description
 - Use standards from the TARGET JURISDICTIONS listed above (${primaryJurisdiction})
 - Base analysis solely on the provided document content
 
@@ -423,7 +429,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         console.log(`✅ NEW FORMAT: Creating ${parsedGrokResponse.length} individual question entries from parsed JSON array`);
         return {
           questions: parsedGrokResponse.map((problem: any) => ({
-            text: problem.questionSummary || problem.questionText || `Question ${problem.question}: ${problem.standard}`,
+            text: problem.questionSummary || problem.justification || `Question ${problem.question}: ${problem.standard}`,
             context: `Question ${problem.question}: Mathematics problem analyzing ${problem.standard}`,
             problemNumber: problem.question || problem.problemNumber, // Handle both field names
             aiResults: {
