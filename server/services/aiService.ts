@@ -862,7 +862,10 @@ IMPORTANT:
       const processingTime = Date.now() - startTime;
       
       console.log('=== GROK STRUCTURED JSON RESPONSE ===');
-      console.log(rawContent);
+      console.log('Raw content type:', typeof rawContent);
+      console.log('Raw content length:', rawContent.length);
+      console.log('Raw content preview:', rawContent.substring(0, 100));
+      console.log('First char code:', rawContent.charCodeAt(0));
       console.log('=== END STRUCTURED JSON RESPONSE ===');
       
       try {
