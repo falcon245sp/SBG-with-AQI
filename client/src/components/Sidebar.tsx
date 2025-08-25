@@ -4,14 +4,25 @@ import {
   Upload, 
   FileText,
   LogOut,
-  BarChart3
+  BarChart3,
+  FolderOpen,
+  Users,
+  Settings,
+  Clock,
+  BookOpen
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const navigation = [
-  { name: 'Documents', href: '/dashboard', icon: BarChart3 },
-  { name: 'Upload', href: '/upload', icon: Upload },
-  { name: 'Results', href: '/results', icon: FileText }
+  { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
+  { name: 'Upload Documents', href: '/upload', icon: Upload },
+  { name: 'File Cabinet', href: '/file-cabinet', icon: FolderOpen },
+  { name: 'Processing Results', href: '/results', icon: Clock },
+  { name: 'Google Classroom', href: '/google-classroom', icon: Users },
+];
+
+const adminNavigation = [
+  { name: 'Admin Panel', href: '/admin', icon: Settings }
 ];
 
 export function Sidebar() {
@@ -21,6 +32,9 @@ export function Sidebar() {
   const handleLogout = () => {
     window.location.href = '/api/logout';
   };
+
+  // Check if user has admin access
+  const isAdmin = user?.email === 'jfielder@srvusd.net';
 
   return (
     <div className="hidden md:flex md:flex-shrink-0">
@@ -34,7 +48,8 @@ export function Sidebar() {
           
           {/* Navigation */}
           <div className="flex-1 flex flex-col">
-            <nav className="flex-1 px-4 py-6 space-y-2">
+            <nav className="flex-1 px-4 py-6 space-y-1">
+              {/* Main Navigation */}
               {navigation.map((item) => {
                 const isActive = location === item.href || (item.href === '/dashboard' && location === '/');
                 return (
@@ -54,6 +69,34 @@ export function Sidebar() {
                   </Link>
                 );
               })}
+              
+              {/* Admin Navigation - Only show for admin users */}
+              {isAdmin && (
+                <>
+                  <div className="px-3 py-2">
+                    <div className="h-px bg-gray-200"></div>
+                  </div>
+                  {adminNavigation.map((item) => {
+                    const isActive = location === item.href;
+                    return (
+                      <Link key={item.name} href={item.href}>
+                        <div className={cn(
+                          "group flex items-center px-3 py-2 text-sm font-medium rounded-md cursor-pointer",
+                          isActive
+                            ? "bg-red-50 text-red-700 border-r-2 border-red-600"
+                            : "text-gray-600 hover:bg-gray-50"
+                        )}>
+                          <item.icon className={cn(
+                            "mr-3 w-5 h-5",
+                            isActive ? "text-red-600" : "text-gray-400"
+                          )} />
+                          {item.name}
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </>
+              )}
             </nav>
 
             {/* User Profile */}
