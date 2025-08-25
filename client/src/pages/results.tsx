@@ -260,7 +260,15 @@ export default function ResultsPage() {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => window.location.href = `/results/${doc.id}`}
+                                    onClick={() => {
+                                      if (doc.assetType === 'generated') {
+                                        // Generated documents (PDFs) -> view document directly
+                                        window.location.href = `/documents/${doc.id}/inspect`;
+                                      } else {
+                                        // Uploaded documents -> view analysis results
+                                        window.location.href = `/results/${doc.id}`;
+                                      }
+                                    }}
                                   >
                                     <Eye className="w-4 h-4 mr-1" />
                                     {doc.assetType === 'generated' ? 'View' : 'View Analysis'}
