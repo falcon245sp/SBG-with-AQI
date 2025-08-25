@@ -34,11 +34,13 @@ import {
   History,
   Download,
   ChevronDown,
-  Eye
+  Eye,
+  Edit
 } from "lucide-react";
 import { Link } from "wouter";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { Label } from "@/components/ui/label";
 
 interface DocumentResult {
   document: {
@@ -110,6 +112,145 @@ interface DocumentResult {
       updatedAt: string;
     };
   }>;
+}
+
+// QuestionOverrideForm component for inline editing
+interface QuestionOverrideFormProps {
+  questionId: string;
+  questionNumber: string;
+  questionText: string;
+  initialRigor?: string;
+  initialStandards: string;
+  onSuccess: () => void;
+}
+
+function QuestionOverrideForm({ questionId, questionNumber, questionText, initialRigor, initialStandards, onSuccess }: QuestionOverrideFormProps) {
+  const [rigor, setRigor] = useState(initialRigor || '');
+  const [standards, setStandards] = useState(initialStandards);
+  const [notes, setNotes] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
+
+  const handleSave = async () => {
+    if (!rigor) {
+      toast({
+        title: "Error",
+        description: "Please select a rigor level.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const processStandards = (standardsInput: string) => {
+        if (!standardsInput || typeof standardsInput !== 'string') {
+          return [];
+        }
+        const codes = standardsInput
+          .split(',')
+          .map((code: string) => code.trim())
+          .filter((code: string) => code.length > 0);
+          
+        return codes.map((code: string) => ({
+          code,
+          description: '',
+          jurisdiction: 'Unknown'
+        }));
+      };
+
+      const payload = {
+        questionId,
+        overriddenRigorLevel: rigor,
+        overriddenStandards: processStandards(standards),
+        notes,
+        confidenceScore: 5, // Default confidence
+        editReason: 'Teacher override from document results'
+      };
+
+      await apiRequest('POST', `/api/questions/${questionId}/override`, payload);
+      
+      toast({
+        title: "Success",
+        description: "Question override saved successfully.",
+        variant: "default",
+      });
+      onSuccess();
+    } catch (error) {
+      console.error('Error saving override:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save override. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="text-sm text-slate-600 bg-slate-50 p-3 rounded">
+        <strong>Question {questionNumber}:</strong> {questionText.substring(0, 150)}...
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="rigor" className="text-sm font-medium">Rigor Level</Label>
+          <Select value={rigor} onValueChange={setRigor}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select rigor level" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="mild">Mild</SelectItem>
+              <SelectItem value="medium">Medium</SelectItem>
+              <SelectItem value="spicy">Spicy</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label htmlFor="standards" className="text-sm font-medium">Standards</Label>
+          <Input 
+            id="standards"
+            value={standards}
+            onChange={(e) => setStandards(e.target.value)}
+            placeholder="Enter standards codes separated by commas (e.g., N-RN.B.3, A-SSE.A.1)"
+            className="mt-1"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="notes" className="text-sm font-medium">Notes (Optional)</Label>
+          <Textarea 
+            id="notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Add any notes about this override..."
+            className="mt-1"
+            rows={3}
+          />
+        </div>
+
+        <div className="flex justify-end space-x-2">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={() => window.location.reload()} // Close dialog by reloading
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="button"
+            onClick={handleSave}
+            disabled={isSaving}
+          >
+            {isSaving ? 'Saving...' : 'Save Override'}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function DocumentResults() {
@@ -949,6 +1090,11 @@ export default function DocumentResults() {
                               <div className="flex items-center justify-between">
                                 <CardTitle className="text-base">
                                   Question {result.questionNumber}
+                                  {result.isOverridden && (
+                                    <Badge variant="outline" className="ml-2 text-xs">
+                                      EDITED
+                                    </Badge>
+                                  )}
                                 </CardTitle>
                                 <div className="flex items-center space-x-2">
                                   <Badge 
@@ -960,6 +1106,34 @@ export default function DocumentResults() {
                                   >
                                     {result.finalRigorLevel?.toUpperCase() || 'PENDING'}
                                   </Badge>
+                                  <Dialog>
+                                    <DialogTrigger asChild>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        data-testid={`button-edit-${result.questionNumber}`}
+                                      >
+                                        <Edit className="w-3 h-3 mr-1" />
+                                        Edit
+                                      </Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                      <DialogHeader>
+                                        <DialogTitle>Edit Question {result.questionNumber}</DialogTitle>
+                                      </DialogHeader>
+                                      <QuestionOverrideForm
+                                        questionId={result.id}
+                                        questionNumber={result.questionNumber}
+                                        questionText={result.questionText}
+                                        initialRigor={result.finalRigorLevel}
+                                        initialStandards={result.finalStandards?.map(s => typeof s === 'string' ? s : s.code).join(', ') || ''}
+                                        onSuccess={() => {
+                                          // Refetch data after successful save
+                                          queryClient.invalidateQueries({ queryKey: [`/api/documents/${docId}/results`] });
+                                        }}
+                                      />
+                                    </DialogContent>
+                                  </Dialog>
                                 </div>
                               </div>
                             </CardHeader>
