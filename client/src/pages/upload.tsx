@@ -213,9 +213,23 @@ export default function UploadPage() {
                       </SelectContent>
                     </Select>
                     {(!classrooms || classrooms.filter(c => c.courseConfigurationCompleted).length === 0) && (
-                      <p className="text-sm text-amber-600 mt-2">
-                        No configured courses found. Please complete the onboarding process first.
-                      </p>
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-2">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <div className="w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center">
+                            <span className="text-xs text-white font-bold">!</span>
+                          </div>
+                          <span className="text-sm font-medium text-amber-800">Setup Required</span>
+                        </div>
+                        <p className="text-sm text-amber-700 mb-3">
+                          No configured courses found. You need to set up your classrooms and courses before uploading documents.
+                        </p>
+                        <a 
+                          href="/onboarding" 
+                          className="inline-flex items-center px-3 py-2 text-sm font-medium text-amber-700 bg-amber-100 border border-amber-300 rounded-md hover:bg-amber-200 transition-colors"
+                        >
+                          Complete Onboarding Setup
+                        </a>
+                      </div>
                     )}
                   </div>
 
