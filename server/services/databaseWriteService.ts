@@ -764,7 +764,7 @@ export class DatabaseWriteService {
         };
         
         if (parseInt(question.questionNumber) <= 4) {
-          console.log(`🔍 [MILD CHECK] - FINAL CONFIRMED Analysis: Standards=${JSON.stringify(finalAnalysis.finalStandards?.slice(0, 1))}, Rigor=${finalAnalysis.finalRigorLevel}, HasOverride=${finalAnalysis.hasTeacherOverride}`);
+          console.log(`🔍 [MILD CHECK] - FINAL CONFIRMED Analysis: Standards=${JSON.stringify(Array.isArray(finalAnalysis.finalStandards) ? finalAnalysis.finalStandards?.slice(0, 1) : finalAnalysis.finalStandards)}, Rigor=${finalAnalysis.finalRigorLevel}, HasOverride=${finalAnalysis.hasTeacherOverride}`);
         } else {
         }
         
