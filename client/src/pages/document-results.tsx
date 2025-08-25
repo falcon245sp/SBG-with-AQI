@@ -79,7 +79,7 @@ interface DocumentResult {
 // QuestionOverrideForm component for inline editing
 interface QuestionOverrideFormProps {
   questionId: string;
-  questionNumber: string;
+  questionNumber: number;
   questionText: string;
   initialRigor?: string;
   initialStandards: string;
@@ -87,7 +87,7 @@ interface QuestionOverrideFormProps {
   onSaveOverride: (payload: any) => void;
   onCancel?: () => void;
   onRevert?: () => void;
-  onCopyFrom?: (questionNumber: string) => void;
+  onCopyFrom?: (questionNumber: number) => void;
   allQuestions?: Array<{ questionNumber: number; finalRigorLevel: string; finalStandards: any[]; isOverridden: boolean; }>;
   isSaving?: boolean;
 }

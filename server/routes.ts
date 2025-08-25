@@ -1156,7 +1156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const transformedResults = rawResults.map(item => {
         const baseData = {
           id: item.id,
-          questionNumber: item.questionNumber,
+          questionNumber: parseInt(item.questionNumber, 10), // Convert string to number for frontend
           questionText: item.questionText,
           questionType: item.questionType,
           context: item.context,
