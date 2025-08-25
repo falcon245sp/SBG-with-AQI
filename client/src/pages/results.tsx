@@ -250,8 +250,8 @@ export default function ResultsPage() {
                                     size="sm"
                                     onClick={() => {
                                       if (doc.assetType === 'generated') {
-                                        // Generated documents (PDFs) -> view document directly
-                                        window.location.href = `/documents/${doc.id}/inspect`;
+                                        // Generated documents (PDFs) -> open PDF directly in new tab
+                                        window.open(`/api/documents/${doc.id}/content`, '_blank');
                                       } else {
                                         // Uploaded documents -> view analysis results
                                         window.location.href = `/results/${doc.id}`;
