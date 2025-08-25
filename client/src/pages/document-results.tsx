@@ -60,57 +60,17 @@ interface DocumentResult {
     questionNumber: number;
     questionText: string;
     context: string;
-    result?: {
-      consensusStandards: Array<{
-        code: string;
-        description: string;
-        jurisdiction: string;
-        gradeLevel?: string;
-        subject?: string;
-      }>;
-      consensusRigorLevel: 'mild' | 'medium' | 'spicy';
-      confidenceScore: string;
-      standardsVotes: any;
-      rigorVotes: any;
-    };
-    confirmedData?: {
-      finalStandards: any;
-      finalRigorLevel: string;
-      hasTeacherOverride: boolean;
-      aiConfidenceScore: string;
-    };
-    aiResponses: Array<{
-      aiEngine: string;
-      rigorLevel: 'mild' | 'medium' | 'spicy';
-      rigorJustification: string;
-      confidence: string;
-      processingTime: number;
-      standardsIdentified: Array<{
-        code: string;
-        description: string;
-        jurisdiction: string;
-      }>;
+    finalRigorLevel: 'mild' | 'medium' | 'spicy' | null;
+    finalStandards: Array<{
+      code: string;
+      description: string;
+      jurisdiction: string;
+      gradeLevel?: string;
+      subject?: string;
     }>;
-    teacherOverride?: {
-      id: string;
-      questionId: string;
-      customerUuid: string;
-      overriddenStandards: Array<{
-        code: string;
-        description: string;
-        jurisdiction: string;
-        gradeLevel?: string;
-        subject?: string;
-      }>;
-      overriddenRigorLevel: 'mild' | 'medium' | 'spicy';
-      confidenceScore: number;
-      notes?: string;
-      editReason?: string;
-      isActive: boolean;
-      isRevertedToAi: boolean;
-      createdAt: string;
-      updatedAt: string;
-    };
+    confidenceScore: number | null;
+    isOverridden: boolean;
+    rigorJustification?: string;
   }>;
 }
 
@@ -122,9 +82,10 @@ interface QuestionOverrideFormProps {
   initialRigor?: string;
   initialStandards: string;
   onSuccess: () => void;
+  onCancel?: () => void;
 }
 
-function QuestionOverrideForm({ questionId, questionNumber, questionText, initialRigor, initialStandards, onSuccess }: QuestionOverrideFormProps) {
+function QuestionOverrideForm({ questionId, questionNumber, questionText, initialRigor, initialStandards, onSuccess, onCancel }: QuestionOverrideFormProps) {
   const [rigor, setRigor] = useState(initialRigor || '');
   const [standards, setStandards] = useState(initialStandards);
   const [notes, setNotes] = useState('');
@@ -235,8 +196,8 @@ function QuestionOverrideForm({ questionId, questionNumber, questionText, initia
         <div className="flex justify-end space-x-2">
           <Button 
             type="button" 
-            variant="outline" 
-            onClick={() => window.location.reload()} // Close dialog by reloading
+            variant="outline"
+            onClick={onCancel}
           >
             Cancel
           </Button>
@@ -1137,10 +1098,10 @@ export default function DocumentResults() {
                                       </DialogHeader>
                                       <QuestionOverrideForm
                                         questionId={result.id}
-                                        questionNumber={result.questionNumber}
+                                        questionNumber={result.questionNumber.toString()}
                                         questionText={result.questionText}
-                                        initialRigor={result.finalRigorLevel}
-                                        initialStandards={result.finalStandards?.map(s => typeof s === 'string' ? s : s.code).join(', ') || ''}
+                                        initialRigor={result.finalRigorLevel || ''}
+                                        initialStandards={result.finalStandards?.map((s: any) => typeof s === 'string' ? s : s.code).join(', ') || ''}
                                         onSuccess={() => {
                                           // Refetch data after successful save
                                           queryClient.invalidateQueries({ queryKey: [`/api/documents/${docId}/results`] });

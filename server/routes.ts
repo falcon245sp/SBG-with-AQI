@@ -1164,7 +1164,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           finalRigorLevel: null,
           finalStandards: [],
           confidenceScore: null,
-          isOverridden: false
+          isOverridden: false,
+          rigorJustification: null
         };
 
         // Check for teacher override first (highest priority)
@@ -1184,6 +1185,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           baseData.finalRigorLevel = item.result.consensusRigorLevel;
           baseData.finalStandards = item.result.consensusStandards || [];
           baseData.confidenceScore = item.result.confidenceScore;
+          // Add rigor justification from the first AI response
+          baseData.rigorJustification = item.aiResponses?.[0]?.rigorJustification || null;
         }
         // Fallback to AI responses if no result consensus yet
         else if (item.aiResponses && item.aiResponses.length > 0) {
@@ -1192,6 +1195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           baseData.finalRigorLevel = latestResponse.rigorLevel;
           baseData.finalStandards = latestResponse.standardsIdentified || [];
           baseData.confidenceScore = latestResponse.confidence;
+          baseData.rigorJustification = latestResponse.rigorJustification || null;
         }
         else {
           console.log(`[Transform] Q${item.questionNumber}: No data source available - result:${!!item.result}, aiResponses:${item.aiResponses?.length || 0}`);
