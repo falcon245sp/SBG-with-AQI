@@ -485,74 +485,172 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       // Check if Grok returned individual questions in the old JSON format
       if (grokResult.jsonResponse && grokResult.jsonResponse.problems && Array.isArray(grokResult.jsonResponse.problems)) {
         console.log(`Creating ${grokResult.jsonResponse.problems.length} individual question entries from JSON response`);
-        return {
-          questions: grokResult.jsonResponse.problems.map((problem: any) => ({
-            text: `Problem ${problem.problemNumber}: ${problem.standardDescription}`,
-            context: `Question ${problem.problemNumber}: Analyzing ${problem.standardCode}`,
-            problemNumber: problem.problemNumber, // Include the actual problem number
-            aiResults: {
-              grok: {
-                standards: [{
-                  code: problem.standardCode,
-                  description: problem.standardDescription,
-                  jurisdiction: jurisdictions[0] || "Common Core",
-                  gradeLevel: "9-12",
-                  subject: "Mathematics"
-                }],
-                rigor: {
-                  level: problem.rigorLevel as 'mild' | 'medium' | 'spicy',
-                  dokLevel: problem.rigorLevel === 'mild' ? 'DOK 1' : problem.rigorLevel === 'medium' ? 'DOK 2' : 'DOK 3',
-                  justification: problem.rigorJustification || `${problem.rigorLevel} rigor level based on problem complexity`,
-                  confidence: 0.85
-                },
-                rawResponse: grokResult.rawResponse,
-                processingTime: grokResult.processingTime,
-                aiEngine: 'grok'
+        
+        // Import the commonStandardsProjectService for standard lookups
+        const { default: commonStandardsProjectService } = await import('./commonStandardsProjectService');
+        
+        // Process each problem and lookup standard descriptions
+        const questionsWithStandardDescriptions = await Promise.all(
+          grokResult.jsonResponse.problems.map(async (problem: any) => {
+            let standardDescription = problem.standardDescription || `Question ${problem.problemNumber}: ${problem.standardCode}`;
+            
+            // Lookup the actual standard description from Common Standards Project API
+            try {
+              const standardDetails = await commonStandardsProjectService.lookupStandardByCode(problem.standardCode);
+              if (standardDetails && standardDetails.description) {
+                standardDescription = standardDetails.description;
+                console.log(`✅ Found standard description for ${problem.standardCode}: ${standardDetails.description.substring(0, 60)}...`);
+              } else {
+                console.log(`⚠️ No description found for standard: ${problem.standardCode}`);
               }
+            } catch (error) {
+              console.log(`⚠️ Error looking up standard ${problem.standardCode}:`, error.message);
             }
-          }))
+            
+            return {
+              text: standardDescription,
+              context: `Question ${problem.problemNumber}: Analyzing ${problem.standardCode}`,
+              problemNumber: problem.problemNumber, // Include the actual problem number
+              aiResults: {
+                grok: {
+                  standards: [{
+                    code: problem.standardCode,
+                    description: standardDescription,
+                    jurisdiction: jurisdictions[0] || "Common Core",
+                    gradeLevel: "9-12",
+                    subject: "Mathematics"
+                  }],
+                  rigor: {
+                    level: problem.rigorLevel as 'mild' | 'medium' | 'spicy',
+                    dokLevel: problem.rigorLevel === 'mild' ? 'DOK 1' : problem.rigorLevel === 'medium' ? 'DOK 2' : 'DOK 3',
+                    justification: problem.rigorJustification || `${problem.rigorLevel} rigor level based on problem complexity`,
+                    confidence: 0.85
+                  },
+                  rawResponse: grokResult.rawResponse,
+                  processingTime: grokResult.processingTime,
+                  aiEngine: 'grok'
+                }
+              }
+            };
+          })
+        );
+        
+        return {
+          questions: questionsWithStandardDescriptions
         };
       }
       
       // If we have individual questions parsed from natural language, create separate question entries  
       if (grokResult.allQuestions && grokResult.allQuestions.length > 0) {
         console.log(`Creating ${grokResult.allQuestions.length} individual question entries from parsed response`);
-        return {
-          questions: grokResult.allQuestions.map((question, index) => ({
-            text: question.questionText,
-            context: `Question ${question.questionNumber}: ${question.questionText}`,
-            problemNumber: question.questionNumber, // Include the actual problem number
-            aiResults: {
-              grok: {
-                standards: question.standards,
-                rigor: question.rigor,
-                rawResponse: grokResult.rawResponse,
-                processingTime: grokResult.processingTime,
-                aiEngine: 'grok'
-              }
+        
+        // Import the commonStandardsProjectService for standard lookups
+        const { default: commonStandardsProjectService } = await import('./commonStandardsProjectService');
+        
+        // Process each question and lookup standard descriptions
+        const questionsWithStandardDescriptions = await Promise.all(
+          grokResult.allQuestions.map(async (question, index) => {
+            // Update standards with Common Standards API descriptions
+            let updatedStandards = question.standards;
+            if (question.standards && question.standards.length > 0) {
+              updatedStandards = await Promise.all(
+                question.standards.map(async (standard: any) => {
+                  let standardDescription = standard.description || `Educational content related to ${standard.code}`;
+                  
+                  // Lookup the actual standard description from Common Standards Project API
+                  try {
+                    const standardDetails = await commonStandardsProjectService.lookupStandardByCode(standard.code);
+                    if (standardDetails && standardDetails.description) {
+                      standardDescription = standardDetails.description;
+                      console.log(`✅ Found standard description for ${standard.code}: ${standardDetails.description.substring(0, 60)}...`);
+                    } else {
+                      console.log(`⚠️ No description found for standard: ${standard.code}`);
+                    }
+                  } catch (error) {
+                    console.log(`⚠️ Error looking up standard ${standard.code}:`, error.message);
+                  }
+                  
+                  return {
+                    ...standard,
+                    description: standardDescription
+                  };
+                })
+              );
             }
-          }))
+            
+            // Use the first standard's description as the question text if available
+            const questionText = (updatedStandards && updatedStandards.length > 0 && updatedStandards[0].description) 
+              ? updatedStandards[0].description 
+              : question.questionText;
+            
+            return {
+              text: questionText,
+              context: `Question ${question.questionNumber}: ${question.questionText}`,
+              problemNumber: question.questionNumber, // Include the actual problem number
+              aiResults: {
+                grok: {
+                  standards: updatedStandards,
+                  rigor: question.rigor,
+                  rawResponse: grokResult.rawResponse,
+                  processingTime: grokResult.processingTime,
+                  aiEngine: 'grok'
+                }
+              }
+            };
+          })
+        );
+        
+        return {
+          questions: questionsWithStandardDescriptions
         };
       }
       
       // Fallback: Create individual question entries from the standards found
       console.log('Creating individual questions from detected standards for teacher use');
       if (grokResult.standards && grokResult.standards.length > 0) {
-        return {
-          questions: grokResult.standards.map((standard, index) => ({
-            text: `Question ${index + 1}: Educational content related to ${standard.code}`,
-            context: `Question ${index + 1}: Analysis for standard ${standard.code}`,
-            problemNumber: `${index + 1}`, // Use sequential numbering as fallback
-            aiResults: {
-              grok: {
-                standards: [standard],
-                rigor: grokResult.rigor,
-                rawResponse: grokResult.rawResponse,
-                processingTime: grokResult.processingTime,
-                aiEngine: 'grok'
+        // Import the commonStandardsProjectService for standard lookups
+        const { default: commonStandardsProjectService } = await import('./commonStandardsProjectService');
+        
+        // Process each standard and lookup descriptions
+        const questionsWithStandardDescriptions = await Promise.all(
+          grokResult.standards.map(async (standard, index) => {
+            let standardDescription = standard.description || `Question ${index + 1}: Educational content related to ${standard.code}`;
+            
+            // Lookup the actual standard description from Common Standards Project API
+            try {
+              const standardDetails = await commonStandardsProjectService.lookupStandardByCode(standard.code);
+              if (standardDetails && standardDetails.description) {
+                standardDescription = standardDetails.description;
+                console.log(`✅ Found standard description for ${standard.code}: ${standardDetails.description.substring(0, 60)}...`);
+              } else {
+                console.log(`⚠️ No description found for standard: ${standard.code}`);
               }
+            } catch (error) {
+              console.log(`⚠️ Error looking up standard ${standard.code}:`, error.message);
             }
-          }))
+            
+            return {
+              text: standardDescription,
+              context: `Question ${index + 1}: Analysis for standard ${standard.code}`,
+              problemNumber: `${index + 1}`, // Use sequential numbering as fallback
+              aiResults: {
+                grok: {
+                  standards: [{
+                    ...standard,
+                    description: standardDescription
+                  }],
+                  rigor: grokResult.rigor,
+                  rawResponse: grokResult.rawResponse,
+                  processingTime: grokResult.processingTime,
+                  aiEngine: 'grok'
+                }
+              }
+            };
+          })
+        );
+        
+        return {
+          questions: questionsWithStandardDescriptions
         };
       }
       
