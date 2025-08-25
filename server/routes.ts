@@ -1149,20 +1149,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log(`Fetching results for document ${id}, customer ${customerUuid}`);
-      const results = await storage.getDocumentResults(id, customerUuid);
-      console.log(`Found ${results.length} results for document ${id}`);
+      const rawResults = await storage.getDocumentResults(id, customerUuid);
+      console.log(`Found ${rawResults.length} results for document ${id}`);
       
-      // Debug: Check if results is valid
-      console.log('Results first item sample:', results[0] ? {
-        id: results[0].id,
-        questionNumber: results[0].questionNumber,
-        hasResult: !!results[0].result,
-        hasAiResponses: results[0].aiResponses?.length || 0
+      // Transform the nested data structure into the flat structure expected by frontend
+      const transformedResults = rawResults.map(item => {
+        const baseData = {
+          id: item.id,
+          questionNumber: item.questionNumber,
+          questionText: item.questionText,
+          questionType: item.questionType,
+          context: item.context,
+          // Default values
+          finalRigorLevel: null,
+          finalStandards: [],
+          confidenceScore: null,
+          isOverridden: false
+        };
+
+        // Check for teacher override first (highest priority)
+        if (item.teacherOverride && !item.teacherOverride.isRevertedToAi) {
+          baseData.finalRigorLevel = item.teacherOverride.overriddenRigorLevel;
+          baseData.finalStandards = item.teacherOverride.overriddenStandards || [];
+          baseData.confidenceScore = item.teacherOverride.confidenceScore;
+          baseData.isOverridden = true;
+        }
+        // Otherwise use the consensus result from AI analysis
+        else if (item.result) {
+          baseData.finalRigorLevel = item.result.finalRigorLevel;
+          baseData.finalStandards = item.result.finalStandards || [];
+          baseData.confidenceScore = item.result.confidenceScore;
+        }
+        // Fallback to AI responses if no result consensus yet
+        else if (item.aiResponses && item.aiResponses.length > 0) {
+          const latestResponse = item.aiResponses[0];
+          baseData.finalRigorLevel = latestResponse.rigorLevel;
+          baseData.finalStandards = latestResponse.identifiedStandards || [];
+          baseData.confidenceScore = latestResponse.confidenceScore;
+        }
+
+        return baseData;
+      });
+
+      console.log('Transformed results sample:', transformedResults[0] ? {
+        id: transformedResults[0].id,
+        questionNumber: transformedResults[0].questionNumber,
+        hasRigor: !!transformedResults[0].finalRigorLevel,
+        hasStandards: transformedResults[0].finalStandards?.length > 0,
+        questionTextLength: transformedResults[0].questionText?.length || 0
       } : 'No results');
       
       res.json({
         document,
-        results
+        results: transformedResults
       });
     } catch (error) {
       console.error("Error fetching document results:", error);

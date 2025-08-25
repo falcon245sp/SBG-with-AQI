@@ -943,14 +943,6 @@ export default function DocumentResults() {
                           Question Analysis ({docResult.results?.length || 0} questions)
                         </h4>
                         
-                        {/* Debug: Show what fields are available */}
-                        {docResult.results?.length > 0 && (
-                          <details className="text-xs text-slate-500 bg-slate-100 p-2 rounded">
-                            <summary>Debug: Available fields</summary>
-                            <pre>{JSON.stringify(docResult.results[0], null, 2)}</pre>
-                          </details>
-                        )}
-                        
                         {docResult.results?.map((result, index) => (
                           <Card key={result.id} className="border-l-4 border-l-blue-500">
                             <CardHeader className="pb-2">
@@ -980,11 +972,13 @@ export default function DocumentResults() {
                               <div>
                                 <p className="text-sm font-medium text-slate-700 mb-1">Standards:</p>
                                 <div className="flex flex-wrap gap-1">
-                                  {result.finalStandards?.map((standard, idx) => (
-                                    <Badge key={idx} variant="outline" className="text-xs">
-                                      {standard.code || standard}
-                                    </Badge>
-                                  )) || (
+                                  {result.finalStandards && result.finalStandards.length > 0 ? (
+                                    result.finalStandards.map((standard, idx) => (
+                                      <Badge key={idx} variant="outline" className="text-xs">
+                                        {typeof standard === 'string' ? standard : standard.code}
+                                      </Badge>
+                                    ))
+                                  ) : (
                                     <span className="text-xs text-slate-400 italic">No standards identified</span>
                                   )}
                                 </div>
