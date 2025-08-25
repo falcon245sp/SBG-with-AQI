@@ -400,7 +400,7 @@ export default function DocumentResults() {
         overriddenStandards: processedStandards
       };
       
-      const response = await apiRequest('POST', `/api/questions/${data.questionId}/teacher-override`, payload);
+      const response = await apiRequest('POST', `/api/questions/${data.questionId}/override`, payload);
       return { response, questionId: data.questionId };
     },
     onSuccess: async (data, variables) => {
