@@ -866,7 +866,13 @@ IMPORTANT:
       console.log('=== END STRUCTURED JSON RESPONSE ===');
       
       try {
+        console.log('=== ATTEMPTING JSON PARSE ===');
+        console.log('Raw content for parsing:', rawContent.substring(0, 200) + '...');
         const parsedResponse = JSON.parse(rawContent);
+        console.log('JSON.parse SUCCESS! Type:', typeof parsedResponse, 'isArray:', Array.isArray(parsedResponse));
+        if (Array.isArray(parsedResponse)) {
+          console.log('Array length:', parsedResponse.length);
+        }
         
         // Handle new clean JSON array format
         if (Array.isArray(parsedResponse)) {
@@ -950,8 +956,11 @@ IMPORTANT:
           allQuestions: questions // Store all parsed questions
         };
       } catch (parseError) {
-        console.error('Failed to parse structured JSON response:', parseError);
-        console.error('Raw content:', rawContent);
+        console.error('=== JSON PARSE FAILED ===');
+        console.error('Parse error:', parseError instanceof Error ? parseError.message : 'Unknown error');
+        console.error('Raw content length:', rawContent.length);
+        console.error('Raw content (first 300 chars):', rawContent.substring(0, 300));
+        console.error('Raw content (last 100 chars):', rawContent.slice(-100));
         
         return {
           standards: [],
