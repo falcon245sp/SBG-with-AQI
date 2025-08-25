@@ -208,9 +208,6 @@ export default function ResultsPage() {
                               Status
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                              Jurisdictions
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                               Created
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
@@ -236,15 +233,6 @@ export default function ResultsPage() {
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <ProcessingStatus status={doc.status} />
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex flex-wrap gap-1">
-                                  {doc.jurisdictions?.map((jurisdiction: string, index: number) => (
-                                    <Badge key={index} variant="outline" className="text-xs">
-                                      {jurisdiction}
-                                    </Badge>
-                                  )) || <span className="text-slate-400">None</span>}
-                                </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                                 <div className="flex items-center">
