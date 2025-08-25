@@ -907,25 +907,25 @@ export default function DocumentResults() {
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <p className="text-sm font-medium text-slate-500">Status</p>
-                              <ProcessingStatus status={doc.status} />
+                              <ProcessingStatus status={docResult?.document?.status} />
                             </div>
                             <div>
                               <p className="text-sm font-medium text-slate-500">File Size</p>
                               <p className="text-lg font-semibold text-slate-900">
-                                {(doc.fileSize / 1024 / 1024).toFixed(1)} MB
+                                {((docResult?.document?.fileSize || 0) / 1024 / 1024).toFixed(1)} MB
                               </p>
                             </div>
                             <div>
                               <p className="text-sm font-medium text-slate-500">Processing Time</p>
                               <p className="text-lg font-semibold text-slate-900 flex items-center">
                                 <Clock className="w-4 h-4 mr-1" />
-                                {formatProcessingTime(doc.processingStarted, doc.processingCompleted)}
+                                {formatProcessingTime(docResult?.document?.processingStarted, docResult?.document?.processingCompleted)}
                               </p>
                             </div>
                             <div>
                               <p className="text-sm font-medium text-slate-500">Jurisdictions</p>
                               <div className="flex flex-wrap gap-1 mt-1">
-                                {doc.jurisdictions?.map((jurisdiction, index) => (
+                                {docResult?.document?.jurisdictions?.map((jurisdiction, index) => (
                                   <Badge key={index} variant="outline" className="text-xs">
                                     {jurisdiction}
                                   </Badge>
@@ -958,22 +958,22 @@ export default function DocumentResults() {
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                         <div>
                           <p className="text-sm font-medium text-slate-500">Status</p>
-                          <ProcessingStatus status={doc.status} />
+                          <ProcessingStatus status={docResult?.document?.status} />
                         </div>
                         <div>
                           <p className="text-sm font-medium text-slate-500">Teacher Review</p>
                           <div className="flex items-center space-x-2">
-                            {doc.teacherReviewStatus === 'not_reviewed' && (
+                            {docResult?.document?.teacherReviewStatus === 'not_reviewed' && (
                               <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
                                 Awaiting Review
                               </Badge>
                             )}
-                            {doc.teacherReviewStatus === 'reviewed_and_accepted' && (
+                            {docResult?.document?.teacherReviewStatus === 'reviewed_and_accepted' && (
                               <Badge variant="secondary" className="bg-green-100 text-green-800">
                                 ✓ Accepted
                               </Badge>
                             )}
-                            {doc.teacherReviewStatus === 'reviewed_and_overridden' && (
+                            {docResult?.document?.teacherReviewStatus === 'reviewed_and_overridden' && (
                               <Badge variant="secondary" className="bg-blue-100 text-blue-800">
                                 ✓ Reviewed with Edits
                               </Badge>
@@ -983,20 +983,20 @@ export default function DocumentResults() {
                         <div>
                           <p className="text-sm font-medium text-slate-500">File Size</p>
                           <p className="text-lg font-semibold text-slate-900">
-                            {(doc.fileSize / 1024 / 1024).toFixed(1)} MB
+                            {(docResult?.document?.fileSize / 1024 / 1024).toFixed(1)} MB
                           </p>
                         </div>
                         <div>
                           <p className="text-sm font-medium text-slate-500">Processing Time</p>
                           <p className="text-lg font-semibold text-slate-900 flex items-center">
                             <Clock className="w-4 h-4 mr-1" />
-                            {formatProcessingTime(doc.processingStarted, doc.processingCompleted)}
+                            {formatProcessingTime(docResult?.document?.processingStarted, docResult?.document?.processingCompleted)}
                           </p>
                         </div>
                         <div>
                           <p className="text-sm font-medium text-slate-500">Jurisdictions</p>
                           <div className="flex flex-wrap gap-1 mt-1">
-                            {doc.jurisdictions?.map((jurisdiction, index) => (
+                            {docResult?.document?.jurisdictions?.map((jurisdiction, index) => (
                               <Badge key={index} variant="outline" className="text-xs">
                                 {jurisdiction}
                               </Badge>
@@ -1257,25 +1257,25 @@ export default function DocumentResults() {
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <p className="text-sm font-medium text-slate-500">Status</p>
-                              <ProcessingStatus status={doc.status} />
+                              <ProcessingStatus status={docResult?.document?.status} />
                             </div>
                             <div>
                               <p className="text-sm font-medium text-slate-500">File Size</p>
                               <p className="text-lg font-semibold text-slate-900">
-                                {(doc.fileSize / 1024 / 1024).toFixed(1)} MB
+                                {((docResult?.document?.fileSize || 0) / 1024 / 1024).toFixed(1)} MB
                               </p>
                             </div>
                             <div>
                               <p className="text-sm font-medium text-slate-500">Processing Time</p>
                               <p className="text-lg font-semibold text-slate-900 flex items-center">
                                 <Clock className="w-4 h-4 mr-1" />
-                                {formatProcessingTime(doc.processingStarted, doc.processingCompleted)}
+                                {formatProcessingTime(docResult?.document?.processingStarted, docResult?.document?.processingCompleted)}
                               </p>
                             </div>
                             <div>
                               <p className="text-sm font-medium text-slate-500">Jurisdictions</p>
                               <div className="flex flex-wrap gap-1 mt-1">
-                                {doc.jurisdictions?.map((jurisdiction, index) => (
+                                {docResult?.document?.jurisdictions?.map((jurisdiction, index) => (
                                   <Badge key={index} variant="outline" className="text-xs">
                                     {jurisdiction}
                                   </Badge>
