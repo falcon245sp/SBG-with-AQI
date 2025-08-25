@@ -131,8 +131,8 @@ export default function DocumentResults() {
     enabled: !!docId,
     refetchInterval: (query) => {
       // Poll every 3 seconds if the doc is still processing or needs review
-      const docStatus = query.state.data?.doc.status;
-      const reviewStatus = query.state.data?.doc.teacherReviewStatus;
+      const docStatus = query.state.data?.document?.status;
+      const reviewStatus = query.state.data?.document?.teacherReviewStatus;
       return (docStatus === 'processing' || docStatus === 'pending' || reviewStatus === 'not_reviewed') ? 3000 : false;
     },
     refetchIntervalInBackground: true,
@@ -1031,7 +1031,7 @@ export default function DocumentResults() {
   }
 
   // Extract data from query result  
-  const doc = docResult.doc;
+  const doc = docResult.document;
   const results = docResult.results;
   const sortedResults = results?.slice().sort((a: any, b: any) => {
     // Custom sorting to handle mixed numeric/string question numbers
