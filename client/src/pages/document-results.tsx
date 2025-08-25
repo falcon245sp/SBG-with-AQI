@@ -1075,7 +1075,10 @@ export default function DocumentResults() {
                                         <div className="space-y-2">
                                           <p className="font-medium">Sherpa's Reasoning:</p>
                                           <p className="text-sm">
-                                            {result.rigorJustification || 'No reasoning available'}
+                                            {result.rigorJustification || 'Reasoning not available yet'}
+                                          </p>
+                                          <p className="text-xs text-gray-500">
+                                            Debug: {JSON.stringify({ hasJustification: !!result.rigorJustification, fieldExists: 'rigorJustification' in result })}
                                           </p>
                                         </div>
                                       </TooltipContent>
