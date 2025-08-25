@@ -76,26 +76,26 @@ export default function CourseSelection() {
     setCourseContextMutation.mutate();
   };
 
-  const configuredClassrooms = classrooms?.filter(c => c.course_configuration_completed) || [];
+  const configuredClassrooms = classrooms?.filter(c => c.courseConfigurationCompleted) || [];
   
   // Debug: Check what we have after filtering
   console.log('📚 [COURSE-SELECTION] All classrooms fetched:', classrooms?.length || 0);
   console.log('📚 [COURSE-SELECTION] Configured classrooms found:', configuredClassrooms.length);
   console.log('📚 [COURSE-SELECTION] Raw classroom data:', classrooms?.map(c => ({
     name: c.name,
-    course_title: c.course_title,
-    course_configuration_completed: c.course_configuration_completed,
-    sbg_enabled: c.sbg_enabled
+    courseTitle: c.courseTitle,
+    courseConfigurationCompleted: c.courseConfigurationCompleted,
+    sbgEnabled: c.sbgEnabled
   })));
   console.log('📚 [COURSE-SELECTION] Filtered configured classroom details:', configuredClassrooms.map(c => ({
     name: c.name,
-    courseTitle: c.course_title,
-    configured: c.course_configuration_completed
+    courseTitle: c.courseTitle,
+    configured: c.courseConfigurationCompleted
   })));
   
   // Group classrooms by course (courseTitle) to show courses, not individual sections
   const courseGroups = configuredClassrooms.reduce((groups: any, classroom: any) => {
-    const courseTitle = classroom.course_title || 'Unknown Course';
+    const courseTitle = classroom.courseTitle || 'Unknown Course';
     if (!groups[courseTitle]) {
       groups[courseTitle] = {
         courseTitle,

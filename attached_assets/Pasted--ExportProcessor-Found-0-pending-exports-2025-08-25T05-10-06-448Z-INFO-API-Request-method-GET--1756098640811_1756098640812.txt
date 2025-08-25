@@ -1,0 +1,194 @@
+[ExportProcessor] Found 0 pending exports
+2025-08-25T05:10:06.448Z [INFO] API Request | method=GET, path=/api/auth/user, statusCode=200, duration=567, requestId=fece940593e820d1c4d01d344becc99b, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.8.17, sessionId=Udp-bjkgBLmBB2Cb_3ApPh349ObWl0ta
+[CustomerLookupService] Looking up user and customer UUID for session user: 79146a31-dd8d-4ba9-a58f-3f32a8bd008e
+[CustomerLookupService] Found user and customer UUID: e57aea91-4122-46fa-b98f-86ed5df38ebf for session user: 79146a31-dd8d-4ba9-a58f-3f32a8bd008e
+🔍 [CLASSROOMS-API] Fetching classrooms for user: {
+  userId: '79146a31-dd8d-4ba9-a58f-3f32a8bd008e',
+  customerUuid: 'e57aea91-4122-46fa-b98f-86ed5df38ebf',
+  email: 'jfielder@srvusd.net'
+}
+🔍 [DB-QUERY] Fetching teacher classrooms for customerUuid: e57aea91-4122-46fa-b98f-86ed5df38ebf
+🔍 [DB-QUERY] Database returned classrooms: {
+  count: 7,
+  customerUuid: 'e57aea91-4122-46fa-b98f-86ed5df38ebf',
+  classrooms: [
+    {
+      id: '7e837397-39c1-48cd-8a69-3a01debd695c',
+      name: 'Algebra 1 - Fielder - 02',
+      courseTitle: 'Algebra 1',
+      courseConfigurationCompleted: true,
+      sbgEnabled: true,
+      raw_course_title: undefined,
+      raw_course_config: undefined,
+      raw_sbg_enabled: undefined
+    },
+    {
+      id: '9f8da2c9-49fa-45fe-ad8c-a0c8cfc767cb',
+      name: 'Algebra 1 - Fielder - 06',
+      courseTitle: 'Algebra 1',
+      courseConfigurationCompleted: true,
+      sbgEnabled: true,
+      raw_course_title: undefined,
+      raw_course_config: undefined,
+      raw_sbg_enabled: undefined
+    },
+    {
+      id: '7ce81b5d-f7df-4e2a-b53e-fe72f6385375',
+      name: 'Algebra 1 Sandbox',
+      courseTitle: null,
+      courseConfigurationCompleted: false,
+      sbgEnabled: false,
+      raw_course_title: undefined,
+      raw_course_config: undefined,
+      raw_sbg_enabled: undefined
+    },
+    {
+      id: 'e734a8ee-2c6d-43c7-99a4-f7433265a54e',
+      name: 'Homeroom - Fielder - HR -E',
+      courseTitle: null,
+      courseConfigurationCompleted: false,
+      sbgEnabled: false,
+      raw_course_title: undefined,
+      raw_course_config: undefined,
+      raw_sbg_enabled: undefined
+    },
+    {
+      id: 'b6caa372-4b36-4d95-9a57-afedb14d961c',
+      name: 'Math Topics Adv - Fielder - 01',
+      courseTitle: 'Pre-Calculus',
+      courseConfigurationCompleted: true,
+      sbgEnabled: true,
+      raw_course_title: undefined,
+      raw_course_config: undefined,
+      raw_sbg_enabled: undefined
+    },
+    {
+      id: '5339d3df-475d-4763-9cff-75f63918984a',
+      name: 'Math Topics Adv - Fielder - 04',
+      courseTitle: 'Pre-Calculus',
+      courseConfigurationCompleted: true,
+      sbgEnabled: true,
+      raw_course_title: undefined,
+      raw_course_config: undefined,
+      raw_sbg_enabled: undefined
+    },
+    {
+      id: '1587b6fe-d7d7-4e16-b34f-fac22031a721',
+      name: 'Math Topics Adv - Fielder - 05',
+      courseTitle: 'Pre-Calculus',
+      courseConfigurationCompleted: true,
+      sbgEnabled: true,
+      raw_course_title: undefined,
+      raw_course_config: undefined,
+      raw_sbg_enabled: undefined
+    }
+  ]
+}
+🔍 [CLASSROOMS-API] Raw database results: {
+  count: 7,
+  classrooms: [
+    {
+      id: '7e837397-39c1-48cd-8a69-3a01debd695c',
+      name: 'Algebra 1 - Fielder - 02',
+      courseTitle: 'Algebra 1',
+      course_title: undefined,
+      courseConfigurationCompleted: true,
+      course_configuration_completed: undefined,
+      sbgEnabled: true,
+      sbg_enabled: undefined
+    },
+    {
+      id: '9f8da2c9-49fa-45fe-ad8c-a0c8cfc767cb',
+      name: 'Algebra 1 - Fielder - 06',
+      courseTitle: 'Algebra 1',
+      course_title: undefined,
+      courseConfigurationCompleted: true,
+      course_configuration_completed: undefined,
+      sbgEnabled: true,
+      sbg_enabled: undefined
+    },
+    {
+      id: '7ce81b5d-f7df-4e2a-b53e-fe72f6385375',
+      name: 'Algebra 1 Sandbox',
+      courseTitle: null,
+      course_title: undefined,
+      courseConfigurationCompleted: false,
+      course_configuration_completed: undefined,
+      sbgEnabled: false,
+      sbg_enabled: undefined
+    },
+    {
+      id: 'e734a8ee-2c6d-43c7-99a4-f7433265a54e',
+      name: 'Homeroom - Fielder - HR -E',
+      courseTitle: null,
+      course_title: undefined,
+      courseConfigurationCompleted: false,
+      course_configuration_completed: undefined,
+      sbgEnabled: false,
+      sbg_enabled: undefined
+    },
+    {
+      id: 'b6caa372-4b36-4d95-9a57-afedb14d961c',
+      name: 'Math Topics Adv - Fielder - 01',
+      courseTitle: 'Pre-Calculus',
+      course_title: undefined,
+      courseConfigurationCompleted: true,
+      course_configuration_completed: undefined,
+      sbgEnabled: true,
+      sbg_enabled: undefined
+    },
+    {
+      id: '5339d3df-475d-4763-9cff-75f63918984a',
+      name: 'Math Topics Adv - Fielder - 04',
+      courseTitle: 'Pre-Calculus',
+      course_title: undefined,
+      courseConfigurationCompleted: true,
+      course_configuration_completed: undefined,
+      sbgEnabled: true,
+      sbg_enabled: undefined
+    },
+    {
+      id: '1587b6fe-d7d7-4e16-b34f-fac22031a721',
+      name: 'Math Topics Adv - Fielder - 05',
+      courseTitle: 'Pre-Calculus',
+      course_title: undefined,
+      courseConfigurationCompleted: true,
+      course_configuration_completed: undefined,
+      sbgEnabled: true,
+      sbg_enabled: undefined
+    }
+  ]
+}
+🔍 [CLASSROOMS-API] Configured classrooms found: {
+  count: 5,
+  configured: [
+    {
+      name: 'Algebra 1 - Fielder - 02',
+      courseTitle: 'Algebra 1',
+      configured: true
+    },
+    {
+      name: 'Algebra 1 - Fielder - 06',
+      courseTitle: 'Algebra 1',
+      configured: true
+    },
+    {
+      name: 'Math Topics Adv - Fielder - 01',
+      courseTitle: 'Pre-Calculus',
+      configured: true
+    },
+    {
+      name: 'Math Topics Adv - Fielder - 04',
+      courseTitle: 'Pre-Calculus',
+      configured: true
+    },
+    {
+      name: 'Math Topics Adv - Fielder - 05',
+      courseTitle: 'Pre-Calculus',
+      configured: true
+    }
+  ]
+}
+🔍 [CLASSROOMS-API] Sending response to frontend: { totalClassrooms: 7, responseSize: 4515 }
+2025-08-25T05:10:06.888Z [INFO] API Request | method=GET, path=/api/classrooms, statusCode=200, duration=228, requestId=83cf29fc6f028100e8c9cc6e223c1a49, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36, ip=10.83.8.17, sessionId=Udp-bjkgBLmBB2Cb_3ApPh349ObWl0ta
+2025-08-25T05:10:14.459Z [INFO] API Request | method=GET, path=/api/auth/user, statusCode=401, duration=1, requestId=d282f411440e58a73a656ac5f098e8fe, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36, ip=10.83.6.37, sessionId=G0BnCohJmpyI0RteRRgQvLZvtDtyPHU_
