@@ -94,7 +94,7 @@ export class AIService {
     jurisdictions: string[]
   ): Promise<{standards: any[], rigor: any}[]> {
     console.log('[AIService] Transforming Grok response with Common Standards lookup');
-    const { default: commonStandardsProjectService } = await import('./commonStandardsProjectService');
+    const { commonStandardsProjectService } = await import('./commonStandardsProjectService');
     
     const transformedResults = [];
     
@@ -107,7 +107,7 @@ export class AIService {
         code: item.standard,
         description: standardDetails.description,
         jurisdiction: jurisdictions[0] || "Common Core State Standards",
-        gradeLevel: standardDetails.ancestorDescriptions?.find(desc => /grade|level/i.test(desc)) || "9-12",
+        gradeLevel: standardDetails.ancestorDescriptions?.find((desc: string) => /grade|level/i.test(desc)) || "9-12",
         subject: "Mathematics"
       } : {
         code: item.standard,
