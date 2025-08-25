@@ -5,6 +5,12 @@ The Document Processing Service, "Standards Sherpa," is a full-stack web applica
 
 ## Version History
 
+### **v0.91 (August 25, 2025) - Document UX & Routing Refinements** ✅
+- **PDF Viewer Integration**: Generated documents (rubrics, cover sheets) now open PDFs directly in new browser tabs instead of routing to document lineage page
+- **Streamlined Document Table**: Permanently removed unwanted columns (Customer ID, Processing Time, Jurisdictions) from Document Processing History for cleaner, minimal interface
+- **Optimized Button Logic**: Enhanced "View" vs "View Analysis" button routing - generated documents show PDFs, uploaded documents show AI analysis results
+- **End-to-End Onboarding Flow**: Confirmed complete onboarding through first upload workflow functions seamlessly with course-level context and session management
+
 ### **v0.9 (August 22, 2025) - Google Classroom Integration Milestone** ✅
 - **Proactive Bulk Configuration**: Automatically presents bulk configuration dialog after configuring first classroom group, eliminating button hunting
 - **Mathematical Course Ordering**: Standards sets now sort by math progression (Algebra 1 → Geometry → Algebra 2 → Pre-Calculus) instead of alphabetically
