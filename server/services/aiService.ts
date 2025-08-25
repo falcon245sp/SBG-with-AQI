@@ -427,8 +427,8 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         console.log(`✅ NEW FORMAT: Creating ${parsedGrokResponse.length} individual question entries from parsed JSON array`);
         return {
           questions: parsedGrokResponse.map((problem: any) => ({
-            text: problem.questionText || `Question ${problem.question}: ${problem.standard}`,
-            context: problem.questionSummary || `Question ${problem.question}: Mathematics problem analyzing ${problem.standard}`,
+            text: problem.questionSummary || problem.questionText || `Question ${problem.question}: ${problem.standard}`,
+            context: `Question ${problem.question}: Mathematics problem analyzing ${problem.standard}`,
             problemNumber: problem.question || problem.problemNumber, // Handle both field names
             aiResults: {
               grok: {
