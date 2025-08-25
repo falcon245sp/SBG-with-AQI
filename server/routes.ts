@@ -1173,19 +1173,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
           baseData.finalStandards = item.teacherOverride.overriddenStandards || [];
           baseData.confidenceScore = item.teacherOverride.confidenceScore;
           baseData.isOverridden = true;
+          console.log(`[Transform] Q${item.questionNumber}: Using teacher override`);
         }
         // Otherwise use the consensus result from AI analysis
         else if (item.result) {
-          baseData.finalRigorLevel = item.result.finalRigorLevel;
-          baseData.finalStandards = item.result.finalStandards || [];
+          console.log(`[Transform] Q${item.questionNumber}: Using consensus result`, {
+            consensusRigor: item.result.consensusRigorLevel,
+            consensusStandards: Array.isArray(item.result.consensusStandards) ? item.result.consensusStandards.length : 'Not array'
+          });
+          baseData.finalRigorLevel = item.result.consensusRigorLevel;
+          baseData.finalStandards = item.result.consensusStandards || [];
           baseData.confidenceScore = item.result.confidenceScore;
         }
         // Fallback to AI responses if no result consensus yet
         else if (item.aiResponses && item.aiResponses.length > 0) {
           const latestResponse = item.aiResponses[0];
+          console.log(`[Transform] Q${item.questionNumber}: Using AI response fallback`);
           baseData.finalRigorLevel = latestResponse.rigorLevel;
-          baseData.finalStandards = latestResponse.identifiedStandards || [];
-          baseData.confidenceScore = latestResponse.confidenceScore;
+          baseData.finalStandards = latestResponse.standardsIdentified || [];
+          baseData.confidenceScore = latestResponse.confidence;
+        }
+        else {
+          console.log(`[Transform] Q${item.questionNumber}: No data source available - result:${!!item.result}, aiResponses:${item.aiResponses?.length || 0}`);
         }
 
         return baseData;
