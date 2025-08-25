@@ -139,7 +139,87 @@ export default function DocumentResults() {
     staleTime: 0, // Always refetch to ensure fresh status
   });
 
-  // Handle Accept and Proceed action
+  // If loading, show loading state
+  if (isLoading) {
+    return (
+      <div className="flex h-screen bg-slate-50">
+        <Sidebar />
+        
+        <div className="flex flex-col w-0 flex-1 overflow-hidden">
+          <div className="relative z-10 flex-shrink-0 flex h-16 bg-white shadow border-b border-slate-200">
+            <div className="flex-1 px-4 flex justify-between items-center">
+              <div className="flex items-center">
+                <Link href="/results">
+                  <Button variant="ghost" size="sm" className="mr-4">
+                    <ArrowLeft className="w-4 h-4" />
+                  </Button>
+                </Link>
+                <FileText className="w-6 h-6 text-blue-600 mr-3" />
+                <h2 className="text-2xl font-semibold text-slate-800">Loading Analysis...</h2>
+              </div>
+            </div>
+          </div>
+          
+          <main className="flex-1 relative overflow-y-auto focus:outline-none">
+            <div className="py-6">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+                <div className="animate-pulse">
+                  <div className="h-8 bg-slate-200 rounded mb-4"></div>
+                  <div className="h-64 bg-slate-200 rounded"></div>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  // If error, show error state
+  if (error || !documentResult) {
+    return (
+      <div className="flex h-screen bg-slate-50">
+        <Sidebar />
+        
+        <div className="flex flex-col w-0 flex-1 overflow-hidden">
+          <div className="relative z-10 flex-shrink-0 flex h-16 bg-white shadow border-b border-slate-200">
+            <div className="flex-1 px-4 flex justify-between items-center">
+              <div className="flex items-center">
+                <Link href="/results">
+                  <Button variant="ghost" size="sm" className="mr-4">
+                    <ArrowLeft className="w-4 h-4" />
+                  </Button>
+                </Link>
+                <FileText className="w-6 h-6 text-blue-600 mr-3" />
+                <h2 className="text-2xl font-semibold text-slate-800">Error Loading Analysis</h2>
+              </div>
+            </div>
+          </div>
+          
+          <main className="flex-1 relative overflow-y-auto focus:outline-none">
+            <div className="py-6">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="text-center">
+                      <AlertCircle className="mx-auto h-12 w-12 text-red-400" />
+                      <h3 className="mt-2 text-sm font-medium text-slate-900">
+                        Unable to load document analysis
+                      </h3>
+                      <p className="mt-1 text-sm text-slate-500">
+                        {error?.message || 'An error occurred while loading the analysis.'}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
   // Accept and proceed mutation with loading state
   const acceptAndProceedMutation = useMutation({
     mutationFn: async () => {
@@ -615,8 +695,6 @@ export default function DocumentResults() {
       </div>
     );
   }
-
-  // Remove duplicate - already declared later in the component
 
   return (
     <div className="flex h-screen bg-slate-50">
