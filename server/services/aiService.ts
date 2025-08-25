@@ -427,20 +427,41 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       // Check if we successfully parsed the JSON array format
       if (parsedGrokResponse && Array.isArray(parsedGrokResponse)) {
         console.log(`✅ NEW FORMAT: Creating ${parsedGrokResponse.length} individual question entries from parsed JSON array`);
-        return {
-          questions: parsedGrokResponse.map((problem: any) => ({
-            text: problem.questionSummary || problem.justification || `Question ${problem.question}: ${problem.standard}`,
-            context: `Question ${problem.question}: Mathematics problem analyzing ${problem.standard}`,
-            problemNumber: problem.question || problem.problemNumber, // Handle both field names
-            aiResults: {
-              grok: {
-                standards: [{
-                  code: problem.standard || problem.standardCode,
-                  description: problem.standardDescription || `Mathematics standard ${problem.standard}`,
-                  jurisdiction: jurisdictions[0] || "Common Core",
-                  gradeLevel: "9-12",
-                  subject: "Mathematics"
-                }],
+        
+        // Import the commonStandardsProjectService for standard lookups
+        const { default: commonStandardsProjectService } = await import('./commonStandardsProjectService');
+        
+        // Process each problem and lookup standard descriptions
+        const questionsWithStandardDescriptions = await Promise.all(
+          parsedGrokResponse.map(async (problem: any) => {
+            let standardDescription = `Question ${problem.question}: ${problem.standard}`;
+            
+            // Lookup the actual standard description from Common Standards Project API
+            try {
+              const standardDetails = await commonStandardsProjectService.lookupStandardByCode(problem.standard || problem.standardCode);
+              if (standardDetails && standardDetails.description) {
+                standardDescription = standardDetails.description;
+                console.log(`✅ Found standard description for ${problem.standard}: ${standardDetails.description.substring(0, 60)}...`);
+              } else {
+                console.log(`⚠️ No description found for standard: ${problem.standard}`);
+              }
+            } catch (error) {
+              console.log(`⚠️ Error looking up standard ${problem.standard}:`, error.message);
+            }
+            
+            return {
+              text: standardDescription,
+              context: `Question ${problem.question}: Mathematics problem analyzing ${problem.standard}`,
+              problemNumber: problem.question || problem.problemNumber, // Handle both field names
+              aiResults: {
+                grok: {
+                  standards: [{
+                    code: problem.standard || problem.standardCode,
+                    description: standardDescription,
+                    jurisdiction: jurisdictions[0] || "Common Core",
+                    gradeLevel: "9-12",
+                    subject: "Mathematics"
+                  }],
                 rigor: {
                   level: (problem.rigor || problem.rigorLevel) as 'mild' | 'medium' | 'spicy',
                   dokLevel: (problem.rigor || problem.rigorLevel) === 'mild' ? 'DOK 1' : (problem.rigor || problem.rigorLevel) === 'medium' ? 'DOK 2' : 'DOK 3',
@@ -451,8 +472,12 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
                 processingTime: grokResult.processingTime,
                 aiEngine: 'grok'
               }
-            }
-          }))
+            };
+          })
+        );
+        
+        return {
+          questions: questionsWithStandardDescriptions
         };
       }
       
