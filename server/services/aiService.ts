@@ -201,22 +201,18 @@ Return a JSON array where each element represents one individual question/proble
 
 [
   {
-    "problemNumber": 1,
-    "questionText": "Complete the prime factorization for 90",
+    "question": 1,
     "questionSummary": "Prime factorization problem",
-    "standardCode": "MATH.8.NS.A.2",
-    "standardDescription": "Use rational approximations of irrational numbers to compare the size of irrational numbers",
-    "rigorLevel": "mild",
-    "rigorJustification": "Basic factorization requiring recall of multiplication facts"
+    "standard": "6.NS.B.4",
+    "rigor": "mild",
+    "justification": "Basic factorization requiring recall of multiplication facts"
   },
   {
-    "problemNumber": 2,
-    "questionText": "Complete the prime factorization for 130",
-    "questionSummary": "Prime factorization problem",
-    "standardCode": "MATH.8.NS.A.2", 
-    "standardDescription": "Use rational approximations of irrational numbers to compare the size of irrational numbers",
-    "rigorLevel": "mild",
-    "rigorJustification": "Basic factorization requiring recall of multiplication facts"
+    "question": 2,
+    "questionSummary": "Prime factorization problem", 
+    "standard": "6.NS.B.4",
+    "rigor": "mild",
+    "justification": "Basic factorization requiring recall of multiplication facts"
   }
 ]
 
@@ -237,7 +233,7 @@ IMPORTANT:
 - Base analysis solely on the provided document content
 
 RESPONSE FORMAT EXAMPLE (clean JSON only):
-[{"problemNumber":1,"questionText":"Problem text","questionSummary":"Brief description","standardCode":"6.NS.B.4","rigor":"mild"}]`;
+[{"question":1,"questionSummary":"Brief description","standard":"6.NS.B.4","rigor":"mild"}]`;
     
     return prompt;
   }
