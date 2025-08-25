@@ -203,7 +203,7 @@ Return a JSON array where each element represents one individual question/proble
   {
     "problemNumber": 1,
     "questionText": "Complete the prime factorization for 90",
-    "standardCode": "CCSS.MATH.8.NS.A.2",
+    "standardCode": "MATH.8.NS.A.2",
     "standardDescription": "Use rational approximations of irrational numbers to compare the size of irrational numbers",
     "rigorLevel": "mild",
     "rigorJustification": "Basic factorization requiring recall of multiplication facts"
@@ -211,7 +211,7 @@ Return a JSON array where each element represents one individual question/proble
   {
     "problemNumber": 2,
     "questionText": "Complete the prime factorization for 130",
-    "standardCode": "CCSS.MATH.8.NS.A.2", 
+    "standardCode": "MATH.8.NS.A.2", 
     "standardDescription": "Use rational approximations of irrational numbers to compare the size of irrational numbers",
     "rigorLevel": "mild",
     "rigorJustification": "Basic factorization requiring recall of multiplication facts"
@@ -223,6 +223,7 @@ IMPORTANT:
 - If you find only one question, return an array with one object
 - Each question must have its own complete analysis
 - Extract the actual question text, don't use generic descriptions
+- Use standards from the TARGET JURISDICTIONS listed above (${primaryJurisdiction})
 - Base analysis solely on the provided document content`;
     
     return prompt;
