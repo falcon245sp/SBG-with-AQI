@@ -1058,16 +1058,29 @@ export default function DocumentResults() {
                                   )}
                                 </CardTitle>
                                 <div className="flex items-center space-x-2">
-                                  <Badge 
-                                    variant={
-                                      result.finalRigorLevel === 'spicy' ? 'destructive' :
-                                      result.finalRigorLevel === 'medium' ? 'default' : 'secondary'
-                                    }
-                                    className="text-xs cursor-help"
-                                    title={`Sherpa's Reasoning: ${(result as any).rigorJustification || 'Reasoning available on hover'}`}
-                                  >
-                                    {result.finalRigorLevel?.toUpperCase() || 'PENDING'}
-                                  </Badge>
+                                  <TooltipProvider delayDuration={0}>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Badge 
+                                          variant={
+                                            result.finalRigorLevel === 'spicy' ? 'destructive' :
+                                            result.finalRigorLevel === 'medium' ? 'default' : 'secondary'
+                                          }
+                                          className="text-xs cursor-help"
+                                        >
+                                          {result.finalRigorLevel?.toUpperCase() || 'PENDING'}
+                                        </Badge>
+                                      </TooltipTrigger>
+                                      <TooltipContent className="max-w-sm bg-slate-900 text-white border-slate-700">
+                                        <div className="space-y-1">
+                                          <p className="font-semibold text-sm text-slate-100">Sherpa's Reasoning:</p>
+                                          <p className="text-sm leading-relaxed text-slate-200">
+                                            {(result as any).rigorJustification || 'Reasoning not available'}
+                                          </p>
+                                        </div>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
                                   <Dialog>
                                     <DialogTrigger asChild>
                                       <Button
