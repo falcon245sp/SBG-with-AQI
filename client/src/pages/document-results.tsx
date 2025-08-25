@@ -127,7 +127,7 @@ export default function DocumentResults() {
   }>({ rigorLevel: 'mild', standards: '', justification: '', confidence: 5 });
 
   const { data: docResult, isLoading, error } = useQuery<DocumentResult>({
-    queryKey: [`/api/docs/${docId}/results`],
+    queryKey: [`/api/documents/${docId}/results`],
     enabled: !!docId,
     refetchInterval: (query) => {
       // Poll every 3 seconds if the doc is still processing or needs review
@@ -229,7 +229,7 @@ export default function DocumentResults() {
       
       console.log(`[Accept] Starting accept process for doc: ${docId}`);
       
-      const response = await fetch(`/api/docs/${docId}/accept`, {
+      const response = await fetch(`/api/documents/${docId}/accept`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -251,7 +251,7 @@ export default function DocumentResults() {
       return responseData;
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: [`/api/docs/${docId}/results`] });
+      await queryClient.invalidateQueries({ queryKey: [`/api/documents/${docId}/results`] });
       await queryClient.invalidateQueries({ queryKey: ['/api/file-cabinet'] });
       
       toast({
@@ -285,8 +285,8 @@ export default function DocumentResults() {
     onSuccess: async (data, questionId) => {
       console.log('Revert successful, invalidating queries...');
       // Invalidate and refetch the queries
-      await queryClient.invalidateQueries({ queryKey: [`/api/docs/${docId}/results`] });
-      await queryClient.refetchQueries({ queryKey: [`/api/docs/${docId}/results`] });
+      await queryClient.invalidateQueries({ queryKey: [`/api/documents/${docId}/results`] });
+      await queryClient.refetchQueries({ queryKey: [`/api/documents/${docId}/results`] });
       console.log('Query refetch completed');
       toast({
         title: "Reverted to Sherpa Analysis",
@@ -772,7 +772,7 @@ export default function DocumentResults() {
                   {/* Document Viewer */}
                   <div className="flex-1 overflow-hidden">
                     <iframe
-                      src={`/api/docs/${docId}/content`}
+                      src={`/api/documents/${docId}/content`}
                       className="w-full h-full border-0"
                       title={`PDF: ${doc.fileName}`}
                       data-testid="doc-viewer-iframe"
@@ -1122,7 +1122,7 @@ export default function DocumentResults() {
                   {/* Document Viewer */}
                   <div className="flex-1 overflow-hidden">
                     <iframe
-                      src={`/api/docs/${docId}/content`}
+                      src={`/api/documents/${docId}/content`}
                       className="w-full h-full border-0"
                       title={`PDF: ${doc.fileName}`}
                       data-testid="doc-viewer-iframe"
@@ -1569,14 +1569,14 @@ function TeacherOverrideForm({
     onSuccess: async (data, variables) => {
       console.log('Override saved, invalidating cache for doc:', docId);
       // Use the same pattern as the revert mutation that works
-      await queryClient.invalidateQueries({ queryKey: [`/api/docs/${docId}/results`] });
-      await queryClient.refetchQueries({ queryKey: [`/api/docs/${docId}/results`] });
+      await queryClient.invalidateQueries({ queryKey: [`/api/documents/${docId}/results`] });
+      await queryClient.refetchQueries({ queryKey: [`/api/documents/${docId}/results`] });
       console.log('Cache refetch completed');
       
       // Trigger regeneration of rubrics and cover sheets with teacher overrides
       try {
         console.log('Triggering rubric regeneration after teacher override...');
-        const response = await fetch(`/api/docs/${docId}/accept`, {
+        const response = await fetch(`/api/documents/${docId}/accept`, {
           method: 'POST',
           credentials: 'include'
         });
