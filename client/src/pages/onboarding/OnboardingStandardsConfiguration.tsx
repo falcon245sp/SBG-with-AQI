@@ -171,7 +171,7 @@ export default function OnboardingStandardsConfiguration() {
         description: "Welcome to Standards Sherpa! Your dashboard is ready.",
         variant: "default"
       });
-      setLocation('/dashboard');
+      setLocation('/course-selection');
     },
     onError: (error: any) => {
       toast({

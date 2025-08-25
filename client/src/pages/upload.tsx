@@ -18,11 +18,15 @@ export default function UploadPage() {
   // Use authenticated user data
   const { user } = useAuth();
   const customerId = (user as any)?.customerUuid || "";
-  const [selectedCourseId, setSelectedCourseId] = useState<string>("");
   const [jurisdictions, setJurisdictions] = useState("Common Core");
   const [focusStandards, setFocusStandards] = useState("");
   const [callbackUrl, setCallbackUrl] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  
+  // Get current course context from session storage
+  const [currentCourseId, setCurrentCourseId] = useState<string>(
+    () => sessionStorage.getItem('currentCourseId') || ""
+  );
   const [submittedJobs, setSubmittedJobs] = useState<Array<{
     jobId: string;
     fileName: string;
@@ -79,14 +83,7 @@ export default function UploadPage() {
       return;
     }
 
-    if (!selectedCourseId) {
-      toast({
-        title: "Course Required",
-        description: "Please select a course before uploading documents.",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Course context is now optional - can be set via session or left navigation
 
     setIsUploading(true);
 
@@ -97,11 +94,11 @@ export default function UploadPage() {
         focusStandards.split(',').map(s => s.trim()).filter(Boolean) : 
         undefined;
 
-      // Submit to web service with course context
+      // Submit to web service with course context from session
       const result = await webServiceClient.submitDocuments({
         customerId,
         files,
-        courseId: selectedCourseId,
+        courseId: currentCourseId || undefined,
         jurisdictions: jurisdictionList,
         focusStandards: focusStandardsList,
         callbackUrl: callbackUrl || undefined
@@ -191,53 +188,27 @@ export default function UploadPage() {
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {/* Course Selection */}
-                  <div>
-                    <Label htmlFor="courseSelection" className="text-base font-medium">Select Course</Label>
-                    <p className="text-sm text-slate-500 mb-2">
-                      Choose which course these documents belong to
-                    </p>
-                    <Select value={selectedCourseId} onValueChange={setSelectedCourseId}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select a course..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {classrooms
-                          ?.filter(classroom => classroom.courseConfigurationCompleted)
-                          ?.map((classroom) => (
-                            <SelectItem key={classroom.id} value={classroom.id}>
-                              {classroom.courseTitle || classroom.name}
-                              {classroom.section && ` (${classroom.section})`}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                    {(!classrooms || classrooms.filter(c => c.courseConfigurationCompleted).length === 0) && (
-                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-2">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <div className="w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center">
-                            <span className="text-xs text-white font-bold">!</span>
-                          </div>
-                          <span className="text-sm font-medium text-amber-800">Setup Required</span>
-                        </div>
-                        <p className="text-sm text-amber-700 mb-3">
-                          No configured courses found. You need to set up your classrooms and courses before uploading documents.
-                        </p>
-                        <a 
-                          href="/onboarding" 
-                          className="inline-flex items-center px-3 py-2 text-sm font-medium text-amber-700 bg-amber-100 border border-amber-300 rounded-md hover:bg-amber-200 transition-colors"
-                        >
-                          Complete Onboarding Setup
-                        </a>
+                  {/* Current Course Context */}
+                  {currentCourseId && classrooms && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <span className="text-sm font-medium text-blue-800">Current Course Context</span>
                       </div>
-                    )}
-                  </div>
+                      <p className="text-sm text-blue-700">
+                        {classrooms.find(c => c.id === currentCourseId)?.courseTitle || 
+                         classrooms.find(c => c.id === currentCourseId)?.name}
+                        {classrooms.find(c => c.id === currentCourseId)?.section && 
+                         ` (${classrooms.find(c => c.id === currentCourseId)?.section})`}
+                      </p>
+                    </div>
+                  )}
 
                   {/* File Upload Area */}
                   <div>
                     <Label className="text-base font-medium">Document Files</Label>
                     <p className="text-sm text-slate-500 mb-2">
-                      Select one or multiple files for processing
+                      Upload educational documents for AI-powered standards analysis and rigor assessment
                     </p>
                     <div className="mt-2">
                       <FileUploader 
@@ -245,10 +216,10 @@ export default function UploadPage() {
                         multiple={true}
                       />
                     </div>
-                    {!selectedCourseId && (
-                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mt-2">
-                        <p className="text-sm text-gray-600">
-                          ⚠️ Please select a course above before uploading files.
+                    {!currentCourseId && (
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-2">
+                        <p className="text-sm text-amber-700">
+                          💡 Files uploaded without course context can be organized later via the course navigation panel.
                         </p>
                       </div>
                     )}
