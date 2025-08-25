@@ -471,6 +471,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
                 rawResponse: grokResult.rawResponse,
                 processingTime: grokResult.processingTime,
                 aiEngine: 'grok'
+                }
               }
             };
           })
