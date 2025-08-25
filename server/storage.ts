@@ -538,6 +538,14 @@ export class DatabaseStorage implements IStorage {
     googleRefreshToken?: string;
     googleTokenExpiry?: Date;
   }): Promise<User> {
+    // Check if user already exists
+    const existing = await this.getUserByGoogleId(userData.googleId);
+    console.log('👤 [USER-UPSERT] Processing user:', {
+      email: userData.email,
+      googleId: userData.googleId.substring(0, 10) + '...',
+      isExistingUser: !!existing
+    });
+    
     const [user] = await db
       .insert(users)
       .values({
@@ -568,6 +576,17 @@ export class DatabaseStorage implements IStorage {
         },
       })
       .returning();
+    
+    console.log('👤 [USER-UPSERT] User operation completed:', {
+      userId: user.id,
+      email: user.email,
+      customerUuid: user.customerUuid,
+      onboardingCompleted: user.onboardingCompleted,
+      onboardingStep: user.onboardingStep,
+      standardsConfigurationCompleted: user.standardsConfigurationCompleted,
+      classroomConnected: user.classroomConnected
+    });
+    
     return user;
   }
 

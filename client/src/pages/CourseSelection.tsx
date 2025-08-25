@@ -60,9 +60,15 @@ export default function CourseSelection() {
   const configuredClassrooms = classrooms?.filter(c => c.course_configuration_completed) || [];
   
   // Debug: Check what we have after filtering
-  console.log('[CourseSelection] All classrooms:', classrooms?.length || 0);
-  console.log('[CourseSelection] Configured classrooms:', configuredClassrooms.length);
-  console.log('[CourseSelection] Configured classroom details:', configuredClassrooms.map(c => ({
+  console.log('📚 [COURSE-SELECTION] All classrooms fetched:', classrooms?.length || 0);
+  console.log('📚 [COURSE-SELECTION] Configured classrooms found:', configuredClassrooms.length);
+  console.log('📚 [COURSE-SELECTION] Raw classroom data:', classrooms?.map(c => ({
+    name: c.name,
+    course_title: c.course_title,
+    course_configuration_completed: c.course_configuration_completed,
+    sbg_enabled: c.sbg_enabled
+  })));
+  console.log('📚 [COURSE-SELECTION] Filtered configured classroom details:', configuredClassrooms.map(c => ({
     name: c.name,
     courseTitle: c.course_title,
     configured: c.course_configuration_completed

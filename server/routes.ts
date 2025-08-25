@@ -208,6 +208,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { user, customerUuid } = await ActiveUserService.requireActiveUserAndCustomerUuid(req);
       const { standardsConfigurationCompleted, onboardingCompleted, courseMappings } = req.body;
 
+      console.log('🎓 [STANDARDS-CONFIG] Complete standards configuration request:', {
+        userId: user.id,
+        customerUuid,
+        standardsConfigurationCompleted,
+        onboardingCompleted,
+        courseMappingsCount: courseMappings?.length || 0
+      });
+
       const updates = {
         standardsConfigurationCompleted,
         onboardingCompleted,
@@ -216,8 +224,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // If course mappings provided, update classroom configurations
       if (courseMappings && Array.isArray(courseMappings)) {
+        console.log('🏫 [STANDARDS-CONFIG] Processing course mappings:', courseMappings.length);
         // Update each classroom with SBG and course mapping settings
         for (const mapping of courseMappings) {
+          console.log('🏫 [STANDARDS-CONFIG] Processing mapping:', {
+            classroomId: mapping.classroomId,
+            selectedCourseId: mapping.selectedCourseId,
+            enableSBG: mapping.enableSBG
+          });
+          
           // Extract course name from the technical ID
           // Format: "67810E9EF6944F9383DCC602A3484C23_D10003FB_high-school-algebra"
           // We want the part after the last underscore: "high-school-algebra"
@@ -245,6 +260,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
           
+          console.log('🏫 [STANDARDS-CONFIG] Updating classroom:', {
+            classroomId: mapping.classroomId,
+            courseTitle: readableCourseName,
+            sbgEnabled: mapping.enableSBG,
+            courseConfigurationCompleted: true
+          });
+          
           await storage.updateClassroom(mapping.classroomId, {
             sbgEnabled: mapping.enableSBG,
             courseTitle: readableCourseName, // ✅ Store readable name instead of technical ID
@@ -253,11 +275,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      console.log('👤 [STANDARDS-CONFIG] Updating user preferences:', updates);
       await storage.updateUserPreferences(user.id, updates);
 
+      console.log('✅ [STANDARDS-CONFIG] Standards configuration completed successfully');
       res.json({ success: true, onboardingCompleted: true });
     } catch (error) {
-      console.error('Error completing standards configuration:', error);
+      console.error('❌ [STANDARDS-CONFIG] Error completing standards configuration:', error);
       res.status(500).json({ error: 'Failed to complete standards configuration' });
     }
   });

@@ -147,24 +147,36 @@ export async function handleGoogleCallback(req: Request, res: Response) {
     (req as any).session.userId = user.id;
     (req as any).session.userEmail = user.email;
     
-    console.log('[OAuth] User authenticated successfully:', user.email);
-    console.log('[OAuth] Session userId set to:', user.id);
+    console.log('🔐 [AUTH-COMPLETE] User authenticated successfully:', user.email);
+    console.log('🔐 [AUTH-COMPLETE] Session userId set to:', user.id);
+    console.log('🔐 [AUTH-COMPLETE] User onboarding status:', {
+      onboardingCompleted: user.onboardingCompleted,
+      onboardingStep: user.onboardingStep,
+      standardsConfigurationCompleted: user.standardsConfigurationCompleted,
+      onboardingRoleSelected: user.onboardingRoleSelected,
+      selectedRole: user.selectedRole,
+      customerUuid: user.customerUuid
+    });
     
     // Check if user is in onboarding flow and redirect appropriately
     if (user.onboardingCompleted) {
-      console.log('[OAuth] Authentication successful, user completed onboarding - redirecting to dashboard');
+      console.log('🎯 [AUTH-REDIRECT] User completed onboarding - redirecting to /dashboard');
       res.redirect('/dashboard');
     } else {
-      console.log('[OAuth] Authentication successful, user in onboarding - checking state for next step');
+      console.log('📋 [AUTH-REDIRECT] User in onboarding flow - checking OAuth state for next step');
+      console.log('📋 [AUTH-REDIRECT] OAuth state parameter:', state);
       
       // If this was classroom authentication, progress to standards configuration
       if (state === 'classroom_auth') {
-        console.log('[OAuth] Classroom authentication complete, importing classrooms and progressing to standards configuration');
+        console.log('🏫 [CLASSROOM-AUTH] Classroom authentication complete, importing classrooms and progressing to standards configuration');
         
         try {
           // Import classrooms immediately after successful authentication
           const googleClassrooms = await googleAuth.getClassrooms(user.googleAccessToken!, user.googleRefreshToken || undefined);
-          console.log(`[OAuth] Found ${googleClassrooms.length} classrooms to import`);
+          console.log(`🏫 [CLASSROOM-IMPORT] Found ${googleClassrooms.length} classrooms to import`);
+          googleClassrooms.forEach((classroom, index) => {
+            console.log(`🏫 [CLASSROOM-IMPORT] Classroom ${index + 1}: "${classroom.name}" (ID: ${classroom.id})`);
+          });
           
           // Get the complete user record with customerUuid (fixes timing issue with auto-generated field)
           const completeUser = await storage.getUserByGoogleId(user.googleId!);
@@ -196,7 +208,10 @@ export async function handleGoogleCallback(req: Request, res: Response) {
 
           // Save/update classrooms using the syncClassrooms method with proper customerUuid
           const savedClassrooms = await storage.syncClassrooms(completeUser.customerUuid, classifiedClassrooms);
-          console.log(`[OAuth] Successfully imported ${savedClassrooms.length} classrooms`);
+          console.log(`🏫 [CLASSROOM-IMPORT] Successfully imported ${savedClassrooms.length} classrooms`);
+          savedClassrooms.forEach((classroom, index) => {
+            console.log(`🏫 [CLASSROOM-IMPORT] Saved Classroom ${index + 1}: "${classroom.name}" (Subject: ${classroom.detectedSubjectArea})`);
+          });
           
         } catch (error) {
           console.error('[OAuth] Error importing classrooms:', error);
@@ -207,9 +222,11 @@ export async function handleGoogleCallback(req: Request, res: Response) {
         await storage.updateUserPreferences(user.id, { 
           onboardingStep: 'standards-configuration' 
         });
+        console.log('📋 [ONBOARDING-UPDATE] Set onboarding step to: standards-configuration');
+        console.log('🎯 [AUTH-REDIRECT] Redirecting to /onboarding/standards-configuration');
         res.redirect('/onboarding/standards-configuration');
       } else {
-        console.log('[OAuth] General authentication, redirecting to onboarding flow');
+        console.log('📋 [AUTH-REDIRECT] General authentication, redirecting to /onboarding for OnboardingCheck');
         // For general authentication, redirect to onboarding and let OnboardingCheck determine the correct step
         res.redirect('/onboarding');
       }
