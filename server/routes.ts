@@ -1757,6 +1757,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       if (!validationResult.success) {
+        console.error('[Teacher Override] Validation failed:', validationResult.error.errors);
+        console.error('[Teacher Override] Request body was:', req.body);
         return res.status(400).json({ 
           message: "Invalid override data",
           errors: validationResult.error.errors 

@@ -259,15 +259,13 @@ export default function DocumentResults() {
     const payload = {
       questionId: targetQuestionId,
       overriddenRigorLevel: sourceQuestion.finalRigorLevel,
-      overriddenStandards: sourceQuestion.finalStandards?.map(s => ({
-        code: typeof s === 'string' ? s : s.code,
-        description: typeof s === 'string' ? '' : (s.description || ''),
-        jurisdiction: typeof s === 'string' ? 'Unknown' : (s.jurisdiction || 'Unknown')
-      })) || [],
+      overriddenStandards: sourceQuestion.finalStandards || [],
       notes: `Copied from Question ${sourceQuestionNumber}`,
       confidenceScore: sourceQuestion.confidenceScore || 5,
       editReason: `Copied analysis from Question ${sourceQuestionNumber}`
     };
+    
+    console.log('Copy payload:', payload);
     
     saveOverrideMutation.mutate(payload);
   };
