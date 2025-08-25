@@ -141,12 +141,14 @@ export class AIService {
     const targetJurisdictions = jurisdictions && jurisdictions.length > 0 ? jurisdictions : ['Common Core'];
     const primaryJurisdiction = targetJurisdictions[0];
     
-    let prompt = `You are an expert in education and Standards-Based Grading (SBG) aligned to multiple jurisdiction standards. I need you to analyze the provided educational documents to:
+    let prompt = `You are an expert in education and Standards-Based Grading (SBG) aligned to multiple jurisdiction standards. 
 
-For each assessment, analyze and identify:
+CRITICAL TASK: Analyze the provided educational document and identify ALL INDIVIDUAL QUESTIONS/PROBLEMS. Many documents contain multiple questions that need separate analysis.
 
-1. The primary educational standard(s) that align with each question/problem
-2. A rigor level assessment based on cognitive complexity
+For each individual question/problem you find:
+1. Extract the complete question text
+2. Identify the primary educational standard(s) that align with that specific question
+3. Assess the rigor level based on cognitive complexity
 
 TARGET JURISDICTIONS:
 `;
@@ -185,53 +187,43 @@ Give special attention to identifying alignment with these specific standards.
 
 `;
     
-    prompt += `ANALYSIS REQUIREMENTS:
-`;
-    prompt += `- Map to specific, relevant educational standards from the target jurisdictions
-`;
-    prompt += `- Provide clear justification for rigor level assignments
-`;
-    prompt += `- Focus on accuracy and consistency
-`;
-    prompt += `- Base analysis solely on the provided document content
+    prompt += `QUESTION IDENTIFICATION GUIDELINES:
+- Look for numbered questions (1., 2., 3., etc.)
+- Look for lettered questions (a), b), c), etc.)
+- Look for questions with explicit question markers
+- Each distinct problem or task should be analyzed separately
+- If you find multiple questions, analyze each one individually
 
 `;
     
-    prompt += `Provide your analysis in JSON format:
-`;
-    prompt += `{
-`;
-    prompt += `  "standards": [
-`;
-    prompt += `    {
-`;
-    prompt += `      "code": "CCSS.MATH.5.NBT.A.1",
-`;
-    prompt += `      "description": "Recognize that in a multi-digit number...",
-`;
-    prompt += `      "jurisdiction": "${primaryJurisdiction}",
-`;
-    prompt += `      "gradeLevel": "5",
-`;
-    prompt += `      "subject": "Mathematics"
-`;
-    prompt += `    }
-`;
-    prompt += `  ],
-`;
-    prompt += `  "rigor": {
-`;
-    prompt += `    "level": "medium",
-`;
-    prompt += `    "dokLevel": "DOK 2",
-`;
-    prompt += `    "justification": "This question requires students to apply concepts and make connections...",
-`;
-    prompt += `    "confidence": 0.85
-`;
-    prompt += `  }
-`;
-    prompt += `}`;
+    prompt += `REQUIRED OUTPUT FORMAT:
+Return a JSON array where each element represents one individual question/problem found in the document:
+
+[
+  {
+    "problemNumber": 1,
+    "questionText": "Complete the prime factorization for 90",
+    "standardCode": "CCSS.MATH.8.NS.A.2",
+    "standardDescription": "Use rational approximations of irrational numbers to compare the size of irrational numbers",
+    "rigorLevel": "mild",
+    "rigorJustification": "Basic factorization requiring recall of multiplication facts"
+  },
+  {
+    "problemNumber": 2,
+    "questionText": "Complete the prime factorization for 130",
+    "standardCode": "CCSS.MATH.8.NS.A.2", 
+    "standardDescription": "Use rational approximations of irrational numbers to compare the size of irrational numbers",
+    "rigorLevel": "mild",
+    "rigorJustification": "Basic factorization requiring recall of multiplication facts"
+  }
+]
+
+IMPORTANT: 
+- If you find multiple questions, return an array with multiple objects
+- If you find only one question, return an array with one object
+- Each question must have its own complete analysis
+- Extract the actual question text, don't use generic descriptions
+- Base analysis solely on the provided document content`;
     
     return prompt;
   }
@@ -400,7 +392,39 @@ Give special attention to identifying alignment with these specific standards.
         return this.getDefaultResult();
       });
       
-      // Check if Grok returned individual questions in the new JSON format
+      // Check if Grok returned individual questions in the new JSON array format
+      if (grokResult.jsonResponse && Array.isArray(grokResult.jsonResponse)) {
+        console.log(`✅ NEW FORMAT: Creating ${grokResult.jsonResponse.length} individual question entries from JSON array response`);
+        return {
+          questions: grokResult.jsonResponse.map((problem: any) => ({
+            text: problem.questionText || `Problem ${problem.problemNumber}: ${problem.standardDescription}`,
+            context: `Question ${problem.problemNumber}: ${problem.questionText || problem.standardDescription}`,
+            problemNumber: problem.problemNumber, // Include the actual problem number
+            aiResults: {
+              grok: {
+                standards: [{
+                  code: problem.standardCode,
+                  description: problem.standardDescription,
+                  jurisdiction: jurisdictions[0] || "Common Core",
+                  gradeLevel: "9-12",
+                  subject: "Mathematics"
+                }],
+                rigor: {
+                  level: problem.rigorLevel as 'mild' | 'medium' | 'spicy',
+                  dokLevel: problem.rigorLevel === 'mild' ? 'DOK 1' : problem.rigorLevel === 'medium' ? 'DOK 2' : 'DOK 3',
+                  justification: problem.rigorJustification || `${problem.rigorLevel} rigor level based on problem complexity`,
+                  confidence: 0.85
+                },
+                rawResponse: grokResult.rawResponse,
+                processingTime: grokResult.processingTime,
+                aiEngine: 'grok'
+              }
+            }
+          }))
+        };
+      }
+      
+      // Check if Grok returned individual questions in the old JSON format
       if (grokResult.jsonResponse && grokResult.jsonResponse.problems && Array.isArray(grokResult.jsonResponse.problems)) {
         console.log(`Creating ${grokResult.jsonResponse.problems.length} individual question entries from JSON response`);
         return {
