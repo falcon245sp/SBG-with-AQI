@@ -331,8 +331,13 @@ export async function getUserClassrooms(req: Request, res: Response) {
     const { user, customerUuid } = await ActiveUserService.requireActiveUserAndCustomerUuid(req);
     const classrooms = await storage.getTeacherClassrooms(customerUuid);
     
-    // Debug: Remove after confirming the fix works
-    // console.log('[OAuth] DEBUG: Returning classrooms data:', JSON.stringify(classrooms, null, 2));
+    // Debug: Check field mapping
+    console.log('[OAuth] DEBUG: First classroom keys:', classrooms[0] ? Object.keys(classrooms[0]) : 'no classrooms');
+    console.log('[OAuth] DEBUG: courseConfigurationCompleted values:', classrooms.map(c => ({
+      name: c.name,
+      courseConfigurationCompleted: (c as any).courseConfigurationCompleted,
+      course_configuration_completed: (c as any).course_configuration_completed
+    })));
     
     res.json(classrooms);
   } catch (error) {

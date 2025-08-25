@@ -59,6 +59,15 @@ export default function CourseSelection() {
 
   const configuredClassrooms = classrooms?.filter(c => c.courseConfigurationCompleted) || [];
   
+  // Debug: Check what we have after filtering
+  console.log('[CourseSelection] All classrooms:', classrooms?.length || 0);
+  console.log('[CourseSelection] Configured classrooms:', configuredClassrooms.length);
+  console.log('[CourseSelection] Configured classroom details:', configuredClassrooms.map(c => ({
+    name: c.name,
+    courseTitle: c.courseTitle,
+    configured: c.courseConfigurationCompleted
+  })));
+  
   // Group classrooms by course (courseTitle) to show courses, not individual sections
   const courseGroups = configuredClassrooms.reduce((groups: any, classroom: any) => {
     const courseTitle = classroom.courseTitle || 'Unknown Course';
@@ -75,6 +84,7 @@ export default function CourseSelection() {
   }, {});
   
   const availableCourses = Object.values(courseGroups);
+  console.log('[CourseSelection] Available courses:', availableCourses);
 
   if (isLoading) {
     return (
