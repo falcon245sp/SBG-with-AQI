@@ -403,11 +403,27 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         return this.getDefaultResult();
       });
       
-      // Check if Grok returned individual questions in the new JSON array format
-      if (grokResult.jsonResponse && Array.isArray(grokResult.jsonResponse)) {
-        console.log(`✅ NEW FORMAT: Creating ${grokResult.jsonResponse.length} individual question entries from JSON array response`);
+      // Check if Grok returned individual questions - parse from raw_response since jsonResponse isn't saved to DB
+      let parsedGrokResponse = null;
+      if (grokResult.rawResponse && grokResult.rawResponse.choices && grokResult.rawResponse.choices[0]) {
+        const rawContent = grokResult.rawResponse.choices[0].message?.content || '';
+        try {
+          // Clean and parse the JSON from raw response
+          const cleanContent = rawContent.replace(/\\"/g, '"').trim();
+          if (cleanContent.startsWith('[') && cleanContent.endsWith(']')) {
+            parsedGrokResponse = JSON.parse(cleanContent);
+            console.log(`✅ PARSED FROM RAW: Successfully parsed ${parsedGrokResponse.length} questions from raw response`);
+          }
+        } catch (parseError) {
+          console.log('⚠️ Could not parse JSON from raw response:', parseError);
+        }
+      }
+      
+      // Check if we successfully parsed the JSON array format
+      if (parsedGrokResponse && Array.isArray(parsedGrokResponse)) {
+        console.log(`✅ NEW FORMAT: Creating ${parsedGrokResponse.length} individual question entries from parsed JSON array`);
         return {
-          questions: grokResult.jsonResponse.map((problem: any) => ({
+          questions: parsedGrokResponse.map((problem: any) => ({
             text: problem.questionText || `Question ${problem.question}: ${problem.standard}`,
             context: `Question ${problem.question}: Mathematics problem analyzing ${problem.standard}`,
             problemNumber: problem.question || problem.problemNumber, // Handle both field names
@@ -872,15 +888,11 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       const processingTime = Date.now() - startTime;
       
       console.log('=== GROK STRUCTURED JSON RESPONSE ===');
-      console.log('Raw content type:', typeof rawContent);
       console.log('Raw content length:', rawContent.length);
-      console.log('Raw content preview:', rawContent.substring(0, 100));
-      console.log('First char code:', rawContent.charCodeAt(0));
       console.log('=== END STRUCTURED JSON RESPONSE ===');
       
       try {
         console.log('=== ATTEMPTING JSON PARSE ===');
-        console.log('Raw content for parsing:', rawContent.substring(0, 200) + '...');
         const parsedResponse = JSON.parse(rawContent);
         console.log('JSON.parse SUCCESS! Type:', typeof parsedResponse, 'isArray:', Array.isArray(parsedResponse));
         if (Array.isArray(parsedResponse)) {
