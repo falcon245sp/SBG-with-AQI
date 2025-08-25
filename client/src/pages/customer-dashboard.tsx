@@ -8,6 +8,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { RigorBadge } from "@/components/RigorBadge";
 import { ProcessingStatus } from "@/components/ProcessingStatus";
+import { Sidebar } from "@/components/Sidebar";
 import { 
   FileText, 
   Upload, 
@@ -136,49 +137,56 @@ export default function CustomerDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Simple Header */}
-        <div className="flex justify-between items-center mb-12">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Standards Sherpa
-            </h1>
-            <p className="text-gray-600">
-              Document analysis and standards alignment
-            </p>
+    <div className="flex h-screen bg-slate-50">
+      <Sidebar />
+      
+      <div className="flex flex-col w-0 flex-1 overflow-hidden">
+        {/* Header */}
+        <div className="relative z-10 flex-shrink-0 flex h-16 bg-white shadow border-b border-slate-200">
+          <div className="flex-1 px-4 flex justify-between items-center">
+            <div className="flex items-center">
+              <FileText className="w-6 h-6 text-blue-600 mr-3" />
+              <h2 className="text-2xl font-semibold text-slate-800">
+                Dashboard
+              </h2>
+            </div>
+            
+            {isAdmin && (
+              <Link href="/admin">
+                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                  <Shield className="h-4 w-4" />
+                  Admin
+                </Button>
+              </Link>
+            )}
           </div>
-          
-          {isAdmin && (
-            <Link href="/admin">
-              <Button variant="outline" className="flex items-center gap-2">
-                <Shield className="h-4 w-4" />
-                Admin
-              </Button>
-            </Link>
-          )}
         </div>
+        
+        {/* Main Content */}
+        <main className="flex-1 relative overflow-y-auto focus:outline-none">
+          <div className="py-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
 
 
-        {/* Core Action - Upload */}
-        <div className="mb-12">
-          <Link href="/upload">
-            <Card className="cursor-pointer hover:shadow-md transition-shadow border-2 border-dashed border-blue-200 hover:border-blue-300">
-              <CardContent className="flex items-center justify-center py-12">
-                <div className="text-center">
-                  <Upload className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-                  <h2 className="text-xl font-semibold text-gray-900 mb-2">Upload Document</h2>
-                  <p className="text-gray-600">Drop PDF or Word documents for AI analysis</p>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        </div>
+              {/* Core Action - Upload */}
+              <div className="mb-12">
+                <Link href="/upload">
+                  <Card className="cursor-pointer hover:shadow-md transition-shadow border-2 border-dashed border-blue-200 hover:border-blue-300">
+                    <CardContent className="flex items-center justify-center py-12">
+                      <div className="text-center">
+                        <Upload className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+                        <h2 className="text-xl font-semibold text-gray-900 mb-2">Upload Document</h2>
+                        <p className="text-gray-600">Drop PDF or Word documents for AI analysis</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </div>
 
-        {/* Documents */}
-        <div>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Your Documents</h2>
+              {/* Documents */}
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900">Your Documents</h2>
             {(documents as DocumentResult[])?.length > 5 && (
               <Link href="/results">
                 <Button variant="outline" size="sm">View All</Button>
@@ -252,8 +260,12 @@ export default function CustomerDashboard() {
                 </Button>
               </Link>
             </div>
-          )}
-        </div>
+              )}
+              </div>
+
+            </div>
+          </div>
+        </main>
       </div>
     </div>
   );
