@@ -838,7 +838,7 @@ export default function DocumentResults() {
                   {/* Document Viewer */}
                   <div className="flex-1 overflow-hidden">
                     <iframe
-                      src={`/api/documents/${docId}/content`}
+                      src={`/api/documents/${docId}/download`}
                       className="w-full h-full border-0"
                       title={`PDF: ${docResult?.document?.fileName}`}
                       data-testid="doc-viewer-iframe"
@@ -935,6 +935,54 @@ export default function DocumentResults() {
                           </div>
                         </CardContent>
                       </Card>
+
+                      {/* Question Analysis Results */}
+                      <div className="space-y-4">
+                        <h4 className="text-lg font-semibold text-slate-900 flex items-center">
+                          <Target className="w-5 h-5 mr-2" />
+                          Question Analysis ({docResult.results?.length || 0} questions)
+                        </h4>
+                        
+                        {docResult.results?.map((result, index) => (
+                          <Card key={result.id} className="border-l-4 border-l-blue-500">
+                            <CardHeader className="pb-2">
+                              <div className="flex items-center justify-between">
+                                <CardTitle className="text-base">
+                                  Question {result.questionNumber}
+                                </CardTitle>
+                                <div className="flex items-center space-x-2">
+                                  <Badge 
+                                    variant={
+                                      result.rigorLevel === 'spicy' ? 'destructive' :
+                                      result.rigorLevel === 'medium' ? 'default' : 'secondary'
+                                    }
+                                    className="text-xs"
+                                  >
+                                    {result.rigorLevel?.toUpperCase()}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              <div>
+                                <p className="text-sm font-medium text-slate-700 mb-1">Question Text:</p>
+                                <p className="text-sm text-slate-600 bg-slate-50 p-2 rounded">{result.questionText}</p>
+                              </div>
+                              
+                              <div>
+                                <p className="text-sm font-medium text-slate-700 mb-1">Standards:</p>
+                                <div className="flex flex-wrap gap-1">
+                                  {result.standards?.map((standard, idx) => (
+                                    <Badge key={idx} variant="outline" className="text-xs">
+                                      {standard.code}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1188,7 +1236,7 @@ export default function DocumentResults() {
                   {/* Document Viewer */}
                   <div className="flex-1 overflow-hidden">
                     <iframe
-                      src={`/api/documents/${docId}/content`}
+                      src={`/api/documents/${docId}/download`}
                       className="w-full h-full border-0"
                       title={`PDF: ${docResult?.document?.fileName}`}
                       data-testid="doc-viewer-iframe"
