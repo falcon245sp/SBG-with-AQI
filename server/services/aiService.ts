@@ -96,11 +96,15 @@ export class AIService {
     console.log('[AIService] Transforming Grok response with Common Standards lookup');
     const { commonStandardsProjectService } = await import('./commonStandardsProjectService');
     
+    // Extract jurisdiction ID for targeted lookups
+    const jurisdictionId = this.getJurisdictionIdFromContext(jurisdictions);
+    console.log(`🎯 Using jurisdiction context for targeted lookups: ${jurisdictionId || 'fallback to all jurisdictions'}`);
+    
     const transformedResults = [];
     
     for (const item of grokJsonArray) {
       // Lookup standard in Common Standards API
-      const standardDetails = await commonStandardsProjectService.lookupStandardByCode(item.standard);
+      const standardDetails = await commonStandardsProjectService.lookupStandardByCode(item.standard, jurisdictionId);
       
       // Create enriched standard object
       const standardObject = standardDetails ? {
@@ -431,6 +435,10 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         // Import the commonStandardsProjectService for standard lookups
         const { commonStandardsProjectService } = await import('./commonStandardsProjectService');
         
+        // Extract jurisdiction ID for targeted lookups
+        const jurisdictionId = this.getJurisdictionIdFromContext(jurisdictions);
+        console.log(`🎯 Using jurisdiction context for targeted lookups: ${jurisdictionId || 'fallback to all jurisdictions'}`);
+        
         // Process each problem and lookup standard descriptions
         const questionsWithStandardDescriptions = await Promise.all(
           parsedGrokResponse.map(async (problem: any) => {
@@ -438,7 +446,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
             
             // Lookup the actual standard description from Common Standards Project API
             try {
-              const standardDetails = await commonStandardsProjectService.lookupStandardByCode(problem.standard || problem.standardCode);
+              const standardDetails = await commonStandardsProjectService.lookupStandardByCode(problem.standard || problem.standardCode, jurisdictionId);
               if (standardDetails && standardDetails.description) {
                 standardDescription = standardDetails.description;
                 console.log(`✅ Found standard description for ${problem.standard}: ${standardDetails.description.substring(0, 60)}...`);
@@ -489,6 +497,10 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         // Import the commonStandardsProjectService for standard lookups
         const { commonStandardsProjectService } = await import('./commonStandardsProjectService');
         
+        // Extract jurisdiction ID for targeted lookups
+        const jurisdictionId = this.getJurisdictionIdFromContext(jurisdictions);
+        console.log(`🎯 Using jurisdiction context for targeted lookups: ${jurisdictionId || 'fallback to all jurisdictions'}`);
+        
         // Process each problem and lookup standard descriptions
         const questionsWithStandardDescriptions = await Promise.all(
           grokResult.jsonResponse.problems.map(async (problem: any) => {
@@ -496,7 +508,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
             
             // Lookup the actual standard description from Common Standards Project API
             try {
-              const standardDetails = await commonStandardsProjectService.lookupStandardByCode(problem.standardCode);
+              const standardDetails = await commonStandardsProjectService.lookupStandardByCode(problem.standardCode, jurisdictionId);
               if (standardDetails && standardDetails.description) {
                 standardDescription = standardDetails.description;
                 console.log(`✅ Found standard description for ${problem.standardCode}: ${standardDetails.description.substring(0, 60)}...`);
@@ -547,6 +559,10 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         // Import the commonStandardsProjectService for standard lookups
         const { commonStandardsProjectService } = await import('./commonStandardsProjectService');
         
+        // Extract jurisdiction ID for targeted lookups
+        const jurisdictionId = this.getJurisdictionIdFromContext(jurisdictions);
+        console.log(`🎯 Using jurisdiction context for targeted lookups: ${jurisdictionId || 'fallback to all jurisdictions'}`);
+        
         // Process each question and lookup standard descriptions
         const questionsWithStandardDescriptions = await Promise.all(
           grokResult.allQuestions.map(async (question, index) => {
@@ -559,7 +575,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
                   
                   // Lookup the actual standard description from Common Standards Project API
                   try {
-                    const standardDetails = await commonStandardsProjectService.lookupStandardByCode(standard.code);
+                    const standardDetails = await commonStandardsProjectService.lookupStandardByCode(standard.code, jurisdictionId);
                     if (standardDetails && standardDetails.description) {
                       standardDescription = standardDetails.description;
                       console.log(`✅ Found standard description for ${standard.code}: ${standardDetails.description.substring(0, 60)}...`);
@@ -611,6 +627,10 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         // Import the commonStandardsProjectService for standard lookups
         const { commonStandardsProjectService } = await import('./commonStandardsProjectService');
         
+        // Extract jurisdiction ID for targeted lookups
+        const jurisdictionId = this.getJurisdictionIdFromContext(jurisdictions);
+        console.log(`🎯 Using jurisdiction context for targeted lookups: ${jurisdictionId || 'fallback to all jurisdictions'}`);
+        
         // Process each standard and lookup descriptions
         const questionsWithStandardDescriptions = await Promise.all(
           grokResult.standards.map(async (standard, index) => {
@@ -618,7 +638,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
             
             // Lookup the actual standard description from Common Standards Project API
             try {
-              const standardDetails = await commonStandardsProjectService.lookupStandardByCode(standard.code);
+              const standardDetails = await commonStandardsProjectService.lookupStandardByCode(standard.code, jurisdictionId);
               if (standardDetails && standardDetails.description) {
                 standardDescription = standardDetails.description;
                 console.log(`✅ Found standard description for ${standard.code}: ${standardDetails.description.substring(0, 60)}...`);
@@ -1748,6 +1768,54 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       });
 
     return { grok };
+  }
+
+  /**
+   * Map jurisdiction strings from AI context to specific jurisdiction IDs for targeted API lookups
+   * This eliminates brute force searching across all jurisdictions
+   */
+  private getJurisdictionIdFromContext(jurisdictions: string[]): string | undefined {
+    if (!jurisdictions || jurisdictions.length === 0) {
+      return undefined;
+    }
+
+    // Convert to lowercase for matching
+    const jurisdictionsLower = jurisdictions.map(j => j.toLowerCase());
+    
+    // Check for Common Core Math indicators
+    if (jurisdictionsLower.some(j => 
+      j.includes('common core') && (j.includes('math') || j.includes('mathematics'))
+    )) {
+      console.log('🎯 Detected Common Core Mathematics jurisdiction');
+      return '49DCCBF24FFF44F68D73A225A70AA4B6'; // Common Core Math jurisdiction ID
+    }
+    
+    // Check for Common Core ELA indicators  
+    if (jurisdictionsLower.some(j => 
+      j.includes('common core') && (j.includes('ela') || j.includes('english') || j.includes('language arts'))
+    )) {
+      console.log('🎯 Detected Common Core ELA jurisdiction');
+      return '49D2802DA33F43A3A2C1F280FCB463CE'; // Common Core ELA jurisdiction ID  
+    }
+    
+    // Check for NGSS Science indicators
+    if (jurisdictionsLower.some(j => 
+      j.includes('ngss') || j.includes('next generation science') || j.includes('science')
+    )) {
+      console.log('🎯 Detected NGSS Science jurisdiction');
+      return '70BCF0BB0F5F4EC4B7A84E3EAEA4F2C4'; // NGSS jurisdiction ID
+    }
+    
+    // Default to Common Core Math for unspecified math content
+    if (jurisdictionsLower.some(j => 
+      j.includes('math') || j.includes('algebra') || j.includes('geometry') || j.includes('statistics')
+    )) {
+      console.log('🎯 Defaulting to Common Core Mathematics for math content');
+      return '49DCCBF24FFF44F68D73A225A70AA4B6'; // Common Core Math jurisdiction ID
+    }
+    
+    console.log('⚠️ No specific jurisdiction mapping found, will search all jurisdictions');
+    return undefined;
   }
 }
 
