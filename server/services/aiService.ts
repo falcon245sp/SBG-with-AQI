@@ -398,22 +398,22 @@ IMPORTANT:
         console.log(`✅ NEW FORMAT: Creating ${grokResult.jsonResponse.length} individual question entries from JSON array response`);
         return {
           questions: grokResult.jsonResponse.map((problem: any) => ({
-            text: problem.questionText || `Problem ${problem.problemNumber}: ${problem.standardDescription}`,
-            context: `Question ${problem.problemNumber}: ${problem.questionText || problem.standardDescription}`,
-            problemNumber: problem.problemNumber, // Include the actual problem number
+            text: problem.questionText || `Question ${problem.question}: ${problem.standard}`,
+            context: `Question ${problem.question}: Mathematics problem analyzing ${problem.standard}`,
+            problemNumber: problem.question || problem.problemNumber, // Handle both field names
             aiResults: {
               grok: {
                 standards: [{
-                  code: problem.standardCode,
-                  description: problem.standardDescription,
+                  code: problem.standard || problem.standardCode,
+                  description: problem.standardDescription || `Mathematics standard ${problem.standard}`,
                   jurisdiction: jurisdictions[0] || "Common Core",
                   gradeLevel: "9-12",
                   subject: "Mathematics"
                 }],
                 rigor: {
-                  level: problem.rigorLevel as 'mild' | 'medium' | 'spicy',
-                  dokLevel: problem.rigorLevel === 'mild' ? 'DOK 1' : problem.rigorLevel === 'medium' ? 'DOK 2' : 'DOK 3',
-                  justification: problem.rigorJustification || `${problem.rigorLevel} rigor level based on problem complexity`,
+                  level: (problem.rigor || problem.rigorLevel) as 'mild' | 'medium' | 'spicy',
+                  dokLevel: (problem.rigor || problem.rigorLevel) === 'mild' ? 'DOK 1' : (problem.rigor || problem.rigorLevel) === 'medium' ? 'DOK 2' : 'DOK 3',
+                  justification: problem.justification || problem.rigorJustification || `${problem.rigor || problem.rigorLevel} rigor level based on problem complexity`,
                   confidence: 0.85
                 },
                 rawResponse: grokResult.rawResponse,
