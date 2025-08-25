@@ -436,7 +436,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         const { commonStandardsProjectService } = await import('./commonStandardsProjectService');
         
         // Extract jurisdiction ID for targeted lookups
-        const jurisdictionId = await this.getJurisdictionIdFromContext(jurisdictions);
+        const jurisdictionId = this.getJurisdictionIdFromContext(jurisdictions);
         console.log(`🎯 Using jurisdiction context for targeted lookups: ${jurisdictionId || 'fallback to all jurisdictions'}`);
         
         // Process each problem and lookup standard descriptions
@@ -498,7 +498,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         const { commonStandardsProjectService } = await import('./commonStandardsProjectService');
         
         // Extract jurisdiction ID for targeted lookups
-        const jurisdictionId = await this.getJurisdictionIdFromContext(jurisdictions);
+        const jurisdictionId = this.getJurisdictionIdFromContext(jurisdictions);
         console.log(`🎯 Using jurisdiction context for targeted lookups: ${jurisdictionId || 'fallback to all jurisdictions'}`);
         
         // Process each problem and lookup standard descriptions
@@ -560,7 +560,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         const { commonStandardsProjectService } = await import('./commonStandardsProjectService');
         
         // Extract jurisdiction ID for targeted lookups
-        const jurisdictionId = await this.getJurisdictionIdFromContext(jurisdictions);
+        const jurisdictionId = this.getJurisdictionIdFromContext(jurisdictions);
         console.log(`🎯 Using jurisdiction context for targeted lookups: ${jurisdictionId || 'fallback to all jurisdictions'}`);
         
         // Process each question and lookup standard descriptions
@@ -628,7 +628,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         const { commonStandardsProjectService } = await import('./commonStandardsProjectService');
         
         // Extract jurisdiction ID for targeted lookups
-        const jurisdictionId = await this.getJurisdictionIdFromContext(jurisdictions);
+        const jurisdictionId = this.getJurisdictionIdFromContext(jurisdictions);
         console.log(`🎯 Using jurisdiction context for targeted lookups: ${jurisdictionId || 'fallback to all jurisdictions'}`);
         
         // Process each standard and lookup descriptions
@@ -1772,65 +1772,38 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
 
   /**
    * Map jurisdiction strings from AI context to specific jurisdiction IDs for targeted API lookups
-   * This eliminates brute force searching across all jurisdictions
+   * Uses stored Common Standards Project jurisdiction IDs directly
    */
-  private async getJurisdictionIdFromContext(jurisdictions: string[]): Promise<string | undefined> {
+  private getJurisdictionIdFromContext(jurisdictions: string[]): string | undefined {
     if (!jurisdictions || jurisdictions.length === 0) {
       return undefined;
     }
 
-    // Import the service to get actual jurisdiction data
-    const { commonStandardsProjectService } = await import('./commonStandardsProjectService');
+    // Convert input to lowercase for matching
+    const jurisdictionsLower = jurisdictions.map(j => j.toLowerCase());
     
-    try {
-      // Get all available jurisdictions from API
-      const availableJurisdictions = await commonStandardsProjectService.getJurisdictions();
-      
-      // Convert input to lowercase for matching
-      const jurisdictionsLower = jurisdictions.map(j => j.toLowerCase());
-      
-      // Check for Common Core patterns
-      if (jurisdictionsLower.some(j => j.includes('common core') || j.includes('ccss'))) {
-        const commonCore = availableJurisdictions.find(j => 
-          j.title.toLowerCase().includes('common core') || j.title.toLowerCase().includes('ccss')
-        );
-        if (commonCore) {
-          console.log(`🎯 Found Common Core jurisdiction: ${commonCore.title} (${commonCore.id})`);
-          return commonCore.id;
-        }
-      }
-      
-      // Check for NGSS Science patterns
-      if (jurisdictionsLower.some(j => j.includes('ngss') || j.includes('next generation science'))) {
-        const ngss = availableJurisdictions.find(j => 
-          j.title.toLowerCase().includes('ngss') || j.title.toLowerCase().includes('next generation science')
-        );
-        if (ngss) {
-          console.log(`🎯 Found NGSS jurisdiction: ${ngss.title} (${ngss.id})`);
-          return ngss.id;
-        }
-      }
-      
-      // Default to Common Core for math content if available
-      if (jurisdictionsLower.some(j => 
-        j.includes('math') || j.includes('algebra') || j.includes('geometry') || j.includes('statistics')
-      )) {
-        const commonCore = availableJurisdictions.find(j => 
-          j.title.toLowerCase().includes('common core') || j.title.toLowerCase().includes('ccss')
-        );
-        if (commonCore) {
-          console.log(`🎯 Defaulting to Common Core for math content: ${commonCore.title} (${commonCore.id})`);
-          return commonCore.id;
-        }
-      }
-      
-      console.log('⚠️ No specific jurisdiction mapping found, will search all jurisdictions');
-      return undefined;
-      
-    } catch (error) {
-      console.log('⚠️ Error getting jurisdiction data, will search all jurisdictions:', (error as Error).message);
-      return undefined;
+    // Check for Common Core patterns
+    if (jurisdictionsLower.some(j => j.includes('common core') || j.includes('ccss'))) {
+      console.log('🎯 Using Common Core State Standards jurisdiction');
+      return '67810E9EF6944F9383DCC602A3484C23'; // Common Core State Standards
     }
+    
+    // Check for NGSS Science patterns
+    if (jurisdictionsLower.some(j => j.includes('ngss') || j.includes('next generation science'))) {
+      console.log('🎯 Using Next Generation Science Standards jurisdiction');
+      return '71E5AA409D894EB0B43A8CD82F727BFE'; // Next Generation Science Standards
+    }
+    
+    // Default to Common Core for math content
+    if (jurisdictionsLower.some(j => 
+      j.includes('math') || j.includes('algebra') || j.includes('geometry') || j.includes('statistics')
+    )) {
+      console.log('🎯 Defaulting to Common Core for math content');
+      return '67810E9EF6944F9383DCC602A3484C23'; // Common Core State Standards
+    }
+    
+    console.log('⚠️ No specific jurisdiction mapping found, will search all jurisdictions');
+    return undefined;
   }
 }
 
