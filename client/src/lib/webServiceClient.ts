@@ -17,7 +17,7 @@ const WEB_SERVICE_BASE_URL = getWebServiceBaseUrl();
 export interface ProcessDocumentRequest {
   customerId: string;
   files: File[];
-  courseId?: string; // V1.0 Course context for file organization
+  courseTitle?: string; // V1.0 Course context for file organization (course name, not ID)
   jurisdictions: string[];
   focusStandards?: string[];
   callbackUrl?: string;
@@ -76,8 +76,8 @@ class WebServiceClient {
     console.log('FormData created with files appended');
     
     // Include course context for V1.0 file organization
-    if (request.courseId) {
-      formData.append('courseId', request.courseId);
+    if (request.courseTitle) {
+      formData.append('courseTitle', request.courseTitle);
     }
     
     formData.append('jurisdictions', request.jurisdictions.join(','));

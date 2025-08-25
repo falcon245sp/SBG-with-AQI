@@ -22,9 +22,9 @@ export default function CourseSelection() {
 
   const setCourseContextMutation = useMutation({
     mutationFn: () => {
-      // Store course context in session storage for immediate use
+      // Store course context (course title, not individual classroom ID) in session storage
       if (selectedCourseId) {
-        sessionStorage.setItem('currentCourseId', selectedCourseId);
+        sessionStorage.setItem('currentCourse', selectedCourseId); // This is now a course title, not classroom ID
       }
       return Promise.resolve();
     },
@@ -59,8 +59,22 @@ export default function CourseSelection() {
 
   const configuredClassrooms = classrooms?.filter(c => c.courseConfigurationCompleted) || [];
   
-  // Debug: Remove this after confirming the fix works
-  // console.log('[CourseSelection] Raw classrooms data:', classrooms);
+  // Group classrooms by course (courseTitle) to show courses, not individual sections
+  const courseGroups = configuredClassrooms.reduce((groups: any, classroom: any) => {
+    const courseTitle = classroom.courseTitle || 'Unknown Course';
+    if (!groups[courseTitle]) {
+      groups[courseTitle] = {
+        courseTitle,
+        classrooms: [],
+        sectionCount: 0
+      };
+    }
+    groups[courseTitle].classrooms.push(classroom);
+    groups[courseTitle].sectionCount++;
+    return groups;
+  }, {});
+  
+  const availableCourses = Object.values(courseGroups);
 
   if (isLoading) {
     return (
@@ -88,7 +102,7 @@ export default function CourseSelection() {
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
-          {configuredClassrooms.length === 0 ? (
+          {availableCourses.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-slate-600 mb-4">
                 No configured courses found. Please complete the course configuration first.
@@ -109,18 +123,16 @@ export default function CourseSelection() {
                   onValueChange={setSelectedCourseId}
                   className="mt-3"
                 >
-                  {configuredClassrooms.map((classroom) => (
-                    <div key={classroom.id} className="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
-                      <RadioGroupItem value={classroom.id} id={classroom.id} />
-                      <Label htmlFor={classroom.id} className="flex-1 cursor-pointer">
+                  {availableCourses.map((course: any) => (
+                    <div key={course.courseTitle} className="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+                      <RadioGroupItem value={course.courseTitle} id={course.courseTitle} />
+                      <Label htmlFor={course.courseTitle} className="flex-1 cursor-pointer">
                         <div className="font-medium">
-                          {classroom.name}
+                          {course.courseTitle}
                         </div>
-                        {classroom.section && (
-                          <div className="text-sm text-slate-500">
-                            Section: {classroom.section}
-                          </div>
-                        )}
+                        <div className="text-sm text-slate-500">
+                          {course.sectionCount} section{course.sectionCount !== 1 ? 's' : ''}
+                        </div>
                       </Label>
                     </div>
                   ))}

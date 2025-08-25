@@ -24,8 +24,8 @@ export default function UploadPage() {
   const [isUploading, setIsUploading] = useState(false);
   
   // Get current course context from session storage
-  const [currentCourseId, setCurrentCourseId] = useState<string>(
-    () => sessionStorage.getItem('currentCourseId') || ""
+  const [currentCourse, setCurrentCourse] = useState<string>(
+    () => sessionStorage.getItem('currentCourse') || ""
   );
   const [submittedJobs, setSubmittedJobs] = useState<Array<{
     jobId: string;
@@ -98,7 +98,7 @@ export default function UploadPage() {
       const result = await webServiceClient.submitDocuments({
         customerId,
         files,
-        courseId: currentCourseId || undefined,
+        courseTitle: currentCourse || undefined, // Send course title instead of courseId
         jurisdictions: jurisdictionList,
         focusStandards: focusStandardsList,
         callbackUrl: callbackUrl || undefined
@@ -189,17 +189,14 @@ export default function UploadPage() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Current Course Context */}
-                  {currentCourseId && classrooms && (
+                  {currentCourse && (
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                       <div className="flex items-center space-x-2 mb-2">
                         <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                         <span className="text-sm font-medium text-blue-800">Current Course Context</span>
                       </div>
                       <p className="text-sm text-blue-700">
-                        {classrooms.find(c => c.id === currentCourseId)?.courseTitle || 
-                         classrooms.find(c => c.id === currentCourseId)?.name}
-                        {classrooms.find(c => c.id === currentCourseId)?.section && 
-                         ` (${classrooms.find(c => c.id === currentCourseId)?.section})`}
+                        {currentCourse}
                       </p>
                     </div>
                   )}
@@ -216,7 +213,7 @@ export default function UploadPage() {
                         multiple={true}
                       />
                     </div>
-                    {!currentCourseId && (
+                    {!currentCourse && (
                       <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-2">
                         <p className="text-sm text-amber-700">
                           💡 Files uploaded without course context can be organized later via the course navigation panel.
