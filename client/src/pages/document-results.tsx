@@ -255,17 +255,17 @@ export default function DocumentResults() {
     const sourceQuestion = docResult?.results?.find(r => r.questionNumber.toString() === sourceQuestionNumber);
     if (!sourceQuestion) return;
     
-    // Copy the analysis from source to target
+    // Copy the analysis from source to target, preserving all data including descriptions
     const payload = {
       questionId: targetQuestionId,
       overriddenRigorLevel: sourceQuestion.finalRigorLevel,
       overriddenStandards: sourceQuestion.finalStandards?.map(s => ({
         code: typeof s === 'string' ? s : s.code,
-        description: '',
-        jurisdiction: 'Unknown'
+        description: typeof s === 'string' ? '' : (s.description || ''),
+        jurisdiction: typeof s === 'string' ? 'Unknown' : (s.jurisdiction || 'Unknown')
       })) || [],
       notes: `Copied from Question ${sourceQuestionNumber}`,
-      confidenceScore: 5,
+      confidenceScore: sourceQuestion.confidenceScore || 5,
       editReason: `Copied analysis from Question ${sourceQuestionNumber}`
     };
     
