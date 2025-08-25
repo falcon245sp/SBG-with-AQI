@@ -8,16 +8,35 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { GraduationCap, ArrowRight } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function CourseSelection() {
   const [, setLocation] = useLocation();
   const [selectedCourseId, setSelectedCourseId] = useState<string>("");
   const queryClient = useQueryClient();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+
+  console.log('🔐 [COURSE-SELECTION] Authentication status:', {
+    user: !!user,
+    isAuthenticated,
+    authLoading,
+    userId: user?.id,
+    email: user?.email
+  });
 
   // Fetch user's configured classrooms for course selection
-  const { data: classrooms, isLoading } = useQuery<any[]>({
+  const { data: classrooms, isLoading: classroomsLoading, error } = useQuery<any[]>({
     queryKey: ["/api/classrooms"],
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    enabled: isAuthenticated, // Only fetch if authenticated
+  });
+
+  console.log('📚 [COURSE-SELECTION] Classrooms query status:', {
+    enabled: isAuthenticated,
+    isLoading: classroomsLoading,
+    error: error?.message,
+    data: !!classrooms,
+    dataLength: classrooms?.length || 0
   });
 
   const setCourseContextMutation = useMutation({
@@ -92,15 +111,23 @@ export default function CourseSelection() {
   const availableCourses = Object.values(courseGroups);
   console.log('[CourseSelection] Available courses:', availableCourses);
 
-  if (isLoading) {
+  if (authLoading || classroomsLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-slate-600">Loading your courses...</p>
+          <p className="mt-4 text-slate-600">
+            {authLoading ? 'Checking authentication...' : 'Loading your courses...'}
+          </p>
         </div>
       </div>
     );
+  }
+
+  if (!isAuthenticated) {
+    console.log('🔐 [COURSE-SELECTION] User not authenticated, redirecting to login');
+    setLocation('/');
+    return null;
   }
 
   return (
