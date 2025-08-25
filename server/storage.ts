@@ -600,20 +600,58 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateClassroom(classroomId: string, updates: Partial<Classroom>): Promise<Classroom> {
+    console.log('🏫 [CLASSROOM-UPDATE] Updating classroom:', {
+      classroomId,
+      updates,
+      updatesKeys: Object.keys(updates)
+    });
+    
     const [classroom] = await db
       .update(classrooms)
       .set(updates)
       .where(eq(classrooms.id, classroomId))
       .returning();
+    
+    console.log('🏫 [CLASSROOM-UPDATE] Classroom updated successfully:', {
+      classroomId: classroom.id,
+      name: classroom.name,
+      courseTitle: classroom.courseTitle,
+      course_title: classroom.course_title,
+      courseConfigurationCompleted: classroom.courseConfigurationCompleted,
+      course_configuration_completed: classroom.course_configuration_completed,
+      sbgEnabled: classroom.sbgEnabled,
+      sbg_enabled: classroom.sbg_enabled
+    });
+    
     return classroom;
   }
 
   async getTeacherClassrooms(customerUuid: string): Promise<Classroom[]> {
-    return await db
+    console.log('🔍 [DB-QUERY] Fetching teacher classrooms for customerUuid:', customerUuid);
+    
+    const results = await db
       .select()
       .from(classrooms)
       .where(eq(classrooms.customerUuid, customerUuid))
       .orderBy(classrooms.name);
+    
+    console.log('🔍 [DB-QUERY] Database returned classrooms:', {
+      count: results.length,
+      customerUuid,
+      classrooms: results.map(c => ({
+        id: c.id,
+        name: c.name,
+        courseTitle: c.courseTitle,
+        courseConfigurationCompleted: c.courseConfigurationCompleted,
+        sbgEnabled: c.sbgEnabled,
+        // Log raw values to see exact database format
+        raw_course_title: (c as any).course_title,
+        raw_course_config: (c as any).course_configuration_completed,
+        raw_sbg_enabled: (c as any).sbg_enabled
+      }))
+    });
+    
+    return results;
   }
 
   async getClassroomByGoogleId(googleClassId: string): Promise<Classroom | undefined> {
