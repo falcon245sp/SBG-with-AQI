@@ -203,6 +203,7 @@ Return a JSON array where each element represents one individual question/proble
   {
     "problemNumber": 1,
     "questionText": "Complete the prime factorization for 90",
+    "questionSummary": "Prime factorization problem",
     "standardCode": "MATH.8.NS.A.2",
     "standardDescription": "Use rational approximations of irrational numbers to compare the size of irrational numbers",
     "rigorLevel": "mild",
@@ -211,6 +212,7 @@ Return a JSON array where each element represents one individual question/proble
   {
     "problemNumber": 2,
     "questionText": "Complete the prime factorization for 130",
+    "questionSummary": "Prime factorization problem",
     "standardCode": "MATH.8.NS.A.2", 
     "standardDescription": "Use rational approximations of irrational numbers to compare the size of irrational numbers",
     "rigorLevel": "mild",
@@ -230,11 +232,12 @@ IMPORTANT:
 - If you find only one question, return an array with one object
 - Each question must have its own complete analysis
 - Extract the actual question text, don't use generic descriptions
+- For "questionSummary", provide a brief, general description of what the question asks (e.g., "Word problem about ratios", "Graphing linear equations", "Solving quadratic equations")
 - Use standards from the TARGET JURISDICTIONS listed above (${primaryJurisdiction})
 - Base analysis solely on the provided document content
 
 RESPONSE FORMAT EXAMPLE (clean JSON only):
-[{"problemNumber":1,"questionText":"Problem text","standardCode":"6.NS.B.4","rigor":"mild"}]`;
+[{"problemNumber":1,"questionText":"Problem text","questionSummary":"Brief description","standardCode":"6.NS.B.4","rigor":"mild"}]`;
     
     return prompt;
   }
@@ -425,7 +428,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         return {
           questions: parsedGrokResponse.map((problem: any) => ({
             text: problem.questionText || `Question ${problem.question}: ${problem.standard}`,
-            context: `Question ${problem.question}: Mathematics problem analyzing ${problem.standard}`,
+            context: problem.questionSummary || `Question ${problem.question}: Mathematics problem analyzing ${problem.standard}`,
             problemNumber: problem.question || problem.problemNumber, // Handle both field names
             aiResults: {
               grok: {
