@@ -1071,10 +1071,14 @@ export default function DocumentResults() {
                                           {result.finalRigorLevel?.toUpperCase() || 'PENDING'}
                                         </Badge>
                                       </TooltipTrigger>
-                                      <TooltipContent className="max-w-sm bg-slate-900 text-white border-slate-700">
-                                        <div className="space-y-1">
-                                          <p className="font-semibold text-sm text-slate-100">Sherpa's Reasoning:</p>
-                                          <p className="text-sm leading-relaxed text-slate-200">
+                                      <TooltipContent 
+                                        className="max-w-sm p-3 text-sm bg-slate-900 text-white border-slate-700"
+                                        side="top"
+                                        align="center"
+                                      >
+                                        <div className="space-y-2">
+                                          <p className="font-semibold">Sherpa's Reasoning:</p>
+                                          <p className="leading-relaxed">
                                             {(result as any).rigorJustification || 'Reasoning not available'}
                                           </p>
                                         </div>

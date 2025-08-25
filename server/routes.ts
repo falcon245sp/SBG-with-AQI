@@ -1187,7 +1187,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           baseData.confidenceScore = item.result.confidenceScore;
           // Add rigor justification from the first AI response
           baseData.rigorJustification = item.aiResponses?.[0]?.rigorJustification || null;
-          console.log(`[Transform] Q${item.questionNumber}: Added rigor justification:`, baseData.rigorJustification ? 'YES' : 'NO');
         }
         // Fallback to AI responses if no result consensus yet
         else if (item.aiResponses && item.aiResponses.length > 0) {
@@ -1197,7 +1196,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           baseData.finalStandards = latestResponse.standardsIdentified || [];
           baseData.confidenceScore = latestResponse.confidence;
           baseData.rigorJustification = latestResponse.rigorJustification || null;
-          console.log(`[Transform] Q${item.questionNumber}: Added rigor justification from AI fallback:`, baseData.rigorJustification ? 'YES' : 'NO');
         }
         else {
           console.log(`[Transform] Q${item.questionNumber}: No data source available - result:${!!item.result}, aiResponses:${item.aiResponses?.length || 0}`);
@@ -1211,8 +1209,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         questionNumber: transformedResults[0].questionNumber,
         hasRigor: !!transformedResults[0].finalRigorLevel,
         hasStandards: transformedResults[0].finalStandards?.length > 0,
-        questionTextLength: transformedResults[0].questionText?.length || 0,
-        hasJustification: !!transformedResults[0].rigorJustification
+        questionTextLength: transformedResults[0].questionText?.length || 0
       } : 'No results');
       
       res.json({
