@@ -733,9 +733,6 @@ export class DatabaseWriteService {
           console.log(`🔍 [MILD CHECK] - AI DRAFT Result: Standards=${JSON.stringify(aiResult?.consensusStandards?.slice(0, 1))}, Rigor=${aiResult?.consensusRigorLevel}`);
           console.log(`🔍 [MILD CHECK] - Teacher Override: ${teacherOverride ? `Standards=${JSON.stringify(teacherOverride.overriddenStandards?.slice(0, 1))}, Rigor=${teacherOverride.overriddenRigorLevel}` : 'NONE'}`);
         } else {
-          console.log(`[DEBUG] Question ${question.questionNumber} (${question.id}) data sources:`);
-          console.log(`[DEBUG] - AI Result: Standards=${JSON.stringify(aiResult?.consensusStandards)}, Rigor=${aiResult?.consensusRigorLevel}`);
-          console.log(`[DEBUG] - Teacher Override: ${teacherOverride ? `Standards=${JSON.stringify(teacherOverride.overriddenStandards)}, Rigor=${teacherOverride.overriddenRigorLevel}` : 'NONE'}`);
         }
         
         // Create final analysis for this question
@@ -758,7 +755,6 @@ export class DatabaseWriteService {
         if (parseInt(question.questionNumber) <= 4) {
           console.log(`🔍 [MILD CHECK] - FINAL CONFIRMED Analysis: Standards=${JSON.stringify(finalAnalysis.finalStandards?.slice(0, 1))}, Rigor=${finalAnalysis.finalRigorLevel}, HasOverride=${finalAnalysis.hasTeacherOverride}`);
         } else {
-          console.log(`[DEBUG] - Final Analysis: Standards=${JSON.stringify(finalAnalysis.finalStandards)}, Rigor=${finalAnalysis.finalRigorLevel}, HasOverride=${finalAnalysis.hasTeacherOverride}`);
         }
         
         if (teacherOverride) {

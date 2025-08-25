@@ -1160,10 +1160,8 @@ export class DatabaseStorage implements IStorage {
       console.log(`[getDocumentResults] Using CONFIRMED analysis for document: ${documentId}`);
       const analysisData = confirmedAnalysis.analysisData as any;
       if (analysisData.questions) {
-        console.log(`[UI DEBUG] CONFIRMED analysis has ${analysisData.questions.length} questions:`);
         for (let i = 0; i < Math.min(3, analysisData.questions.length); i++) {
           const q = analysisData.questions[i];
-          console.log(`[UI DEBUG] Q${q.questionNumber}: Standards=${JSON.stringify(q.finalStandards)}, Rigor=${q.finalRigorLevel}, HasOverride=${q.hasTeacherOverride}`);
         }
         for (const q of analysisData.questions) {
           confirmedQuestionsMap.set(q.questionId, q);
@@ -1218,7 +1216,6 @@ export class DatabaseStorage implements IStorage {
       
       // Debug logging for Question 1 to understand the customer filtering issue
       if (question.questionNumber === '1') {
-        console.log(`[DEBUG] Question 1 (${question.id}): Looking for overrides with customerUuid: ${customerUuid}`);
         
         // Check all overrides for this question regardless of customer to debug
         const allOverrides = await db
@@ -1233,8 +1230,6 @@ export class DatabaseStorage implements IStorage {
           .where(eq(teacherOverrides.questionId, question.id))
           .orderBy(desc(teacherOverrides.updatedAt));
         
-        console.log(`[DEBUG] All overrides for Question 1:`, allOverrides);
-        console.log(`[DEBUG] Found ${teacherOverride ? 'active' : 'no active'} override for customer ${customerUuid}`);
       }
       
       // Debug logging for specific question

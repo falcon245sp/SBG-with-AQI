@@ -10,8 +10,6 @@ const googleAuth = new GoogleAuthService();
 // Initiate basic Google authentication (profile + email only)
 export async function initiateGoogleAuth(req: Request, res: Response) {
   try {
-    console.log('\n=== ENHANCED OAUTH DEBUG ===');
-    console.log('[DEBUG] Request Details:');
     console.log('- Method:', req.method);
     console.log('- URL:', req.url);
     console.log('- Host:', req.headers.host);
@@ -23,7 +21,6 @@ export async function initiateGoogleAuth(req: Request, res: Response) {
     const isProduction = process.env.NODE_ENV === 'production';
     const envPrefix = isProduction ? 'PROD_' : 'DEV_';
 
-    console.log('\n[DEBUG] Environment Variables:');
     console.log(`- Environment: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}`);
     console.log(`- ${envPrefix}GOOGLE_CLIENT_ID exists:`, !!process.env[`${envPrefix}GOOGLE_CLIENT_ID`]);
     console.log(`- ${envPrefix}GOOGLE_CLIENT_SECRET exists:`, !!process.env[`${envPrefix}GOOGLE_CLIENT_SECRET`]);
@@ -38,7 +35,6 @@ export async function initiateGoogleAuth(req: Request, res: Response) {
     const isDirectBrowserRequest = !acceptHeader || !acceptHeader.includes('application/json');
     
     const authUrl = googleAuth.getAuthUrl();
-    console.log('\n[DEBUG] Generated OAuth URL Analysis:');
     console.log('- Full URL:', authUrl);
     
     // Parse URL components for detailed analysis
@@ -57,7 +53,6 @@ export async function initiateGoogleAuth(req: Request, res: Response) {
       console.error('- URL parsing error:', urlError);
     }
     
-    console.log('\n[DEBUG] Request Type Analysis:');
     console.log('- Accept Header:', acceptHeader);
     console.log('- Is Direct Browser Request:', isDirectBrowserRequest);
     
@@ -74,7 +69,6 @@ export async function initiateGoogleAuth(req: Request, res: Response) {
       console.log('[OAuth] Returning JSON response with authUrl');
       res.json({ authUrl });
     }
-    console.log('=== END OAUTH DEBUG ===\n');
   } catch (error) {
     console.error('\n[ERROR] OAuth Initialization Failed:');
     console.error('- Error Message:', (error as Error).message);

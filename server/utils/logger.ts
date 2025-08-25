@@ -222,8 +222,7 @@ export function requestLoggingMiddleware(req: any, res: any, next: any) {
   req.requestId = Logger.generateRequestId();
   const startTime = Date.now();
   
-  // Log the start of the request
-  logger.debug('Request started', Logger.extractRequestContext(req));
+  // Request tracking (debug logging removed for production)
   
   res.on('finish', () => {
     const duration = Date.now() - startTime;

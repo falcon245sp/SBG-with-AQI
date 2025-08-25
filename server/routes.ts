@@ -241,7 +241,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Fallback: clean up the technical name
               readableCourseName = coursePart
                 .replace(/-/g, ' ')
-                .replace(/\b\w/g, l => l.toUpperCase());
+                .replace(/\b\w/g, (l: string) => l.toUpperCase());
             }
           }
           
@@ -367,10 +367,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Google OAuth routes with renamed environment variables (workaround for Replit conflicts)
-  app.get('/api/auth/google', (req, res, next) => {
-    console.log('[DEBUG] /api/auth/google route hit');
-    next();
-  }, initiateGoogleAuth);
+  app.get('/api/auth/google', initiateGoogleAuth);
   app.get('/api/auth/google/full-integration', initiateFullIntegration);
   app.get('/api/auth/google/classroom', initiateClassroomAuth);
   app.get('/api/auth/google/callback', handleGoogleCallback);
@@ -471,7 +468,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } else {
           readableCourseName = coursePart
             .replace(/-/g, ' ')
-            .replace(/\b\w/g, l => l.toUpperCase());
+            .replace(/\b\w/g, (l: string) => l.toUpperCase());
         }
       }
       
@@ -621,11 +618,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       const files = (req.files as Express.Multer.File[]) || [];
       
-      console.log(`=== UPLOAD DEBUG ===`);
-      console.log(`Raw req.files:`, req.files);
-      console.log(`Parsed files array length: ${files.length}`);
-      console.log(`Files:`, files.map(f => ({ name: f.originalname, size: f.size, fieldname: f.fieldname })));
-      console.log(`Form body:`, req.body);
       
       if (!files || files.length === 0) {
         return res.status(400).json({ message: "No files uploaded" });
@@ -718,7 +710,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const statusCode = errors.length > 0 ? 207 : 202; // 207 Multi-Status if some failed
       
       console.log(`Upload complete: ${jobs.length} jobs created, ${errors.length} errors`);
-      console.log(`=== END UPLOAD DEBUG ===`);
       
       // For backwards compatibility, also include single-file response format
       if (jobs.length === 1 && files.length === 1) {
@@ -1679,11 +1670,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Test route to manually trigger export processing (for debugging)
   app.post('/api/test/trigger-export-processing', async (req, res) => {
     try {
-      console.log('[DEBUG] Manually triggering export processing...');
       await exportProcessor.processPendingExports();
       res.json({ success: true, message: 'Export processing triggered manually' });
     } catch (error) {
-      console.error('[DEBUG] Failed to trigger export processing:', error);
+      console.error('Failed to trigger export processing:', error);
       res.status(500).json({ success: false, message: 'Failed to trigger export processing' });
     }
   });
