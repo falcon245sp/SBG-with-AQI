@@ -231,6 +231,69 @@ class CommonStandardsProjectService {
     }
   }
 
+  // Lookup standard by code across all cached standards
+  async lookupStandardByCode(standardCode: string, jurisdictionId?: string): Promise<CSPStandard | null> {
+    console.log(`[CommonStandardsProjectService] Looking up standard: ${standardCode}`);
+    
+    try {
+      // Get all jurisdictions if none specified
+      if (!jurisdictionId) {
+        const jurisdictions = await this.getJurisdictions();
+        
+        // Try Common Core first if available
+        const commonCore = jurisdictions.find(j => 
+          j.title.toLowerCase().includes('common core') || j.title.toLowerCase().includes('ccss')
+        );
+        
+        if (commonCore) {
+          const result = await this.lookupStandardByCode(standardCode, commonCore.id);
+          if (result) return result;
+        }
+        
+        // If not found in Common Core, try other jurisdictions
+        for (const jurisdiction of jurisdictions) {
+          if (jurisdiction.id !== commonCore?.id) {
+            const result = await this.lookupStandardByCode(standardCode, jurisdiction.id);
+            if (result) return result;
+          }
+        }
+        
+        return null;
+      }
+      
+      // Search within specific jurisdiction
+      const standardSets = await this.getStandardSetsForJurisdiction(jurisdictionId);
+      
+      for (const standardSet of standardSets) {
+        try {
+          const standards = await this.getStandardsForSet(standardSet.id);
+          
+          // Look for matching statementNotation (the standard code)
+          const match = standards.find(standard => 
+            standard.statementNotation === standardCode ||
+            standard.id.includes(standardCode) ||
+            standard.description?.toLowerCase().includes(standardCode.toLowerCase())
+          );
+          
+          if (match) {
+            console.log(`[CommonStandardsProjectService] Found standard ${standardCode} in set ${standardSet.title}`);
+            return match;
+          }
+        } catch (error) {
+          console.log(`[CommonStandardsProjectService] Skipping set ${standardSet.id} due to error:`, (error as Error).message);
+          continue;
+        }
+      }
+      
+      console.log(`[CommonStandardsProjectService] Standard ${standardCode} not found in jurisdiction ${jurisdictionId}`);
+      return null;
+      
+    } catch (error) {
+      console.error(`[CommonStandardsProjectService] Error looking up standard ${standardCode}:`, error);
+      return null;
+    }
+  }
+
   // Organize standard sets into grade bands for UI display
   organizeCoursesByGradeBand(standardSets: CSPStandardSet[]): GradeBandCourses[] {
     const gradeBands: Record<string, GradeBandCourses> = {};

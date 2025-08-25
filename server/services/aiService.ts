@@ -72,28 +72,70 @@ export interface PromptCustomization {
   outputFormat?: 'detailed' | 'concise' | 'standardized'; // Output format preference
 }
 
-const ANALYSIS_PROMPT = `You are an expert in high school precalculus education and Standards-Based Grading (SBG) aligned to {JURISDICTIONS}. As a math teacher implementing SBG, I need you to analyze the provided unit documents (quizzes, tests, etc.).
+const ANALYSIS_PROMPT = `Using only your knowledge of the {JURISDICTIONS}, analyze the attached math test question by question. For each question, determine the most relevant standard, assign a level of rigor (mild, medium, or spicy), and provide a brief justification.
 
-For each individual problem/question in the document, identify:
+Output the results strictly as a JSON array of objects (no additional text), where each object has the keys:
+- "question" (integer): The question number
+- "standard" (string): The standard code (e.g., "6.NS.C.7", "F-IF.A.1")  
+- "rigor" (string): Either "mild", "medium", or "spicy"
+- "justification" (string): Brief explanation of your rigor assessment
 
-1. The most relevant standard (e.g., F-IF.A.1, F-BF.B.3, A-REI.B.4)
-2. A concise description of what the standard covers 
-3. A rigor level: mild (basic recall/application), medium (multi-step/interpretive), or spicy (synthesis/reasoning/real-world application)
+RIGOR LEVELS:
+- mild: Basic recall, recognition, or simple application
+- medium: Multi-step problems, analysis, or interpretive tasks  
+- spicy: Synthesis, evaluation, reasoning, or complex real-world application
 
-Return your analysis as a JSON object with a "problems" array. Each problem should have:
-- problemNumber: The question/problem number (e.g., "1", "2", "3")  
-- standardCode: The standard code (e.g., "F-IF.A.1")
-- standardDescription: Brief description of what the standard covers
-- rigorLevel: Either "mild", "medium", or "spicy"
-- rigorJustification: Explain why you chose this rigor level for this specific problem
-
-Focus on:
-- Map to relevant mathematics standards (F-BF, F-IF, A-REI, etc.)
-- Base rigor on problem complexity: basic domain/range is mild; transformations with graphs are medium; optimization/contextual synthesis is spicy
-- Analyze each problem individually 
-- Be accurate and consistent`;
+Be accurate and consistent with {JURISDICTIONS} standards.`;
 
 export class AIService {
+  // Transform new Grok JSON format to match downstream contracts
+  private async transformGrokResponse(
+    grokJsonArray: Array<{question: number, standard: string, rigor: string, justification: string}>,
+    jurisdictions: string[]
+  ): Promise<{standards: any[], rigor: any}[]> {
+    console.log('[AIService] Transforming Grok response with Common Standards lookup');
+    const { default: commonStandardsProjectService } = await import('./commonStandardsProjectService');
+    
+    const transformedResults = [];
+    
+    for (const item of grokJsonArray) {
+      // Lookup standard in Common Standards API
+      const standardDetails = await commonStandardsProjectService.lookupStandardByCode(item.standard);
+      
+      // Create enriched standard object
+      const standardObject = standardDetails ? {
+        code: item.standard,
+        description: standardDetails.description,
+        jurisdiction: jurisdictions[0] || "Common Core State Standards",
+        gradeLevel: standardDetails.ancestorDescriptions?.find(desc => /grade|level/i.test(desc)) || "9-12",
+        subject: "Mathematics"
+      } : {
+        code: item.standard,
+        description: `Standard ${item.standard}`,
+        jurisdiction: jurisdictions[0] || "Common Core State Standards", 
+        gradeLevel: "9-12",
+        subject: "Mathematics"
+      };
+      
+      // Map rigor to DOK level
+      const dokLevel = item.rigor === 'mild' ? 'DOK 1' : 
+                      item.rigor === 'medium' ? 'DOK 2' : 'DOK 3';
+      
+      transformedResults.push({
+        standards: [standardObject],
+        rigor: {
+          level: item.rigor as 'mild' | 'medium' | 'spicy',
+          dokLevel,
+          justification: item.justification,
+          confidence: 0.85
+        }
+      });
+    }
+    
+    console.log(`[AIService] Transformed ${transformedResults.length} Grok responses with Standards API data`);
+    return transformedResults;
+  }
+
   private generatePromptWithStandards(focusStandards?: string[], jurisdictions?: string[]): string {
     // Use provided jurisdictions or default to Common Core
     const targetJurisdictions = jurisdictions && jurisdictions.length > 0 ? jurisdictions : ['Common Core'];
@@ -591,31 +633,23 @@ Give special attention to identifying alignment with these specific standards.
         response_format: {
           type: "json_schema",
           json_schema: {
-            name: "problem_analysis",
+            name: "question_analysis_array",
             schema: {
-              type: "object",
-              properties: {
-                problems: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      problemNumber: { type: "string" },
-                      standardCode: { type: "string" },
-                      standardDescription: { type: "string" },
-                      rigorLevel: { 
-                        type: "string",
-                        enum: ["mild", "medium", "spicy"]
-                      },
-                      rigorJustification: { type: "string" }
-                    },
-                    required: ["problemNumber", "standardCode", "standardDescription", "rigorLevel", "rigorJustification"],
-                    additionalProperties: false
-                  }
-                }
-              },
-              required: ["problems"],
-              additionalProperties: false
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  question: { type: "integer" },
+                  standard: { type: "string" },
+                  rigor: { 
+                    type: "string",
+                    enum: ["mild", "medium", "spicy"]
+                  },
+                  justification: { type: "string" }
+                },
+                required: ["question", "standard", "rigor", "justification"],
+                additionalProperties: false
+              }
             },
             strict: true
           }
@@ -625,15 +659,57 @@ Give special attention to identifying alignment with these specific standards.
       const processingTime = Date.now() - startTime;
       const rawContent = response.choices[0].message.content || '';
       
-      console.log('=== GROK WITH PROMPT STRUCTURED JSON RESPONSE ===');
+      console.log('=== GROK CLEAN JSON ARRAY RESPONSE ===');
       console.log(rawContent);
-      console.log('=== END STRUCTURED JSON RESPONSE ===');
+      console.log('=== END JSON ARRAY RESPONSE ===');
       
       try {
         const parsedResponse = JSON.parse(rawContent);
-        const problems = parsedResponse.problems || [];
         
-        console.log('=== GROK WITH PROMPT STRUCTURED PARSING DEBUG ===');
+        // Handle new clean JSON array format
+        if (Array.isArray(parsedResponse)) {
+          console.log('=== GROK NEW FORMAT PARSING DEBUG ===');
+          console.log('Number of questions parsed:', parsedResponse.length);
+          
+          // Transform with Common Standards lookup
+          const transformedResults = await this.transformGrokResponse(parsedResponse, jurisdictions);
+          
+          const questions = parsedResponse.map((item: any, index: number) => {
+            const transformed = transformedResults[index];
+            console.log(`Question ${item.question}: ${item.standard} (${item.rigor})`);
+            
+            return {
+              questionNumber: item.question.toString(),
+              questionText: `Question ${item.question}: Analyzing ${item.standard}`,
+              standards: transformed.standards,
+              rigor: transformed.rigor,
+              rawResponse: response,
+              processingTime,
+              aiEngine: 'grok'
+            };
+          });
+          
+          console.log(`analyzeGrokWithPrompt: Successfully parsed ${questions.length} questions from new array format`);
+          
+          // Return first question's data for compatibility, store all questions
+          const firstQuestion = questions[0] || {
+            standards: [],
+            rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'No questions found', confidence: 0.1 }
+          };
+          
+          return {
+            standards: firstQuestion.standards,
+            rigor: firstQuestion.rigor,
+            rawResponse: response,
+            processingTime,
+            jsonResponse: parsedResponse,
+            allQuestions: questions
+          };
+        }
+        
+        // Fallback: Handle old format for backward compatibility  
+        const problems = parsedResponse.problems || [];
+        console.log('=== GROK OLD FORMAT FALLBACK ===');
         console.log('Number of problems parsed:', problems.length);
         
         const questions = problems.map((problem: any) => {
@@ -651,13 +727,16 @@ Give special attention to identifying alignment with these specific standards.
             rigor: {
               level: problem.rigorLevel as 'mild' | 'medium' | 'spicy',
               dokLevel: problem.rigorLevel === 'mild' ? 'DOK 1' : problem.rigorLevel === 'medium' ? 'DOK 2' : 'DOK 3',
-              justification: `${problem.rigorLevel} rigor level based on problem complexity`,
+              justification: problem.rigorJustification || `${problem.rigorLevel} rigor level based on problem complexity`,
               confidence: 0.85
-            }
+            },
+            rawResponse: response,
+            processingTime,
+            aiEngine: 'grok'
           };
         });
         
-        console.log(`analyzeGrokWithPrompt: Successfully parsed ${questions.length} problems from structured output`);
+        console.log(`analyzeGrokWithPrompt: Successfully parsed ${questions.length} problems from old format`);
         
         // Return first question's data for compatibility, store all questions
         const firstQuestion = questions[0] || {
@@ -670,8 +749,8 @@ Give special attention to identifying alignment with these specific standards.
           rigor: firstQuestion.rigor,
           rawResponse: response,
           processingTime,
-          jsonResponse: parsedResponse, // Store the full parsed JSON response
-          allQuestions: questions // Store all parsed questions
+          jsonResponse: parsedResponse,
+          allQuestions: questions
         };
       } catch (parseError) {
         console.error('analyzeGrokWithPrompt: Failed to parse structured JSON response:', parseError);
@@ -724,31 +803,23 @@ Give special attention to identifying alignment with these specific standards.
         response_format: {
           type: "json_schema",
           json_schema: {
-            name: "problem_analysis",
+            name: "question_analysis_array",
             schema: {
-              type: "object",
-              properties: {
-                problems: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      problemNumber: { type: "string" },
-                      standardCode: { type: "string" },
-                      standardDescription: { type: "string" },
-                      rigorLevel: { 
-                        type: "string",
-                        enum: ["mild", "medium", "spicy"]
-                      },
-                      rigorJustification: { type: "string" }
-                    },
-                    required: ["problemNumber", "standardCode", "standardDescription", "rigorLevel", "rigorJustification"],
-                    additionalProperties: false
-                  }
-                }
-              },
-              required: ["problems"],
-              additionalProperties: false
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  question: { type: "integer" },
+                  standard: { type: "string" },
+                  rigor: { 
+                    type: "string",
+                    enum: ["mild", "medium", "spicy"]
+                  },
+                  justification: { type: "string" }
+                },
+                required: ["question", "standard", "rigor", "justification"],
+                additionalProperties: false
+              }
             },
             strict: true
           }
@@ -771,9 +842,49 @@ Give special attention to identifying alignment with these specific standards.
       
       try {
         const parsedResponse = JSON.parse(rawContent);
-        const problems = parsedResponse.problems || [];
         
-        console.log('=== STRUCTURED PARSING DEBUG ===');
+        // Handle new clean JSON array format
+        if (Array.isArray(parsedResponse)) {
+          console.log('=== GROK NEW ARRAY FORMAT ===');
+          console.log('Number of questions parsed:', parsedResponse.length);
+          
+          // Transform with Common Standards lookup
+          const transformedResults = await this.transformGrokResponse(parsedResponse, jurisdictions);
+          
+          const questions = parsedResponse.map((item: any, index: number) => {
+            const transformed = transformedResults[index];
+            console.log(`Question ${item.question}: ${item.standard} (${item.rigor})`);
+            
+            return {
+              questionNumber: item.question.toString(),
+              questionText: `Question ${item.question}: ${item.standard} analysis`,
+              standards: transformed.standards,
+              rigor: transformed.rigor,
+              rawResponse: grokResponse,
+              processingTime,
+              aiEngine: 'grok'
+            };
+          });
+          
+          // Return first question's data for compatibility
+          const firstQuestion = questions[0] || {
+            standards: [],
+            rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'No questions found', confidence: 0.1 }
+          };
+          
+          return {
+            standards: firstQuestion.standards,
+            rigor: firstQuestion.rigor,
+            rawResponse: grokResponse,
+            processingTime,
+            jsonResponse: parsedResponse,
+            allQuestions: questions
+          };
+        }
+        
+        // Fallback: Handle old format
+        const problems = parsedResponse.problems || [];
+        console.log('=== GROK OLD FORMAT FALLBACK ===');
         console.log('Number of problems parsed:', problems.length);
         
         const questions = problems.map((problem: any) => {
