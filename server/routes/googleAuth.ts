@@ -330,6 +330,15 @@ export async function getUserClassrooms(req: Request, res: Response) {
   try {
     const { user, customerUuid } = await ActiveUserService.requireActiveUserAndCustomerUuid(req);
     const classrooms = await storage.getTeacherClassrooms(customerUuid);
+    
+    // Debug: log what we're returning
+    console.log('[OAuth] DEBUG: Returning classrooms data:', JSON.stringify(classrooms, null, 2));
+    console.log('[OAuth] DEBUG: First classroom keys:', classrooms[0] ? Object.keys(classrooms[0]) : 'no classrooms');
+    console.log('[OAuth] DEBUG: courseConfigurationCompleted values:', classrooms.map(c => ({
+      name: c.name,
+      courseConfigurationCompleted: c.courseConfigurationCompleted
+    })));
+    
     res.json(classrooms);
   } catch (error) {
     console.error('[OAuth] Error fetching user classrooms:', error);

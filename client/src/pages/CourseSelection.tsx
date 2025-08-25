@@ -58,6 +58,11 @@ export default function CourseSelection() {
   };
 
   const configuredClassrooms = classrooms?.filter(c => c.courseConfigurationCompleted) || [];
+  
+  // Debug: log the classroom data to see the actual structure
+  console.log('[CourseSelection] Raw classrooms data:', classrooms);
+  console.log('[CourseSelection] Configured classrooms:', configuredClassrooms);
+  console.log('[CourseSelection] First classroom keys:', classrooms?.[0] ? Object.keys(classrooms[0]) : 'no classrooms');
 
   if (isLoading) {
     return (
