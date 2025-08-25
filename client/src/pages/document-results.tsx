@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -35,7 +36,8 @@ import {
   Download,
   ChevronDown,
   Eye,
-  Edit
+  Edit,
+  AlertTriangle
 } from "lucide-react";
 import { Link } from "wouter";
 import jsPDF from 'jspdf';
@@ -243,6 +245,8 @@ export default function DocumentResults() {
   const queryClient = useQueryClient();
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
   const [openDialogs, setOpenDialogs] = useState<{ [key: string]: boolean }>({});
+  const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
+  const [pendingSaveData, setPendingSaveData] = useState<any>(null);
   const [overrideFormData, setOverrideFormData] = useState<{
     rigorLevel: 'mild' | 'medium' | 'spicy';
     standards: string;
@@ -250,24 +254,26 @@ export default function DocumentResults() {
     confidence: number;
   }>({ rigorLevel: 'mild', standards: '', justification: '', confidence: 5 });
   
-  // Copy/paste functionality
+  // Copy/paste functionality - populates form fields instead of saving immediately
   const handleCopyFromQuestion = (targetQuestionId: string, sourceQuestionNumber: string) => {
     const sourceQuestion = docResult?.results?.find(r => r.questionNumber.toString() === sourceQuestionNumber);
     if (!sourceQuestion) return;
     
-    // Copy the analysis from source to target, preserving all data including descriptions
-    const payload = {
-      questionId: targetQuestionId,
-      overriddenRigorLevel: sourceQuestion.finalRigorLevel,
-      overriddenStandards: sourceQuestion.finalStandards || [],
-      notes: `Copied from Question ${sourceQuestionNumber}`,
-      confidenceScore: sourceQuestion.confidenceScore || 5,
-      editReason: `Copied analysis from Question ${sourceQuestionNumber}`
-    };
+    // Populate form fields with copied data
+    setOverrideFormData({
+      rigorLevel: sourceQuestion.finalRigorLevel as 'mild' | 'medium' | 'spicy',
+      standards: sourceQuestion.finalStandards?.map(s => 
+        typeof s === 'string' ? s : `${s.code}: ${s.description || ''}`
+      ).join('\n') || '',
+      justification: `Copied from Question ${sourceQuestionNumber}`,
+      confidence: sourceQuestion.confidenceScore || 5
+    });
     
-    console.log('Copy payload:', payload);
-    
-    saveOverrideMutation.mutate(payload);
+    toast({
+      title: "Copied Successfully",
+      description: `Rigor level and standards copied from Question ${sourceQuestionNumber}. Review and save when ready.`,
+      variant: "default"
+    });
   };
 
 
@@ -371,6 +377,21 @@ export default function DocumentResults() {
     }
   });
 
+  // Function to handle save with confirmation
+  const handleSaveWithConfirmation = (data: any) => {
+    setPendingSaveData(data);
+    setShowSaveConfirmation(true);
+  };
+
+  // Function to proceed with actual save
+  const proceedWithSave = () => {
+    if (pendingSaveData) {
+      saveOverrideMutation.mutate(pendingSaveData);
+    }
+    setShowSaveConfirmation(false);
+    setPendingSaveData(null);
+  };
+
   // Save override mutation
   const saveOverrideMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -404,13 +425,7 @@ export default function DocumentResults() {
     onSuccess: async (data, variables) => {
       console.log('Override saved, invalidating cache for doc:', docId);
       
-      // Close any open dialogs
-      const openDialog = document.querySelector('[data-state="open"][role="dialog"]');
-      if (openDialog) {
-        const closeButton = openDialog.querySelector('[aria-label="Close"]') as HTMLElement;
-        if (closeButton) closeButton.click();
-      }
-      
+      // Keep dialog open - don't auto-close so user can continue editing
       // Force immediate data refresh
       await queryClient.invalidateQueries({ queryKey: [`/api/documents/${docId}/results`] });
       await queryClient.refetchQueries({ queryKey: [`/api/documents/${docId}/results`] });
@@ -434,8 +449,8 @@ export default function DocumentResults() {
       }
       
       toast({
-        title: "Teacher Override Saved",
-        description: "Your changes have been saved and rubrics are being regenerated.",
+        title: "Changes Committed to Gradebook",
+        description: "Your overrides have been saved and new rubrics are being generated. You can continue editing if needed.",
         variant: "default",
       });
     },
@@ -1757,9 +1772,10 @@ export default function DocumentResults() {
                                           questionId={question.id}
                                           questionText={question.questionText}
                                           initialData={overrideFormData}
+                                          onSave={handleSaveWithConfirmation}
                                           onSuccess={() => {
-                                            // Close the dialog - cache invalidation is handled in the mutation
-                                            setOpenDialogs(prev => ({ ...prev, [question.id]: false }));
+                                            // Keep dialog open so user can continue editing
+                                            // setOpenDialogs(prev => ({ ...prev, [question.id]: false }));
                                           }}
                                         />
                                       </DialogContent>
@@ -1816,6 +1832,48 @@ export default function DocumentResults() {
           )}
         </main>
       </div>
+      
+      {/* Confirmation Dialog for Teacher Override Saves */}
+      <AlertDialog open={showSaveConfirmation} onOpenChange={setShowSaveConfirmation}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center text-amber-600">
+              <AlertTriangle className="w-5 h-5 mr-2" />
+              Commit Changes to Gradebook?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p className="text-slate-700">
+                <strong>This action will:</strong>
+              </p>
+              <ul className="text-sm text-slate-600 space-y-1 pl-4">
+                <li>• Save your override permanently</li>
+                <li>• Regenerate rubrics with your changes</li>
+                <li>• Commit results to the gradebook</li>
+                <li>• Update all exported documents</li>
+              </ul>
+              <p className="text-sm text-amber-700 bg-amber-50 p-3 rounded border border-amber-200">
+                <strong>⚠️ Important:</strong> Once saved, these changes will be reflected in all generated rubrics and gradebooks. You can continue editing afterwards if needed.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="space-x-2">
+            <AlertDialogCancel 
+              onClick={() => {
+                setShowSaveConfirmation(false);
+                setPendingSaveData(null);
+              }}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={proceedWithSave}
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              Yes, Commit to Gradebook
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -1825,6 +1883,7 @@ function TeacherOverrideForm({
   questionId, 
   questionText, 
   initialData, 
+  onSave,
   onSuccess 
 }: {
   questionId: string;
@@ -1835,6 +1894,7 @@ function TeacherOverrideForm({
     justification: string;
     confidence: number;
   };
+  onSave: (data: any) => void;
   onSuccess: () => void;
 }) {
   const [formData, setFormData] = useState(initialData);
@@ -1921,7 +1981,15 @@ function TeacherOverrideForm({
       return;
     }
     
-    saveOverrideMutation.mutate(formData);
+    // Use the confirmation system instead of direct save
+    onSave({
+      questionId,
+      overriddenRigorLevel: formData.rigorLevel,
+      overriddenStandards: formData.standards,
+      notes: formData.justification,
+      confidenceScore: formData.confidence,
+      editReason: 'Teacher override from document results'
+    });
   };
 
   return (
