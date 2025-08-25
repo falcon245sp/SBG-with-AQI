@@ -713,6 +713,17 @@ export class DatabaseWriteService {
     console.log(`👤 Customer: ${customerUuid}`);
     
     try {
+      // CRITICAL FIX: Delete any existing confirmed analysis to ensure teacher overrides are reflected
+      console.log(`[DatabaseWriteService] Checking for existing confirmed analysis for document: ${documentId}`);
+      const existingConfirmed = await storage.getConfirmedAnalysis(documentId);
+      if (existingConfirmed) {
+        console.log(`[DatabaseWriteService] Deleting existing confirmed analysis to incorporate latest teacher overrides`);
+        await storage.deleteConfirmedAnalysisByDocumentId(documentId);
+        
+        // Also clear any pending exports to avoid processing with stale data
+        console.log(`[DatabaseWriteService] Clearing export queue to regenerate with updated overrides`);
+        await storage.clearExportQueueForDocument(documentId);
+      }
       // Get all questions for the document
       const questions = await storage.getQuestionsByDocumentId(documentId);
       const questionResults = await storage.getQuestionResultsByDocumentId(documentId);
@@ -730,7 +741,7 @@ export class DatabaseWriteService {
         if (parseInt(question.questionNumber) <= 4) {
           console.log(`\n🔍 [MILD CHECK] Question ${question.questionNumber} (${question.id}) CONFIRMED creation:`);
           console.log(`🔍 [MILD CHECK] - Question Text: ${question.questionText?.substring(0, 50)}...`);
-          console.log(`🔍 [MILD CHECK] - AI DRAFT Result: Standards=${JSON.stringify(aiResult?.consensusStandards?.slice(0, 1))}, Rigor=${aiResult?.consensusRigorLevel}`);
+          console.log(`🔍 [MILD CHECK] - AI DRAFT Result: Standards=${JSON.stringify(Array.isArray(aiResult?.consensusStandards) ? aiResult?.consensusStandards?.slice(0, 1) : aiResult?.consensusStandards)}, Rigor=${aiResult?.consensusRigorLevel}`);
           console.log(`🔍 [MILD CHECK] - Teacher Override: ${teacherOverride ? `Standards=${JSON.stringify(teacherOverride.overriddenStandards?.slice(0, 1))}, Rigor=${teacherOverride.overriddenRigorLevel}` : 'NONE'}`);
         } else {
         }
