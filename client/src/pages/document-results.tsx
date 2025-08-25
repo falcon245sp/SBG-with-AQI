@@ -1057,34 +1057,25 @@ export default function DocumentResults() {
                                     </Badge>
                                   )}
                                 </CardTitle>
-                                <div className="flex items-center space-x-2">
-                                  <TooltipProvider delayDuration={0}>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Badge 
-                                          variant={
-                                            result.finalRigorLevel === 'spicy' ? 'destructive' :
-                                            result.finalRigorLevel === 'medium' ? 'default' : 'secondary'
-                                          }
-                                          className="text-xs cursor-help"
-                                        >
-                                          {result.finalRigorLevel?.toUpperCase() || 'PENDING'}
-                                        </Badge>
-                                      </TooltipTrigger>
-                                      <TooltipContent 
-                                        className="max-w-sm p-3 text-sm bg-slate-900 text-white border-slate-700"
-                                        side="top"
-                                        align="center"
-                                      >
-                                        <div className="space-y-2">
-                                          <p className="font-semibold">Sherpa's Reasoning:</p>
-                                          <p className="leading-relaxed">
-                                            {(result as any).rigorJustification || 'Reasoning not available'}
-                                          </p>
-                                        </div>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
+                                <div className="flex items-center space-x-2 relative">
+                                  <div className="group relative">
+                                    <Badge 
+                                      variant={
+                                        result.finalRigorLevel === 'spicy' ? 'destructive' :
+                                        result.finalRigorLevel === 'medium' ? 'default' : 'secondary'
+                                      }
+                                      className="text-xs cursor-help"
+                                    >
+                                      {result.finalRigorLevel?.toUpperCase() || 'PENDING'}
+                                    </Badge>
+                                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-slate-900 text-white text-sm rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 max-w-xs">
+                                      <div className="font-semibold mb-1">Sherpa's Reasoning:</div>
+                                      <div className="text-xs leading-relaxed whitespace-normal">
+                                        {(result as any).rigorJustification || 'Reasoning not available'}
+                                      </div>
+                                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-900"></div>
+                                    </div>
+                                  </div>
                                   <Dialog>
                                     <DialogTrigger asChild>
                                       <Button
