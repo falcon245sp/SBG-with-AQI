@@ -425,32 +425,21 @@ export default function DocumentResults() {
     onSuccess: async (data, variables) => {
       console.log('Override saved, invalidating cache for doc:', docId);
       
-      // Keep dialog open - don't auto-close so user can continue editing
+      // Close the dialog after successful save
+      const openDialog = document.querySelector('[data-state="open"][role="dialog"]');
+      if (openDialog) {
+        const closeButton = openDialog.querySelector('[aria-label="Close"]') as HTMLElement;
+        if (closeButton) closeButton.click();
+      }
+      
       // Force immediate data refresh
       await queryClient.invalidateQueries({ queryKey: [`/api/documents/${docId}/results`] });
       await queryClient.refetchQueries({ queryKey: [`/api/documents/${docId}/results`] });
       console.log('Cache refetch completed');
       
-      try {
-        console.log('Triggering rubric regeneration after teacher override...');
-        const response = await fetch(`/api/documents/${docId}/accept`, {
-          method: 'POST',
-          credentials: 'include'
-        });
-        
-        if (response.ok) {
-          console.log('Rubric regeneration triggered successfully');
-          await queryClient.invalidateQueries({ queryKey: ['/api/file-cabinet'] });
-        } else {
-          console.warn('Failed to trigger rubric regeneration:', response.status);
-        }
-      } catch (error) {
-        console.error('Error triggering rubric regeneration:', error);
-      }
-      
       toast({
-        title: "Changes Committed to Gradebook",
-        description: "Your overrides have been saved and new rubrics are being generated. You can continue editing if needed.",
+        title: "Override Saved",
+        description: "Changes saved successfully. Continue editing other questions or click 'Accept and Proceed' to generate rubrics.",
         variant: "default",
       });
     },
