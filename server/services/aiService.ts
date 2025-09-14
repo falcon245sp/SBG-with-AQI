@@ -2,8 +2,8 @@ import OpenAI from "openai";
 import Anthropic from '@anthropic-ai/sdk';
 import { logger } from '../utils/logger';
 
-// Currently using OpenAI GPT-4o-mini model as requested by the user
-const OPENAI_MODEL = "gpt-4o-mini";
+// Using OpenAI GPT-5 model for better analysis results
+const OPENAI_MODEL = "gpt-5";
 
 console.log(`AI Service initialized with OpenAI model: ${OPENAI_MODEL}`);
 
