@@ -113,6 +113,9 @@ Preferred communication style: Simple, everyday language.
 - **Performance Monitoring**: Automatic performance logging with warnings for slow operations.
 - **Database Optimization**: Materialized views with automatic trigger-based refresh for document relationship queries.
 
+### Technical Debt & Future Improvements
+- **AI Response Parsing Centralization**: Refactor code so that API response parsing from AI engines happens in only one place and is served to other functions via an internal API, eliminating duplicate parsing logic across multiple analysis functions.
+
 ### Feature Specifications
 - **Student Facing Test Cover Sheet**: PDF export with four-column layout (Question, Standard, Topic, Rigor Level).
 - **Teacher Override System**: Database and UI for teachers to save corrections to AI analysis, including confidence scoring and "Revert to Sherpa" functionality; export processors respect teacher overrides.
