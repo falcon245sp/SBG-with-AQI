@@ -590,25 +590,14 @@ export default function DocumentResults() {
     
     results.forEach(question => {
       // Use teacher override as truth if available, otherwise use Sherpa analysis
-      // NEW ARCHITECTURE: Use CONFIRMED data when available, fallback to old logic for compatibility
+      // Use the flat structure returned by the API
       const getEffectiveData = () => {
-        if (question.confirmedData) {
-          // Use CONFIRMED analysis data (single source of truth)
-          return {
-            standards: question.confirmedData.finalStandards || [],
-            rigor: question.confirmedData.finalRigorLevel || 'mild',
-            source: question.confirmedData.hasTeacherOverride ? 'Teacher (Confirmed)' : 'AI (Confirmed)',
-            confidence: question.confirmedData.aiConfidenceScore || 'N/A'
-          };
-        } else {
-          // Fallback to old scattered logic for docs without CONFIRMED analysis
-          return {
-            standards: question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [],
-            rigor: question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild',
-            source: question.teacherOverride ? 'Teacher Override' : 'Standards Sherpa',
-            confidence: question.teacherOverride?.confidenceScore || question.result?.confidenceScore || 'N/A'
-          };
-        }
+        return {
+          standards: question.finalStandards || [],
+          rigor: question.finalRigorLevel || 'mild',
+          source: question.isOverridden ? 'Teacher Override' : 'Standards Sherpa',
+          confidence: question.confidenceScore || 'N/A'
+        };
       };
       
       const effectiveData = getEffectiveData();
@@ -616,7 +605,7 @@ export default function DocumentResults() {
       const effectiveRigor = effectiveData.rigor;
       const source = effectiveData.source;
       const confidence = effectiveData.confidence;
-      const justification = question.teacherOverride?.notes || question.teacherOverride?.editReason || question.aiResponses?.[0]?.rigorJustification || '';
+      const justification = question.rigorJustification || '';
       
       const standardsCodes = effectiveStandards.map((s: any) => s.code).join('; ');
       const dokLevel = effectiveRigor === 'mild' ? 'DOK 1-2' : effectiveRigor === 'medium' ? 'DOK 2-3' : 'DOK 3-4';
@@ -636,12 +625,12 @@ export default function DocumentResults() {
     const csvContent = csvRows.map(row => row.join(',')).join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
-    const a = window.doc.createElement('a');
+    const a = document.createElement('a');
     a.href = url;
     a.download = `${doc.fileName.replace(/\.[^/.]+$/, '')}_analysis.csv`;
-    window.doc.body.appendChild(a);
+    document.body.appendChild(a);
     a.click();
-    window.doc.body.removeChild(a);
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
     toast({
@@ -668,9 +657,9 @@ export default function DocumentResults() {
     const sortedResults = [...results].sort((a, b) => a.questionNumber - b.questionNumber);
     
     sortedResults.forEach((question) => {
-      // NEW ARCHITECTURE: Use CONFIRMED data for cover sheet generation
-      const effectiveStandards = question.confirmedData?.finalStandards || question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [];
-      const effectiveRigor = question.confirmedData?.finalRigorLevel || question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild';
+      // Use the flat structure from the API
+      const effectiveStandards = question.finalStandards || [];
+      const effectiveRigor = question.finalRigorLevel || 'mild';
       
       const primaryStandard = effectiveStandards[0]?.code || 'No Standard';
       const rigorText = effectiveRigor === 'mild' ? 'MILD (*)' : 
@@ -750,9 +739,9 @@ export default function DocumentResults() {
     const sortedResults = [...results].sort((a, b) => a.questionNumber - b.questionNumber);
     
     sortedResults.forEach((question, index) => {
-      // NEW ARCHITECTURE: Use CONFIRMED data for rubric generation
-      const effectiveStandards = question.confirmedData?.finalStandards || question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [];
-      const effectiveRigor = question.confirmedData?.finalRigorLevel || question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild';
+      // Use the flat structure from the API
+      const effectiveStandards = question.finalStandards || [];
+      const effectiveRigor = question.finalRigorLevel || 'mild';
       const questionText = question.questionText.length > 40 
         ? question.questionText.substring(0, 40) + '...' 
         : question.questionText;
@@ -812,8 +801,8 @@ export default function DocumentResults() {
     const sortedResults = [...results].sort((a, b) => a.questionNumber - b.questionNumber);
     
     sortedResults.forEach((question) => {
-      const effectiveStandards = question.teacherOverride?.overriddenStandards || question.result?.consensusStandards || [];
-      const effectiveRigor = question.teacherOverride?.overriddenRigorLevel || question.result?.consensusRigorLevel || 'mild';
+      const effectiveStandards = question.finalStandards || [];
+      const effectiveRigor = question.finalRigorLevel || 'mild';
       const questionText = question.questionText.length > 60 
         ? question.questionText.substring(0, 60) + '...' 
         : question.questionText;
@@ -1607,10 +1596,8 @@ export default function DocumentResults() {
                               </td>
                               <td className="px-6 py-4">
                                 {(() => {
-                                  // NEW ARCHITECTURE: Use CONFIRMED data first, then fallback to old logic
-                                  const effectiveStandards = question.confirmedData?.finalStandards || 
-                                                            question.teacherOverride?.overriddenStandards || 
-                                                            question.result?.consensusStandards || [];
+                                  // Use the flat structure from API
+                                  const effectiveStandards = question.finalStandards || [];
                                   
                                   if (effectiveStandards.length > 0) {
                                     return (
