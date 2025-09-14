@@ -29,6 +29,193 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY_ENV_VAR || "default_key",
 });
 
+// Centralized JSON schema for GPT-5 structured output
+export const QUESTION_LIST_SCHEMA = {
+  name: "QuestionList",
+  schema: {
+    type: "array",
+    items: {
+      type: "object",
+      required: ["question", "questionSummary", "standard", "rigor", "justification"],
+      properties: {
+        question: { type: "integer" },
+        questionSummary: { type: "string" },
+        standard: { type: "string" },
+        rigor: { type: "string", enum: ["mild", "medium", "spicy"] },
+        justification: { type: "string" }
+      },
+      additionalProperties: false
+    }
+  },
+  strict: true
+} as const;
+
+// Type definition for validated question list items
+export interface QuestionListItem {
+  question: number;
+  questionSummary: string;
+  standard: string;
+  rigor: 'mild' | 'medium' | 'spicy';
+  justification: string;
+}
+
+// Helper function to validate data against QUESTION_LIST_SCHEMA programmatically
+function validateAgainstQuestionListSchema(data: any): { valid: boolean; error?: string } {
+  const schema = QUESTION_LIST_SCHEMA.schema;
+  
+  // Validate top-level type (must be array)
+  if (!Array.isArray(data)) {
+    return { valid: false, error: `Expected array, got ${typeof data}` };
+  }
+  
+  // Validate each item in the array
+  for (let i = 0; i < data.length; i++) {
+    const item = data[i];
+    const itemSchema = schema.items;
+    
+    // Check if item is an object
+    if (typeof item !== 'object' || item === null) {
+      return { valid: false, error: `Item ${i + 1}: Expected object, got ${typeof item}` };
+    }
+    
+    // Check for additional properties (strict mode)
+    if (itemSchema.additionalProperties === false) {
+      const allowedProps = Object.keys(itemSchema.properties);
+      const actualProps = Object.keys(item);
+      const extraProps = actualProps.filter(prop => !allowedProps.includes(prop));
+      
+      if (extraProps.length > 0) {
+        return { valid: false, error: `Item ${i + 1}: Additional properties not allowed: ${extraProps.join(', ')}` };
+      }
+    }
+    
+    // Check required fields
+    const requiredFields = itemSchema.required || [];
+    for (const field of requiredFields) {
+      if (!(field in item)) {
+        return { valid: false, error: `Item ${i + 1}: Missing required field '${field}'` };
+      }
+    }
+    
+    // Validate each property according to schema
+    for (const [propName, propSchema] of Object.entries(itemSchema.properties)) {
+      if (propName in item) {
+        const value = item[propName];
+        const propDef = propSchema as any;
+        
+        // Type validation
+        if (propDef.type === 'integer') {
+          if (!Number.isInteger(value)) {
+            return { valid: false, error: `Item ${i + 1}.${propName}: Expected integer, got ${typeof value}` };
+          }
+        } else if (propDef.type === 'string') {
+          if (typeof value !== 'string') {
+            return { valid: false, error: `Item ${i + 1}.${propName}: Expected string, got ${typeof value}` };
+          }
+        }
+        
+        // Enum validation
+        if (propDef.enum && !propDef.enum.includes(value)) {
+          return { valid: false, error: `Item ${i + 1}.${propName}: Value '${value}' not in allowed enum values: ${propDef.enum.join(', ')}` };
+        }
+      }
+    }
+  }
+  
+  return { valid: true };
+}
+
+// Robust JSON extractor for GPT-5 responses with programmatic schema validation
+export function extractAndValidateQuestionList(rawContent: string): {
+  success: boolean;
+  data?: QuestionListItem[];
+  error?: string;
+  cleanedContent?: string;
+} {
+  console.log('=== ROBUST JSON EXTRACTION WITH SCHEMA VALIDATION ===');
+  console.log('Raw content length:', rawContent.length);
+  console.log('Raw content preview:', rawContent.substring(0, 200));
+  
+  try {
+    // Step 1: Clean the content by removing markdown and code fences
+    let cleanedContent = rawContent.trim();
+    
+    // Remove markdown code fences (```json, ```, etc.)
+    cleanedContent = cleanedContent.replace(/^```(?:json|javascript|js)?\s*/gm, '');
+    cleanedContent = cleanedContent.replace(/```\s*$/gm, '');
+    
+    // Remove common wrapper text patterns
+    cleanedContent = cleanedContent.replace(/^.*?(?=\[)/s, ''); // Remove everything before first [
+    cleanedContent = cleanedContent.replace(/(?<=\]).*$/s, ''); // Remove everything after last ]
+    
+    // Remove escape sequences that might break parsing
+    cleanedContent = cleanedContent.replace(/\\"/g, '"');
+    cleanedContent = cleanedContent.replace(/\\\\/g, '\\');
+    
+    cleanedContent = cleanedContent.trim();
+    console.log('Cleaned content length:', cleanedContent.length);
+    console.log('Cleaned content preview:', cleanedContent.substring(0, 200));
+    
+    // Step 2: Validate it looks like a JSON array
+    if (!cleanedContent.startsWith('[') || !cleanedContent.endsWith(']')) {
+      return {
+        success: false,
+        error: `Content doesn't appear to be a JSON array. Starts with: "${cleanedContent.substring(0, 10)}", ends with: "${cleanedContent.slice(-10)}"`,
+        cleanedContent
+      };
+    }
+    
+    // Step 3: Parse JSON
+    let parsedData: any;
+    try {
+      parsedData = JSON.parse(cleanedContent);
+    } catch (parseError) {
+      return {
+        success: false,
+        error: `JSON parsing failed: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`,
+        cleanedContent
+      };
+    }
+    
+    // Step 4: Programmatic schema validation against QUESTION_LIST_SCHEMA
+    console.log('🔍 Performing programmatic schema validation against QUESTION_LIST_SCHEMA...');
+    const schemaValidation = validateAgainstQuestionListSchema(parsedData);
+    
+    if (!schemaValidation.valid) {
+      return {
+        success: false,
+        error: `Schema validation failed: ${schemaValidation.error}`,
+        cleanedContent
+      };
+    }
+    
+    console.log('✅ Schema validation passed!');
+    
+    // Step 5: Convert to strongly typed QuestionListItem array
+    const validatedQuestions: QuestionListItem[] = parsedData.map((item: any) => ({
+      question: item.question,
+      questionSummary: item.questionSummary,
+      standard: item.standard,
+      rigor: item.rigor as 'mild' | 'medium' | 'spicy',
+      justification: item.justification
+    }));
+    
+    console.log(`✅ Successfully extracted and validated ${validatedQuestions.length} questions against QUESTION_LIST_SCHEMA`);
+    return {
+      success: true,
+      data: validatedQuestions,
+      cleanedContent
+    };
+    
+  } catch (error) {
+    return {
+      success: false,
+      error: `Unexpected error during extraction: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      cleanedContent: rawContent
+    };
+  }
+}
+
 export interface EducationalStandard {
   code: string;
   description: string;
@@ -77,6 +264,7 @@ const ANALYSIS_PROMPT = `Using only your knowledge of the {JURISDICTIONS}, analy
 
 Output the results strictly as a JSON array of objects (no additional text), where each object has the keys:
 - "question" (integer): The question number
+- "questionSummary" (string): Brief 3-5 word description of the question (e.g., "Prime factorization problem", "Integer addition problem")
 - "standard" (string): The standard code (e.g., "6.NS.C.7", "F-IF.A.1")  
 - "rigor" (string): Either "mild", "medium", or "spicy"
 - "justification" (string): Brief explanation of your rigor assessment
@@ -352,29 +540,57 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       text: string;
       context: string;
       aiResults: {
+        gpt5?: AIAnalysisResult;
         grok: AIAnalysisResult;
       };
     }>;
   }> {
     try {
-      console.log('Analyzing document with custom prompt configuration (Grok only)');
+      console.log('Analyzing document with custom prompt configuration with GPT-5 (primary) and Grok (fallback)');
       
+      // Try GPT-5 first with standardized QUESTION_LIST_SCHEMA format
+      let gpt5Result: AIAnalysisResult | null = null;
+      try {
+        console.log('Attempting GPT-5 analysis with custom configuration...');
+        
+        // Use the standardized generatePromptWithStandards for GPT-5 compatibility
+        const focusStandards = customization?.focusStandards;
+        const jurisdictionPriority = customization?.jurisdictionPriority || jurisdictions;
+        
+        gpt5Result = await this.analyzeGPT5WithPrompt(
+          `Analyze this educational document (${mimeType}) for standards alignment and rigor level.`,
+          `Document path: ${filePath}. Focus on jurisdictions: ${jurisdictionPriority.join(', ')}. Custom configuration applied.`,
+          jurisdictionPriority,
+          this.generatePromptWithStandards(focusStandards, jurisdictionPriority)
+        );
+        console.log('✅ GPT-5 analysis with custom configuration successful');
+      } catch (error) {
+        console.error('⚠️ GPT-5 analysis with custom configuration failed, falling back to Grok:', error);
+      }
+      
+      // Fallback to Grok with the full custom prompt
       const customPrompt = this.generateCustomPrompt(customization);
-      
-      const grokResult = await this.analyzeGrokWithPrompt(
+      const grokResult = gpt5Result || await this.analyzeGrokWithPrompt(
         `Analyze this educational document (${mimeType}) for standards alignment and rigor level.`,
         `Document path: ${filePath}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
         jurisdictions,
         customPrompt
-      ).catch(() => this.getDefaultResult());
+      ).catch((error) => {
+        console.error('Both GPT-5 and Grok analysis failed:', error);
+        return this.getDefaultResult();
+      });
+      
+      // Build response with both results when available
+      const aiResults: any = { grok: grokResult };
+      if (gpt5Result) {
+        aiResults.gpt5 = gpt5Result;
+      }
       
       return {
         questions: [{
           text: "Educational content analysis from uploaded document",
           context: `Document type: ${mimeType}, Jurisdictions: ${jurisdictions.join(', ')}, Custom Analysis: ${customization ? 'Yes' : 'No'}`,
-          aiResults: {
-            grok: grokResult
-          }
+          aiResults
         }]
       };
     } catch (error) {
@@ -403,35 +619,50 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     try {
       console.log('Analyzing document content with length:', documentContent.length);
       
-      console.log('Using Grok only for document analysis');
-      const grokResult = await this.analyzeGrok(
+      console.log('Starting document analysis with GPT-5 (primary) and Grok (fallback)');
+      
+      // Try GPT-5 first with the proper GPT-5 prompt
+      let gpt5Result: AIAnalysisResult | null = null;
+      try {
+        console.log('Attempting GPT-5 analysis...');
+        gpt5Result = await this.analyzeGPT5(
+          `Analyze this educational document content for standards alignment and rigor level.`,
+          `Document content: ${documentContent}\n\nDocument type: ${mimeType}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
+          jurisdictions
+        );
+        console.log('✅ GPT-5 analysis successful');
+      } catch (error) {
+        console.error('⚠️ GPT-5 analysis failed, falling back to Grok:', error);
+      }
+      
+      // Use GPT-5 result if successful, otherwise fall back to Grok
+      const grokResult = gpt5Result || await this.analyzeGrok(
         `Analyze this educational document content for standards alignment and rigor level.`,
         `Document content: ${documentContent}\n\nDocument type: ${mimeType}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
         jurisdictions
       ).catch((error) => {
-        console.error('GPT-5 analysis failed:', error);
+        console.error('Both GPT-5 and Grok analysis failed:', error);
         return this.getDefaultResult();
       });
       
-      // Check if Grok returned individual questions - parse from raw_response since jsonResponse isn't saved to DB
-      let parsedGrokResponse = null;
+      // Check if Grok returned individual questions - parse from raw_response using robust extraction
+      let extractedQuestions: QuestionListItem[] | null = null;
       if (grokResult.rawResponse && grokResult.rawResponse.choices && grokResult.rawResponse.choices[0]) {
         const rawContent = grokResult.rawResponse.choices[0].message?.content || '';
-        try {
-          // Clean and parse the JSON from raw response
-          const cleanContent = rawContent.replace(/\\"/g, '"').trim();
-          if (cleanContent.startsWith('[') && cleanContent.endsWith(']')) {
-            parsedGrokResponse = JSON.parse(cleanContent);
-            console.log(`✅ PARSED FROM RAW: Successfully parsed ${parsedGrokResponse.length} questions from raw response`);
-          }
-        } catch (parseError) {
-          console.log('⚠️ Could not parse JSON from raw response:', parseError);
+        console.log('Attempting robust JSON extraction from Grok response...');
+        
+        const extractionResult = extractAndValidateQuestionList(rawContent);
+        if (extractionResult.success && extractionResult.data) {
+          extractedQuestions = extractionResult.data;
+          console.log(`✅ ROBUST EXTRACTION: Successfully extracted ${extractedQuestions.length} validated questions`);
+        } else {
+          console.log('⚠️ Robust extraction failed:', extractionResult.error);
         }
       }
       
-      // Check if we successfully parsed the JSON array format
-      if (parsedGrokResponse && Array.isArray(parsedGrokResponse)) {
-        console.log(`✅ NEW FORMAT: Creating ${parsedGrokResponse.length} individual question entries from parsed JSON array`);
+      // Check if we successfully extracted the validated questions
+      if (extractedQuestions && extractedQuestions.length > 0) {
+        console.log(`✅ NEW FORMAT: Creating ${extractedQuestions.length} individual question entries from validated data`);
         
         // Import the commonStandardsProjectService for standard lookups
         const { commonStandardsProjectService } = await import('./commonStandardsProjectService');
@@ -440,41 +671,41 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         const jurisdictionId = await this.getJurisdictionIdFromContext(jurisdictions);
         console.log(`🎯 Using jurisdiction context for targeted lookups: ${jurisdictionId || 'fallback to all jurisdictions'}`);
         
-        // Process each problem and lookup standard descriptions
+        // Process each validated question and lookup standard descriptions
         const questionsWithStandardDescriptions = await Promise.all(
-          parsedGrokResponse.map(async (problem: any) => {
-            let standardDescription = `Question ${problem.question}: ${problem.standard}`;
+          extractedQuestions.map(async (question: QuestionListItem) => {
+            let standardDescription = question.questionSummary || `Question ${question.question}: ${question.standard}`;
             
             // Lookup the actual standard description from Common Standards Project API
             try {
-              const standardDetails = await commonStandardsProjectService.lookupStandardByCode(problem.standard || problem.standardCode, jurisdictionId);
+              const standardDetails = await commonStandardsProjectService.lookupStandardByCode(question.standard, jurisdictionId);
               if (standardDetails && standardDetails.description) {
                 standardDescription = standardDetails.description;
-                console.log(`✅ Found standard description for ${problem.standard}: ${standardDetails.description.substring(0, 60)}...`);
+                console.log(`✅ Found standard description for ${question.standard}: ${standardDetails.description.substring(0, 60)}...`);
               } else {
-                console.log(`⚠️ No description found for standard: ${problem.standard}`);
+                console.log(`⚠️ No description found for standard: ${question.standard}`);
               }
             } catch (error) {
-              console.log(`⚠️ Error looking up standard ${problem.standard}:`, (error as Error).message);
+              console.log(`⚠️ Error looking up standard ${question.standard}:`, (error as Error).message);
             }
             
             return {
               text: standardDescription,
-              context: `Question ${problem.question}: Mathematics problem analyzing ${problem.standard}`,
-              problemNumber: problem.question || problem.problemNumber, // Handle both field names
+              context: `Question ${question.question}: ${question.questionSummary}`,
+              problemNumber: question.question,
               aiResults: {
                 grok: {
                   standards: [{
-                    code: problem.standard || problem.standardCode,
+                    code: question.standard,
                     description: standardDescription,
                     jurisdiction: jurisdictions[0] || "Common Core",
                     gradeLevel: "9-12",
                     subject: "Mathematics"
                   }],
                 rigor: {
-                  level: (problem.rigor || problem.rigorLevel) as 'mild' | 'medium' | 'spicy',
-                  dokLevel: (problem.rigor || problem.rigorLevel) === 'mild' ? 'DOK 1' : (problem.rigor || problem.rigorLevel) === 'medium' ? 'DOK 2' : 'DOK 3',
-                  justification: problem.justification || problem.rigorJustification || `${problem.rigor || problem.rigorLevel} rigor level based on problem complexity`,
+                  level: question.rigor,
+                  dokLevel: question.rigor === 'mild' ? 'DOK 1' : question.rigor === 'medium' ? 'DOK 2' : 'DOK 3',
+                  justification: question.justification,
                   confidence: 0.85
                 },
                 rawResponse: grokResult.rawResponse,
@@ -743,8 +974,11 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
             content: `Question: ${questionText}\n\nContext: ${context}`
           }
         ],
-        response_format: { type: "json_object" },
         max_tokens: 1000,
+        response_format: {
+          type: "json_schema",
+          json_schema: QUESTION_LIST_SCHEMA
+        }
       });
 
       const processingTime = Date.now() - startTime;
@@ -783,8 +1017,11 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
             content: `Question: ${questionText}\n\nContext: ${context}`
           }
         ],
-        response_format: { type: "json_object" },
         max_tokens: 1000,
+        response_format: {
+          type: "json_schema",
+          json_schema: QUESTION_LIST_SCHEMA
+        }
       });
 
       const processingTime = Date.now() - startTime;
@@ -833,27 +1070,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         max_tokens: 10000,
         response_format: {
           type: "json_schema",
-          json_schema: {
-            name: "question_analysis_array",
-            schema: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  question: { type: "integer" },
-                  standard: { type: "string" },
-                  rigor: { 
-                    type: "string",
-                    enum: ["mild", "medium", "spicy"]
-                  },
-                  justification: { type: "string" }
-                },
-                required: ["question", "standard", "rigor", "justification"],
-                additionalProperties: false
-              }
-            },
-            strict: true
-          }
+          json_schema: QUESTION_LIST_SCHEMA
         }
       });
 
@@ -1003,27 +1220,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         max_tokens: 10000,
         response_format: {
           type: "json_schema",
-          json_schema: {
-            name: "question_analysis_array",
-            schema: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  question: { type: "integer" },
-                  standard: { type: "string" },
-                  rigor: { 
-                    type: "string",
-                    enum: ["mild", "medium", "spicy"]
-                  },
-                  justification: { type: "string" }
-                },
-                required: ["question", "standard", "rigor", "justification"],
-                additionalProperties: false
-              }
-            },
-            strict: true
-          }
+          json_schema: QUESTION_LIST_SCHEMA
         }
       });
 
@@ -1041,82 +1238,42 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       console.log('Raw content length:', rawContent.length);
       console.log('=== END STRUCTURED JSON RESPONSE ===');
       
-      try {
-        console.log('=== ATTEMPTING JSON PARSE ===');
-        const parsedResponse = JSON.parse(rawContent);
-        console.log('JSON.parse SUCCESS! Type:', typeof parsedResponse, 'isArray:', Array.isArray(parsedResponse));
-        if (Array.isArray(parsedResponse)) {
-          console.log('Array length:', parsedResponse.length);
-        }
+      // Use robust JSON extraction for GPT-5 responses
+      console.log('=== ATTEMPTING ROBUST JSON EXTRACTION ===');
+      const extractionResult = extractAndValidateQuestionList(rawContent);
+      
+      if (extractionResult.success && extractionResult.data) {
+        console.log('✅ GPT-5 ROBUST EXTRACTION SUCCESS!');
+        const validatedQuestions = extractionResult.data;
+        console.log('Number of validated questions:', validatedQuestions.length);
         
-        // Handle new clean JSON array format
-        if (Array.isArray(parsedResponse)) {
-          console.log('=== GROK NEW ARRAY FORMAT ===');
-          console.log('Number of questions parsed:', parsedResponse.length);
-          
-          // Transform with Common Standards lookup
-          const transformedResults = await this.transformGrokResponse(parsedResponse, jurisdictions);
-          
-          const questions = parsedResponse.map((item: any, index: number) => {
-            const transformed = transformedResults[index];
-            console.log(`Question ${item.question}: ${item.standard} (${item.rigor})`);
-            
-            return {
-              questionNumber: item.question.toString(),
-              questionText: `Question ${item.question}: ${item.standard} analysis`,
-              standards: transformed.standards,
-              rigor: transformed.rigor,
-              rawResponse: gpt5Response,
-              processingTime,
-              aiEngine: 'grok'
-            };
-          });
-          
-          // Return first question's data for compatibility
-          const firstQuestion = questions[0] || {
-            standards: [],
-            rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'No questions found', confidence: 0.1 }
-          };
+        // Transform with Common Standards lookup
+        const transformedResults = await this.transformGrokResponse(
+          validatedQuestions.map(q => ({
+            question: q.question,
+            standard: q.standard,
+            rigor: q.rigor,
+            justification: q.justification
+          })), 
+          jurisdictions
+        );
+        
+        const questions = validatedQuestions.map((item: QuestionListItem, index: number) => {
+          const transformed = transformedResults[index];
+          console.log(`Question ${item.question}: ${item.standard} (${item.rigor})`);
           
           return {
-            standards: firstQuestion.standards,
-            rigor: firstQuestion.rigor,
+            questionNumber: item.question.toString(),
+            questionText: `Question ${item.question}: ${item.questionSummary}`,
+            standards: transformed.standards,
+            rigor: transformed.rigor,
             rawResponse: gpt5Response,
             processingTime,
-            jsonResponse: parsedResponse,
-            allQuestions: questions
-          };
-        }
-        
-        // Fallback: Handle old format
-        const problems = parsedResponse.problems || [];
-        console.log('=== GROK OLD FORMAT FALLBACK ===');
-        console.log('Number of problems parsed:', problems.length);
-        
-        const questions = problems.map((problem: any) => {
-          console.log(`Problem ${problem.problemNumber}: ${problem.standardCode} (${problem.rigorLevel})`);
-          return {
-            questionNumber: problem.problemNumber,
-            questionText: `Problem ${problem.problemNumber}: ${problem.standardDescription}`,
-            standards: [{
-              code: problem.standardCode,
-              description: problem.standardDescription,
-              jurisdiction: "Common Core",
-              gradeLevel: "9-12",
-              subject: "Mathematics"
-            }],
-            rigor: {
-              level: problem.rigorLevel as 'mild' | 'medium' | 'spicy',
-              dokLevel: problem.rigorLevel === 'mild' ? 'DOK 1' : problem.rigorLevel === 'medium' ? 'DOK 2' : 'DOK 3',
-              justification: `${problem.rigorLevel} rigor level based on problem complexity`,
-              confidence: 0.85
-            }
+            aiEngine: 'gpt-5'
           };
         });
         
-        console.log(`Successfully parsed ${questions.length} problems from structured output`);
-        
-        // Return first question's data for compatibility, store all questions
+        // Return first question's data for compatibility
         const firstQuestion = questions[0] || {
           standards: [],
           rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'No questions found', confidence: 0.1 }
@@ -1127,24 +1284,22 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
           rigor: firstQuestion.rigor,
           rawResponse: gpt5Response,
           processingTime,
-          jsonResponse: parsedResponse, // Store the full parsed JSON response
-          allQuestions: questions // Store all parsed questions
+          jsonResponse: validatedQuestions, // Store validated questions
+          allQuestions: questions
         };
-      } catch (parseError) {
-        console.error('=== JSON PARSE FAILED ===');
-        console.error('Parse error:', parseError instanceof Error ? parseError.message : 'Unknown error');
-        console.error('Raw content length:', rawContent.length);
-        console.error('Raw content (first 300 chars):', rawContent.substring(0, 300));
-        console.error('Raw content (last 100 chars):', rawContent.slice(-100));
+      } else {
+        console.error('❌ GPT-5 ROBUST EXTRACTION FAILED:', extractionResult.error);
+        console.error('Cleaned content was:', extractionResult.cleanedContent?.substring(0, 500));
         
         return {
           standards: [],
-          rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'JSON parsing failed', confidence: 0.1 },
+          rigor: { level: 'mild', dokLevel: 'DOK 1', justification: `JSON extraction failed: ${extractionResult.error}`, confidence: 0.1 },
           rawResponse: gpt5Response,
           processingTime,
           allQuestions: []
         };
       }
+      
     } catch (error) {
       console.error('=== GROK JSON PARSE ERROR DEBUG ===');
       console.error('Error:', error instanceof Error ? error.message : 'Unknown error');
