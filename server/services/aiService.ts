@@ -987,7 +987,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
             content: `Question: ${questionText}\n\nContext: ${context}`
           }
         ],
-        max_tokens: 1000,
+        max_completion_tokens: 1000,
         response_format: {
           type: "json_schema",
           json_schema: QUESTION_LIST_SCHEMA
@@ -1030,7 +1030,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
             content: `Question: ${questionText}\n\nContext: ${context}`
           }
         ],
-        max_tokens: 1000,
+        max_completion_tokens: 1000,
         response_format: {
           type: "json_schema",
           json_schema: QUESTION_LIST_SCHEMA
@@ -1081,7 +1081,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
             content: `Question: ${questionText}\n\nContext: ${context}`
           }
         ],
-        max_tokens: 10000,
+        max_completion_tokens: 10000,
         response_format: {
           type: "json_schema",
           json_schema: QUESTION_LIST_SCHEMA
@@ -1231,7 +1231,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
             content: `Question: ${questionText}\n\nContext: ${context}`
           }
         ],
-        max_tokens: 10000,
+        max_completion_tokens: 10000,
         response_format: {
           type: "json_schema",
           json_schema: QUESTION_LIST_SCHEMA
