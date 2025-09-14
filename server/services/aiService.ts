@@ -325,24 +325,27 @@ export interface PromptCustomization {
   outputFormat?: 'detailed' | 'concise' | 'standardized'; // Output format preference
 }
 
-const ANALYSIS_PROMPT = `Answer deterministically. Always follow these steps in order:
-(1) Identify the {JURISDICTIONS} standard. 
-(2) Assign a rigor level from 1–3. 
-Do not vary phrasing across runs.
+const ANALYSIS_PROMPT = `You are an expert curriculum alignment engine.
 
-Using only the {JURISDICTIONS} standards for {COURSE}, evaluate the attached assessment and, for each question, provide the relevant standard and assign a level of rigor (1-3).
+Task:
+Given a single assessment question, identify:
+1. The most relevant {JURISDICTIONS} standard (at the {COURSE} level, unless the question clearly belongs to another domain).
+2. The rigor level (1 = recall/procedure, 2 = application, 3 = reasoning/analysis).
 
-Output the results strictly as a JSON array of objects (no additional text), where each object has the keys:
-- "question" (integer): The question number
-- "questionSummary" (string): Brief 3-5 word description of the question
-- "standard" (string): The standard code (e.g., "A-SSE.A.1", "F-IF.A.1")  
-- "rigor" (string): Either "mild", "medium", or "spicy" (where 1=mild, 2=medium, 3=spicy)
-- "justification" (string): Brief explanation of your rigor assessment
+Guidelines:
+- Look only at the instruction line. Ignore numbers or specific values.
+- Always use the official {JURISDICTIONS} code format (e.g., A-SSE.1, A-REI.3, N-Q.1).
+- Be consistent: if two questions use the same instruction type (e.g., "Complete the prime factorization..."), they must map to the same standard every time.
+- If more than one standard seems plausible, choose the single *most directly assessed* one, not supporting skills.
+- Output strictly in JSON.
 
-RIGOR LEVELS:
-- mild (1): Basic recall, recognition, or simple application
-- medium (2): Multi-step problems, analysis, or interpretive tasks  
-- spicy (3): Synthesis, evaluation, reasoning, or complex real-world application`;
+Output schema:
+{
+  "question_number": <int>,
+  "instruction_text": "<string>",
+  "standard": "<{JURISDICTIONS} code>",
+  "rigor": <1|2|3>
+}`;
 
 export class AIService {
   // Transform new Grok JSON format to match downstream contracts
@@ -1295,12 +1298,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
 
 Focus specifically on Question ${questionNumber}: ${questionText.substring(0, 200)}...
 
-Analyze ONLY this question and provide the result as a JSON object with the keys:
-- "question" (integer): ${questionNumber}
-- "questionSummary" (string): Brief 3-5 word description
-- "standard" (string): The standard code (e.g., "A-SSE.A.1", "F-IF.A.1")  
-- "rigor" (string): Either "mild", "medium", or "spicy"
-- "justification" (string): Brief explanation of your rigor assessment`;
+Analyze ONLY this question and provide the result as a single JSON object following the exact output schema above.`;
 
       const gpt5Response = await openai.responses.create({
         model: OPENAI_MODEL,
@@ -1317,32 +1315,42 @@ Analyze ONLY this question and provide the result as a JSON object with the keys
       const responseText = gpt5Response.text || gpt5Response.message?.content || '';
       const processingTime = Date.now() - startTime;
 
-      // Extract and validate the single question result
-      const extractedResult = this.extractAndValidateQuestionList(responseText);
-      
-      if (!extractedResult || !extractedResult.questions || extractedResult.questions.length === 0) {
-        throw new Error(`No valid question analysis found for question ${questionNumber}`);
+      // Parse the single question JSON response
+      let questionResult;
+      try {
+        // Clean and parse the JSON response
+        const cleanedText = responseText.replace(/```json\n?|\n?```/g, '').trim();
+        questionResult = JSON.parse(cleanedText);
+        
+        // Validate required fields
+        if (!questionResult.question_number || !questionResult.standard || !questionResult.rigor) {
+          throw new Error('Missing required fields in response');
+        }
+      } catch (parseError) {
+        console.error('Failed to parse single question analysis:', parseError);
+        throw new Error(`Failed to parse AI response for question ${questionNumber}: ${parseError.message}`);
       }
 
-      const questionResult = extractedResult.questions[0]; // Should be just one question
+      // Convert numeric rigor to level names  
+      const rigorLevel = questionResult.rigor === 1 ? 'mild' : questionResult.rigor === 2 ? 'medium' : 'spicy';
       
       const result: AIAnalysisResult = {
         standards: [{
           code: questionResult.standard,
-          description: `Standard ${questionResult.standard}`,
+          description: questionResult.instruction_text || `Standard ${questionResult.standard}`,
           jurisdiction: jurisdictions[0] || "Common Core State Standards",
           gradeLevel: "9-12",
           subject: "Mathematics"
         }],
         rigor: {
-          level: questionResult.rigor as 'mild' | 'medium' | 'spicy',
-          dokLevel: questionResult.rigor === 'mild' ? '1' : questionResult.rigor === 'medium' ? '2' : '3',
-          justification: questionResult.justification,
-          confidence: 0.85
+          level: rigorLevel,
+          dokLevel: `DOK ${questionResult.rigor}`,
+          justification: `Rigor level ${questionResult.rigor} based on instruction analysis`,
+          confidence: 0.90 // Higher confidence due to focused analysis
         },
         rawResponse: gpt5Response,
         processingTime,
-        jsonResponse: extractedResult,
+        jsonResponse: questionResult,
         aiEngine: 'openai'
       };
 
