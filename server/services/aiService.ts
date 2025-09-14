@@ -2,7 +2,7 @@ import OpenAI from "openai";
 import Anthropic from '@anthropic-ai/sdk';
 import { logger } from '../utils/logger';
 
-// Using OpenAI GPT-5 model for better analysis results
+// Using OpenAI GPT-5 model for better analysis results  
 const OPENAI_MODEL = "gpt-5";
 
 console.log(`AI Service initialized with OpenAI model: ${OPENAI_MODEL}`);
@@ -323,23 +323,19 @@ export interface PromptCustomization {
   outputFormat?: 'detailed' | 'concise' | 'standardized'; // Output format preference
 }
 
-const ANALYSIS_PROMPT = `Using your knowledge of {JURISDICTIONS} standards for {COURSE}, analyze the attached math test question by question. For each question, determine the most relevant standard, assign a level of rigor (mild, medium, or spicy), and provide a brief justification.
-
-Consider the course level "{COURSE}" when determining appropriate standards and rigor expectations. Standards and rigor should align with typical {COURSE} curriculum scope and sequence.
+const ANALYSIS_PROMPT = `Using only the {JURISDICTIONS} standards for {COURSE}, evaluate the attached assessment and, for each question, provide the relevant standard and assign a level of rigor (1-3).
 
 Output the results strictly as a JSON array of objects (no additional text), where each object has the keys:
 - "question" (integer): The question number
-- "questionSummary" (string): Brief 3-5 word description of the question (e.g., "Prime factorization problem", "Integer addition problem")
-- "standard" (string): The standard code (e.g., "6.NS.C.7", "F-IF.A.1")  
-- "rigor" (string): Either "mild", "medium", or "spicy"
+- "questionSummary" (string): Brief 3-5 word description of the question
+- "standard" (string): The standard code (e.g., "A-SSE.A.1", "F-IF.A.1")  
+- "rigor" (string): Either "mild", "medium", or "spicy" (where 1=mild, 2=medium, 3=spicy)
 - "justification" (string): Brief explanation of your rigor assessment
 
 RIGOR LEVELS:
-- mild: Basic recall, recognition, or simple application
-- medium: Multi-step problems, analysis, or interpretive tasks  
-- spicy: Synthesis, evaluation, reasoning, or complex real-world application
-
-Be accurate and consistent with {JURISDICTIONS} standards appropriate for {COURSE} level expectations.`;
+- mild (1): Basic recall, recognition, or simple application
+- medium (2): Multi-step problems, analysis, or interpretive tasks  
+- spicy (3): Synthesis, evaluation, reasoning, or complex real-world application`;
 
 export class AIService {
   // Transform new Grok JSON format to match downstream contracts
@@ -617,27 +613,27 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     }>;
   }> {
     try {
-      console.log('Analyzing document with custom prompt configuration with GPT-4o-mini (primary) and Grok (fallback)');
+      console.log('Analyzing document with custom prompt configuration with GPT-5 (primary) and Grok (fallback)');
       
-      // Try GPT-4o-mini first with standardized QUESTION_LIST_SCHEMA format
+      // Try GPT-5 first with standardized QUESTION_LIST_SCHEMA format
       let gpt5Result: AIAnalysisResult | null = null;
       try {
-        console.log('Attempting GPT-4o-mini analysis with custom configuration...');
+        console.log('Attempting GPT-5 analysis with custom configuration...');
         
-        // Use the standardized generatePromptWithStandards for GPT-4o-mini compatibility
-        const focusStandards = customization?.focusStandards;
+        // Use the simple proven prompt that worked perfectly with ChatGPT 5.0
         const jurisdictionPriority = customization?.jurisdictionPriority || jurisdictions;
+        const simplePrompt = ANALYSIS_PROMPT.replace('{JURISDICTIONS}', jurisdictionPriority.join(' and ')).replace('{COURSE}', course || 'General Mathematics');
         
         gpt5Result = await this.analyzeGPT5WithPrompt(
           `Analyze this educational document (${mimeType}) for standards alignment and rigor level.`,
           `Document path: ${filePath}. Focus on jurisdictions: ${jurisdictionPriority.join(', ')}. Custom configuration applied.`,
           jurisdictionPriority,
-          this.generatePromptWithStandards(focusStandards, jurisdictionPriority, course),
+          simplePrompt,
           course
         );
-        console.log('✅ GPT-4o-mini analysis with custom configuration successful');
+        console.log('✅ GPT-5 analysis with custom configuration successful');
       } catch (error) {
-        console.error('⚠️ GPT-4o-mini analysis with custom configuration failed, falling back to Grok:', error);
+        console.error('⚠️ GPT-5 analysis with custom configuration failed, falling back to Grok:', error);
       }
       
       // Fallback to Grok with the full custom prompt
