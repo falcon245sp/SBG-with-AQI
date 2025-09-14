@@ -325,7 +325,12 @@ export interface PromptCustomization {
   outputFormat?: 'detailed' | 'concise' | 'standardized'; // Output format preference
 }
 
-const ANALYSIS_PROMPT = `Using only the {JURISDICTIONS} standards for {COURSE}, evaluate the attached assessment and, for each question, provide the relevant standard and assign a level of rigor (1-3).
+const ANALYSIS_PROMPT = `Answer deterministically. Always follow these steps in order:
+(1) Identify the CCSS standard. 
+(2) Assign a rigor level from 1–3. 
+Do not vary phrasing across runs.
+
+Using only the {JURISDICTIONS} standards for {COURSE}, evaluate the attached assessment and, for each question, provide the relevant standard and assign a level of rigor (1-3).
 
 Output the results strictly as a JSON array of objects (no additional text), where each object has the keys:
 - "question" (integer): The question number
@@ -1194,7 +1199,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
           }
         ],
         max_completion_tokens: 10000,
-        temperature: 0.2,
+        temperature: 1.0,
         response_format: {
           type: "json_schema",
           json_schema: ANALYSIS_RESULT_SCHEMA
@@ -1398,7 +1403,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
           }
         ],
         max_completion_tokens: 10000,
-        temperature: 0.2,
+        temperature: 1.0,
         response_format: {
           type: "json_schema",
           json_schema: ANALYSIS_RESULT_SCHEMA
