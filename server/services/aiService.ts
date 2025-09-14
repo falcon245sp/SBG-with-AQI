@@ -2,11 +2,12 @@ import OpenAI from "openai";
 import Anthropic from '@anthropic-ai/sdk';
 import { logger } from '../utils/logger';
 
-// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+// the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR || "default_key"
+  apiKey: process.env.OPENAI_API_KEY
 });
 
+// Keep Grok client as fallback option
 const grok = new OpenAI({ 
   baseURL: "https://api.x.ai/v1", 
   apiKey: process.env.XAI_API_KEY || process.env.XAI_API_KEY_ENV_VAR || "default_key"
@@ -408,7 +409,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         `Document content: ${documentContent}\n\nDocument type: ${mimeType}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
         jurisdictions
       ).catch((error) => {
-        console.error('Grok analysis failed:', error);
+        console.error('GPT-5 analysis failed:', error);
         return this.getDefaultResult();
       });
       
@@ -806,7 +807,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     }
   }
 
-  async analyzeGrokWithPrompt(
+  async analyzeGPT5WithPrompt(
     questionText: string, 
     context: string, 
     jurisdictions: string[], 
@@ -817,8 +818,8 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     const prompt = basePrompt.replace('{JURISDICTIONS}', jurisdictions.join(' and '));
     
     try {
-      const response = await grok.chat.completions.create({
-        model: "grok-2-1212",
+      const response = await openai.chat.completions.create({
+        model: "gpt-5",
         messages: [
           {
             role: "system",
@@ -975,20 +976,20 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     }
   }
 
-  async analyzeGrok(questionText: string, context: string, jurisdictions: string[]): Promise<AIAnalysisResult> {
+  async analyzeGPT5(questionText: string, context: string, jurisdictions: string[]): Promise<AIAnalysisResult> {
     const startTime = Date.now();
-    let grokResponse: any = null;
+    let gpt5Response: any = null;
     
     try {
-      console.log('=== GROK API CALL DEBUG ===');
+      console.log('=== GPT-5 API CALL DEBUG ===');
       const dynamicPrompt = ANALYSIS_PROMPT.replace('{JURISDICTIONS}', jurisdictions.join(' and '));
       console.log('System prompt length:', dynamicPrompt.length);
       console.log('User content length:', `Question: ${questionText}\n\nContext: ${context}`.length);
-      console.log('Model:', "grok-2-1212");
+      console.log('Model:', "gpt-5");
       console.log('Max tokens:', 10000);
       
-      grokResponse = await grok.chat.completions.create({
-        model: "grok-2-1212",
+      gpt5Response = await openai.chat.completions.create({
+        model: "gpt-5",
         messages: [
           {
             role: "system",
@@ -1027,13 +1028,13 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       });
 
       console.log('=== GROK RESPONSE DEBUG ===');
-      console.log('Response status:', grokResponse.choices?.[0]?.finish_reason);
-      console.log('Content length:', grokResponse.choices?.[0]?.message?.content?.length || 0);
-      console.log('Raw content (first 500 chars):', (grokResponse.choices?.[0]?.message?.content || '').substring(0, 500));
-      console.log('Raw content (last 100 chars):', (grokResponse.choices?.[0]?.message?.content || '').slice(-100));
+      console.log('Response status:', gpt5Response.choices?.[0]?.finish_reason);
+      console.log('Content length:', gpt5Response.choices?.[0]?.message?.content?.length || 0);
+      console.log('Raw content (first 500 chars):', (gpt5Response.choices?.[0]?.message?.content || '').substring(0, 500));
+      console.log('Raw content (last 100 chars):', (gpt5Response.choices?.[0]?.message?.content || '').slice(-100));
       
       // Parse structured JSON response
-      const rawContent = grokResponse.choices?.[0]?.message?.content || '';
+      const rawContent = gpt5Response.choices?.[0]?.message?.content || '';
       const processingTime = Date.now() - startTime;
       
       console.log('=== GROK STRUCTURED JSON RESPONSE ===');
@@ -1065,7 +1066,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
               questionText: `Question ${item.question}: ${item.standard} analysis`,
               standards: transformed.standards,
               rigor: transformed.rigor,
-              rawResponse: grokResponse,
+              rawResponse: gpt5Response,
               processingTime,
               aiEngine: 'grok'
             };
@@ -1080,7 +1081,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
           return {
             standards: firstQuestion.standards,
             rigor: firstQuestion.rigor,
-            rawResponse: grokResponse,
+            rawResponse: gpt5Response,
             processingTime,
             jsonResponse: parsedResponse,
             allQuestions: questions
@@ -1124,7 +1125,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         return {
           standards: firstQuestion.standards,
           rigor: firstQuestion.rigor,
-          rawResponse: grokResponse,
+          rawResponse: gpt5Response,
           processingTime,
           jsonResponse: parsedResponse, // Store the full parsed JSON response
           allQuestions: questions // Store all parsed questions
@@ -1139,7 +1140,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         return {
           standards: [],
           rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'JSON parsing failed', confidence: 0.1 },
-          rawResponse: grokResponse,
+          rawResponse: gpt5Response,
           processingTime,
           allQuestions: []
         };
@@ -1150,8 +1151,8 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       
       // Now we can access the response from the outer scope
-      if (grokResponse?.choices?.[0]?.message?.content) {
-        const failedContent = grokResponse.choices[0].message.content;
+      if (gpt5Response?.choices?.[0]?.message?.content) {
+        const failedContent = gpt5Response.choices[0].message.content;
         console.error('=== MALFORMED JSON CONTENT ANALYSIS ===');
         console.error('Content length:', failedContent.length);
         
@@ -1729,7 +1730,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         jurisdictions,
         dynamicPrompt
       ).catch((error) => {
-        console.error('Grok analysis failed:', error);
+        console.error('GPT-5 analysis failed:', error);
         return this.getDefaultResult();
       });
       
@@ -1756,6 +1757,22 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     }
   }
 
+  // Compatibility wrappers for existing method calls (delegates to GPT-5)
+  async analyzeGrok(questionText: string, context: string, jurisdictions: string[]): Promise<AIAnalysisResult> {
+    console.log('Using GPT-5 for analysis (via analyzeGrok compatibility wrapper)');
+    return this.analyzeGPT5(questionText, context, jurisdictions);
+  }
+
+  async analyzeGrokWithPrompt(
+    questionText: string, 
+    context: string, 
+    jurisdictions: string[], 
+    customPrompt?: string
+  ): Promise<AIAnalysisResult> {
+    console.log('Using GPT-5 for analysis (via analyzeGrokWithPrompt compatibility wrapper)');
+    return this.analyzeGPT5WithPrompt(questionText, context, jurisdictions, customPrompt);
+  }
+
   async analyzeQuestion(questionText: string, context: string, jurisdictions: string[]): Promise<{
     grok: AIAnalysisResult;
   }> {
@@ -1763,7 +1780,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     console.log('Using Grok for question analysis');
     const grok = await this.analyzeGrok(questionText, context, jurisdictions)
       .catch((error) => {
-        console.error('Grok analysis failed:', error);
+        console.error('GPT-5 analysis failed:', error);
         return this.getDefaultResult();
       });
 
