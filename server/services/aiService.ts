@@ -1194,7 +1194,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
           }
         ],
         max_completion_tokens: 10000,
-        temperature: 1.0,
+        temperature: 0.2,
         response_format: {
           type: "json_schema",
           json_schema: ANALYSIS_RESULT_SCHEMA
@@ -1398,7 +1398,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
           }
         ],
         max_completion_tokens: 10000,
-        temperature: 1.0,
+        temperature: 0.2,
         response_format: {
           type: "json_schema",
           json_schema: ANALYSIS_RESULT_SCHEMA
