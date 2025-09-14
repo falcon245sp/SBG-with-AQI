@@ -326,7 +326,7 @@ export interface PromptCustomization {
 }
 
 const ANALYSIS_PROMPT = `Answer deterministically. Always follow these steps in order:
-(1) Identify the CCSS standard. 
+(1) Identify the {JURISDICTIONS} standard. 
 (2) Assign a rigor level from 1–3. 
 Do not vary phrasing across runs.
 
