@@ -145,8 +145,8 @@ export function extractAndValidateQuestionList(rawContent: string): {
     cleanedContent = cleanedContent.replace(/```\s*$/gm, '');
     
     // Remove common wrapper text patterns
-    cleanedContent = cleanedContent.replace(/^.*?(?=\[)/s, ''); // Remove everything before first [
-    cleanedContent = cleanedContent.replace(/(?<=\]).*$/s, ''); // Remove everything after last ]
+    cleanedContent = cleanedContent.replace(/^[\s\S]*?(?=\[)/, ''); // Remove everything before first [
+    cleanedContent = cleanedContent.replace(/(?<=\])[\s\S]*$/, ''); // Remove everything after last ]
     
     // Remove escape sequences that might break parsing
     cleanedContent = cleanedContent.replace(/\\"/g, '"');
@@ -260,7 +260,9 @@ export interface PromptCustomization {
   outputFormat?: 'detailed' | 'concise' | 'standardized'; // Output format preference
 }
 
-const ANALYSIS_PROMPT = `Using only your knowledge of the {JURISDICTIONS}, analyze the attached math test question by question. For each question, determine the most relevant standard, assign a level of rigor (mild, medium, or spicy), and provide a brief justification.
+const ANALYSIS_PROMPT = `Using your knowledge of {JURISDICTIONS} standards for {COURSE}, analyze the attached math test question by question. For each question, determine the most relevant standard, assign a level of rigor (mild, medium, or spicy), and provide a brief justification.
+
+Consider the course level "{COURSE}" when determining appropriate standards and rigor expectations. Standards and rigor should align with typical {COURSE} curriculum scope and sequence.
 
 Output the results strictly as a JSON array of objects (no additional text), where each object has the keys:
 - "question" (integer): The question number
@@ -274,7 +276,7 @@ RIGOR LEVELS:
 - medium: Multi-step problems, analysis, or interpretive tasks  
 - spicy: Synthesis, evaluation, reasoning, or complex real-world application
 
-Be accurate and consistent with {JURISDICTIONS} standards.`;
+Be accurate and consistent with {JURISDICTIONS} standards appropriate for {COURSE} level expectations.`;
 
 export class AIService {
   // Transform new Grok JSON format to match downstream contracts
@@ -329,14 +331,18 @@ export class AIService {
     return transformedResults;
   }
 
-  private generatePromptWithStandards(focusStandards?: string[], jurisdictions?: string[]): string {
+  private generatePromptWithStandards(focusStandards?: string[], jurisdictions?: string[], course?: string): string {
     // Use provided jurisdictions or default to Common Core
     const targetJurisdictions = jurisdictions && jurisdictions.length > 0 ? jurisdictions : ['Common Core'];
     const primaryJurisdiction = targetJurisdictions[0];
     
-    let prompt = `You are an expert in education and Standards-Based Grading (SBG) aligned to multiple jurisdiction standards. 
+    const courseContext = course || 'General Mathematics';
+    
+    let prompt = `You are an expert in education and Standards-Based Grading (SBG) aligned to multiple jurisdiction standards for ${courseContext}. 
 
 CRITICAL TASK: Analyze the provided educational document and identify ALL INDIVIDUAL QUESTIONS/PROBLEMS. Many documents contain multiple questions that need separate analysis.
+
+Consider the course level "${courseContext}" when determining appropriate standards and rigor expectations. Standards and rigor should align with typical ${courseContext} curriculum scope and sequence.
 
 For each individual question/problem you find:
 1. Extract the complete question text
@@ -429,6 +435,7 @@ IMPORTANT:
 - Each question must have its own complete analysis
 - EVERY object MUST include "questionSummary" field with a brief description
 - Use standards from the TARGET JURISDICTIONS listed above (${primaryJurisdiction})
+- Consider ${courseContext} level expectations when assigning standards and rigor
 - Base analysis solely on the provided document content
 
 RESPONSE FORMAT EXAMPLE (clean JSON only):
@@ -534,7 +541,8 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     filePath: string, 
     mimeType: string, 
     jurisdictions: string[], 
-    customization?: PromptCustomization
+    customization?: PromptCustomization,
+    course?: string
   ): Promise<{
     questions: Array<{
       text: string;
@@ -561,7 +569,8 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
           `Analyze this educational document (${mimeType}) for standards alignment and rigor level.`,
           `Document path: ${filePath}. Focus on jurisdictions: ${jurisdictionPriority.join(', ')}. Custom configuration applied.`,
           jurisdictionPriority,
-          this.generatePromptWithStandards(focusStandards, jurisdictionPriority)
+          this.generatePromptWithStandards(focusStandards, jurisdictionPriority, course),
+          course
         );
         console.log('✅ GPT-5 analysis with custom configuration successful');
       } catch (error) {
@@ -574,7 +583,8 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         `Analyze this educational document (${mimeType}) for standards alignment and rigor level.`,
         `Document path: ${filePath}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
         jurisdictions,
-        customPrompt
+        customPrompt,
+        course
       ).catch((error) => {
         console.error('Both GPT-5 and Grok analysis failed:', error);
         return this.getDefaultResult();
@@ -607,7 +617,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     }
   }
 
-  async analyzeDocument(documentContent: string, mimeType: string, jurisdictions: string[]): Promise<{
+  async analyzeDocument(documentContent: string, mimeType: string, jurisdictions: string[], course?: string): Promise<{
     questions: Array<{
       text: string;
       context: string;
@@ -628,7 +638,8 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         gpt5Result = await this.analyzeGPT5(
           `Analyze this educational document content for standards alignment and rigor level.`,
           `Document content: ${documentContent}\n\nDocument type: ${mimeType}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
-          jurisdictions
+          jurisdictions,
+          course
         );
         console.log('✅ GPT-5 analysis successful');
       } catch (error) {
@@ -639,7 +650,8 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       const grokResult = gpt5Result || await this.analyzeGrok(
         `Analyze this educational document content for standards alignment and rigor level.`,
         `Document content: ${documentContent}\n\nDocument type: ${mimeType}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
-        jurisdictions
+        jurisdictions,
+        course
       ).catch((error) => {
         console.error('Both GPT-5 and Grok analysis failed:', error);
         return this.getDefaultResult();
@@ -955,11 +967,12 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     questionText: string, 
     context: string, 
     jurisdictions: string[], 
-    customPrompt?: string
+    customPrompt?: string,
+    course?: string
   ): Promise<AIAnalysisResult> {
     const startTime = Date.now();
     const basePrompt = customPrompt || ANALYSIS_PROMPT;
-    const prompt = basePrompt.replace('{JURISDICTIONS}', jurisdictions.join(' and '));
+    const prompt = basePrompt.replace('{JURISDICTIONS}', jurisdictions.join(' and ')).replace('{COURSE}', course || 'General Mathematics');
     
     try {
       const response = await openai.chat.completions.create({
@@ -1001,7 +1014,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     }
   }
 
-  async analyzeChatGPT(questionText: string, context: string, jurisdictions: string[]): Promise<AIAnalysisResult> {
+  async analyzeChatGPT(questionText: string, context: string, jurisdictions: string[], course?: string): Promise<AIAnalysisResult> {
     const startTime = Date.now();
     
     try {
@@ -1010,7 +1023,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         messages: [
           {
             role: "system",
-            content: ANALYSIS_PROMPT.replace('{JURISDICTIONS}', jurisdictions.join(' and '))
+            content: ANALYSIS_PROMPT.replace('{JURISDICTIONS}', jurisdictions.join(' and ')).replace('{COURSE}', course || 'General Mathematics')
           },
           {
             role: "user",
@@ -1048,11 +1061,12 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     questionText: string, 
     context: string, 
     jurisdictions: string[], 
-    customPrompt?: string
+    customPrompt?: string,
+    course?: string
   ): Promise<AIAnalysisResult> {
     const startTime = Date.now();
     const basePrompt = customPrompt || ANALYSIS_PROMPT;
-    const prompt = basePrompt.replace('{JURISDICTIONS}', jurisdictions.join(' and '));
+    const prompt = basePrompt.replace('{JURISDICTIONS}', jurisdictions.join(' and ')).replace('{COURSE}', course || 'General Mathematics');
     
     try {
       const response = await openai.chat.completions.create({
@@ -1193,13 +1207,13 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     }
   }
 
-  async analyzeGPT5(questionText: string, context: string, jurisdictions: string[]): Promise<AIAnalysisResult> {
+  async analyzeGPT5(questionText: string, context: string, jurisdictions: string[], course?: string): Promise<AIAnalysisResult> {
     const startTime = Date.now();
     let gpt5Response: any = null;
     
     try {
       console.log('=== GPT-5 API CALL DEBUG ===');
-      const dynamicPrompt = ANALYSIS_PROMPT.replace('{JURISDICTIONS}', jurisdictions.join(' and '));
+      const dynamicPrompt = ANALYSIS_PROMPT.replace('{JURISDICTIONS}', jurisdictions.join(' and ')).replace('{COURSE}', course || 'General Mathematics');
       console.log('System prompt length:', dynamicPrompt.length);
       console.log('User content length:', `Question: ${questionText}\n\nContext: ${context}`.length);
       console.log('Model:', "gpt-5");
@@ -1445,7 +1459,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       }
 
       // Extract rigor assessment
-      const rigorMatch = content.match(/RIGOR ASSESSMENT:(.+?)$/is);
+      const rigorMatch = content.match(/RIGOR ASSESSMENT:([\s\S]+?)(?=\n\n|$)/i);
       if (rigorMatch) {
         const rigorText = rigorMatch[1].trim();
         console.log('Rigor section found:', rigorText);
@@ -1460,7 +1474,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
           rigor.dokLevel = `DOK ${dokMatch[1]}`;
         }
         
-        const justificationMatch = rigorText.match(/(?:because|justification|reason):\s*(.+?)(?:\n|confidence|$)/is);
+        const justificationMatch = rigorText.match(/(?:because|justification|reason):\s*(.+?)(?=\n|confidence|$)/i);
         if (justificationMatch) {
           rigor.justification = justificationMatch[1].trim();
         } else {
@@ -1723,7 +1737,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         const allStandardCodes = content.match(/[A-Z]+-[A-Z]+\.[A-Z]+\.\d+/g) || [];
         if (allStandardCodes.length > 0) {
           // Create a single question with all found standards
-          const uniqueCodes = [...new Set(allStandardCodes)];
+          const uniqueCodes = Array.from(new Set(allStandardCodes));
           const standards = uniqueCodes.map(code => ({
             code,
             description: `Analysis for ${code}`,
@@ -1759,11 +1773,12 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     questionText: string, 
     context: string, 
     jurisdictions: string[], 
-    customPrompt?: string
+    customPrompt?: string,
+    course?: string
   ): Promise<AIAnalysisResult> {
     const startTime = Date.now();
     const basePrompt = customPrompt || ANALYSIS_PROMPT;
-    const prompt = basePrompt.replace('{JURISDICTIONS}', jurisdictions.join(' and '));
+    const prompt = basePrompt.replace('{JURISDICTIONS}', jurisdictions.join(' and ')).replace('{COURSE}', course || 'General Course');
     
     try {
       const response = await anthropic.messages.create({
@@ -1799,11 +1814,11 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     }
   }
 
-  async analyzeClaude(questionText: string, context: string, jurisdictions: string[]): Promise<AIAnalysisResult> {
+  async analyzeClaude(questionText: string, context: string, jurisdictions: string[], course?: string): Promise<AIAnalysisResult> {
     const startTime = Date.now();
     
     try {
-      const prompt = ANALYSIS_PROMPT.replace('{JURISDICTIONS}', jurisdictions.join(' and '));
+      const prompt = ANALYSIS_PROMPT.replace('{JURISDICTIONS}', jurisdictions.join(' and ')).replace('{COURSE}', course || 'General Course');
       const response = await anthropic.messages.create({
         max_tokens: 1024,
         messages: [
@@ -1861,8 +1876,9 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
   async analyzeDocumentWithStandards(
     documentContent: string, 
     mimeType: string, 
-    jurisdictions: string[], 
-    focusStandards?: string[]
+    jurisdictions: string[],
+    focusStandards: string[],
+    course?: string
   ): Promise<{
     questions: Array<{
       text: string;
@@ -1913,27 +1929,28 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
   }
 
   // Compatibility wrappers for existing method calls (delegates to GPT-5)
-  async analyzeGrok(questionText: string, context: string, jurisdictions: string[]): Promise<AIAnalysisResult> {
+  async analyzeGrok(questionText: string, context: string, jurisdictions: string[], course?: string): Promise<AIAnalysisResult> {
     console.log('Using GPT-5 for analysis (via analyzeGrok compatibility wrapper)');
-    return this.analyzeGPT5(questionText, context, jurisdictions);
+    return this.analyzeGPT5(questionText, context, jurisdictions, course);
   }
 
   async analyzeGrokWithPrompt(
     questionText: string, 
     context: string, 
     jurisdictions: string[], 
-    customPrompt?: string
+    customPrompt?: string,
+    course?: string
   ): Promise<AIAnalysisResult> {
     console.log('Using GPT-5 for analysis (via analyzeGrokWithPrompt compatibility wrapper)');
-    return this.analyzeGPT5WithPrompt(questionText, context, jurisdictions, customPrompt);
+    return this.analyzeGPT5WithPrompt(questionText, context, jurisdictions, customPrompt, course);
   }
 
-  async analyzeQuestion(questionText: string, context: string, jurisdictions: string[]): Promise<{
+  async analyzeQuestion(questionText: string, context: string, jurisdictions: string[], course?: string): Promise<{
     grok: AIAnalysisResult;
   }> {
-    // Use only Grok for analysis
-    console.log('Using Grok for question analysis');
-    const grok = await this.analyzeGrok(questionText, context, jurisdictions)
+    // Use GPT-5 for analysis but maintain result structure
+    console.log('Using GPT-5 for question analysis');
+    const grok = await this.analyzeGrok(questionText, context, jurisdictions, course)
       .catch((error) => {
         console.error('GPT-5 analysis failed:', error);
         return this.getDefaultResult();

@@ -24,8 +24,8 @@ export class DocumentProcessor {
       
       logger.documentProcessing('Starting document processing', {
         documentId,
-        callbackUrl,
-        focusStandards: focusStandards?.length || 0
+        component: 'DocumentProcessor',
+        operation: 'processDocument'
       });
       
       // Update status to processing
@@ -38,17 +38,16 @@ export class DocumentProcessor {
 
       logger.documentProcessing('Document retrieved', {
         documentId,
-        mimeType: document.mimeType,
         fileName: document.name,
         fileSize: document.fileSize,
-        jurisdictions: document.jurisdictions?.length || 0
+        component: 'DocumentProcessor'
       });
 
       // Extract text content from the document
       logger.documentProcessing('Starting text extraction', {
         documentId,
-        originalPath: document.originalPath,
-        mimeType: document.mimeType
+        fileName: document.originalPath,
+        component: 'DocumentProcessor'
       });
       
       const extractedText = await this.extractTextFromDocument(document.originalPath, document.mimeType);
@@ -59,39 +58,38 @@ export class DocumentProcessor {
       
       logger.documentProcessing('Text extraction completed', {
         documentId,
-        extractedLength: extractedText.length,
-        extractedWords: extractedText.split(/\s+/).length
+        component: 'DocumentProcessor',
+        operation: 'textExtraction'
       });
       
       // Send extracted text to AI engines for analysis
+      const courseContext = document.courseTitle || undefined;
       const analysisResults = focusStandards && focusStandards.length > 0
         ? await aiService.analyzeDocumentWithStandards(
             extractedText,
             document.mimeType,
             document.jurisdictions,
-            focusStandards
+            focusStandards,
+            courseContext
           )
         : await aiService.analyzeDocument(
             extractedText,
             document.mimeType,
-            document.jurisdictions
+            document.jurisdictions,
+            courseContext
           );
       
       // Create question records from AI analysis
       logger.documentProcessing('AI analysis completed', {
         documentId,
-        questionsFound: analysisResults.questions.length,
-        processingTime: Date.now()
+        component: 'DocumentProcessor',
+        operation: 'aiAnalysis'
       });
       
       logger.debug('Questions extracted from AI analysis', {
         documentId,
-        questions: analysisResults.questions.map((q, i) => ({
-          questionNumber: i + 1,
-          textPreview: q.text?.substring(0, 100) + '...',
-          hasContext: !!q.context,
-          hasAiResults: !!q.aiResults
-        }))
+        component: 'DocumentProcessor',
+        operation: 'questionExtraction'
       });
       
       const questionRecords = [];
@@ -353,11 +351,8 @@ export class DocumentProcessor {
     try {
       console.log(`[DocumentProcessor] Auto-generating exports for document: ${documentId}`);
       
-      // Import dynamically to avoid circular dependency
-      const { ExportType } = await import('../utils/documentTagging');
-      
       // Generate common exports that teachers typically need
-      const commonExports: ExportType[] = ['rubric_pdf', 'cover_sheet'];
+      const commonExports: ExportType[] = [ExportType.RUBRIC_PDF, ExportType.COVER_SHEET];
       
       for (const exportType of commonExports) {
         try {
