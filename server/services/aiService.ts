@@ -2,8 +2,8 @@ import OpenAI from "openai";
 import Anthropic from '@anthropic-ai/sdk';
 import { logger } from '../utils/logger';
 
-// Using OpenAI GPT-5 model for better analysis results  
-const OPENAI_MODEL = "gpt-5";
+// Using OpenAI GPT-5-mini model for better analysis results  
+const OPENAI_MODEL = "gpt-5-mini";
 
 console.log(`AI Service initialized with OpenAI model: ${OPENAI_MODEL}`);
 
@@ -1192,6 +1192,10 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
           }
         ],
         max_completion_tokens: 10000,
+        temperature: 0.3,
+        top_p: 1.0,
+        frequency_penalty: 0.0,
+        presence_penalty: 0.0,
         response_format: {
           type: "json_schema",
           json_schema: ANALYSIS_RESULT_SCHEMA
@@ -1239,6 +1243,10 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
           }
         ],
         max_completion_tokens: 10000,
+        temperature: 0.3,
+        top_p: 1.0,
+        frequency_penalty: 0.0,
+        presence_penalty: 0.0,
         response_format: {
           type: "json_schema",
           json_schema: ANALYSIS_RESULT_SCHEMA
