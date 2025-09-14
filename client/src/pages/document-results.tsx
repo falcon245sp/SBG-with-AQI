@@ -290,6 +290,20 @@ export default function DocumentResults() {
     staleTime: 0, // Always refetch to ensure fresh status
   });
 
+  // DEBUG: Log received data to see what the frontend is getting
+  if (docResult) {
+    console.log('🚀 FRONTEND RECEIVED:', {
+      resultsCount: docResult.results?.length || 0,
+      firstResult: docResult.results?.[0] ? {
+        id: docResult.results[0].id,
+        questionNumber: docResult.results[0].questionNumber,
+        finalRigorLevel: docResult.results[0].finalRigorLevel,
+        finalStandards: docResult.results[0].finalStandards,
+        questionText: docResult.results[0].questionText?.substring(0, 50)
+      } : 'None'
+    });
+  }
+
   // Accept and proceed mutation with loading state
   const acceptAndProceedMutation = useMutation({
     mutationFn: async () => {
