@@ -655,6 +655,109 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         aiResults.gpt5 = gpt5Result;
       }
       
+      // Check if GPT-5/Grok returned individual questions - parse from raw_response using robust extraction
+      let extractedQuestions: QuestionListItem[] | null = null;
+      const mainResult = gpt5Result || grokResult;
+      if (mainResult.rawResponse && mainResult.rawResponse.choices && mainResult.rawResponse.choices[0]) {
+        const rawContent = mainResult.rawResponse.choices[0].message?.content || '';
+        console.log('Attempting robust JSON extraction from custom configuration response...');
+        
+        const extractionResult = extractAndValidateQuestionList(rawContent);
+        if (extractionResult.success && extractionResult.data) {
+          extractedQuestions = extractionResult.data;
+          console.log(`✅ ROBUST EXTRACTION: Successfully extracted ${extractedQuestions.length} validated questions with custom config`);
+        } else {
+          console.log('⚠️ Robust extraction failed:', extractionResult.error);
+        }
+      }
+      
+      // Check if we successfully extracted the validated questions
+      if (extractedQuestions && extractedQuestions.length > 0) {
+        console.log(`✅ NEW FORMAT: Creating ${extractedQuestions.length} individual question entries from validated data with custom config`);
+        
+        // Import the commonStandardsProjectService for standard lookups
+        const { commonStandardsProjectService } = await import('./commonStandardsProjectService');
+        
+        // Extract jurisdiction ID for targeted lookups
+        const jurisdictionId = await this.getJurisdictionIdFromContext(jurisdictions);
+        console.log(`🎯 Using jurisdiction context for targeted lookups: ${jurisdictionId || 'fallback to all jurisdictions'}`);
+        
+        // Process each validated question and lookup standard descriptions
+        const questionsWithStandardDescriptions = await Promise.all(
+          extractedQuestions.map(async (question: QuestionListItem) => {
+            let standardDescription = question.questionSummary || `Question ${question.question}: ${question.standard}`;
+            
+            // Lookup the actual standard description from Common Standards Project API
+            try {
+              const standardDetails = await commonStandardsProjectService.lookupStandardByCode(question.standard, jurisdictionId);
+              if (standardDetails && standardDetails.description) {
+                standardDescription = standardDetails.description;
+                console.log(`✅ Found standard description for ${question.standard}: ${standardDetails.description.substring(0, 60)}...`);
+              } else {
+                console.log(`⚠️ No description found for standard: ${question.standard}`);
+              }
+            } catch (error) {
+              console.log(`⚠️ Error looking up standard ${question.standard}:`, (error as Error).message);
+            }
+            
+            return {
+              text: standardDescription,
+              context: `Question ${question.question}: ${question.questionSummary}`,
+              problemNumber: question.question,
+              aiResults
+            };
+          })
+        );
+        
+        return {
+          questions: questionsWithStandardDescriptions
+        };
+      }
+      
+      // Check if main result returned individual questions in the old JSON format
+      if (mainResult.jsonResponse && mainResult.jsonResponse.problems && Array.isArray(mainResult.jsonResponse.problems)) {
+        console.log(`Creating ${mainResult.jsonResponse.problems.length} individual question entries from JSON response with custom config`);
+        
+        // Import the commonStandardsProjectService for standard lookups
+        const { commonStandardsProjectService } = await import('./commonStandardsProjectService');
+        
+        // Extract jurisdiction ID for targeted lookups
+        const jurisdictionId = await this.getJurisdictionIdFromContext(jurisdictions);
+        console.log(`🎯 Using jurisdiction context for targeted lookups: ${jurisdictionId || 'fallback to all jurisdictions'}`);
+        
+        // Process each problem and lookup standard descriptions
+        const questionsWithStandardDescriptions = await Promise.all(
+          mainResult.jsonResponse.problems.map(async (problem: any) => {
+            let standardDescription = problem.standardDescription || `Question ${problem.problemNumber}: ${problem.standardCode}`;
+            
+            // Lookup the actual standard description from Common Standards Project API
+            try {
+              const standardDetails = await commonStandardsProjectService.lookupStandardByCode(problem.standardCode, jurisdictionId);
+              if (standardDetails && standardDetails.description) {
+                standardDescription = standardDetails.description;
+                console.log(`✅ Found standard description for ${problem.standardCode}: ${standardDetails.description.substring(0, 60)}...`);
+              } else {
+                console.log(`⚠️ No description found for standard: ${problem.standardCode}`);
+              }
+            } catch (error) {
+              console.log(`⚠️ Error looking up standard ${problem.standardCode}:`, (error as Error).message);
+            }
+            
+            return {
+              text: standardDescription,
+              context: `Question ${problem.problemNumber}: Analyzing ${problem.standardCode}`,
+              problemNumber: problem.problemNumber, // Include the actual problem number
+              aiResults
+            };
+          })
+        );
+        
+        return {
+          questions: questionsWithStandardDescriptions
+        };
+      }
+      
+      // Fallback to single question only if no individual questions were found
       return {
         questions: [{
           text: "Educational content analysis from uploaded document",
@@ -1167,153 +1270,6 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     }
   }
 
-  async analyzeGrokWithPrompt(
-    questionText: string, 
-    context: string, 
-    jurisdictions: string[], 
-    customPrompt?: string,
-    course?: string
-  ): Promise<AIAnalysisResult> {
-    const startTime = Date.now();
-    
-    try {
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          {
-            role: "system",
-            content: (customPrompt || ANALYSIS_PROMPT).replace('{JURISDICTIONS}', jurisdictions.join(' and ')).replace('{COURSE}', course || 'General Mathematics')
-          },
-          {
-            role: "user",
-            content: `Question: ${questionText}\n\nContext: ${context}`
-          }
-        ],
-        max_completion_tokens: 10000,
-        response_format: {
-          type: "json_schema",
-          json_schema: QUESTION_LIST_SCHEMA
-        }
-      });
-
-      const processingTime = Date.now() - startTime;
-      const rawContent = response.choices[0].message.content || '';
-      
-      console.log('=== GROK CLEAN JSON ARRAY RESPONSE ===');
-      console.log(rawContent);
-      console.log('=== END JSON ARRAY RESPONSE ===');
-      
-      try {
-        const parsedResponse = JSON.parse(rawContent);
-        
-        // Handle new clean JSON array format
-        if (Array.isArray(parsedResponse)) {
-          console.log('=== GROK NEW FORMAT PARSING DEBUG ===');
-          console.log('Number of questions parsed:', parsedResponse.length);
-          
-          // Transform with Common Standards lookup
-          const transformedResults = await this.transformGrokResponse(parsedResponse, jurisdictions);
-          
-          const questions = parsedResponse.map((item: any, index: number) => {
-            const transformed = transformedResults[index];
-            console.log(`Question ${item.question}: ${item.standard} (${item.rigor})`);
-            
-            return {
-              questionNumber: item.question.toString(),
-              questionText: `Question ${item.question}: Analyzing ${item.standard}`,
-              standards: transformed.standards,
-              rigor: transformed.rigor,
-              rawResponse: response,
-              processingTime,
-              aiEngine: 'grok'
-            };
-          });
-          
-          console.log(`analyzeGrokWithPrompt: Successfully parsed ${questions.length} questions from new array format`);
-          
-          // Return first question's data for compatibility, store all questions
-          const firstQuestion = questions[0] || {
-            standards: [],
-            rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'No questions found', confidence: 0.1 }
-          };
-          
-          return {
-            standards: firstQuestion.standards,
-            rigor: firstQuestion.rigor,
-            rawResponse: response,
-            processingTime,
-            jsonResponse: parsedResponse,
-            allQuestions: questions
-          };
-        }
-        
-        // Fallback: Handle old format for backward compatibility  
-        const problems = parsedResponse.problems || [];
-        console.log('=== GROK OLD FORMAT FALLBACK ===');
-        console.log('Number of problems parsed:', problems.length);
-        
-        const questions = problems.map((problem: any) => {
-          console.log(`Problem ${problem.problemNumber}: ${problem.standardCode} (${problem.rigorLevel})`);
-          return {
-            questionNumber: problem.problemNumber,
-            questionText: `Problem ${problem.problemNumber}: ${problem.standardDescription}`,
-            standards: [{
-              code: problem.standardCode,
-              description: problem.standardDescription,
-              jurisdiction: "Common Core",
-              gradeLevel: "9-12",
-              subject: "Mathematics"
-            }],
-            rigor: {
-              level: problem.rigorLevel as 'mild' | 'medium' | 'spicy',
-              dokLevel: problem.rigorLevel === 'mild' ? 'DOK 1' : problem.rigorLevel === 'medium' ? 'DOK 2' : 'DOK 3',
-              justification: problem.rigorJustification || `${problem.rigorLevel} rigor level based on problem complexity`,
-              confidence: 0.85
-            },
-            rawResponse: response,
-            processingTime,
-            aiEngine: 'grok'
-          };
-        });
-        
-        console.log(`analyzeGrokWithPrompt: Successfully parsed ${questions.length} problems from old format`);
-        
-        // Return first question's data for compatibility, store all questions
-        const firstQuestion = questions[0] || {
-          standards: [],
-          rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'No questions found', confidence: 0.1 }
-        };
-        
-        return {
-          standards: firstQuestion.standards,
-          rigor: firstQuestion.rigor,
-          rawResponse: response,
-          processingTime,
-          jsonResponse: parsedResponse,
-          allQuestions: questions
-        };
-      } catch (parseError) {
-        console.error('analyzeGrokWithPrompt: Failed to parse structured JSON response:', parseError);
-        console.error('Raw content:', rawContent);
-        
-        return {
-          standards: [],
-          rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'JSON parsing failed', confidence: 0.1 },
-          rawResponse: response,
-          processingTime,
-          allQuestions: []
-        };
-      }
-    } catch (error) {
-      console.error('Grok analysis error:', error);
-      return {
-        standards: [],
-        rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'Error in analysis', confidence: 0.0 },
-        rawResponse: { error: error instanceof Error ? error.message : 'Unknown error' },
-        processingTime: Date.now() - startTime
-      };
-    }
-  }
 
   async analyzeGPT5(questionText: string, context: string, jurisdictions: string[], course?: string): Promise<AIAnalysisResult> {
     const startTime = Date.now();
@@ -2039,6 +1995,146 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         return this.getDefaultResult();
       });
       
+      // Check if GPT-5/Grok returned individual questions - parse from raw_response using robust extraction
+      let extractedQuestions: QuestionListItem[] | null = null;
+      if (grokResult.rawResponse && grokResult.rawResponse.choices && grokResult.rawResponse.choices[0]) {
+        const rawContent = grokResult.rawResponse.choices[0].message?.content || '';
+        console.log('Attempting robust JSON extraction from GPT-5/Grok response with standards...');
+        
+        const extractionResult = extractAndValidateQuestionList(rawContent);
+        if (extractionResult.success && extractionResult.data) {
+          extractedQuestions = extractionResult.data;
+          console.log(`✅ ROBUST EXTRACTION: Successfully extracted ${extractedQuestions.length} validated questions with standards`);
+        } else {
+          console.log('⚠️ Robust extraction failed:', extractionResult.error);
+        }
+      }
+      
+      // Check if we successfully extracted the validated questions
+      if (extractedQuestions && extractedQuestions.length > 0) {
+        console.log(`✅ NEW FORMAT: Creating ${extractedQuestions.length} individual question entries from validated data with standards`);
+        
+        // Import the commonStandardsProjectService for standard lookups
+        const { commonStandardsProjectService } = await import('./commonStandardsProjectService');
+        
+        // Extract jurisdiction ID for targeted lookups
+        const jurisdictionId = await this.getJurisdictionIdFromContext(jurisdictions);
+        console.log(`🎯 Using jurisdiction context for targeted lookups: ${jurisdictionId || 'fallback to all jurisdictions'}`);
+        
+        // Process each validated question and lookup standard descriptions
+        const questionsWithStandardDescriptions = await Promise.all(
+          extractedQuestions.map(async (question: QuestionListItem) => {
+            let standardDescription = question.questionSummary || `Question ${question.question}: ${question.standard}`;
+            
+            // Lookup the actual standard description from Common Standards Project API
+            try {
+              const standardDetails = await commonStandardsProjectService.lookupStandardByCode(question.standard, jurisdictionId);
+              if (standardDetails && standardDetails.description) {
+                standardDescription = standardDetails.description;
+                console.log(`✅ Found standard description for ${question.standard}: ${standardDetails.description.substring(0, 60)}...`);
+              } else {
+                console.log(`⚠️ No description found for standard: ${question.standard}`);
+              }
+            } catch (error) {
+              console.log(`⚠️ Error looking up standard ${question.standard}:`, (error as Error).message);
+            }
+            
+            return {
+              text: standardDescription,
+              context: `Question ${question.question}: ${question.questionSummary}`,
+              problemNumber: question.question,
+              aiResults: {
+                grok: {
+                  standards: [{
+                    code: question.standard,
+                    description: standardDescription,
+                    jurisdiction: jurisdictions[0] || "Common Core",
+                    gradeLevel: "9-12",
+                    subject: "Mathematics"
+                  }],
+                rigor: {
+                  level: question.rigor,
+                  dokLevel: question.rigor === 'mild' ? 'DOK 1' : question.rigor === 'medium' ? 'DOK 2' : 'DOK 3',
+                  justification: question.justification,
+                  confidence: 0.85
+                },
+                rawResponse: grokResult.rawResponse,
+                processingTime: grokResult.processingTime,
+                aiEngine: 'grok'
+                }
+              }
+            };
+          })
+        );
+        
+        return {
+          questions: questionsWithStandardDescriptions
+        };
+      }
+      
+      // Check if GPT-5/Grok returned individual questions in the old JSON format
+      if (grokResult.jsonResponse && grokResult.jsonResponse.problems && Array.isArray(grokResult.jsonResponse.problems)) {
+        console.log(`Creating ${grokResult.jsonResponse.problems.length} individual question entries from JSON response with standards`);
+        
+        // Import the commonStandardsProjectService for standard lookups
+        const { commonStandardsProjectService } = await import('./commonStandardsProjectService');
+        
+        // Extract jurisdiction ID for targeted lookups
+        const jurisdictionId = await this.getJurisdictionIdFromContext(jurisdictions);
+        console.log(`🎯 Using jurisdiction context for targeted lookups: ${jurisdictionId || 'fallback to all jurisdictions'}`);
+        
+        // Process each problem and lookup standard descriptions
+        const questionsWithStandardDescriptions = await Promise.all(
+          grokResult.jsonResponse.problems.map(async (problem: any) => {
+            let standardDescription = problem.standardDescription || `Question ${problem.problemNumber}: ${problem.standardCode}`;
+            
+            // Lookup the actual standard description from Common Standards Project API
+            try {
+              const standardDetails = await commonStandardsProjectService.lookupStandardByCode(problem.standardCode, jurisdictionId);
+              if (standardDetails && standardDetails.description) {
+                standardDescription = standardDetails.description;
+                console.log(`✅ Found standard description for ${problem.standardCode}: ${standardDetails.description.substring(0, 60)}...`);
+              } else {
+                console.log(`⚠️ No description found for standard: ${problem.standardCode}`);
+              }
+            } catch (error) {
+              console.log(`⚠️ Error looking up standard ${problem.standardCode}:`, (error as Error).message);
+            }
+            
+            return {
+              text: standardDescription,
+              context: `Question ${problem.problemNumber}: Analyzing ${problem.standardCode}`,
+              problemNumber: problem.problemNumber, // Include the actual problem number
+              aiResults: {
+                grok: {
+                  standards: [{
+                    code: problem.standardCode,
+                    description: standardDescription,
+                    jurisdiction: jurisdictions[0] || "Common Core",
+                    gradeLevel: "9-12",
+                    subject: "Mathematics"
+                  }],
+                  rigor: {
+                    level: problem.rigorLevel as 'mild' | 'medium' | 'spicy',
+                    dokLevel: problem.rigorLevel === 'mild' ? 'DOK 1' : problem.rigorLevel === 'medium' ? 'DOK 2' : 'DOK 3',
+                    justification: problem.rigorJustification || `${problem.rigorLevel} rigor level based on problem complexity`,
+                    confidence: 0.85
+                  },
+                  rawResponse: grokResult.rawResponse,
+                  processingTime: grokResult.processingTime,
+                  aiEngine: 'grok'
+                }
+              }
+            };
+          })
+        );
+        
+        return {
+          questions: questionsWithStandardDescriptions
+        };
+      }
+      
+      // Fallback to single question only if no individual questions were found
       return {
         questions: [{
           text: "Educational content analysis from uploaded document",
