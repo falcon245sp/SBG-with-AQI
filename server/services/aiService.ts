@@ -66,7 +66,7 @@ export const ANALYSIS_RESULT_SCHEMA = {
         type: "array",
         items: {
           type: "object",
-          required: ["code", "description"],
+          required: ["code", "description", "jurisdiction", "gradeLevel", "subject"],
           properties: {
             code: { type: "string" },
             description: { type: "string" },
