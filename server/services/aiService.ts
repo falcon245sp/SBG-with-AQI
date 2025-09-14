@@ -1192,10 +1192,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
           }
         ],
         max_completion_tokens: 10000,
-        temperature: 0.3,
-        top_p: 1.0,
-        frequency_penalty: 0.0,
-        presence_penalty: 0.0,
+        temperature: 1.0,
         response_format: {
           type: "json_schema",
           json_schema: ANALYSIS_RESULT_SCHEMA
@@ -1212,8 +1209,8 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         processingTime
       };
     } catch (error) {
-      console.error('GPT-4o-mini analysis error:', error);
-      throw new Error(`GPT-4o-mini analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error(`${OPENAI_MODEL} analysis error:`, error);
+      throw new Error(`${OPENAI_MODEL} analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -1223,7 +1220,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     let gpt5Response: any = null;
     
     try {
-      console.log('=== GPT-4o-mini API CALL DEBUG ===');
+      console.log(`=== ${OPENAI_MODEL} API CALL DEBUG ===`);
       const dynamicPrompt = ANALYSIS_PROMPT.replace('{JURISDICTIONS}', jurisdictions.join(' and ')).replace('{COURSE}', course || 'General Mathematics');
       console.log('System prompt length:', dynamicPrompt.length);
       console.log('User content length:', `Question: ${questionText}\n\nContext: ${context}`.length);
@@ -1243,10 +1240,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
           }
         ],
         max_completion_tokens: 10000,
-        temperature: 0.3,
-        top_p: 1.0,
-        frequency_penalty: 0.0,
-        presence_penalty: 0.0,
+        temperature: 1.0,
         response_format: {
           type: "json_schema",
           json_schema: ANALYSIS_RESULT_SCHEMA
@@ -1263,8 +1257,8 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         processingTime
       };
     } catch (error) {
-      console.error('GPT-4o-mini analysis error:', error);
-      throw new Error(`GPT-4o-mini analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error(`${OPENAI_MODEL} analysis error:`, error);
+      throw new Error(`${OPENAI_MODEL} analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
