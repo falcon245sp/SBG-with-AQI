@@ -644,10 +644,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         jurisdictions,
         customPrompt,
         course
-      ).catch((error) => {
-        console.error('Both GPT-5 and Grok analysis failed:', error);
-        return this.getDefaultResult();
-      });
+);
       
       // Build response with both results when available
       const aiResults: any = { grok: grokResult };
@@ -767,15 +764,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       };
     } catch (error) {
       console.error('Error analyzing document with custom prompt:', error);
-      return {
-        questions: [{
-          text: "Document analysis",
-          context: "Analysis failed",
-          aiResults: {
-            grok: this.getDefaultResult()
-          }
-        }]
-      };
+      throw new Error(`Document analysis with custom prompt failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -814,10 +803,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         `Document content: ${documentContent}\n\nDocument type: ${mimeType}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
         jurisdictions,
         course
-      ).catch((error) => {
-        console.error('Both GPT-5 and Grok analysis failed:', error);
-        return this.getDefaultResult();
-      });
+);
       
       // Check if Grok returned individual questions - parse from raw_response using robust extraction
       let extractedQuestions: QuestionListItem[] | null = null;
@@ -1093,37 +1079,10 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       };
     } catch (error) {
       console.error('Error analyzing document:', error);
-      return {
-        questions: [{
-          text: "Document analysis",
-          context: "Analysis failed",
-          aiResults: {
-            grok: this.getDefaultResult()
-          }
-        }]
-      };
+      throw new Error(`Document analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
   
-  private getDefaultResult(): AIAnalysisResult {
-    return {
-      standards: [{
-        code: "SAMPLE.STANDARD",
-        description: "Sample educational standard",
-        jurisdiction: "General",
-        gradeLevel: "Multiple",
-        subject: "General"
-      }],
-      rigor: {
-        level: 'medium',
-        dokLevel: 'DOK 2',
-        justification: 'Default analysis - document processing completed',
-        confidence: 0.7
-      },
-      rawResponse: { message: 'Document analyzed successfully' },
-      processingTime: 1000
-    };
-  }
 
   async analyzeChatGPTWithPrompt(
     questionText: string, 
@@ -1160,19 +1119,14 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       const result = JSON.parse(response.choices[0].message.content || '{}');
       
       return {
-        standards: result.standards || [],
-        rigor: result.rigor || { level: 'mild', dokLevel: 'DOK 1', justification: 'Unable to assess', confidence: 0.1 },
+        standards: result.standards,
+        rigor: result.rigor,
         rawResponse: response,
         processingTime
       };
     } catch (error) {
       console.error('ChatGPT analysis error:', error);
-      return {
-        standards: [],
-        rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'Error in analysis', confidence: 0.0 },
-        rawResponse: { error: error instanceof Error ? error.message : 'Unknown error' },
-        processingTime: Date.now() - startTime
-      };
+      throw new Error(`ChatGPT analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -1203,19 +1157,14 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       const result = JSON.parse(response.choices[0].message.content || '{}');
       
       return {
-        standards: result.standards || [],
-        rigor: result.rigor || { level: 'mild', dokLevel: 'DOK 1', justification: 'Unable to assess', confidence: 0.1 },
+        standards: result.standards,
+        rigor: result.rigor,
         rawResponse: response,
         processingTime
       };
     } catch (error) {
       console.error('ChatGPT analysis error:', error);
-      return {
-        standards: [],
-        rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'Error in analysis', confidence: 0.0 },
-        rawResponse: { error: error instanceof Error ? error.message : 'Unknown error' },
-        processingTime: Date.now() - startTime
-      };
+      throw new Error(`ChatGPT analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -1254,19 +1203,14 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       const result = JSON.parse(response.choices[0].message.content || '{}');
       
       return {
-        standards: result.standards || [],
-        rigor: result.rigor || { level: 'mild', dokLevel: 'DOK 1', justification: 'Unable to assess', confidence: 0.1 },
+        standards: result.standards,
+        rigor: result.rigor,
         rawResponse: response,
         processingTime
       };
     } catch (error) {
       console.error('GPT-5 analysis error:', error);
-      return {
-        standards: [],
-        rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'Error in analysis', confidence: 0.0 },
-        rawResponse: { error: error instanceof Error ? error.message : 'Unknown error' },
-        processingTime: Date.now() - startTime
-      };
+      throw new Error(`GPT-5 analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -1306,19 +1250,14 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       const result = JSON.parse(gpt5Response.choices[0].message.content || '{}');
       
       return {
-        standards: result.standards || [],
-        rigor: result.rigor || { level: 'mild', dokLevel: 'DOK 1', justification: 'Unable to assess', confidence: 0.1 },
+        standards: result.standards,
+        rigor: result.rigor,
         rawResponse: gpt5Response,
         processingTime
       };
     } catch (error) {
       console.error('GPT-5 analysis error:', error);
-      return {
-        standards: [],
-        rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'Error in analysis', confidence: 0.0 },
-        rawResponse: { error: error instanceof Error ? error.message : 'Unknown error' },
-        processingTime: Date.now() - startTime
-      };
+      throw new Error(`GPT-5 analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -1378,10 +1317,10 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         });
         
         // Return first question's data for compatibility
-        const firstQuestion = questions[0] || {
-          standards: [],
-          rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'No questions found', confidence: 0.1 }
-        };
+        if (questions.length === 0) {
+          throw new Error('GPT-5 analysis succeeded but no questions could be extracted from the response');
+        }
+        const firstQuestion = questions[0];
         
         return {
           standards: firstQuestion.standards,
@@ -1395,13 +1334,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         console.error('❌ GPT-5 ROBUST EXTRACTION FAILED:', extractionResult.error);
         console.error('Cleaned content was:', extractionResult.cleanedContent?.substring(0, 500));
         
-        return {
-          standards: [],
-          rigor: { level: 'mild', dokLevel: 'DOK 1', justification: `JSON extraction failed: ${extractionResult.error}`, confidence: 0.1 },
-          rawResponse: gpt5Response,
-          processingTime,
-          allQuestions: []
-        };
+        throw new Error(`GPT-5 JSON extraction failed: ${extractionResult.error}`);
       }
       
     } catch (error) {
@@ -1449,12 +1382,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         console.error('No response content available for analysis');
       }
       
-      return {
-        standards: [],
-        rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'Error in analysis', confidence: 0.0 },
-        rawResponse: { error: error instanceof Error ? error.message : 'Unknown error' },
-        processingTime: Date.now() - startTime
-      };
+      throw new Error(`GPT-5 old debug version analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -1888,19 +1816,14 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       const result = JSON.parse(content.type === 'text' ? content.text : '{}');
       
       return {
-        standards: result.standards || [],
-        rigor: result.rigor || { level: 'mild', dokLevel: 'DOK 1', justification: 'Unable to assess', confidence: 0.1 },
+        standards: result.standards,
+        rigor: result.rigor,
         rawResponse: response,
         processingTime
       };
     } catch (error) {
       console.error('Claude analysis error:', error);
-      return {
-        standards: [],
-        rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'Error in analysis', confidence: 0.0 },
-        rawResponse: { error: error instanceof Error ? error.message : 'Unknown error' },
-        processingTime: Date.now() - startTime
-      };
+      throw new Error(`Claude analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -1926,19 +1849,14 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       const result = JSON.parse(content.type === 'text' ? content.text : '{}');
       
       return {
-        standards: result.standards || [],
-        rigor: result.rigor || { level: 'mild', dokLevel: 'DOK 1', justification: 'Unable to assess', confidence: 0.1 },
+        standards: result.standards,
+        rigor: result.rigor,
         rawResponse: response,
         processingTime
       };
     } catch (error) {
       console.error('Claude analysis error:', error);
-      return {
-        standards: [],
-        rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'Error in analysis', confidence: 0.0 },
-        rawResponse: { error: error instanceof Error ? error.message : 'Unknown error' },
-        processingTime: Date.now() - startTime
-      };
+      throw new Error(`Claude analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -1955,10 +1873,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     // Use only Grok for analysis with custom prompt
     console.log('Using Grok for question analysis with custom prompt');
     const grok = await this.analyzeGrokWithPrompt(questionText, context, jurisdictions, customPrompt)
-      .catch((error) => {
-        console.error('Grok analysis with custom prompt failed:', error);
-        return this.getDefaultResult();
-      });
+;
 
     return { grok };
   }
@@ -1990,10 +1905,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         `Document content: ${documentContent}\n\nDocument type: ${mimeType}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
         jurisdictions,
         dynamicPrompt
-      ).catch((error) => {
-        console.error('GPT-5 analysis failed:', error);
-        return this.getDefaultResult();
-      });
+);
       
       // Check if GPT-5/Grok returned individual questions - parse from raw_response using robust extraction
       let extractedQuestions: QuestionListItem[] | null = null;
@@ -2146,15 +2058,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       };
     } catch (error) {
       console.error('Error analyzing document with standards:', error);
-      return {
-        questions: [{
-          text: "Document analysis",
-          context: "Analysis failed",
-          aiResults: {
-            grok: this.getDefaultResult()
-          }
-        }]
-      };
+      throw new Error(`Document analysis with standards failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -2181,10 +2085,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     // Use GPT-5 for analysis but maintain result structure
     console.log('Using GPT-5 for question analysis');
     const grok = await this.analyzeGrok(questionText, context, jurisdictions, course)
-      .catch((error) => {
-        console.error('GPT-5 analysis failed:', error);
-        return this.getDefaultResult();
-      });
+;
 
     return { grok };
   }
