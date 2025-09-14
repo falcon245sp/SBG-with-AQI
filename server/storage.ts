@@ -606,21 +606,21 @@ export class DatabaseStorage implements IStorage {
       updatesKeys: Object.keys(updates)
     });
     
+    // Import the explicit projection to ensure camelCase output
+    const { classroomSelect } = await import('./dbMapper.js');
+    
     const [classroom] = await db
       .update(classrooms)
       .set(updates)
       .where(eq(classrooms.id, classroomId))
-      .returning();
+      .returning(classroomSelect);
     
     console.log('🏫 [CLASSROOM-UPDATE] Classroom updated successfully:', {
       classroomId: classroom.id,
       name: classroom.name,
       courseTitle: classroom.courseTitle,
-      course_title: classroom.course_title,
       courseConfigurationCompleted: classroom.courseConfigurationCompleted,
-      course_configuration_completed: classroom.course_configuration_completed,
-      sbgEnabled: classroom.sbgEnabled,
-      sbg_enabled: classroom.sbg_enabled
+      sbgEnabled: classroom.sbgEnabled
     });
     
     return classroom;
@@ -629,37 +629,28 @@ export class DatabaseStorage implements IStorage {
   async getTeacherClassrooms(customerUuid: string): Promise<Classroom[]> {
     console.log('🔍 [DB-QUERY] Fetching teacher classrooms for customerUuid:', customerUuid);
     
+    // Import the explicit projection to ensure camelCase output
+    const { classroomSelect } = await import('./dbMapper.js');
+    
     const results = await db
-      .select()
+      .select(classroomSelect)
       .from(classrooms)
       .where(eq(classrooms.customerUuid, customerUuid))
       .orderBy(classrooms.name);
     
-    // Map database snake_case fields to camelCase for JavaScript
-    const mappedResults = results.map(c => ({
-      ...c,
-      courseTitle: c.courseTitle || (c as any).course_title,
-      courseConfigurationCompleted: c.courseConfigurationCompleted ?? (c as any).course_configuration_completed,
-      sbgEnabled: c.sbgEnabled ?? (c as any).sbg_enabled
-    }));
-    
     console.log('🔍 [DB-QUERY] Database returned classrooms:', {
-      count: mappedResults.length,
+      count: results.length,
       customerUuid,
-      classrooms: mappedResults.map(c => ({
+      classrooms: results.map(c => ({
         id: c.id,
         name: c.name,
         courseTitle: c.courseTitle,
         courseConfigurationCompleted: c.courseConfigurationCompleted,
-        sbgEnabled: c.sbgEnabled,
-        // Log raw values to see exact database format
-        raw_course_title: (c as any).course_title,
-        raw_course_config: (c as any).course_configuration_completed,
-        raw_sbg_enabled: (c as any).sbg_enabled
+        sbgEnabled: c.sbgEnabled
       }))
     });
     
-    return mappedResults;
+    return results;
   }
 
   async getClassroomByGoogleId(googleClassId: string): Promise<Classroom | undefined> {
