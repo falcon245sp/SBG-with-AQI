@@ -622,13 +622,12 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         
         // Use the simple proven prompt that worked perfectly with ChatGPT 5.0
         const jurisdictionPriority = customization?.jurisdictionPriority || jurisdictions;
-        const simplePrompt = ANALYSIS_PROMPT.replace('{JURISDICTIONS}', jurisdictionPriority.join(' and ')).replace('{COURSE}', course || 'General Mathematics');
         
         gpt5Result = await this.analyzeGPT5WithPrompt(
           `Analyze this educational document (${mimeType}) for standards alignment and rigor level.`,
           `Document path: ${filePath}. Focus on jurisdictions: ${jurisdictionPriority.join(', ')}. Custom configuration applied.`,
           jurisdictionPriority,
-          simplePrompt,
+          ANALYSIS_PROMPT,
           course
         );
         console.log('✅ GPT-5 analysis with custom configuration successful');
