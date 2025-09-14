@@ -1270,6 +1270,106 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     }
   }
 
+  async analyzeGPT5SingleQuestionWithFile(
+    fileIds: string[], 
+    jurisdictions: string[], 
+    course: string, 
+    questionNumber: number,
+    questionText: string
+  ): Promise<AIAnalysisResult> {
+    const startTime = Date.now();
+    
+    try {
+      logger.info(`[AIService] Analyzing single question ${questionNumber} with file upload approach`, {
+        component: 'AIService',
+        operation: 'singleQuestionFileAnalysis',
+        questionNumber,
+        fileCount: fileIds.length
+      });
+
+      const prompt = ANALYSIS_PROMPT
+        .replace(/{JURISDICTIONS}/g, jurisdictions.join(', '))
+        .replace(/{COURSE}/g, course);
+
+      const singleQuestionPrompt = `${prompt}
+
+Focus specifically on Question ${questionNumber}: ${questionText.substring(0, 200)}...
+
+Analyze ONLY this question and provide the result as a JSON object with the keys:
+- "question" (integer): ${questionNumber}
+- "questionSummary" (string): Brief 3-5 word description
+- "standard" (string): The standard code (e.g., "A-SSE.A.1", "F-IF.A.1")  
+- "rigor" (string): Either "mild", "medium", or "spicy"
+- "justification" (string): Brief explanation of your rigor assessment`;
+
+      const gpt5Response = await openai.responses.create({
+        model: OPENAI_MODEL,
+        instructions: singleQuestionPrompt,
+        user_message: `Analyze question ${questionNumber} from the attached document.`,
+        attachments: fileIds.map(file_id => ({
+          file_id,
+          tools: [{ type: "file_search" }]
+        })),
+        max_output_tokens: 4000,
+        temperature: 1.0
+      });
+
+      const responseText = gpt5Response.text || gpt5Response.message?.content || '';
+      const processingTime = Date.now() - startTime;
+
+      // Extract and validate the single question result
+      const extractedResult = this.extractAndValidateQuestionList(responseText);
+      
+      if (!extractedResult || !extractedResult.questions || extractedResult.questions.length === 0) {
+        throw new Error(`No valid question analysis found for question ${questionNumber}`);
+      }
+
+      const questionResult = extractedResult.questions[0]; // Should be just one question
+      
+      const result: AIAnalysisResult = {
+        standards: [{
+          code: questionResult.standard,
+          description: `Standard ${questionResult.standard}`,
+          jurisdiction: jurisdictions[0] || "Common Core State Standards",
+          gradeLevel: "9-12",
+          subject: "Mathematics"
+        }],
+        rigor: {
+          level: questionResult.rigor as 'mild' | 'medium' | 'spicy',
+          dokLevel: questionResult.rigor === 'mild' ? '1' : questionResult.rigor === 'medium' ? '2' : '3',
+          justification: questionResult.justification,
+          confidence: 0.85
+        },
+        rawResponse: gpt5Response,
+        processingTime,
+        jsonResponse: extractedResult,
+        aiEngine: 'openai'
+      };
+
+      logger.info(`[AIService] Single question file analysis completed`, {
+        component: 'AIService',
+        operation: 'singleQuestionFileAnalysis',
+        questionNumber,
+        processingTime,
+        standard: questionResult.standard,
+        rigor: questionResult.rigor
+      });
+
+      return result;
+    } catch (error) {
+      const processingTime = Date.now() - startTime;
+      logger.error(`[AIService] Single question file analysis failed`, {
+        component: 'AIService',
+        operation: 'singleQuestionFileAnalysis',
+        questionNumber,
+        error: error.message,
+        processingTime
+      });
+
+      throw new Error(`Single question file analysis failed: ${error.message}`);
+    }
+  }
+
   async analyzeGPT5WithFile(
     fileIds: string[], 
     jurisdictions: string[], 
