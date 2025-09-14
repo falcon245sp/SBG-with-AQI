@@ -29,23 +29,68 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY_ENV_VAR || "default_key",
 });
 
-// Centralized JSON schema for GPT-5 structured output
+// GPT-5 compatible JSON schemas for structured output
 export const QUESTION_LIST_SCHEMA = {
   name: "QuestionList",
   schema: {
-    type: "array",
-    items: {
-      type: "object",
-      required: ["question", "questionSummary", "standard", "rigor", "justification"],
-      properties: {
-        question: { type: "integer" },
-        questionSummary: { type: "string" },
-        standard: { type: "string" },
-        rigor: { type: "string", enum: ["mild", "medium", "spicy"] },
-        justification: { type: "string" }
+    type: "object",
+    properties: {
+      questions: {
+        type: "array",
+        items: {
+          type: "object",
+          required: ["question", "questionSummary", "standard", "rigor", "justification"],
+          properties: {
+            question: { type: "integer" },
+            questionSummary: { type: "string" },
+            standard: { type: "string" },
+            rigor: { type: "string", enum: ["mild", "medium", "spicy"] },
+            justification: { type: "string" }
+          },
+          additionalProperties: false
+        }
+      }
+    },
+    required: ["questions"],
+    additionalProperties: false
+  },
+  strict: true
+} as const;
+
+export const ANALYSIS_RESULT_SCHEMA = {
+  name: "AnalysisResult",
+  schema: {
+    type: "object",
+    properties: {
+      standards: {
+        type: "array",
+        items: {
+          type: "object",
+          required: ["code", "description"],
+          properties: {
+            code: { type: "string" },
+            description: { type: "string" },
+            jurisdiction: { type: "string" },
+            gradeLevel: { type: "string" },
+            subject: { type: "string" }
+          },
+          additionalProperties: false
+        }
       },
-      additionalProperties: false
-    }
+      rigor: {
+        type: "object",
+        required: ["level", "dokLevel", "justification", "confidence"],
+        properties: {
+          level: { type: "string", enum: ["mild", "medium", "spicy"] },
+          dokLevel: { type: "string" },
+          justification: { type: "string" },
+          confidence: { type: "number", minimum: 0, maximum: 1 }
+        },
+        additionalProperties: false
+      }
+    },
+    required: ["standards", "rigor"],
+    additionalProperties: false
   },
   strict: true
 } as const;
@@ -63,15 +108,20 @@ export interface QuestionListItem {
 function validateAgainstQuestionListSchema(data: any): { valid: boolean; error?: string } {
   const schema = QUESTION_LIST_SCHEMA.schema;
   
-  // Validate top-level type (must be array)
-  if (!Array.isArray(data)) {
-    return { valid: false, error: `Expected array, got ${typeof data}` };
+  // Validate top-level type (must be object)
+  if (typeof data !== 'object' || data === null) {
+    return { valid: false, error: `Expected object, got ${typeof data}` };
   }
   
-  // Validate each item in the array
-  for (let i = 0; i < data.length; i++) {
-    const item = data[i];
-    const itemSchema = schema.items;
+  // Validate questions property exists and is array
+  if (!data.questions || !Array.isArray(data.questions)) {
+    return { valid: false, error: `Expected 'questions' property to be an array, got ${typeof data.questions}` };
+  }
+  
+  // Validate each item in the questions array
+  for (let i = 0; i < data.questions.length; i++) {
+    const item = data.questions[i];
+    const itemSchema = schema.properties.questions.items;
     
     // Check if item is an object
     if (typeof item !== 'object' || item === null) {
@@ -156,11 +206,14 @@ export function extractAndValidateQuestionList(rawContent: string): {
     console.log('Cleaned content length:', cleanedContent.length);
     console.log('Cleaned content preview:', cleanedContent.substring(0, 200));
     
-    // Step 2: Validate it looks like a JSON array
-    if (!cleanedContent.startsWith('[') || !cleanedContent.endsWith(']')) {
+    // Step 2: Validate it looks like JSON (either array or object format)
+    const isArray = cleanedContent.startsWith('[') && cleanedContent.endsWith(']');
+    const isObject = cleanedContent.startsWith('{') && cleanedContent.endsWith('}');
+    
+    if (!isArray && !isObject) {
       return {
         success: false,
-        error: `Content doesn't appear to be a JSON array. Starts with: "${cleanedContent.substring(0, 10)}", ends with: "${cleanedContent.slice(-10)}"`,
+        error: `Content doesn't appear to be JSON. Starts with: "${cleanedContent.substring(0, 10)}", ends with: "${cleanedContent.slice(-10)}"`,
         cleanedContent
       };
     }
@@ -177,7 +230,13 @@ export function extractAndValidateQuestionList(rawContent: string): {
       };
     }
     
-    // Step 4: Programmatic schema validation against QUESTION_LIST_SCHEMA
+    // Step 4: Handle both array and object formats (tolerant fallback)
+    if (Array.isArray(parsedData)) {
+      console.log('🔄 Converting top-level array to { questions: [...] } format for schema compatibility');
+      parsedData = { questions: parsedData };
+    }
+    
+    // Step 5: Programmatic schema validation against QUESTION_LIST_SCHEMA
     console.log('🔍 Performing programmatic schema validation against QUESTION_LIST_SCHEMA...');
     const schemaValidation = validateAgainstQuestionListSchema(parsedData);
     
@@ -191,8 +250,8 @@ export function extractAndValidateQuestionList(rawContent: string): {
     
     console.log('✅ Schema validation passed!');
     
-    // Step 5: Convert to strongly typed QuestionListItem array
-    const validatedQuestions: QuestionListItem[] = parsedData.map((item: any) => ({
+    // Step 6: Convert to strongly typed QuestionListItem array
+    const validatedQuestions: QuestionListItem[] = parsedData.questions.map((item: any) => ({
       question: item.question,
       questionSummary: item.questionSummary,
       standard: item.standard,
@@ -990,7 +1049,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         max_completion_tokens: 1000,
         response_format: {
           type: "json_schema",
-          json_schema: QUESTION_LIST_SCHEMA
+          json_schema: ANALYSIS_RESULT_SCHEMA
         }
       });
 
@@ -1033,7 +1092,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         max_completion_tokens: 1000,
         response_format: {
           type: "json_schema",
-          json_schema: QUESTION_LIST_SCHEMA
+          json_schema: ANALYSIS_RESULT_SCHEMA
         }
       });
 
@@ -1075,6 +1134,55 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
           {
             role: "system",
             content: prompt
+          },
+          {
+            role: "user",
+            content: `Question: ${questionText}\n\nContext: ${context}`
+          }
+        ],
+        max_completion_tokens: 10000,
+        response_format: {
+          type: "json_schema",
+          json_schema: ANALYSIS_RESULT_SCHEMA
+        }
+      });
+
+      const processingTime = Date.now() - startTime;
+      const result = JSON.parse(response.choices[0].message.content || '{}');
+      
+      return {
+        standards: result.standards || [],
+        rigor: result.rigor || { level: 'mild', dokLevel: 'DOK 1', justification: 'Unable to assess', confidence: 0.1 },
+        rawResponse: response,
+        processingTime
+      };
+    } catch (error) {
+      console.error('GPT-5 analysis error:', error);
+      return {
+        standards: [],
+        rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'Error in analysis', confidence: 0.0 },
+        rawResponse: { error: error instanceof Error ? error.message : 'Unknown error' },
+        processingTime: Date.now() - startTime
+      };
+    }
+  }
+
+  async analyzeGrokWithPrompt(
+    questionText: string, 
+    context: string, 
+    jurisdictions: string[], 
+    customPrompt?: string,
+    course?: string
+  ): Promise<AIAnalysisResult> {
+    const startTime = Date.now();
+    
+    try {
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: (customPrompt || ANALYSIS_PROMPT).replace('{JURISDICTIONS}', jurisdictions.join(' and ')).replace('{COURSE}', course || 'General Mathematics')
           },
           {
             role: "user",
@@ -1234,11 +1342,37 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         max_completion_tokens: 10000,
         response_format: {
           type: "json_schema",
-          json_schema: QUESTION_LIST_SCHEMA
+          json_schema: ANALYSIS_RESULT_SCHEMA
         }
       });
 
-      console.log('=== GROK RESPONSE DEBUG ===');
+      const processingTime = Date.now() - startTime;
+      const result = JSON.parse(gpt5Response.choices[0].message.content || '{}');
+      
+      return {
+        standards: result.standards || [],
+        rigor: result.rigor || { level: 'mild', dokLevel: 'DOK 1', justification: 'Unable to assess', confidence: 0.1 },
+        rawResponse: gpt5Response,
+        processingTime
+      };
+    } catch (error) {
+      console.error('GPT-5 analysis error:', error);
+      return {
+        standards: [],
+        rigor: { level: 'mild', dokLevel: 'DOK 1', justification: 'Error in analysis', confidence: 0.0 },
+        rawResponse: { error: error instanceof Error ? error.message : 'Unknown error' },
+        processingTime: Date.now() - startTime
+      };
+    }
+  }
+
+  // Keep existing debugging code for reference but streamline the return
+  async analyzeGPT5_OLD_DEBUG_VERSION(questionText: string, context: string, jurisdictions: string[], course?: string): Promise<AIAnalysisResult> {
+    const startTime = Date.now();
+    let gpt5Response: any = null;
+    
+    try {
+      console.log('=== GPT-5 API CALL DEBUG ===');
       console.log('Response status:', gpt5Response.choices?.[0]?.finish_reason);
       console.log('Content length:', gpt5Response.choices?.[0]?.message?.content?.length || 0);
       console.log('Raw content (first 500 chars):', (gpt5Response.choices?.[0]?.message?.content || '').substring(0, 500));
