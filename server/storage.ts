@@ -635,10 +635,18 @@ export class DatabaseStorage implements IStorage {
       .where(eq(classrooms.customerUuid, customerUuid))
       .orderBy(classrooms.name);
     
+    // Map database snake_case fields to camelCase for JavaScript
+    const mappedResults = results.map(c => ({
+      ...c,
+      courseTitle: c.courseTitle || (c as any).course_title,
+      courseConfigurationCompleted: c.courseConfigurationCompleted ?? (c as any).course_configuration_completed,
+      sbgEnabled: c.sbgEnabled ?? (c as any).sbg_enabled
+    }));
+    
     console.log('🔍 [DB-QUERY] Database returned classrooms:', {
-      count: results.length,
+      count: mappedResults.length,
       customerUuid,
-      classrooms: results.map(c => ({
+      classrooms: mappedResults.map(c => ({
         id: c.id,
         name: c.name,
         courseTitle: c.courseTitle,
@@ -651,7 +659,7 @@ export class DatabaseStorage implements IStorage {
       }))
     });
     
-    return results;
+    return mappedResults;
   }
 
   async getClassroomByGoogleId(googleClassId: string): Promise<Classroom | undefined> {
