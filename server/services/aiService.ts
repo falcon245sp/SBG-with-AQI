@@ -779,21 +779,21 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     try {
       console.log('Analyzing document content with length:', documentContent.length);
       
-      console.log('Starting document analysis with GPT-4o-mini (primary) and Grok (fallback)');
+      console.log(`Starting document analysis with ${OPENAI_MODEL} (primary) and Grok (fallback)`);
       
-      // Try GPT-4o-mini first with the proper GPT-4o-mini prompt
+      // Try GPT-5-mini first with the simple prompt
       let gpt5Result: AIAnalysisResult | null = null;
       try {
-        console.log('Attempting GPT-4o-mini analysis...');
+        console.log(`Attempting ${OPENAI_MODEL} analysis...`);
         gpt5Result = await this.analyzeGPT5(
           `Analyze this educational document content for standards alignment and rigor level.`,
           `Document content: ${documentContent}\n\nDocument type: ${mimeType}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
           jurisdictions,
           course
         );
-        console.log('✅ GPT-4o-mini analysis successful');
+        console.log(`✅ ${OPENAI_MODEL} analysis successful`);
       } catch (error) {
-        console.error('⚠️ GPT-4o-mini analysis failed, falling back to Grok:', error);
+        console.error(`⚠️ ${OPENAI_MODEL} analysis failed, falling back to Grok:`, error);
       }
       
       // Use GPT-4o-mini result if successful, otherwise fall back to Grok
