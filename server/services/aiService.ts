@@ -2,7 +2,11 @@ import OpenAI from "openai";
 import Anthropic from '@anthropic-ai/sdk';
 import { logger } from '../utils/logger';
 
-// the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
+// Currently using OpenAI GPT-4o-mini model as requested by the user
+const OPENAI_MODEL = "gpt-4o-mini";
+
+console.log(`AI Service initialized with OpenAI model: ${OPENAI_MODEL}`);
+
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY
 });
@@ -29,7 +33,7 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY_ENV_VAR || "default_key",
 });
 
-// GPT-5 compatible JSON schemas for structured output
+// GPT-4o-mini compatible JSON schemas for structured output
 export const QUESTION_LIST_SCHEMA = {
   name: "QuestionList",
   schema: {
@@ -175,7 +179,7 @@ function validateAgainstQuestionListSchema(data: any): { valid: boolean; error?:
   return { valid: true };
 }
 
-// Robust JSON extractor for GPT-5 responses with programmatic schema validation
+// Robust JSON extractor for GPT-4o-mini responses with programmatic schema validation
 export function extractAndValidateQuestionList(rawContent: string): {
   success: boolean;
   data?: QuestionListItem[];
@@ -613,14 +617,14 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     }>;
   }> {
     try {
-      console.log('Analyzing document with custom prompt configuration with GPT-5 (primary) and Grok (fallback)');
+      console.log('Analyzing document with custom prompt configuration with GPT-4o-mini (primary) and Grok (fallback)');
       
-      // Try GPT-5 first with standardized QUESTION_LIST_SCHEMA format
+      // Try GPT-4o-mini first with standardized QUESTION_LIST_SCHEMA format
       let gpt5Result: AIAnalysisResult | null = null;
       try {
-        console.log('Attempting GPT-5 analysis with custom configuration...');
+        console.log('Attempting GPT-4o-mini analysis with custom configuration...');
         
-        // Use the standardized generatePromptWithStandards for GPT-5 compatibility
+        // Use the standardized generatePromptWithStandards for GPT-4o-mini compatibility
         const focusStandards = customization?.focusStandards;
         const jurisdictionPriority = customization?.jurisdictionPriority || jurisdictions;
         
@@ -631,9 +635,9 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
           this.generatePromptWithStandards(focusStandards, jurisdictionPriority, course),
           course
         );
-        console.log('✅ GPT-5 analysis with custom configuration successful');
+        console.log('✅ GPT-4o-mini analysis with custom configuration successful');
       } catch (error) {
-        console.error('⚠️ GPT-5 analysis with custom configuration failed, falling back to Grok:', error);
+        console.error('⚠️ GPT-4o-mini analysis with custom configuration failed, falling back to Grok:', error);
       }
       
       // Fallback to Grok with the full custom prompt
@@ -652,7 +656,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         aiResults.gpt5 = gpt5Result;
       }
       
-      // Check if GPT-5/Grok returned individual questions - parse from raw_response using robust extraction
+      // Check if GPT-4o-mini/Grok returned individual questions - parse from raw_response using robust extraction
       let extractedQuestions: QuestionListItem[] | null = null;
       const mainResult = gpt5Result || grokResult;
       if (mainResult.rawResponse && mainResult.rawResponse.choices && mainResult.rawResponse.choices[0]) {
@@ -780,24 +784,24 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     try {
       console.log('Analyzing document content with length:', documentContent.length);
       
-      console.log('Starting document analysis with GPT-5 (primary) and Grok (fallback)');
+      console.log('Starting document analysis with GPT-4o-mini (primary) and Grok (fallback)');
       
-      // Try GPT-5 first with the proper GPT-5 prompt
+      // Try GPT-4o-mini first with the proper GPT-4o-mini prompt
       let gpt5Result: AIAnalysisResult | null = null;
       try {
-        console.log('Attempting GPT-5 analysis...');
+        console.log('Attempting GPT-4o-mini analysis...');
         gpt5Result = await this.analyzeGPT5(
           `Analyze this educational document content for standards alignment and rigor level.`,
           `Document content: ${documentContent}\n\nDocument type: ${mimeType}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
           jurisdictions,
           course
         );
-        console.log('✅ GPT-5 analysis successful');
+        console.log('✅ GPT-4o-mini analysis successful');
       } catch (error) {
-        console.error('⚠️ GPT-5 analysis failed, falling back to Grok:', error);
+        console.error('⚠️ GPT-4o-mini analysis failed, falling back to Grok:', error);
       }
       
-      // Use GPT-5 result if successful, otherwise fall back to Grok
+      // Use GPT-4o-mini result if successful, otherwise fall back to Grok
       const grokResult = gpt5Result || await this.analyzeGrok(
         `Analyze this educational document content for standards alignment and rigor level.`,
         `Document content: ${documentContent}\n\nDocument type: ${mimeType}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
@@ -1097,7 +1101,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     
     try {
       const response = await openai.chat.completions.create({
-        model: "gpt-4o", // the newest OpenAI model is "gpt-4o"
+        model: OPENAI_MODEL, // ChatGPT 4o-mini model
         messages: [
           {
             role: "system",
@@ -1125,8 +1129,8 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         processingTime
       };
     } catch (error) {
-      console.error('ChatGPT analysis error:', error);
-      throw new Error(`ChatGPT analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('ChatGPT 4o-mini analysis error:', error);
+      throw new Error(`ChatGPT 4o-mini analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -1135,7 +1139,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     
     try {
       const response = await openai.chat.completions.create({
-        model: "gpt-4o", // the newest OpenAI model is "gpt-4o"
+        model: OPENAI_MODEL, // ChatGPT 4o-mini model
         messages: [
           {
             role: "system",
@@ -1163,8 +1167,8 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         processingTime
       };
     } catch (error) {
-      console.error('ChatGPT analysis error:', error);
-      throw new Error(`ChatGPT analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('ChatGPT 4o-mini analysis error:', error);
+      throw new Error(`ChatGPT 4o-mini analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -1181,7 +1185,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     
     try {
       const response = await openai.chat.completions.create({
-        model: "gpt-5",
+        model: OPENAI_MODEL,
         messages: [
           {
             role: "system",
@@ -1209,8 +1213,8 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         processingTime
       };
     } catch (error) {
-      console.error('GPT-5 analysis error:', error);
-      throw new Error(`GPT-5 analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('GPT-4o-mini analysis error:', error);
+      throw new Error(`GPT-4o-mini analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -1220,15 +1224,15 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     let gpt5Response: any = null;
     
     try {
-      console.log('=== GPT-5 API CALL DEBUG ===');
+      console.log('=== GPT-4o-mini API CALL DEBUG ===');
       const dynamicPrompt = ANALYSIS_PROMPT.replace('{JURISDICTIONS}', jurisdictions.join(' and ')).replace('{COURSE}', course || 'General Mathematics');
       console.log('System prompt length:', dynamicPrompt.length);
       console.log('User content length:', `Question: ${questionText}\n\nContext: ${context}`.length);
-      console.log('Model:', "gpt-5");
+      console.log('Model:', OPENAI_MODEL);
       console.log('Max tokens:', 10000);
       
       gpt5Response = await openai.chat.completions.create({
-        model: "gpt-5",
+        model: OPENAI_MODEL,
         messages: [
           {
             role: "system",
@@ -1256,8 +1260,8 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         processingTime
       };
     } catch (error) {
-      console.error('GPT-5 analysis error:', error);
-      throw new Error(`GPT-5 analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('GPT-4o-mini analysis error:', error);
+      throw new Error(`GPT-4o-mini analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -1267,7 +1271,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     let gpt5Response: any = null;
     
     try {
-      console.log('=== GPT-5 API CALL DEBUG ===');
+      console.log('=== GPT-4o-mini API CALL DEBUG ===');
       console.log('Response status:', gpt5Response.choices?.[0]?.finish_reason);
       console.log('Content length:', gpt5Response.choices?.[0]?.message?.content?.length || 0);
       console.log('Raw content (first 500 chars):', (gpt5Response.choices?.[0]?.message?.content || '').substring(0, 500));
@@ -1281,12 +1285,12 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       console.log('Raw content length:', rawContent.length);
       console.log('=== END STRUCTURED JSON RESPONSE ===');
       
-      // Use robust JSON extraction for GPT-5 responses
+      // Use robust JSON extraction for GPT-4o-mini responses
       console.log('=== ATTEMPTING ROBUST JSON EXTRACTION ===');
       const extractionResult = extractAndValidateQuestionList(rawContent);
       
       if (extractionResult.success && extractionResult.data) {
-        console.log('✅ GPT-5 ROBUST EXTRACTION SUCCESS!');
+        console.log('✅ GPT-4o-mini ROBUST EXTRACTION SUCCESS!');
         const validatedQuestions = extractionResult.data;
         console.log('Number of validated questions:', validatedQuestions.length);
         
@@ -1312,13 +1316,13 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
             rigor: transformed.rigor,
             rawResponse: gpt5Response,
             processingTime,
-            aiEngine: 'gpt-5'
+            aiEngine: 'gpt-4o-mini'
           };
         });
         
         // Return first question's data for compatibility
         if (questions.length === 0) {
-          throw new Error('GPT-5 analysis succeeded but no questions could be extracted from the response');
+          throw new Error('GPT-4o-mini analysis succeeded but no questions could be extracted from the response');
         }
         const firstQuestion = questions[0];
         
@@ -1331,10 +1335,10 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
           allQuestions: questions
         };
       } else {
-        console.error('❌ GPT-5 ROBUST EXTRACTION FAILED:', extractionResult.error);
+        console.error('❌ GPT-4o-mini ROBUST EXTRACTION FAILED:', extractionResult.error);
         console.error('Cleaned content was:', extractionResult.cleanedContent?.substring(0, 500));
         
-        throw new Error(`GPT-5 JSON extraction failed: ${extractionResult.error}`);
+        throw new Error(`GPT-4o-mini JSON extraction failed: ${extractionResult.error}`);
       }
       
     } catch (error) {
@@ -1382,7 +1386,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         console.error('No response content available for analysis');
       }
       
-      throw new Error(`GPT-5 old debug version analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(`GPT-4o-mini old debug version analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -1907,11 +1911,11 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         dynamicPrompt
 );
       
-      // Check if GPT-5/Grok returned individual questions - parse from raw_response using robust extraction
+      // Check if GPT-4o-mini/Grok returned individual questions - parse from raw_response using robust extraction
       let extractedQuestions: QuestionListItem[] | null = null;
       if (grokResult.rawResponse && grokResult.rawResponse.choices && grokResult.rawResponse.choices[0]) {
         const rawContent = grokResult.rawResponse.choices[0].message?.content || '';
-        console.log('Attempting robust JSON extraction from GPT-5/Grok response with standards...');
+        console.log('Attempting robust JSON extraction from GPT-4o-mini/Grok response with standards...');
         
         const extractionResult = extractAndValidateQuestionList(rawContent);
         if (extractionResult.success && extractionResult.data) {
@@ -1984,7 +1988,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         };
       }
       
-      // Check if GPT-5/Grok returned individual questions in the old JSON format
+      // Check if GPT-4o-mini/Grok returned individual questions in the old JSON format
       if (grokResult.jsonResponse && grokResult.jsonResponse.problems && Array.isArray(grokResult.jsonResponse.problems)) {
         console.log(`Creating ${grokResult.jsonResponse.problems.length} individual question entries from JSON response with standards`);
         
@@ -2062,9 +2066,9 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     }
   }
 
-  // Compatibility wrappers for existing method calls (delegates to GPT-5)
+  // Compatibility wrappers for existing method calls (delegates to GPT-4o-mini)
   async analyzeGrok(questionText: string, context: string, jurisdictions: string[], course?: string): Promise<AIAnalysisResult> {
-    console.log('Using GPT-5 for analysis (via analyzeGrok compatibility wrapper)');
+    console.log('Using GPT-4o-mini for analysis (via analyzeGrok compatibility wrapper)');
     return this.analyzeGPT5(questionText, context, jurisdictions, course);
   }
 
@@ -2075,15 +2079,15 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     customPrompt?: string,
     course?: string
   ): Promise<AIAnalysisResult> {
-    console.log('Using GPT-5 for analysis (via analyzeGrokWithPrompt compatibility wrapper)');
+    console.log('Using GPT-4o-mini for analysis (via analyzeGrokWithPrompt compatibility wrapper)');
     return this.analyzeGPT5WithPrompt(questionText, context, jurisdictions, customPrompt, course);
   }
 
   async analyzeQuestion(questionText: string, context: string, jurisdictions: string[], course?: string): Promise<{
     grok: AIAnalysisResult;
   }> {
-    // Use GPT-5 for analysis but maintain result structure
-    console.log('Using GPT-5 for question analysis');
+    // Use GPT-4o-mini for analysis but maintain result structure
+    console.log('Using GPT-4o-mini for question analysis');
     const grok = await this.analyzeGrok(questionText, context, jurisdictions, course)
 ;
 
