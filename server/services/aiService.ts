@@ -1,6 +1,8 @@
 import OpenAI from "openai";
 import Anthropic from '@anthropic-ai/sdk';
 import { logger } from '../utils/logger';
+import fs from 'fs';
+import path from 'path';
 
 // Using OpenAI GPT-5-mini model for better analysis results  
 const OPENAI_MODEL = "gpt-5-mini";
@@ -1215,7 +1217,163 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
   }
 
 
-  async analyzeGPT5(questionText: string, context: string, jurisdictions: string[], course?: string): Promise<AIAnalysisResult> {
+  async uploadFileToOpenAI(filePath: string): Promise<string> {
+    try {
+      console.log(`=== UPLOADING FILE TO OPENAI ===`);
+      console.log(`File path: ${filePath}`);
+      
+      // Check if file exists
+      if (!fs.existsSync(filePath)) {
+        throw new Error(`File not found: ${filePath}`);
+      }
+      
+      // Get file stats for logging
+      const stats = fs.statSync(filePath);
+      console.log(`File size: ${stats.size} bytes`);
+      
+      // Upload file to OpenAI
+      const fileStream = fs.createReadStream(filePath);
+      const response = await openai.files.create({
+        file: fileStream,
+        purpose: "assistants"
+      });
+      
+      console.log(`✅ File uploaded successfully. File ID: ${response.id}`);
+      console.log(`File status: ${response.status}`);
+      console.log(`=== END FILE UPLOAD ===`);
+      
+      return response.id;
+    } catch (error) {
+      console.error('Error uploading file to OpenAI:', error);
+      throw new Error(`File upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async deleteFileFromOpenAI(fileId: string): Promise<void> {
+    try {
+      console.log(`=== DELETING FILE FROM OPENAI ===`);
+      console.log(`File ID: ${fileId}`);
+      
+      const response = await openai.files.del(fileId);
+      
+      console.log(`✅ File deleted successfully. Deleted: ${response.deleted}`);
+      console.log(`=== END FILE DELETION ===`);
+    } catch (error) {
+      console.error('Error deleting file from OpenAI:', error);
+      // Don't throw error on cleanup failure - just log it
+      console.warn(`File cleanup failed for ${fileId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async analyzeGPT5WithFile(
+    fileIds: string[], 
+    jurisdictions: string[], 
+    course?: string,
+    customPrompt?: string
+  ): Promise<AIAnalysisResult> {
+    const startTime = Date.now();
+    let gpt5Response: any = null;
+    
+    try {
+      console.log(`=== ${OPENAI_MODEL} FILE ANALYSIS DEBUG ===`);
+      console.log(`File IDs: ${fileIds.join(', ')}`);
+      
+      const basePrompt = customPrompt || this.generatePromptWithStandards(undefined, jurisdictions, course);
+      console.log('System prompt length:', basePrompt.length);
+      console.log('Model:', OPENAI_MODEL);
+      console.log('Max tokens:', 10000);
+      
+      gpt5Response = await openai.responses.create({
+        model: OPENAI_MODEL,
+        instructions: basePrompt,
+        user_message: "Please analyze the uploaded document(s) for educational standards and rigor levels. Focus on identifying all individual questions/problems in the document.",
+        attachments: fileIds.map(fileId => ({
+          file_id: fileId,
+          tools: [{ type: "file_search" }]
+        })),
+        max_output_tokens: 10000,
+        temperature: 1.0
+      });
+
+      const processingTime = Date.now() - startTime;
+      const rawContent = gpt5Response.text || gpt5Response.message?.content || '';
+      
+      console.log(`=== ${OPENAI_MODEL} FILE ANALYSIS RESPONSE ===`);
+      console.log('Response length:', rawContent.length);
+      console.log('Response preview:', rawContent.substring(0, 200));
+      
+      // Use robust JSON extraction for question list
+      const extractionResult = extractAndValidateQuestionList(rawContent);
+      
+      if (extractionResult.success && extractionResult.data) {
+        console.log(`✅ Successfully extracted ${extractionResult.data.length} questions from file analysis`);
+        
+        // Transform to analysis result format using first question for compatibility
+        const firstQuestion = extractionResult.data[0];
+        if (firstQuestion) {
+          return {
+            standards: [{
+              code: firstQuestion.standard,
+              description: firstQuestion.questionSummary,
+              jurisdiction: jurisdictions[0] || 'Common Core',
+              gradeLevel: '9-12',
+              subject: 'Mathematics'
+            }],
+            rigor: {
+              level: firstQuestion.rigor,
+              dokLevel: firstQuestion.rigor === 'mild' ? 'DOK 1' : firstQuestion.rigor === 'medium' ? 'DOK 2' : 'DOK 3',
+              justification: firstQuestion.justification,
+              confidence: 0.85
+            },
+            rawResponse: gpt5Response,
+            processingTime,
+            jsonResponse: extractionResult.data,
+            aiEngine: 'gpt-5-mini-file'
+          };
+        }
+      }
+      
+      // Fallback to basic analysis result
+      console.log('⚠️ Using fallback analysis result format');
+      return {
+        standards: [{
+          code: 'UNKNOWN',
+          description: 'File analysis completed',
+          jurisdiction: jurisdictions[0] || 'Common Core',
+          gradeLevel: '9-12',
+          subject: 'Mathematics'
+        }],
+        rigor: {
+          level: 'medium',
+          dokLevel: 'DOK 2',
+          justification: 'File-based analysis',
+          confidence: 0.7
+        },
+        rawResponse: gpt5Response,
+        processingTime,
+        aiEngine: 'gpt-5-mini-file'
+      };
+      
+    } catch (error) {
+      console.error(`${OPENAI_MODEL} file analysis error:`, error);
+      throw new Error(`${OPENAI_MODEL} file analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async analyzeGPT5(
+    questionText: string, 
+    context: string, 
+    jurisdictions: string[], 
+    course?: string,
+    fileIds?: string[]
+  ): Promise<AIAnalysisResult> {
+    // If file IDs are provided, use file-based analysis
+    if (fileIds && fileIds.length > 0) {
+      console.log(`Using file-based analysis with ${fileIds.length} file(s)`);
+      return this.analyzeGPT5WithFile(fileIds, jurisdictions, course);
+    }
+    
+    // Original text-based analysis
     const startTime = Date.now();
     let gpt5Response: any = null;
     

@@ -43,41 +43,139 @@ export class DocumentProcessor {
         component: 'DocumentProcessor'
       });
 
-      // Extract text content from the document
-      logger.documentProcessing('Starting text extraction', {
-        documentId,
-        fileName: document.originalPath,
-        component: 'DocumentProcessor'
-      });
-      
-      const extractedText = await this.extractTextFromDocument(document.originalPath, document.mimeType);
-      
-      if (!extractedText || extractedText.trim().length === 0) {
-        throw new Error('No text content could be extracted from the document');
-      }
-      
-      logger.documentProcessing('Text extraction completed', {
-        documentId,
-        component: 'DocumentProcessor',
-        operation: 'textExtraction'
-      });
-      
-      // Send extracted text to AI engines for analysis
+      // Try OpenAI file upload for PDFs first, fallback to text extraction
+      let analysisResults: any;
+      let uploadedFileId: string | undefined;
+      let extractedText: string | undefined;
       const courseContext = document.courseTitle || undefined;
-      const analysisResults = focusStandards && focusStandards.length > 0
-        ? await aiService.analyzeDocumentWithStandards(
-            extractedText,
-            document.mimeType,
-            document.jurisdictions,
-            focusStandards,
-            courseContext
-          )
-        : await aiService.analyzeDocument(
-            extractedText,
-            document.mimeType,
+      
+      try {
+        // Check if file is a PDF and try direct file upload to OpenAI
+        if (document.mimeType === 'application/pdf') {
+          console.log(`📄 Attempting OpenAI file upload for PDF: ${document.originalPath}`);
+          
+          logger.documentProcessing('Starting OpenAI file upload', {
+            documentId,
+            fileName: document.originalPath,
+            component: 'DocumentProcessor'
+          });
+          
+          uploadedFileId = await aiService.uploadFileToOpenAI(document.originalPath);
+          console.log(`✅ Successfully uploaded PDF to OpenAI. File ID: ${uploadedFileId}`);
+          
+          // Use file-based analysis with OpenAI
+          logger.documentProcessing('Starting file-based AI analysis', {
+            documentId,
+            component: 'DocumentProcessor',
+            operation: 'fileBasedAnalysis'
+          });
+          
+          const fileAnalysisResult = await aiService.analyzeGPT5WithFile(
+            [uploadedFileId],
             document.jurisdictions,
             courseContext
           );
+          
+          // Transform file analysis result to match expected format
+          analysisResults = {
+            questions: [{
+              text: fileAnalysisResult.standards?.[0]?.description || "PDF file analysis completed",
+              context: `File-based analysis of ${document.name}`,
+              aiResults: {
+                grok: fileAnalysisResult
+              }
+            }]
+          };
+          
+          // If the file analysis returned multiple questions, use those instead
+          if (fileAnalysisResult.jsonResponse && Array.isArray(fileAnalysisResult.jsonResponse)) {
+            console.log(`✅ File analysis extracted ${fileAnalysisResult.jsonResponse.length} individual questions`);
+            
+            analysisResults = {
+              questions: fileAnalysisResult.jsonResponse.map((question: any, index: number) => ({
+                text: question.questionSummary || `Question ${index + 1}`,
+                context: `File-based analysis - Question ${question.question || index + 1}: ${question.questionSummary || 'Educational assessment'}`,
+                problemNumber: question.question || index + 1,
+                aiResults: {
+                  grok: {
+                    standards: [{
+                      code: question.standard,
+                      description: question.questionSummary,
+                      jurisdiction: document.jurisdictions[0] || 'Common Core',
+                      gradeLevel: '9-12',
+                      subject: 'Mathematics'
+                    }],
+                    rigor: {
+                      level: question.rigor,
+                      dokLevel: question.rigor === 'mild' ? 'DOK 1' : question.rigor === 'medium' ? 'DOK 2' : 'DOK 3',
+                      justification: question.justification,
+                      confidence: 0.85
+                    },
+                    rawResponse: fileAnalysisResult.rawResponse,
+                    processingTime: fileAnalysisResult.processingTime,
+                    aiEngine: 'gpt-5-mini-file'
+                  }
+                }
+              }))
+            };
+          }
+          
+          logger.documentProcessing('File-based AI analysis completed', {
+            documentId,
+            component: 'DocumentProcessor',
+            operation: 'fileBasedAnalysis'
+          });
+          
+          console.log(`🎯 Successfully completed file-based analysis for document: ${documentId}`);
+          
+        } else {
+          throw new Error('File type not supported for direct upload - falling back to text extraction');
+        }
+        
+      } catch (fileUploadError) {
+        console.log(`⚠️ File upload failed, falling back to text extraction: ${fileUploadError instanceof Error ? fileUploadError.message : 'Unknown error'}`);
+        
+        // Cleanup uploaded file if it exists
+        if (uploadedFileId) {
+          await aiService.deleteFileFromOpenAI(uploadedFileId);
+          uploadedFileId = undefined;
+        }
+        
+        // Fallback to text extraction approach
+        logger.documentProcessing('Starting text extraction fallback', {
+          documentId,
+          fileName: document.originalPath,
+          component: 'DocumentProcessor'
+        });
+        
+        extractedText = await this.extractTextFromDocument(document.originalPath, document.mimeType);
+        
+        if (!extractedText || extractedText.trim().length === 0) {
+          throw new Error('No text content could be extracted from the document');
+        }
+        
+        logger.documentProcessing('Text extraction completed', {
+          documentId,
+          component: 'DocumentProcessor',
+          operation: 'textExtraction'
+        });
+        
+        // Send extracted text to AI engines for analysis
+        analysisResults = focusStandards && focusStandards.length > 0
+          ? await aiService.analyzeDocumentWithStandards(
+              extractedText,
+              document.mimeType,
+              document.jurisdictions,
+              focusStandards,
+              courseContext
+            )
+          : await aiService.analyzeDocument(
+              extractedText,
+              document.mimeType,
+              document.jurisdictions,
+              courseContext
+            );
+      }
       
       // Create question records from AI analysis
       logger.documentProcessing('AI analysis completed', {
@@ -137,7 +235,19 @@ export class DocumentProcessor {
       }
 
       console.log(`Completed processing for document: ${documentId}`);
+      
+      // Cleanup uploaded files after successful processing
+      if (uploadedFileId) {
+        console.log(`🧹 Cleaning up uploaded file: ${uploadedFileId}`);
+        await aiService.deleteFileFromOpenAI(uploadedFileId);
+      }
+      
     } catch (error) {
+      // Cleanup uploaded files in case of error
+      if (uploadedFileId) {
+        console.log(`🧹 Cleaning up uploaded file due to error: ${uploadedFileId}`);
+        await aiService.deleteFileFromOpenAI(uploadedFileId);
+      }
       console.error(`=== DOCUMENT PROCESSING FAILURE ANALYSIS ===`);
       console.error('Document ID:', documentId);
       console.error('Error type:', error instanceof Error ? error.constructor.name : typeof error);
@@ -202,7 +312,7 @@ export class DocumentProcessor {
       console.log('Direct AI rigor:', JSON.stringify(aiResult.rigor));
       
       // Store raw AI response for reference (optional - keep for debugging)
-      await this.storeIndividualAIResponses(question, { [aiResult.aiEngine || 'grok']: aiResult });
+      await this.storeIndividualAIResponses(question, { [aiResult.aiEngine || 'openai']: aiResult });
       
       // NO CONSENSUS - Use AI response directly as DRAFT
       await DatabaseWriteService.createQuestionResult({
@@ -241,33 +351,36 @@ export class DocumentProcessor {
   
   private async storeIndividualAIResponses(question: any, enhancedResults: any): Promise<void> {
     try {
-      console.log('Storing individual AI response for Grok engine');
-      
-      if (!enhancedResults.grok) {
-        throw new Error('Missing Grok result in enhanced results');
+      // Find the first available AI result
+      const engineKeys = Object.keys(enhancedResults);
+      if (engineKeys.length === 0) {
+        throw new Error('No AI results found in enhanced results');
       }
       
-      const grokResult = enhancedResults.grok;
-      console.log('Grok result details:', {
-        hasStandards: !!grokResult.standards,
-        standardsCount: grokResult.standards?.length || 0,
-        rigorLevel: grokResult.rigor?.level,
-        confidence: grokResult.rigor?.confidence,
-        processingTime: grokResult.processingTime
+      const engineKey = engineKeys[0];
+      const aiResult = enhancedResults[engineKey];
+      
+      console.log(`Storing individual AI response for ${engineKey} engine`);
+      console.log(`${engineKey} result details:`, {
+        hasStandards: !!aiResult.standards,
+        standardsCount: aiResult.standards?.length || 0,
+        rigorLevel: aiResult.rigor?.level,
+        confidence: aiResult.rigor?.confidence,
+        processingTime: aiResult.processingTime
       });
       
       await DatabaseWriteService.createAIResponse({
         questionId: question.id,
-        aiEngine: 'grok',
-        standardsIdentified: grokResult.standards || [],
-        rigorLevel: grokResult.rigor?.level || 'mild',
-        rigorJustification: grokResult.rigor?.justification || 'No justification provided',
-        confidence: (grokResult.rigor?.confidence || 0.5).toString(),
-        rawResponse: grokResult.rawResponse || {},
-        processingTime: grokResult.processingTime || 0,
+        aiEngine: engineKey,
+        standardsIdentified: aiResult.standards || [],
+        rigorLevel: aiResult.rigor?.level || 'mild',
+        rigorJustification: aiResult.rigor?.justification || 'No justification provided',
+        confidence: (aiResult.rigor?.confidence || 0.5).toString(),
+        rawResponse: aiResult.rawResponse || {},
+        processingTime: aiResult.processingTime || 0,
       });
       
-      console.log('Successfully stored Grok AI response');
+      console.log(`Successfully stored ${engineKey} AI response`);
     } catch (error) {
       console.error('Error storing individual AI responses:', error);
       console.error('Enhanced results structure:', JSON.stringify(enhancedResults, null, 2));
