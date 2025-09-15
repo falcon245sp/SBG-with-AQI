@@ -1,0 +1,93 @@
+{
+  "documentId": "4a1846ba-a567-4dcc-a388-3305db708134",
+  "customerUuid": "43155b6c-895f-476a-9c4b-1b4446825715",
+  "originalFileSize": 79905,
+  "originalMimeType": "application/pdf",
+  "processingVersion": "two-pass-v1",
+  "createdAt": "2025-09-15T06:28:21.313Z",
+  "pass1Started": "2025-09-15T06:28:22.049Z",
+  "pass1Completed": "2025-09-15T06:28:22.051Z",
+  "pass1RawResponse": null,
+  "pass1ExtractedQuestions": [],
+  "pass1QuestionCount": 0,
+  "pass1ErrorMessage": "Use analyzeWithAssistantsAPI for file uploads - Chat Completions API does not accept file_ids parameter",
+  "pass1Checksum": "facda9778e1d974ae9d07502c4328296",
+  "aiEnginesUsed": [
+    "openai"
+  ],
+  "totalProcessingTime": 5,
+  "extractedText": "Name ___________________________  Date __________________\n\nIntroduction to Algebraic Equations Test – Version 1\n\n1\n\n3\n\n5\n\n7\n\n9\n\nSolve for 𝑥𝑥. \n\n𝑥𝑥 + 9 = 16\n\nSolve for 𝑥𝑥. \n\n11 = 3𝑥𝑥 + 2\n\nSolve for 𝑥𝑥. \n\n11 + 17 = 3𝑥𝑥 + 4𝑥𝑥\n\nSolve for 𝑥𝑥. \n\n2\n\n4\n\n6\n\n8\n\nSolve for 𝑥𝑥. \n\n−18 = 𝑥𝑥 + 7\n\nSolve for 𝑥𝑥.\n\n𝑥𝑥 − 15 = −42\n\nSolve for 𝑥𝑥. \n\n19 + 12𝑥𝑥 − 5𝑥𝑥 = 33\n\nSolve for 𝑥𝑥. \n\n−2𝑥𝑥 = −11𝑥𝑥 − 27\n\n2𝑥𝑥 − 10𝑥𝑥 − 9 = −25\n\nSolve for 𝑥𝑥. \n\n5𝑥𝑥 − 9 = 3𝑥𝑥 + 7\n\n10\n\nSolve for 𝑥𝑥. \n\n−𝑥𝑥 + 7 = −6𝑥𝑥 − 18\n\n\fName ___________________________  Date __________________\n\nIntroduction to Algebraic Equations Test – Version 1\n\n11\n\nSolve for 𝑥𝑥. \n\n12\n\nSolve for 𝑥𝑥. \n\n−3𝑥𝑥 − 27 = 8𝑥𝑥 + 6\n\n𝑥𝑥 + 21 = 3(𝑥𝑥 + 5)\n\n13\n\n15\n\n17\n\n19\n\nSolve for 𝑥𝑥. \n\n14\n\nSolve for 𝑥𝑥. \n\n5 𝑥𝑥 − 4 = −2(−𝑥𝑥 + 4)\n\n7 −𝑥𝑥 − 1 + 5𝑥𝑥 = 4𝑥𝑥 + 3 + 14\n\nSolve for 𝑥𝑥. \n\n16\n\nSolve for 𝑥𝑥. \n\n−2 𝑥𝑥 − 6 + 2 = 4(𝑥𝑥 + 8)\n\n9 𝑥𝑥 + 1 = 3 𝑥𝑥 + 4 − 7𝑥𝑥 + 10\n\nSolve for 𝑥𝑥. \n\n𝑥𝑥\n6\n\n= 1\n\nSolve for 𝑥𝑥. \n\n3𝑥𝑥 = 42\n\n18\n\n20\n\nSolve for 𝑥𝑥. \n\n−3 =\n\n𝑥𝑥\n8\n\nSolve for 𝑥𝑥. \n\n−12 = 4𝑥𝑥",
+  "extractedTextLength": 1104,
+  "dbStorageStarted": "2025-09-15T06:28:53.781Z",
+  "dbStorageCompleted": "2025-09-15T06:28:54.009Z",
+  "dbStoredQuestions": [
+    {
+      "id": "e2ca3af9-b0e3-4692-bd1f-bd0b7ccb237e",
+      "documentId": "4a1846ba-a567-4dcc-a388-3305db708134",
+      "questionNumber": "1",
+      "questionText": "Solve linear equations in one variable, including equations with rational number coefficients and those requiring use of the distributive property and collecting like terms.",
+      "context": "Question 1: Analysis for standard CCSS.MATH.CONTENT.8.EE.C.7",
+      "questionType": null,
+      "createdAt": "2025-09-15T06:28:53.820Z",
+      "aiResults": {
+        "grok": {
+          "standards": [
+            {
+              "code": "CCSS.MATH.CONTENT.8.EE.C.7",
+              "description": "Solve linear equations in one variable, including equations with rational number coefficients and those requiring use of the distributive property and collecting like terms.",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "8",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "2",
+            "justification": "The instruction text ('Solve for x.') asks students to solve a variety of one-variable linear equations (one-step, multi-step, distributive property, combine like terms, variables on both sides, simple fractions). Tasks require procedural application of algebraic techniques rather than mere recall or extended reasoning.",
+            "confidence": 0.92
+          },
+          "rawResponse": {
+            "id": "chatcmpl-CFwzGzHfQyHBqkIvH9Ks7QCcDxzG8",
+            "object": "chat.completion",
+            "created": 1757917702,
+            "model": "gpt-5-mini-2025-08-07",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\n  \"standards\": [\n    {\n      \"code\": \"CCSS.MATH.CONTENT.8.EE.C.7\",\n      \"description\": \"Solve linear equations in one variable, including equations with rational number coefficients and those requiring use of the distributive property and collecting like terms.\",\n      \"jurisdiction\": \"Common Core State Standards\",\n      \"gradeLevel\": \"8\",\n      \"subject\": \"Mathematics\"\n    }\n  ],\n  \"rigor\": {\n    \"level\": \"medium\",\n    \"dokLevel\": \"2\",\n    \"justification\": \"The instruction text ('Solve for x.') asks students to solve a variety of one-variable linear equations (one-step, multi-step, distributive property, combine like terms, variables on both sides, simple fractions). Tasks require procedural application of algebraic techniques rather than mere recall or extended reasoning.\",\n    \"confidence\": 0.92\n  }\n}",
+                  "refusal": null,
+                  "annotations": []
+                },
+                "finish_reason": "stop"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 1033,
+              "completion_tokens": 1353,
+              "total_tokens": 2386,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 1152,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+              }
+            },
+            "service_tier": "default",
+            "system_fingerprint": null
+          },
+          "processingTime": 20203,
+          "aiEngine": "chatgpt"
+        }
+      }
+    }
+  ],
+  "dbStoredAiResponses": [],
+  "dbStoredResults": [],
+  "dbStorageChecksum": "4281a51a90c644ea16daa3ee89bb3303"
+}
