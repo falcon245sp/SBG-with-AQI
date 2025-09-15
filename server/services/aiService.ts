@@ -326,19 +326,34 @@ export interface PromptCustomization {
   outputFormat?: 'detailed' | 'concise' | 'standardized'; // Output format preference
 }
 
-const ANALYSIS_PROMPT = `You are an expert curriculum alignment engine.
+// Pass 1: Question Extraction Prompt
+const EXTRACTION_PROMPT = `You are an extraction engine. 
+From the assessment attached, output each question as a JSON object.
+
+Schema:
+{
+  "question_number": <int>,
+  "instruction_text": "<string containing only the instruction line>"
+}
+
+Rules:
+- Do not classify or interpret.
+- Do not add commentary.
+- Only output the instruction text exactly as written.`;
+
+// Pass 2: Classification Prompt
+const CLASSIFICATION_PROMPT = `You are a curriculum alignment engine.
 
 Task:
-Given a single assessment question, identify:
-1. The most relevant {JURISDICTIONS} standard (at the {COURSE} level, unless the question clearly belongs to another domain).
-2. The rigor level (1 = recall/procedure, 2 = application, 3 = reasoning/analysis).
+Given the following JSON object representing a single assessment item, 
+map it to the most relevant {JURISDICTIONS} standard (at the {COURSE} level) 
+and assign rigor (1 = recall, 2 = application, 3 = reasoning).
 
-Guidelines:
-- Look only at the instruction line. Ignore numbers or specific values.
-- Always use the official {JURISDICTIONS} code format (e.g., A-SSE.1, A-REI.3, N-Q.1).
-- Be consistent: if two questions use the same instruction type (e.g., "Complete the prime factorization..."), they must map to the same standard every time.
-- If more than one standard seems plausible, choose the single *most directly assessed* one, not supporting skills.
-- Output strictly in JSON.
+Rules:
+- Use only the "instruction_text" field for classification.
+- Be consistent: if two instruction_text values are identical or nearly identical, 
+  assign the same standard and rigor.
+- If more than one standard seems possible, choose the most directly assessed one.
 
 Output schema:
 {
@@ -1271,6 +1286,233 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       console.error('Error deleting file from OpenAI:', error);
       // Don't throw error on cleanup failure - just log it
       console.warn(`File cleanup failed for ${fileId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  // Pass 1: Extract questions from uploaded file
+  async extractQuestionsFromFile(fileIds: string[]): Promise<Array<{question_number: number, instruction_text: string}>> {
+    const startTime = Date.now();
+    
+    try {
+      logger.info(`[AIService] Extracting questions from uploaded file`, {
+        component: 'AIService',
+        operation: 'extractQuestions'
+      });
+
+      const gpt5Response = await openai.responses.create({
+        model: OPENAI_MODEL,
+        input: `${EXTRACTION_PROMPT}\n\nExtract all questions from the attached document.`,
+        tools: [{ type: 'file_search', vector_store_ids: [] }],
+        file_ids: fileIds,
+        temperature: OPENAI_TEMPERATURE,
+        max_output_tokens: 4000
+      });
+
+      const responseText = typeof gpt5Response.output_text === 'string' ? gpt5Response.output_text : '';
+      const processingTime = Date.now() - startTime;
+
+      // Parse the extraction response
+      let extractedQuestions;
+      try {
+        const cleanedText = String(responseText).replace(/```json\n?|\n?```/g, '').trim();
+        extractedQuestions = JSON.parse(cleanedText);
+        
+        if (!Array.isArray(extractedQuestions)) {
+          throw new Error('Expected array of questions');
+        }
+      } catch (parseError) {
+        console.error('Failed to parse question extraction:', parseError);
+        const errorMsg = parseError instanceof Error ? parseError.message : String(parseError);
+        throw new Error(`Failed to parse extraction response: ${errorMsg}`);
+      }
+
+      logger.info(`[AIService] Question extraction completed`, {
+        component: 'AIService',
+        operation: 'extractQuestions',
+        processingTime,
+        questionCount: extractedQuestions.length
+      });
+
+      return extractedQuestions;
+    } catch (error) {
+      const processingTime = Date.now() - startTime;
+      logger.error(`[AIService] Question extraction failed`, {
+        component: 'AIService',
+        operation: 'extractQuestions',
+        processingTime,
+        error: error instanceof Error ? error.message : String(error)
+      });
+      throw error;
+    }
+  }
+
+  // Two-Pass Analysis: Complete workflow for file-based analysis
+  async analyzeTwoPassWithFile(
+    fileIds: string[], 
+    jurisdictions: string[], 
+    course: string
+  ): Promise<AIAnalysisResult> {
+    const startTime = Date.now();
+    
+    try {
+      logger.info(`[AIService] Starting two-pass analysis with file upload`, {
+        component: 'AIService',
+        operation: 'twoPassAnalysis'
+      });
+
+      // Pass 1: Extract all questions from the file
+      const extractedQuestions = await this.extractQuestionsFromFile(fileIds);
+      
+      if (!extractedQuestions || extractedQuestions.length === 0) {
+        throw new Error('No questions could be extracted from the document');
+      }
+
+      // Pass 2: Classify each question individually
+      const questionResults = [];
+      for (const extractedQuestion of extractedQuestions) {
+        const result = await this.classifyExtractedQuestion(extractedQuestion, jurisdictions, course);
+        questionResults.push({
+          question: extractedQuestion.question_number,
+          questionSummary: extractedQuestion.instruction_text,
+          standard: result.standards[0]?.code || 'Unknown',
+          rigor: result.rigor.level,
+          justification: result.rigor.justification
+        });
+      }
+
+      const processingTime = Date.now() - startTime;
+
+      // Return result in the expected format (using first question for compatibility)
+      const firstResult = questionResults[0];
+      const result: AIAnalysisResult = {
+        standards: [{
+          code: firstResult.standard,
+          description: firstResult.questionSummary,
+          jurisdiction: jurisdictions[0] || "Common Core State Standards",
+          gradeLevel: "9-12",
+          subject: "Mathematics"
+        }],
+        rigor: {
+          level: firstResult.rigor,
+          dokLevel: firstResult.rigor === 'mild' ? 'DOK 1' : firstResult.rigor === 'medium' ? 'DOK 2' : 'DOK 3',
+          justification: firstResult.justification,
+          confidence: 0.90
+        },
+        rawResponse: questionResults,
+        processingTime,
+        jsonResponse: questionResults, // All questions for downstream processing
+        aiEngine: 'openai-two-pass'
+      };
+
+      logger.info(`[AIService] Two-pass analysis completed`, {
+        component: 'AIService',
+        operation: 'twoPassAnalysis',
+        questionCount: questionResults.length
+      });
+
+      return result;
+    } catch (error) {
+      const processingTime = Date.now() - startTime;
+      logger.error(`[AIService] Two-pass analysis failed`, {
+        component: 'AIService',
+        operation: 'twoPassAnalysis',
+        error: error instanceof Error ? error.message : String(error)
+      });
+      throw error;
+    }
+  }
+
+  // Pass 2: Classify a single extracted question
+  async classifyExtractedQuestion(
+    extractedQuestion: {question_number: number, instruction_text: string}, 
+    jurisdictions: string[], 
+    course: string
+  ): Promise<AIAnalysisResult> {
+    const startTime = Date.now();
+    
+    try {
+      logger.info(`[AIService] Classifying extracted question ${extractedQuestion.question_number}`, {
+        component: 'AIService',
+        operation: 'classifyQuestion'
+      });
+
+      const prompt = CLASSIFICATION_PROMPT
+        .replace(/{JURISDICTIONS}/g, jurisdictions.join(', '))
+        .replace(/{COURSE}/g, course);
+
+      const classificationInput = `${prompt}
+
+Input question to classify:
+${JSON.stringify(extractedQuestion)}
+
+Analyze this question and provide the classification as a single JSON object following the exact output schema above.`;
+
+      const gpt5Response = await openai.responses.create({
+        model: OPENAI_MODEL,
+        input: classificationInput,
+        temperature: OPENAI_TEMPERATURE,
+        max_output_tokens: 2000
+      });
+
+      const responseText = typeof gpt5Response.output_text === 'string' ? gpt5Response.output_text : '';
+      const processingTime = Date.now() - startTime;
+
+      // Parse the classification response
+      let questionResult;
+      try {
+        const cleanedText = String(responseText).replace(/```json\n?|\n?```/g, '').trim();
+        questionResult = JSON.parse(cleanedText);
+        
+        if (!questionResult.question_number || !questionResult.standard || !questionResult.rigor) {
+          throw new Error('Missing required fields in classification response');
+        }
+      } catch (parseError) {
+        console.error('Failed to parse question classification:', parseError);
+        const errorMsg = parseError instanceof Error ? parseError.message : String(parseError);
+        throw new Error(`Failed to parse classification response: ${errorMsg}`);
+      }
+
+      // Convert numeric rigor to level names  
+      const rigorLevel = questionResult.rigor === 1 ? 'mild' : questionResult.rigor === 2 ? 'medium' : 'spicy';
+      
+      const result: AIAnalysisResult = {
+        standards: [{
+          code: questionResult.standard,
+          description: questionResult.instruction_text || `Standard ${questionResult.standard}`,
+          jurisdiction: jurisdictions[0] || "Common Core State Standards",
+          gradeLevel: "9-12",
+          subject: "Mathematics"
+        }],
+        rigor: {
+          level: rigorLevel,
+          dokLevel: `DOK ${questionResult.rigor}`,
+          justification: `Rigor level ${questionResult.rigor} based on instruction analysis`,
+          confidence: 0.90
+        },
+        rawResponse: gpt5Response,
+        processingTime,
+        jsonResponse: questionResult,
+        aiEngine: 'openai'
+      };
+
+      logger.info(`[AIService] Question classification completed`, {
+        component: 'AIService',
+        operation: 'classifyQuestion',
+        processingTime,
+        standard: questionResult.standard,
+        rigor: questionResult.rigor
+      });
+
+      return result;
+    } catch (error) {
+      const processingTime = Date.now() - startTime;
+      logger.error(`[AIService] Question classification failed`, {
+        component: 'AIService',
+        operation: 'classifyQuestion',
+        processingTime,
+        error: error instanceof Error ? error.message : String(error)
+      });
+      throw error;
     }
   }
 

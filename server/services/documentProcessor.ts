@@ -70,7 +70,8 @@ export class DocumentProcessor {
             operation: 'fileBasedAnalysis'
           });
           
-          const fileAnalysisResult = await aiService.analyzeGPT5WithFile(
+          // Use new two-pass approach: extract questions first, then classify each individually
+          const fileAnalysisResult = await aiService.analyzeTwoPassWithFile(
             [uploadedFileId],
             document.jurisdictions,
             courseContext
