@@ -1,0 +1,353 @@
+{
+  "documentId": "98347f0c-7628-4d44-9eec-777fbddce266",
+  "customerUuid": "43155b6c-895f-476a-9c4b-1b4446825715",
+  "originalFileSize": 86092,
+  "originalMimeType": "application/pdf",
+  "processingVersion": "two-pass-v1",
+  "createdAt": "2025-09-15T05:58:23.428Z",
+  "pass1Started": "2025-09-15T05:58:23.893Z",
+  "pass1Completed": "2025-09-15T05:58:34.570Z",
+  "pass1RawResponse": null,
+  "pass1ExtractedQuestions": [],
+  "pass1QuestionCount": 0,
+  "pass1ErrorMessage": "Failed to parse extraction response: Unexpected token 'I', \"I don't se\"... is not valid JSON",
+  "pass1Checksum": "facda9778e1d974ae9d07502c4328296",
+  "aiEnginesUsed": [
+    "openai"
+  ],
+  "totalProcessingTime": 10680,
+  "extractedText": "Name ___________________________  Date __________________\n\nIntegers Test – Version 2\n\n1\n\n3\n\n5\n\n7\n\n9\n\nComplete the prime factorization for \nthe number below.\n\n2\n\nComplete the prime factorization for \nthe number below.\n\n195\n\n315\n\nGraph both of your numbers on a \nnumber line and then write an inequality \nto compare the two numbers.\n−2 𝑎𝑎𝑎𝑎𝑎𝑎 − 5\n\nAdd the two integers. \n\n7 + (−15)\n\nSubtract the two integers. \n\nGraph both of your numbers on a \nnumber line and then write an inequality \nto compare the two numbers.\n−8 𝑎𝑎𝑎𝑎𝑎𝑎 1\n\nAdd the two integers. \n\n(−3) + (−25)\n\nSubtract the two integers. \n\n4\n\n6\n\n8\n\n21 − (−8)\n\n−7 − (−12)\n\nSubtract the two integers. \n\n10\n\nMultiply the two integers.\n\n(−8) − 15\n\n(−5)(−1)\n\n\fName ___________________________  Date __________________\n\nIntegers Test – Version 2\n\n11\n\nMultiply the two integers.\n\n(−20)(3)\n\n12\n\nUse the order of operations to solve \neach problem.\n\n−10 + 2 7 − (−3)\n\n13\n\nUse the order of operations to solve \neach problem.\n\n14\n\nUse the order of operations to solve \neach problem.\n\n−\n\n26\n2\n\n+ 5 − 5(2)\n\n−4 2 + (9 + (−10))\n32\n\n15\n\nUse the order of operations to solve \neach problem.\n\n16\n\nUse the order of operations to solve \neach problem.\n\n5 + 42−3(2 − 6)\n\n− 15 − 21 +\n\n9\n3\n\n17\n\nDivide the two integers. \n\n18\n\nDivide the two integers. \n\n84 ÷ (−4)\n\n−63\n3\n\n19\n\nDivide the two integers. \n\n20\n\nDivide the two integers. \n\n−24 ÷ (−8)\n\n165\n−11",
+  "extractedTextLength": 1391,
+  "dbStorageStarted": "2025-09-15T05:59:40.515Z",
+  "dbStorageCompleted": "2025-09-15T05:59:41.600Z",
+  "dbStoredQuestions": [
+    {
+      "id": "2d9f27f2-ba76-45b0-bb78-68b7e12c35cc",
+      "documentId": "98347f0c-7628-4d44-9eec-777fbddce266",
+      "questionNumber": "1",
+      "questionText": "Find the greatest common factor and least common multiple of whole numbers and use prime factorization to do so.",
+      "context": "Question 1: Analysis for standard CCSS.MATH.CONTENT.6.NS.B.4",
+      "questionType": null,
+      "createdAt": "2025-09-15T05:59:40.547Z",
+      "aiResults": {
+        "grok": {
+          "standards": [
+            {
+              "code": "CCSS.MATH.CONTENT.6.NS.B.4",
+              "description": "Find the greatest common factor and least common multiple of whole numbers and use prime factorization to do so.",
+              "jurisdiction": "Common Core",
+              "gradeLevel": "6",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "2",
+            "justification": "The worksheet focuses on procedural fluency with integers (addition, subtraction, multiplication, division), prime factorization, graphing on a number line, and evaluating expressions using order of operations. Most items require multi-step application of rules rather than simple recall, but do not demand extended reasoning or proofs.",
+            "confidence": 0.7
+          },
+          "rawResponse": {
+            "id": "chatcmpl-CFwWREtLqbIaB59bMXKoDec0sK0Xb",
+            "object": "chat.completion",
+            "created": 1757915915,
+            "model": "gpt-5-mini-2025-08-07",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\n  \"standards\": [\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.NS.B.4\",\n      \"description\": \"Find the greatest common factor and least common multiple of whole numbers and use prime factorization to do so.\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.NS.C.6\",\n      \"description\": \"Understand and use positive and negative numbers: represent and compare integers and rational numbers on a number line and use inequalities to compare them.\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.7.NS.A.2\",\n      \"description\": \"Apply and extend previous understandings of addition and subtraction to add and subtract rational numbers; represent sums and differences on a number line.\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"7\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.7.NS.A.1\",\n      \"description\": \"Apply and extend previous understandings of multiplication and division to multiply and divide rational numbers (including integers).\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"7\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.EE.A.2\",\n      \"description\": \"Write, read, and evaluate numerical expressions using whole-number operations and parentheses (order of operations).\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics\"\n    }\n  ],\n  \"rigor\": {\n    \"level\": \"medium\",\n    \"dokLevel\": \"2\",\n    \"justification\": \"The worksheet focuses on procedural fluency with integers (addition, subtraction, multiplication, division), prime factorization, graphing on a number line, and evaluating expressions using order of operations. Most items require multi-step application of rules rather than simple recall, but do not demand extended reasoning or proofs.\",\n    \"confidence\": 0.7\n  }\n}",
+                  "refusal": null,
+                  "annotations": []
+                },
+                "finish_reason": "stop"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 768,
+              "completion_tokens": 3059,
+              "total_tokens": 3827,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 2560,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+              }
+            },
+            "service_tier": "default",
+            "system_fingerprint": null
+          },
+          "processingTime": 47413,
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "2927f539-a08f-4f39-9f4b-d33618402c23",
+      "documentId": "98347f0c-7628-4d44-9eec-777fbddce266",
+      "questionNumber": "2",
+      "questionText": "Understand and use positive and negative numbers: represent and compare integers and rational numbers on a number line and use inequalities to compare them.",
+      "context": "Question 2: Analysis for standard CCSS.MATH.CONTENT.6.NS.C.6",
+      "questionType": null,
+      "createdAt": "2025-09-15T05:59:40.619Z",
+      "aiResults": {
+        "grok": {
+          "standards": [
+            {
+              "code": "CCSS.MATH.CONTENT.6.NS.C.6",
+              "description": "Understand and use positive and negative numbers: represent and compare integers and rational numbers on a number line and use inequalities to compare them.",
+              "jurisdiction": "Common Core",
+              "gradeLevel": "6",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "2",
+            "justification": "The worksheet focuses on procedural fluency with integers (addition, subtraction, multiplication, division), prime factorization, graphing on a number line, and evaluating expressions using order of operations. Most items require multi-step application of rules rather than simple recall, but do not demand extended reasoning or proofs.",
+            "confidence": 0.7
+          },
+          "rawResponse": {
+            "id": "chatcmpl-CFwWREtLqbIaB59bMXKoDec0sK0Xb",
+            "object": "chat.completion",
+            "created": 1757915915,
+            "model": "gpt-5-mini-2025-08-07",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\n  \"standards\": [\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.NS.B.4\",\n      \"description\": \"Find the greatest common factor and least common multiple of whole numbers and use prime factorization to do so.\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.NS.C.6\",\n      \"description\": \"Understand and use positive and negative numbers: represent and compare integers and rational numbers on a number line and use inequalities to compare them.\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.7.NS.A.2\",\n      \"description\": \"Apply and extend previous understandings of addition and subtraction to add and subtract rational numbers; represent sums and differences on a number line.\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"7\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.7.NS.A.1\",\n      \"description\": \"Apply and extend previous understandings of multiplication and division to multiply and divide rational numbers (including integers).\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"7\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.EE.A.2\",\n      \"description\": \"Write, read, and evaluate numerical expressions using whole-number operations and parentheses (order of operations).\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics\"\n    }\n  ],\n  \"rigor\": {\n    \"level\": \"medium\",\n    \"dokLevel\": \"2\",\n    \"justification\": \"The worksheet focuses on procedural fluency with integers (addition, subtraction, multiplication, division), prime factorization, graphing on a number line, and evaluating expressions using order of operations. Most items require multi-step application of rules rather than simple recall, but do not demand extended reasoning or proofs.\",\n    \"confidence\": 0.7\n  }\n}",
+                  "refusal": null,
+                  "annotations": []
+                },
+                "finish_reason": "stop"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 768,
+              "completion_tokens": 3059,
+              "total_tokens": 3827,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 2560,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+              }
+            },
+            "service_tier": "default",
+            "system_fingerprint": null
+          },
+          "processingTime": 47413,
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "4f28e794-2e22-4600-8c78-7232cf4ee6bd",
+      "documentId": "98347f0c-7628-4d44-9eec-777fbddce266",
+      "questionNumber": "3",
+      "questionText": "Apply and extend previous understandings of addition and subtraction to add and subtract rational numbers; represent sums and differences on a number line.",
+      "context": "Question 3: Analysis for standard CCSS.MATH.CONTENT.7.NS.A.2",
+      "questionType": null,
+      "createdAt": "2025-09-15T05:59:40.691Z",
+      "aiResults": {
+        "grok": {
+          "standards": [
+            {
+              "code": "CCSS.MATH.CONTENT.7.NS.A.2",
+              "description": "Apply and extend previous understandings of addition and subtraction to add and subtract rational numbers; represent sums and differences on a number line.",
+              "jurisdiction": "Common Core",
+              "gradeLevel": "7",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "2",
+            "justification": "The worksheet focuses on procedural fluency with integers (addition, subtraction, multiplication, division), prime factorization, graphing on a number line, and evaluating expressions using order of operations. Most items require multi-step application of rules rather than simple recall, but do not demand extended reasoning or proofs.",
+            "confidence": 0.7
+          },
+          "rawResponse": {
+            "id": "chatcmpl-CFwWREtLqbIaB59bMXKoDec0sK0Xb",
+            "object": "chat.completion",
+            "created": 1757915915,
+            "model": "gpt-5-mini-2025-08-07",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\n  \"standards\": [\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.NS.B.4\",\n      \"description\": \"Find the greatest common factor and least common multiple of whole numbers and use prime factorization to do so.\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.NS.C.6\",\n      \"description\": \"Understand and use positive and negative numbers: represent and compare integers and rational numbers on a number line and use inequalities to compare them.\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.7.NS.A.2\",\n      \"description\": \"Apply and extend previous understandings of addition and subtraction to add and subtract rational numbers; represent sums and differences on a number line.\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"7\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.7.NS.A.1\",\n      \"description\": \"Apply and extend previous understandings of multiplication and division to multiply and divide rational numbers (including integers).\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"7\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.EE.A.2\",\n      \"description\": \"Write, read, and evaluate numerical expressions using whole-number operations and parentheses (order of operations).\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics\"\n    }\n  ],\n  \"rigor\": {\n    \"level\": \"medium\",\n    \"dokLevel\": \"2\",\n    \"justification\": \"The worksheet focuses on procedural fluency with integers (addition, subtraction, multiplication, division), prime factorization, graphing on a number line, and evaluating expressions using order of operations. Most items require multi-step application of rules rather than simple recall, but do not demand extended reasoning or proofs.\",\n    \"confidence\": 0.7\n  }\n}",
+                  "refusal": null,
+                  "annotations": []
+                },
+                "finish_reason": "stop"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 768,
+              "completion_tokens": 3059,
+              "total_tokens": 3827,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 2560,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+              }
+            },
+            "service_tier": "default",
+            "system_fingerprint": null
+          },
+          "processingTime": 47413,
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "3fb5d352-fce2-470e-8c3b-5e9d1909bc87",
+      "documentId": "98347f0c-7628-4d44-9eec-777fbddce266",
+      "questionNumber": "4",
+      "questionText": "Apply and extend previous understandings of multiplication and division to multiply and divide rational numbers (including integers).",
+      "context": "Question 4: Analysis for standard CCSS.MATH.CONTENT.7.NS.A.1",
+      "questionType": null,
+      "createdAt": "2025-09-15T05:59:40.762Z",
+      "aiResults": {
+        "grok": {
+          "standards": [
+            {
+              "code": "CCSS.MATH.CONTENT.7.NS.A.1",
+              "description": "Apply and extend previous understandings of multiplication and division to multiply and divide rational numbers (including integers).",
+              "jurisdiction": "Common Core",
+              "gradeLevel": "7",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "2",
+            "justification": "The worksheet focuses on procedural fluency with integers (addition, subtraction, multiplication, division), prime factorization, graphing on a number line, and evaluating expressions using order of operations. Most items require multi-step application of rules rather than simple recall, but do not demand extended reasoning or proofs.",
+            "confidence": 0.7
+          },
+          "rawResponse": {
+            "id": "chatcmpl-CFwWREtLqbIaB59bMXKoDec0sK0Xb",
+            "object": "chat.completion",
+            "created": 1757915915,
+            "model": "gpt-5-mini-2025-08-07",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\n  \"standards\": [\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.NS.B.4\",\n      \"description\": \"Find the greatest common factor and least common multiple of whole numbers and use prime factorization to do so.\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.NS.C.6\",\n      \"description\": \"Understand and use positive and negative numbers: represent and compare integers and rational numbers on a number line and use inequalities to compare them.\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.7.NS.A.2\",\n      \"description\": \"Apply and extend previous understandings of addition and subtraction to add and subtract rational numbers; represent sums and differences on a number line.\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"7\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.7.NS.A.1\",\n      \"description\": \"Apply and extend previous understandings of multiplication and division to multiply and divide rational numbers (including integers).\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"7\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.EE.A.2\",\n      \"description\": \"Write, read, and evaluate numerical expressions using whole-number operations and parentheses (order of operations).\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics\"\n    }\n  ],\n  \"rigor\": {\n    \"level\": \"medium\",\n    \"dokLevel\": \"2\",\n    \"justification\": \"The worksheet focuses on procedural fluency with integers (addition, subtraction, multiplication, division), prime factorization, graphing on a number line, and evaluating expressions using order of operations. Most items require multi-step application of rules rather than simple recall, but do not demand extended reasoning or proofs.\",\n    \"confidence\": 0.7\n  }\n}",
+                  "refusal": null,
+                  "annotations": []
+                },
+                "finish_reason": "stop"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 768,
+              "completion_tokens": 3059,
+              "total_tokens": 3827,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 2560,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+              }
+            },
+            "service_tier": "default",
+            "system_fingerprint": null
+          },
+          "processingTime": 47413,
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "81d718c1-5488-4192-b254-cf01d106d8fd",
+      "documentId": "98347f0c-7628-4d44-9eec-777fbddce266",
+      "questionNumber": "5",
+      "questionText": "Write, read, and evaluate numerical expressions using whole-number operations and parentheses (order of operations).",
+      "context": "Question 5: Analysis for standard CCSS.MATH.CONTENT.6.EE.A.2",
+      "questionType": null,
+      "createdAt": "2025-09-15T05:59:40.834Z",
+      "aiResults": {
+        "grok": {
+          "standards": [
+            {
+              "code": "CCSS.MATH.CONTENT.6.EE.A.2",
+              "description": "Write, read, and evaluate numerical expressions using whole-number operations and parentheses (order of operations).",
+              "jurisdiction": "Common Core",
+              "gradeLevel": "6",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "2",
+            "justification": "The worksheet focuses on procedural fluency with integers (addition, subtraction, multiplication, division), prime factorization, graphing on a number line, and evaluating expressions using order of operations. Most items require multi-step application of rules rather than simple recall, but do not demand extended reasoning or proofs.",
+            "confidence": 0.7
+          },
+          "rawResponse": {
+            "id": "chatcmpl-CFwWREtLqbIaB59bMXKoDec0sK0Xb",
+            "object": "chat.completion",
+            "created": 1757915915,
+            "model": "gpt-5-mini-2025-08-07",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\n  \"standards\": [\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.NS.B.4\",\n      \"description\": \"Find the greatest common factor and least common multiple of whole numbers and use prime factorization to do so.\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.NS.C.6\",\n      \"description\": \"Understand and use positive and negative numbers: represent and compare integers and rational numbers on a number line and use inequalities to compare them.\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.7.NS.A.2\",\n      \"description\": \"Apply and extend previous understandings of addition and subtraction to add and subtract rational numbers; represent sums and differences on a number line.\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"7\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.7.NS.A.1\",\n      \"description\": \"Apply and extend previous understandings of multiplication and division to multiply and divide rational numbers (including integers).\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"7\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.EE.A.2\",\n      \"description\": \"Write, read, and evaluate numerical expressions using whole-number operations and parentheses (order of operations).\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics\"\n    }\n  ],\n  \"rigor\": {\n    \"level\": \"medium\",\n    \"dokLevel\": \"2\",\n    \"justification\": \"The worksheet focuses on procedural fluency with integers (addition, subtraction, multiplication, division), prime factorization, graphing on a number line, and evaluating expressions using order of operations. Most items require multi-step application of rules rather than simple recall, but do not demand extended reasoning or proofs.\",\n    \"confidence\": 0.7\n  }\n}",
+                  "refusal": null,
+                  "annotations": []
+                },
+                "finish_reason": "stop"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 768,
+              "completion_tokens": 3059,
+              "total_tokens": 3827,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 2560,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+              }
+            },
+            "service_tier": "default",
+            "system_fingerprint": null
+          },
+          "processingTime": 47413,
+          "aiEngine": "chatgpt"
+        }
+      }
+    }
+  ],
+  "dbStoredAiResponses": [],
+  "dbStoredResults": [],
+  "dbStorageChecksum": "1abc7cbf22c798b28abe2b0984f324d0"
+}
