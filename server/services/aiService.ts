@@ -1290,68 +1290,9 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         operation: 'extractQuestions'
       });
 
-      // Prepare the API call object
-      const apiRequest = {
-        model: "gpt-5",  // ChatGPT's working model name
-        temperature: 0.2,
-        top_p: 1.0,
-        messages: [
-          {
-            role: "system",
-            content: "You are an expert educational content analyzer who extracts questions from assessments."
-          },
-          {
-            role: "user", 
-            content: `${EXTRACTION_PROMPT}\n\nExtract all questions from the attached document.`
-          }
-        ],
-        file_ids: fileIds,  // ChatGPT's exact file attachment pattern
-        max_completion_tokens: 4000
-      };
-
-      // 🔍 CONSOLE LOG: Complete API Request Being Sent to ChatGPT
-      console.log('\n=== COMPLETE API REQUEST TO CHATGPT ===');
-      console.log('API Endpoint: chat.completions.create');
-      console.log('Full Request Object:', JSON.stringify(apiRequest, null, 2));
-      console.log('File IDs Array:', fileIds);
-      console.log('File IDs Count:', fileIds.length);
-      console.log('=== END API REQUEST LOGGING ===\n');
-
-      // Use ChatGPT's exact working pattern
-      const gpt5Response = await openai.chat.completions.create(apiRequest);
-
-      const responseText = gpt5Response.choices[0]?.message?.content || '';
-      const processingTime = Date.now() - startTime;
-
-      // 🔍 CONSOLE LOG: Pass 1 Raw JSON Response from OpenAI
-      console.log('\n=== PASS 1 RAW OPENAI RESPONSE ===');
-      console.log('Response Text:', responseText);
-      console.log('Response Length:', responseText.length);
-      console.log('=== END PASS 1 RAW RESPONSE ===\n');
-
-      // Parse the extraction response
-      let extractedQuestions;
-      try {
-        const cleanedText = String(responseText).replace(/```json\n?|\n?```/g, '').trim();
-        extractedQuestions = JSON.parse(cleanedText);
-        
-        if (!Array.isArray(extractedQuestions)) {
-          throw new Error('Expected array of questions');
-        }
-      } catch (parseError) {
-        console.error('Failed to parse question extraction:', parseError);
-        const errorMsg = parseError instanceof Error ? parseError.message : String(parseError);
-        throw new Error(`Failed to parse extraction response: ${errorMsg}`);
-      }
-
-      logger.info(`[AIService] Question extraction completed`, {
-        component: 'AIService',
-        operation: 'extractQuestions',
-        processingTime,
-        questionCount: extractedQuestions.length
-      });
-
-      return extractedQuestions;
+      // RESEARCH CONCLUSION: file_ids parameter is NOT supported in ChatGPT Chat Completions API
+      // This confirmed our web search findings. Text extraction approach works perfectly.
+      throw new Error('File attachment approach not supported - Chat Completions API does not accept file_ids parameter');
     } catch (error) {
       const processingTime = Date.now() - startTime;
       logger.error(`[AIService] Question extraction failed`, {

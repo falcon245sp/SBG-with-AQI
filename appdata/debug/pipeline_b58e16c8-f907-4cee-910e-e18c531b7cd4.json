@@ -17,5 +17,207 @@
   ],
   "totalProcessingTime": 182,
   "extractedText": "Name ___________________________  Date __________________\n\nIntegers Test – Version 1\n\n1\n\n3\n\n5\n\n7\n\n9\n\nComplete the prime factorization for \nthe number below.\n\n2\n\nComplete the prime factorization for \nthe number below.\n\n90\n\n130\n\nGraph both of your numbers on a \nnumber line and then write an inequality \nto compare the two numbers.\n−7 𝑎𝑎𝑎𝑎𝑎𝑎 − 5\n\nAdd the two integers. \n\n13 + (−6)\n\nSubtract the two integers. \n\nGraph both of your numbers on a \nnumber line and then write an inequality \nto compare the two numbers.\n4 𝑎𝑎𝑎𝑎𝑎𝑎 − 2\n\nAdd the two integers. \n\n(−9) + (−5)\n\nSubtract the two integers. \n\n4\n\n6\n\n8\n\n15 − (−7)\n\n−12 − (−3)\n\nSubtract the two integers. \n\n10\n\nMultiply the two integers.\n\n(−5) − 8\n\n(−6)(−8)\n\n\fName ___________________________  Date __________________\n\nIntegers Test – Version 1\n\n11\n\nMultiply the two integers.\n\n(−15)(4)\n\n12\n\nUse the order of operations to solve \neach problem.\n\n6 9 − 15 + (−2)\n\n13\n\nUse the order of operations to solve \neach problem.\n\n14\n\nUse the order of operations to solve \neach problem.\n\n11 −\n\n24\n6\n\n+ 9 − 3(4)\n\n3(−2)(6 + (−4))\n22\n\n15\n\nUse the order of operations to solve \neach problem.\n\n16\n\nUse the order of operations to solve \neach problem.\n\n82−5(6 − 3)\n\n−4(12 − 14)(6 + 2)\n\n17\n\nDivide the two integers. \n\n18\n\nDivide the two integers. \n\n39 ÷ (−3)\n\n−121\n11\n\n19\n\nDivide the two integers. \n\n20\n\nDivide the two integers. \n\n−96 ÷ (−6)\n\n168\n−7",
-  "extractedTextLength": 1387
+  "extractedTextLength": 1387,
+  "dbStorageStarted": "2025-09-15T06:07:26.379Z",
+  "dbStorageCompleted": "2025-09-15T06:07:27.061Z",
+  "dbStoredQuestions": [
+    {
+      "id": "5f847b0b-fd18-48ca-b47e-4547c5650d15",
+      "documentId": "b58e16c8-f907-4cee-910e-e18c531b7cd4",
+      "questionNumber": "1",
+      "questionText": "Find the greatest common factor and least common multiple of two whole numbers less than or equal to 100 using prime factorization and related strategies.",
+      "context": "Question 1: Analysis for standard CCSS.MATH.CONTENT.6.NS.B.4",
+      "questionType": null,
+      "createdAt": "2025-09-15T06:07:26.414Z",
+      "aiResults": {
+        "grok": {
+          "standards": [
+            {
+              "code": "CCSS.MATH.CONTENT.6.NS.B.4",
+              "description": "Find the greatest common factor and least common multiple of two whole numbers less than or equal to 100 using prime factorization and related strategies.",
+              "jurisdiction": "Common Core",
+              "gradeLevel": "6",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "2",
+            "justification": "The tasks are predominantly procedural and computational (prime factorization, integer addition/subtraction/multiplication/division, order of operations, graphing on a number line and writing inequalities). They require application of algorithms and multi-step computation rather than simple recall or deep multi-step reasoning/proof.",
+            "confidence": 0.86
+          },
+          "rawResponse": {
+            "id": "chatcmpl-CFwe5a90bjlDpY4hMn1g0VWguvUQ7",
+            "object": "chat.completion",
+            "created": 1757916389,
+            "model": "gpt-5-mini-2025-08-07",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\n  \"standards\": [\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.NS.B.4\",\n      \"description\": \"Find the greatest common factor and least common multiple of two whole numbers less than or equal to 100 using prime factorization and related strategies.\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.7.NS.A.1\",\n      \"description\": \"Apply and extend previous understandings of addition and subtraction to add and subtract rational numbers; represent addition and subtraction on a horizontal or vertical number line; use ordering of rational numbers and represent comparisons with inequalities.\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"7\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.7.NS.A.2\",\n      \"description\": \"Apply and extend previous understandings of multiplication and division and of fractions to multiply and divide rational numbers, including integer multiplication and division and operations involving negative numbers.\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"7\",\n      \"subject\": \"Mathematics\"\n    }\n  ],\n  \"rigor\": {\n    \"level\": \"medium\",\n    \"dokLevel\": \"2\",\n    \"justification\": \"The tasks are predominantly procedural and computational (prime factorization, integer addition/subtraction/multiplication/division, order of operations, graphing on a number line and writing inequalities). They require application of algorithms and multi-step computation rather than simple recall or deep multi-step reasoning/proof.\",\n    \"confidence\": 0.86\n  }\n}",
+                  "refusal": null,
+                  "annotations": []
+                },
+                "finish_reason": "stop"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 766,
+              "completion_tokens": 2744,
+              "total_tokens": 3510,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 2368,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+              }
+            },
+            "service_tier": "default",
+            "system_fingerprint": null
+          },
+          "processingTime": 45333,
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "0a42fa0e-d3a9-4a49-9e83-4df967f9f801",
+      "documentId": "b58e16c8-f907-4cee-910e-e18c531b7cd4",
+      "questionNumber": "2",
+      "questionText": "Apply and extend previous understandings of addition and subtraction to add and subtract rational numbers; represent addition and subtraction on a horizontal or vertical number line; use ordering of rational numbers and represent comparisons with inequalities.",
+      "context": "Question 2: Analysis for standard CCSS.MATH.CONTENT.7.NS.A.1",
+      "questionType": null,
+      "createdAt": "2025-09-15T06:07:26.489Z",
+      "aiResults": {
+        "grok": {
+          "standards": [
+            {
+              "code": "CCSS.MATH.CONTENT.7.NS.A.1",
+              "description": "Apply and extend previous understandings of addition and subtraction to add and subtract rational numbers; represent addition and subtraction on a horizontal or vertical number line; use ordering of rational numbers and represent comparisons with inequalities.",
+              "jurisdiction": "Common Core",
+              "gradeLevel": "7",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "2",
+            "justification": "The tasks are predominantly procedural and computational (prime factorization, integer addition/subtraction/multiplication/division, order of operations, graphing on a number line and writing inequalities). They require application of algorithms and multi-step computation rather than simple recall or deep multi-step reasoning/proof.",
+            "confidence": 0.86
+          },
+          "rawResponse": {
+            "id": "chatcmpl-CFwe5a90bjlDpY4hMn1g0VWguvUQ7",
+            "object": "chat.completion",
+            "created": 1757916389,
+            "model": "gpt-5-mini-2025-08-07",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\n  \"standards\": [\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.NS.B.4\",\n      \"description\": \"Find the greatest common factor and least common multiple of two whole numbers less than or equal to 100 using prime factorization and related strategies.\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.7.NS.A.1\",\n      \"description\": \"Apply and extend previous understandings of addition and subtraction to add and subtract rational numbers; represent addition and subtraction on a horizontal or vertical number line; use ordering of rational numbers and represent comparisons with inequalities.\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"7\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.7.NS.A.2\",\n      \"description\": \"Apply and extend previous understandings of multiplication and division and of fractions to multiply and divide rational numbers, including integer multiplication and division and operations involving negative numbers.\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"7\",\n      \"subject\": \"Mathematics\"\n    }\n  ],\n  \"rigor\": {\n    \"level\": \"medium\",\n    \"dokLevel\": \"2\",\n    \"justification\": \"The tasks are predominantly procedural and computational (prime factorization, integer addition/subtraction/multiplication/division, order of operations, graphing on a number line and writing inequalities). They require application of algorithms and multi-step computation rather than simple recall or deep multi-step reasoning/proof.\",\n    \"confidence\": 0.86\n  }\n}",
+                  "refusal": null,
+                  "annotations": []
+                },
+                "finish_reason": "stop"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 766,
+              "completion_tokens": 2744,
+              "total_tokens": 3510,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 2368,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+              }
+            },
+            "service_tier": "default",
+            "system_fingerprint": null
+          },
+          "processingTime": 45333,
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "da92ce6d-42dd-4ce8-91e1-3427d3f467fd",
+      "documentId": "b58e16c8-f907-4cee-910e-e18c531b7cd4",
+      "questionNumber": "3",
+      "questionText": "Apply and extend previous understandings of multiplication and division and of fractions to multiply and divide rational numbers, including integer multiplication and division and operations involving negative numbers.",
+      "context": "Question 3: Analysis for standard CCSS.MATH.CONTENT.7.NS.A.2",
+      "questionType": null,
+      "createdAt": "2025-09-15T06:07:26.564Z",
+      "aiResults": {
+        "grok": {
+          "standards": [
+            {
+              "code": "CCSS.MATH.CONTENT.7.NS.A.2",
+              "description": "Apply and extend previous understandings of multiplication and division and of fractions to multiply and divide rational numbers, including integer multiplication and division and operations involving negative numbers.",
+              "jurisdiction": "Common Core",
+              "gradeLevel": "7",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "2",
+            "justification": "The tasks are predominantly procedural and computational (prime factorization, integer addition/subtraction/multiplication/division, order of operations, graphing on a number line and writing inequalities). They require application of algorithms and multi-step computation rather than simple recall or deep multi-step reasoning/proof.",
+            "confidence": 0.86
+          },
+          "rawResponse": {
+            "id": "chatcmpl-CFwe5a90bjlDpY4hMn1g0VWguvUQ7",
+            "object": "chat.completion",
+            "created": 1757916389,
+            "model": "gpt-5-mini-2025-08-07",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\n  \"standards\": [\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.NS.B.4\",\n      \"description\": \"Find the greatest common factor and least common multiple of two whole numbers less than or equal to 100 using prime factorization and related strategies.\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.7.NS.A.1\",\n      \"description\": \"Apply and extend previous understandings of addition and subtraction to add and subtract rational numbers; represent addition and subtraction on a horizontal or vertical number line; use ordering of rational numbers and represent comparisons with inequalities.\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"7\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.7.NS.A.2\",\n      \"description\": \"Apply and extend previous understandings of multiplication and division and of fractions to multiply and divide rational numbers, including integer multiplication and division and operations involving negative numbers.\",\n      \"jurisdiction\": \"Common Core\",\n      \"gradeLevel\": \"7\",\n      \"subject\": \"Mathematics\"\n    }\n  ],\n  \"rigor\": {\n    \"level\": \"medium\",\n    \"dokLevel\": \"2\",\n    \"justification\": \"The tasks are predominantly procedural and computational (prime factorization, integer addition/subtraction/multiplication/division, order of operations, graphing on a number line and writing inequalities). They require application of algorithms and multi-step computation rather than simple recall or deep multi-step reasoning/proof.\",\n    \"confidence\": 0.86\n  }\n}",
+                  "refusal": null,
+                  "annotations": []
+                },
+                "finish_reason": "stop"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 766,
+              "completion_tokens": 2744,
+              "total_tokens": 3510,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 2368,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+              }
+            },
+            "service_tier": "default",
+            "system_fingerprint": null
+          },
+          "processingTime": 45333,
+          "aiEngine": "chatgpt"
+        }
+      }
+    }
+  ],
+  "dbStoredAiResponses": [],
+  "dbStoredResults": [],
+  "dbStorageChecksum": "a90951cb63d1d88a9d9cb4b6e3656ad5"
 }
