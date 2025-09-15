@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { DocumentTraversalService } from '../services/documentTraversalService.js';
 import { ActiveUserService } from '../services/activeUserService.js';
+import { debugLogger } from '../services/debugLogger.js';
 import { z } from 'zod';
 
 const router = Router();
@@ -79,9 +80,29 @@ router.get('/api/documents/:documentId/inspection', async (req, res) => {
     const { documentId } = req.params;
     const inspection = await DocumentTraversalService.getDocumentInspection(documentId);
     
+    // Debug logging: Log UX display data for pipeline debugging
+    await debugLogger.logUxDisplay(
+      documentId, 
+      {
+        inspection,
+        endpoint: '/api/documents/:documentId/inspection',
+        timestamp: new Date().toISOString(),
+        questionsCount: inspection?.questions?.length || 0,
+        resultsCount: inspection?.results?.length || 0
+      }
+    );
+    
     res.json(inspection);
   } catch (error) {
     console.error('[DocumentTraversal] Error getting document inspection:', error);
+    
+    // Debug logging: Log UX display error
+    await debugLogger.logUxDisplay(
+      req.params.documentId,
+      null,
+      error instanceof Error ? error.message : 'Unknown inspection error'
+    );
+    
     res.status(500).json({ 
       error: 'Failed to get document inspection',
       details: error instanceof Error ? error.message : 'Unknown error'

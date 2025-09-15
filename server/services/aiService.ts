@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import Anthropic from '@anthropic-ai/sdk';
 import { logger } from '../utils/logger';
+import { debugLogger } from './debugLogger';
 import fs from 'fs';
 import path from 'path';
 
@@ -1353,9 +1354,12 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
   async analyzeTwoPassWithFile(
     fileIds: string[], 
     jurisdictions: string[], 
-    course: string
+    course: string,
+    documentId?: string,
+    customerUuid?: string
   ): Promise<AIAnalysisResult> {
     const startTime = Date.now();
+    const debugDocumentId = documentId || 'unknown_document';
     
     try {
       logger.info(`[AIService] Starting two-pass analysis with file upload`, {
@@ -1363,32 +1367,125 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         operation: 'twoPassAnalysis'
       });
 
+      // Initialize debug logging if we have document info
+      if (documentId && customerUuid) {
+        // We'll update this with more details from document processor
+      }
+
       // Pass 1: Extract all questions from the file
       console.log(`🔍 === PASS 1: QUESTION EXTRACTION ===`);
-      const extractedQuestions = await this.extractQuestionsFromFile(fileIds);
-      console.log(`🔍 Pass 1 Raw JSON Result:`, JSON.stringify(extractedQuestions, null, 2));
+      const pass1StartTime = Date.now();
+      
+      // Log Pass 1 start
+      if (documentId) {
+        await debugLogger.logPass1Start(documentId);
+      }
+      
+      let extractedQuestions;
+      let pass1Error;
+      try {
+        extractedQuestions = await this.extractQuestionsFromFile(fileIds);
+        console.log(`🔍 Pass 1 Raw JSON Result:`, JSON.stringify(extractedQuestions, null, 2));
+        
+        // Log Pass 1 success
+        if (documentId) {
+          await debugLogger.logPass1Results(
+            documentId, 
+            { fileIds, model: OPENAI_MODEL, extractedCount: extractedQuestions.length },
+            extractedQuestions
+          );
+        }
+      } catch (error) {
+        pass1Error = error instanceof Error ? error.message : String(error);
+        console.error(`🔍 Pass 1 ERROR:`, pass1Error);
+        
+        // Log Pass 1 failure
+        if (documentId) {
+          await debugLogger.logPass1Results(documentId, null, [], pass1Error);
+        }
+        throw error;
+      }
       
       if (!extractedQuestions || extractedQuestions.length === 0) {
-        throw new Error('No questions could be extracted from the document');
+        const errorMsg = 'No questions could be extracted from the document';
+        if (documentId) {
+          await debugLogger.logPass1Results(documentId, null, [], errorMsg);
+        }
+        throw new Error(errorMsg);
       }
 
       // Pass 2: Classify each question individually
       console.log(`🎯 === PASS 2: INDIVIDUAL QUESTION CLASSIFICATION ===`);
-      const questionResults = [];
-      for (const extractedQuestion of extractedQuestions) {
-        console.log(`🎯 Pass 2 Input for Q${extractedQuestion.question_number}:`, JSON.stringify(extractedQuestion, null, 2));
-        const result = await this.classifyExtractedQuestion(extractedQuestion, jurisdictions, course);
-        console.log(`🎯 Pass 2 Output for Q${extractedQuestion.question_number}:`, JSON.stringify(result, null, 2));
-        questionResults.push({
-          question: extractedQuestion.question_number,
-          questionSummary: extractedQuestion.instruction_text,
-          standard: result.standards[0]?.code || 'Unknown',
-          rigor: result.rigor.level,
-          justification: result.rigor.justification
-        });
+      
+      // Log Pass 2 start
+      if (documentId) {
+        await debugLogger.logPass2Start(documentId);
       }
-      console.log(`🎯 === FINAL PASS 2 RESULTS ===`);
-      console.log(`Final Question Results:`, JSON.stringify(questionResults, null, 2));
+      
+      const questionResults = [];
+      const pass2Classifications = [];
+      const pass2StandardsFound = [];
+      const pass2RigorLevels = [];
+      let pass2Error;
+      
+      try {
+        for (const extractedQuestion of extractedQuestions) {
+          console.log(`🎯 Pass 2 Input for Q${extractedQuestion.question_number}:`, JSON.stringify(extractedQuestion, null, 2));
+          const result = await this.classifyExtractedQuestion(extractedQuestion, jurisdictions, course);
+          console.log(`🎯 Pass 2 Output for Q${extractedQuestion.question_number}:`, JSON.stringify(result, null, 2));
+          
+          const questionData = {
+            question: extractedQuestion.question_number,
+            questionSummary: extractedQuestion.instruction_text,
+            standard: result.standards[0]?.code || 'Unknown',
+            rigor: result.rigor.level,
+            justification: result.rigor.justification
+          };
+          
+          questionResults.push(questionData);
+          pass2Classifications.push({
+            questionNumber: extractedQuestion.question_number,
+            classification: result,
+            input: extractedQuestion
+          });
+          pass2StandardsFound.push({
+            questionNumber: extractedQuestion.question_number,
+            standards: result.standards
+          });
+          pass2RigorLevels.push({
+            questionNumber: extractedQuestion.question_number,
+            rigor: result.rigor
+          });
+        }
+        
+        console.log(`🎯 === FINAL PASS 2 RESULTS ===`);
+        console.log(`Final Question Results:`, JSON.stringify(questionResults, null, 2));
+        
+        // Log Pass 2 success
+        if (documentId) {
+          await debugLogger.logPass2Results(
+            documentId,
+            pass2Classifications,
+            pass2StandardsFound,
+            pass2RigorLevels
+          );
+        }
+      } catch (error) {
+        pass2Error = error instanceof Error ? error.message : String(error);
+        console.error(`🎯 Pass 2 ERROR:`, pass2Error);
+        
+        // Log Pass 2 failure
+        if (documentId) {
+          await debugLogger.logPass2Results(
+            documentId,
+            pass2Classifications,
+            pass2StandardsFound,
+            pass2RigorLevels,
+            pass2Error
+          );
+        }
+        throw error;
+      }
 
       const processingTime = Date.now() - startTime;
 
@@ -1414,6 +1511,15 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         aiEngine: 'openai-two-pass'
       };
 
+      // Finalize debug logging
+      if (documentId) {
+        await debugLogger.finalizePipelineLog(
+          documentId,
+          ['openai'],
+          processingTime
+        );
+      }
+
       logger.info(`[AIService] Two-pass analysis completed`, {
         component: 'AIService',
         operation: 'twoPassAnalysis',
@@ -1423,6 +1529,16 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       return result;
     } catch (error) {
       const processingTime = Date.now() - startTime;
+      
+      // Log error in debug system
+      if (documentId) {
+        await debugLogger.finalizePipelineLog(
+          documentId,
+          ['openai'],
+          processingTime
+        );
+      }
+      
       logger.error(`[AIService] Two-pass analysis failed`, {
         component: 'AIService',
         operation: 'twoPassAnalysis',

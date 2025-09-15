@@ -2,6 +2,7 @@ import { storage } from '../storage';
 import { ProcessingStatus, TeacherReviewStatus, AssetType, ExportType, AiEngine, RigorLevel, GradeSubmissionStatus, BusinessDefaults } from "../../shared/businessEnums";
 import { DatabaseWriteService } from './databaseWriteService';
 import { aiService } from './aiService';
+import { debugLogger } from './debugLogger';
 // Removed rigorAnalyzer - using direct AI responses now
 import * as fs from 'fs';
 import * as path from 'path';
@@ -35,6 +36,15 @@ export class DocumentProcessor {
       if (!document) {
         throw new Error(`Document ${documentId} not found`);
       }
+
+      // Initialize debug logging
+      await debugLogger.initializeLog(
+        documentId,
+        document.customerUuid,
+        document.name,
+        document.fileSize,
+        document.mimeType
+      );
 
       logger.documentProcessing('Document retrieved', {
         documentId,
@@ -74,7 +84,9 @@ export class DocumentProcessor {
           const fileAnalysisResult = await aiService.analyzeTwoPassWithFile(
             [uploadedFileId],
             document.jurisdictions,
-            courseContext
+            courseContext,
+            documentId,
+            document.customerUuid
           );
           
           // Transform file analysis result to match expected format
@@ -155,6 +167,9 @@ export class DocumentProcessor {
           throw new Error('No text content could be extracted from the document');
         }
         
+        // Log extracted text for debugging
+        await debugLogger.logDocumentExtraction(documentId, extractedText);
+        
         logger.documentProcessing('Text extraction completed', {
           documentId,
           component: 'DocumentProcessor',
@@ -191,6 +206,9 @@ export class DocumentProcessor {
         operation: 'questionExtraction'
       });
       
+      // Debug logging: Start DB storage phase
+      await debugLogger.logDbStorageStart(documentId);
+      
       const questionRecords = [];
       for (let i = 0; i < analysisResults.questions.length; i++) {
         const questionData = analysisResults.questions[i];
@@ -205,11 +223,26 @@ export class DocumentProcessor {
 
       // Store AI analysis results for each question with JSON voting
       console.log(`\n🔄 PROCESSING ${questionRecords.length} QUESTIONS WITH NEW DIRECT AI PIPELINE`);
+      const storedAiResponses = [];
+      const storedResults = [];
+      
       for (const question of questionRecords) {
         console.log(`📝 About to process question ${question.questionNumber} with NEW PIPELINE`);
-        await this.storeAIResultsWithJsonVoting(question, question.aiResults);
+        const aiResults = await this.storeAIResultsWithJsonVoting(question, question.aiResults);
+        if (aiResults) {
+          storedAiResponses.push(...(aiResults.aiResponses || []));
+          storedResults.push(...(aiResults.questionResults || []));
+        }
       }
       console.log(`✅ COMPLETED PROCESSING ALL QUESTIONS WITH NEW PIPELINE\n`);
+
+      // Debug logging: Complete DB storage phase
+      await debugLogger.logDbStorageResults(
+        documentId, 
+        questionRecords, 
+        storedAiResponses, 
+        storedResults
+      );
 
       // Update status to completed
       await DatabaseWriteService.updateDocumentStatus(documentId, ProcessingStatus.COMPLETED);
@@ -273,6 +306,15 @@ export class DocumentProcessor {
       console.error('=== END PROCESSING FAILURE ANALYSIS ===');
       
       await DatabaseWriteService.updateDocumentStatus(documentId, ProcessingStatus.FAILED, error instanceof Error ? error.message : 'Unknown error');
+      
+      // Debug logging: Log DB storage error
+      await debugLogger.logDbStorageResults(
+        documentId, 
+        [], 
+        [], 
+        [], 
+        error instanceof Error ? error.message : 'Unknown processing error'
+      );
       
       if (callbackUrl) {
         await this.sendCallback(callbackUrl, {

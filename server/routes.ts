@@ -1950,6 +1950,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const documentTraversalRouter = await import('./routes/documentTraversal');
   app.use(documentTraversalRouter.default);
 
+  // Register Debug router
+  const debugRouter = await import('./routes/debug');
+  console.log('[Routes] Registering Debug router');
+  app.use('/api/debug', debugRouter.default);
+
   // Simple testing endpoints for system validation
   app.get('/api/test-export', async (req, res) => {
     try {
