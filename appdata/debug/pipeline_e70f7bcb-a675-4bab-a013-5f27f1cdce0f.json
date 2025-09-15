@@ -1,0 +1,21 @@
+{
+  "documentId": "e70f7bcb-a675-4bab-a013-5f27f1cdce0f",
+  "customerUuid": "6fd73505-1a03-4794-856f-675676426542",
+  "originalFileSize": 86092,
+  "originalMimeType": "application/pdf",
+  "processingVersion": "two-pass-v1",
+  "createdAt": "2025-09-15T05:05:55.073Z",
+  "pass1Started": "2025-09-15T05:05:55.824Z",
+  "pass1Completed": "2025-09-15T05:05:56.240Z",
+  "pass1RawResponse": null,
+  "pass1ExtractedQuestions": [],
+  "pass1QuestionCount": 0,
+  "pass1ErrorMessage": "400 Unknown parameter: 'file_ids'.",
+  "pass1Checksum": "facda9778e1d974ae9d07502c4328296",
+  "aiEnginesUsed": [
+    "openai"
+  ],
+  "totalProcessingTime": 419,
+  "extractedText": "Name ___________________________  Date __________________\n\nIntegers Test – Version 2\n\n1\n\n3\n\n5\n\n7\n\n9\n\nComplete the prime factorization for \nthe number below.\n\n2\n\nComplete the prime factorization for \nthe number below.\n\n195\n\n315\n\nGraph both of your numbers on a \nnumber line and then write an inequality \nto compare the two numbers.\n−2 𝑎𝑎𝑎𝑎𝑎𝑎 − 5\n\nAdd the two integers. \n\n7 + (−15)\n\nSubtract the two integers. \n\nGraph both of your numbers on a \nnumber line and then write an inequality \nto compare the two numbers.\n−8 𝑎𝑎𝑎𝑎𝑎𝑎 1\n\nAdd the two integers. \n\n(−3) + (−25)\n\nSubtract the two integers. \n\n4\n\n6\n\n8\n\n21 − (−8)\n\n−7 − (−12)\n\nSubtract the two integers. \n\n10\n\nMultiply the two integers.\n\n(−8) − 15\n\n(−5)(−1)\n\n\fName ___________________________  Date __________________\n\nIntegers Test – Version 2\n\n11\n\nMultiply the two integers.\n\n(−20)(3)\n\n12\n\nUse the order of operations to solve \neach problem.\n\n−10 + 2 7 − (−3)\n\n13\n\nUse the order of operations to solve \neach problem.\n\n14\n\nUse the order of operations to solve \neach problem.\n\n−\n\n26\n2\n\n+ 5 − 5(2)\n\n−4 2 + (9 + (−10))\n32\n\n15\n\nUse the order of operations to solve \neach problem.\n\n16\n\nUse the order of operations to solve \neach problem.\n\n5 + 42−3(2 − 6)\n\n− 15 − 21 +\n\n9\n3\n\n17\n\nDivide the two integers. \n\n18\n\nDivide the two integers. \n\n84 ÷ (−4)\n\n−63\n3\n\n19\n\nDivide the two integers. \n\n20\n\nDivide the two integers. \n\n−24 ÷ (−8)\n\n165\n−11",
+  "extractedTextLength": 1391
+}
