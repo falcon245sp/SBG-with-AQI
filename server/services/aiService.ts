@@ -1457,7 +1457,6 @@ Rules:
       logger.error(`[AIService] Two-pass analysis failed`, {
         component: 'AIService',
         operation: 'analyzeTwoPassWithFile',
-        processingTime,
         error: error instanceof Error ? error.message : String(error)
       });
       // Re-throw with a concise message that pinpoints likely cause
@@ -1638,7 +1637,6 @@ Rules:
       logger.error(`[AIService] Two-pass text analysis failed`, {
         component: 'AIService',
         operation: 'analyzeTwoPassWithText',
-        processingTime,
         error: error instanceof Error ? error.message : String(error)
       });
       // Re-throw with a concise message that pinpoints likely cause
