@@ -1364,16 +1364,21 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       });
 
       // Pass 1: Extract all questions from the file
+      console.log(`🔍 === PASS 1: QUESTION EXTRACTION ===`);
       const extractedQuestions = await this.extractQuestionsFromFile(fileIds);
+      console.log(`🔍 Pass 1 Raw JSON Result:`, JSON.stringify(extractedQuestions, null, 2));
       
       if (!extractedQuestions || extractedQuestions.length === 0) {
         throw new Error('No questions could be extracted from the document');
       }
 
       // Pass 2: Classify each question individually
+      console.log(`🎯 === PASS 2: INDIVIDUAL QUESTION CLASSIFICATION ===`);
       const questionResults = [];
       for (const extractedQuestion of extractedQuestions) {
+        console.log(`🎯 Pass 2 Input for Q${extractedQuestion.question_number}:`, JSON.stringify(extractedQuestion, null, 2));
         const result = await this.classifyExtractedQuestion(extractedQuestion, jurisdictions, course);
+        console.log(`🎯 Pass 2 Output for Q${extractedQuestion.question_number}:`, JSON.stringify(result, null, 2));
         questionResults.push({
           question: extractedQuestion.question_number,
           questionSummary: extractedQuestion.instruction_text,
@@ -1382,6 +1387,8 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
           justification: result.rigor.justification
         });
       }
+      console.log(`🎯 === FINAL PASS 2 RESULTS ===`);
+      console.log(`Final Question Results:`, JSON.stringify(questionResults, null, 2));
 
       const processingTime = Date.now() - startTime;
 
