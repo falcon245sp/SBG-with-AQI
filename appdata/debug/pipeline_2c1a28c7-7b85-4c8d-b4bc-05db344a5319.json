@@ -1,0 +1,93 @@
+{
+  "documentId": "2c1a28c7-7b85-4c8d-b4bc-05db344a5319",
+  "customerUuid": "43155b6c-895f-476a-9c4b-1b4446825715",
+  "originalFileSize": 95433,
+  "originalMimeType": "application/pdf",
+  "processingVersion": "two-pass-v1",
+  "createdAt": "2025-09-15T06:37:27.429Z",
+  "pass1Started": "2025-09-15T06:37:27.993Z",
+  "pass1Completed": "2025-09-15T06:37:27.994Z",
+  "pass1RawResponse": null,
+  "pass1ExtractedQuestions": [],
+  "pass1QuestionCount": 0,
+  "pass1ErrorMessage": "Use analyzeWithAssistantsAPI for file uploads - Chat Completions API does not accept file_ids parameter",
+  "pass1Checksum": "facda9778e1d974ae9d07502c4328296",
+  "aiEnginesUsed": [
+    "openai"
+  ],
+  "totalProcessingTime": 2,
+  "extractedText": "Name ___________________________  Date __________________\n\nIntroduction to Algebraic Equations Test – Version 2\n\n1\n\n3\n\n5\n\n7\n\n9\n\nSolve for 𝑥𝑥. \n\n𝑥𝑥 + 2 = 6\n\nSolve for 𝑥𝑥. \n\n16 = 2𝑥𝑥  − 2\n\nSolve for 𝑥𝑥. \n\n3 + 19 = 6𝑥𝑥 + 5𝑥𝑥\n\nSolve for 𝑥𝑥. \n\n2\n\n4\n\n6\n\n8\n\nSolve for 𝑥𝑥. \n\n−1 = 𝑥𝑥 + 5\n\nSolve for 𝑥𝑥.\n\n𝑥𝑥 − 22 = −12\n\nSolve for 𝑥𝑥. \n\n23 + 9𝑥𝑥 − 2𝑥𝑥 = 51\n\nSolve for 𝑥𝑥. \n\n−5𝑥𝑥 + 6 = −8𝑥𝑥 − 24\n\n7𝑥𝑥 − 12𝑥𝑥 − 10 = −55\n\nSolve for 𝑥𝑥. \n\n10\n\nSolve for 𝑥𝑥. \n\n12𝑥𝑥 − 14 = 8𝑥𝑥 + 6\n\n−2𝑥𝑥 + 12 = −5𝑥𝑥 + 18\n\n\fName ___________________________  Date __________________\n\nIntroduction to Algebraic Equations Test – Version 2\n\n11\n\nSolve for 𝑥𝑥. \n\n12\n\nSolve for 𝑥𝑥. \n\n−𝑥𝑥 + 13 = 6𝑥𝑥 − 8\n\n6𝑥𝑥 + 2 = −2(4𝑥𝑥 − 8)\n\n13\n\n15\n\n17\n\n19\n\nSolve for 𝑥𝑥. \n\n14\n\nSolve for 𝑥𝑥. \n\n−4 𝑥𝑥 − 1 = 2(−𝑥𝑥 + 3)\n\n−3 −2𝑥𝑥 − 10 + 6𝑥𝑥 = 2𝑥𝑥 + 17 + 23\n\nSolve for 𝑥𝑥. \n\n16\n\nSolve for 𝑥𝑥. \n\n5 𝑥𝑥 − 3 + 14 = −7(2𝑥𝑥 + 8)\n\n5 2𝑥𝑥 + 11 = 3 −𝑥𝑥 + 12 + 9𝑥𝑥 + 19\n\nSolve for 𝑥𝑥. \n\n𝑥𝑥\n5\n\n= 0\n\nSolve for 𝑥𝑥. \n\n9𝑥𝑥 = 72\n\n18\n\n20\n\nSolve for 𝑥𝑥. \n\n−6 =\n\n𝑥𝑥\n3\n\nSolve for 𝑥𝑥. \n\n42 = −14𝑥𝑥",
+  "extractedTextLength": 1121,
+  "dbStorageStarted": "2025-09-15T06:37:58.830Z",
+  "dbStorageCompleted": "2025-09-15T06:37:59.061Z",
+  "dbStoredQuestions": [
+    {
+      "id": "7b77c26e-f7f6-44dd-93cd-f43ebf13bb94",
+      "documentId": "2c1a28c7-7b85-4c8d-b4bc-05db344a5319",
+      "questionNumber": "1",
+      "questionText": "Solve linear equations in one variable, including those with variables on both sides and requiring use of distributive property and combining like terms.",
+      "context": "Question 1: Analysis for standard CCSS.MATH.CONTENT.8.EE.C.7",
+      "questionType": null,
+      "createdAt": "2025-09-15T06:37:58.863Z",
+      "aiResults": {
+        "grok": {
+          "standards": [
+            {
+              "code": "CCSS.MATH.CONTENT.8.EE.C.7",
+              "description": "Solve linear equations in one variable, including those with variables on both sides and requiring use of distributive property and combining like terms.",
+              "jurisdiction": "Common Core",
+              "gradeLevel": "8",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "2",
+            "justification": "The repeated instruction 'Solve for x.' asks students to apply standard algebraic procedures (one-step and multi-step linear equation solving, distribution, combining like terms). This is procedural application rather than simple recall or advanced multi-step reasoning.",
+            "confidence": 0.9
+          },
+          "rawResponse": {
+            "id": "chatcmpl-CFx84ryP9BUOO1vhzexdiAFQJ0X4H",
+            "object": "chat.completion",
+            "created": 1757918248,
+            "model": "gpt-5-mini-2025-08-07",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\"standards\":[{\"code\":\"CCSS.MATH.CONTENT.8.EE.C.7\",\"description\":\"Solve linear equations in one variable, including those with variables on both sides and requiring use of distributive property and combining like terms.\",\"jurisdiction\":\"Common Core\",\"gradeLevel\":\"8\",\"subject\":\"Mathematics\"}],\"rigor\":{\"level\":\"medium\",\"dokLevel\":\"2\",\"justification\":\"The repeated instruction 'Solve for x.' asks students to apply standard algebraic procedures (one-step and multi-step linear equation solving, distribution, combining like terms). This is procedural application rather than simple recall or advanced multi-step reasoning.\",\"confidence\":0.9}}",
+                  "refusal": null,
+                  "annotations": []
+                },
+                "finish_reason": "stop"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 1042,
+              "completion_tokens": 1455,
+              "total_tokens": 2497,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 1152,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+              }
+            },
+            "service_tier": "default",
+            "system_fingerprint": null
+          },
+          "processingTime": 18469,
+          "aiEngine": "chatgpt"
+        }
+      }
+    }
+  ],
+  "dbStoredAiResponses": [],
+  "dbStoredResults": [],
+  "dbStorageChecksum": "65b3cd191674267fe2389dfd42997126"
+}
