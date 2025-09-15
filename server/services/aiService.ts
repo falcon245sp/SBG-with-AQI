@@ -5,7 +5,8 @@ import fs from 'fs';
 import path from 'path';
 
 // Using OpenAI GPT-5-mini model for better analysis results  
-const OPENAI_MODEL = "gpt-5-mini";
+const OPENAI_MODEL = "gpt-4o";
+const OPENAI_TEMPERATURE = parseFloat(process.env.OPENAI_TEMPERATURE || "0.2");
 
 console.log(`AI Service initialized with OpenAI model: ${OPENAI_MODEL}`);
 
@@ -1202,7 +1203,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
           }
         ],
         max_completion_tokens: 10000,
-        temperature: 1.0,
+        temperature: OPENAI_TEMPERATURE,
         response_format: {
           type: "json_schema",
           json_schema: ANALYSIS_RESULT_SCHEMA
@@ -1262,7 +1263,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       console.log(`=== DELETING FILE FROM OPENAI ===`);
       console.log(`File ID: ${fileId}`);
       
-      const response = await openai.files.del(fileId);
+      const response = await openai.files.delete(fileId);
       
       console.log(`✅ File deleted successfully. Deleted: ${response.deleted}`);
       console.log(`=== END FILE DELETION ===`);
@@ -1286,7 +1287,6 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       logger.info(`[AIService] Analyzing single question ${questionNumber} with file upload approach`, {
         component: 'AIService',
         operation: 'singleQuestionFileAnalysis',
-        questionNumber,
         fileCount: fileIds.length
       });
 
@@ -1302,17 +1302,14 @@ Analyze ONLY this question and provide the result as a single JSON object follow
 
       const gpt5Response = await openai.responses.create({
         model: OPENAI_MODEL,
-        instructions: singleQuestionPrompt,
-        user_message: `Analyze question ${questionNumber} from the attached document.`,
-        attachments: fileIds.map(file_id => ({
-          file_id,
-          tools: [{ type: "file_search" }]
-        })),
-        max_output_tokens: 4000,
-        temperature: 1.0
+        input: `${singleQuestionPrompt}\n\nAnalyze question ${questionNumber} from the attached document.`,
+        tools: [{ type: 'file_search', vector_store_ids: [] }],
+        file_ids: fileIds,
+        temperature: OPENAI_TEMPERATURE,
+        max_output_tokens: 4000
       });
 
-      const responseText = gpt5Response.text || gpt5Response.message?.content || '';
+      const responseText = typeof gpt5Response.output_text === 'string' ? gpt5Response.output_text : '';
       const processingTime = Date.now() - startTime;
 
       // Parse the single question JSON response
@@ -1328,7 +1325,8 @@ Analyze ONLY this question and provide the result as a single JSON object follow
         }
       } catch (parseError) {
         console.error('Failed to parse single question analysis:', parseError);
-        throw new Error(`Failed to parse AI response for question ${questionNumber}: ${parseError.message}`);
+        const errorMsg = parseError instanceof Error ? parseError.message : String(parseError);
+        throw new Error(`Failed to parse AI response for question ${questionNumber}: ${errorMsg}`);
       }
 
       // Convert numeric rigor to level names  
@@ -1357,7 +1355,6 @@ Analyze ONLY this question and provide the result as a single JSON object follow
       logger.info(`[AIService] Single question file analysis completed`, {
         component: 'AIService',
         operation: 'singleQuestionFileAnalysis',
-        questionNumber,
         processingTime,
         standard: questionResult.standard,
         rigor: questionResult.rigor
@@ -1405,7 +1402,7 @@ Analyze ONLY this question and provide the result as a single JSON object follow
           tools: [{ type: "file_search" }]
         })),
         max_output_tokens: 10000,
-        temperature: 1.0
+        temperature: OPENAI_TEMPERATURE
       });
 
       const processingTime = Date.now() - startTime;
@@ -1511,7 +1508,7 @@ Analyze ONLY this question and provide the result as a single JSON object follow
           }
         ],
         max_completion_tokens: 10000,
-        temperature: 1.0,
+        temperature: OPENAI_TEMPERATURE,
         response_format: {
           type: "json_schema",
           json_schema: ANALYSIS_RESULT_SCHEMA
