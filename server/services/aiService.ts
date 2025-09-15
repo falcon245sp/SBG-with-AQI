@@ -1290,16 +1290,22 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         operation: 'extractQuestions'
       });
 
+      // Use ChatGPT's exact working pattern
       const gpt5Response = await openai.chat.completions.create({
-        model: OPENAI_MODEL,
+        model: "gpt-5",  // ChatGPT's working model name
+        temperature: 0.2,
+        top_p: 1.0,
         messages: [
           {
-            role: "user",
+            role: "system",
+            content: "You are an expert educational content analyzer who extracts questions from assessments."
+          },
+          {
+            role: "user", 
             content: `${EXTRACTION_PROMPT}\n\nExtract all questions from the attached document.`
           }
         ],
-        file_ids: fileIds,  // Correct format: top-level parameter like ChatGPT's Python example
-        temperature: OPENAI_TEMPERATURE,
+        file_ids: fileIds,  // ChatGPT's exact file attachment pattern
         max_completion_tokens: 4000
       });
 
