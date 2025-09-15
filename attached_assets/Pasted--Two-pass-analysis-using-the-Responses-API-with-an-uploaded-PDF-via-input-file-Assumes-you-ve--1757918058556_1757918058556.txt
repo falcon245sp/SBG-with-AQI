@@ -1,0 +1,184 @@
+// Two-pass analysis using the Responses API with an uploaded PDF via input_file.
+// Assumes you've already uploaded your PDF and have a valid fileId (purpose: "assistants").
+
+import OpenAI from "openai";
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+function stripFences(s = "") {
+  return s
+    .replace(/```json\s*([\s\S]*?)\s*```/gi, "$1")
+    .replace(/```\s*([\s\S]*?)\s*```/gi, "$1")
+    .trim();
+}
+
+function safeParse<T = any>(s: string): T {
+  return JSON.parse(stripFences(s));
+}
+
+function validateExtraction(arr: any): arr is Array<{question_number:number; instruction_text:string}> {
+  return Array.isArray(arr) && arr.every(
+    (o) => o && typeof o.question_number === "number" && typeof o.instruction_text === "string" && o.instruction_text.trim().length > 0
+  );
+}
+
+function validateClassification(arr: any): arr is Array<{question_number:number; instruction_text:string; standard:string; rigor:1|2|3}> {
+  return Array.isArray(arr) && arr.every(
+    (o) =>
+      o &&
+      typeof o.question_number === "number" &&
+      typeof o.instruction_text === "string" &&
+      typeof o.standard === "string" &&
+      [1, 2, 3].includes(o.rigor)
+  );
+}
+
+function enforceConsistency(items: Array<{instruction_text:string; standard:string; rigor:1|2|3}>) {
+  const norm = (t: string) => t.replace(/\s+/g, " ").trim().toLowerCase();
+  const seen = new Map<string, {standard:string; rigor:1|2|3}>();
+  for (const it of items) {
+    const k = norm(it.instruction_text || "");
+    if (!k) continue;
+    if (seen.has(k)) {
+      const { standard, rigor } = seen.get(k)!;
+      it.standard = standard;
+      it.rigor = rigor;
+    } else {
+      seen.set(k, { standard: it.standard, rigor: it.rigor });
+    }
+  }
+  return items;
+}
+
+export async function analyzeTwoPassWithFile(
+  fileIds: string[],
+  jurisdictions: string[] = [],
+  courseContext?: string,
+  documentId?: string,
+  customerUuid?: string
+): Promise<any> {
+  const startTime = Date.now();
+  const jList = jurisdictions.length ? jurisdictions : ["CCSS Algebra 1"];
+
+  try {
+    if (!fileIds?.length) throw new Error("No fileIds provided.");
+    const fileId = fileIds[0];
+
+    // PASS 1 — Extraction (Responses API + input_file)
+    const extractionResponse = await openai.responses.create({
+      model: "gpt-4o",
+      temperature: 0.0,
+      input: [
+        { role: "system", content: "You are an extraction engine that outputs JSON only." },
+        {
+          role: "user",
+          content: [
+            {
+              type: "input_text",
+              text:
+`From the attached assessment, extract each question.
+
+Schema:
+[
+  { "question_number": <int>, "instruction_text": "<string containing only the instruction line>" }
+]
+
+Rules:
+- Output ONLY a JSON array (no commentary).
+- Only include the instruction text (no answers, numbers, or worked steps).
+- Do not classify or infer standards.
+${courseContext ? `- Context (optional hint): ${courseContext}` : ""}`
+            },
+            { type: "input_file", file_id: fileId }
+          ]
+        }
+      ]
+    });
+
+    const extractionJSON = extractionResponse.output_text || "";
+    let extractedQuestions: Array<{question_number:number; instruction_text:string}>;
+    try {
+      extractedQuestions = safeParse(extractionJSON);
+      if (!validateExtraction(extractedQuestions)) throw new Error("Invalid extraction schema");
+    } catch (e) {
+      throw new Error(`Pass 1 extraction invalid JSON: ${(e as Error).message}`);
+    }
+
+    // PASS 2 — Classification (Responses API)
+    const classificationResponse = await openai.responses.create({
+      model: "gpt-4o",
+      temperature: 0.0,
+      input: [
+        { role: "system", content: "You are a curriculum alignment engine. Output JSON only, no commentary." },
+        {
+          role: "user",
+          content: [
+            {
+              type: "input_text",
+              text:
+`Given this JSON array of extracted questions:
+
+${JSON.stringify(extractedQuestions, null, 2)}
+
+Map each item to the most relevant ${jList.join(", ")} standard and assign rigor.
+
+Rules:
+- Use official codes where applicable (e.g., A-SSE.1, A-REI.3, N-Q.1).
+- rigor: 1 = recall/procedure, 2 = application, 3 = reasoning/analysis.
+- Use only the "instruction_text" field for classification.
+- If two instruction_text values are identical or nearly identical, they MUST receive the same standard and rigor.
+- Output strictly a JSON array of objects in this schema:
+
+[
+  {
+    "question_number": <int>,
+    "instruction_text": "<string>",
+    "standard": "<code>",
+    "rigor": <1|2|3>
+  }
+]`
+            }
+          ]
+        }
+      ]
+    });
+
+    const classificationJSON = classificationResponse.output_text || "";
+    let parsedResult: Array<{question_number:number; instruction_text:string; standard:string; rigor:1|2|3}>;
+    try {
+      parsedResult = safeParse(classificationJSON);
+      if (!validateClassification(parsedResult)) throw new Error("Invalid classification schema");
+    } catch (e) {
+      // Provide a clear, typed fallback if the model ever deviates
+      parsedResult = [{
+        question_number: 1,
+        instruction_text: "Document analysis completed",
+        standard: "MATH.CONTENT.7.NS.A.1",
+        rigor: 2
+      } as any];
+    }
+
+    // Final local consistency pass
+    parsedResult = enforceConsistency(parsedResult);
+
+    const processingTime = Date.now() - startTime;
+    return {
+      questions: parsedResult,
+      jsonResponse: parsedResult,
+      rawResponse: { pass1: extractionJSON, pass2: classificationJSON },
+      processingTime,
+      aiEngine: "responses-api-two-pass",
+      documentId,
+      customerUuid
+    };
+
+  } catch (error: any) {
+    const processingTime = Date.now() - startTime;
+    // Re-throw with a concise message that pinpoints likely cause
+    const msg = error?.message || String(error);
+    throw new Error(
+      `Two-pass (Responses API) failed: ${msg}. ` +
+      `Tip: ensure file was uploaded with purpose="assistants" and you are using responses.create with { type: "input_file", file_id }.`
+    );
+  }
+}

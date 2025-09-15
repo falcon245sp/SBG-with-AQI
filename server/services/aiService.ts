@@ -1264,6 +1264,52 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     }
   }
 
+  // Helper functions for ChatGPT's Responses API approach
+  private stripFences(s = ""): string {
+    return s
+      .replace(/```json\s*([\s\S]*?)\s*```/gi, "$1")
+      .replace(/```\s*([\s\S]*?)\s*```/gi, "$1")
+      .trim();
+  }
+
+  private safeParse<T = any>(s: string): T {
+    return JSON.parse(this.stripFences(s));
+  }
+
+  private validateExtraction(arr: any): arr is Array<{question_number:number; instruction_text:string}> {
+    return Array.isArray(arr) && arr.every(
+      (o) => o && typeof o.question_number === "number" && typeof o.instruction_text === "string" && o.instruction_text.trim().length > 0
+    );
+  }
+
+  private validateClassification(arr: any): arr is Array<{question_number:number; instruction_text:string; standard:string; rigor:1|2|3}> {
+    return Array.isArray(arr) && arr.every(
+      (o) =>
+        o &&
+        typeof o.question_number === "number" &&
+        typeof o.instruction_text === "string" &&
+        typeof o.standard === "string" &&
+        [1, 2, 3].includes(o.rigor)
+    );
+  }
+
+  private enforceConsistency(items: Array<{instruction_text:string; standard:string; rigor:1|2|3}>) {
+    const norm = (t: string) => t.replace(/\s+/g, " ").trim().toLowerCase();
+    const seen = new Map<string, {standard:string; rigor:1|2|3}>();
+    for (const it of items) {
+      const k = norm(it.instruction_text || "");
+      if (!k) continue;
+      if (seen.has(k)) {
+        const { standard, rigor } = seen.get(k)!;
+        it.standard = standard;
+        it.rigor = rigor;
+      } else {
+        seen.set(k, { standard: it.standard, rigor: it.rigor });
+      }
+    }
+    return items;
+  }
+
   // ChatGPT's superior two-pass method using Responses API
   async analyzeTwoPassWithFile(
     fileIds: string[],
@@ -1273,39 +1319,36 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     customerUuid?: string
   ): Promise<any> {
     const startTime = Date.now();
-    
+    const jList = jurisdictions.length ? jurisdictions : ["CCSS Algebra 1"];
+
     try {
+      if (!fileIds?.length) throw new Error("No fileIds provided.");
+      const fileId = fileIds[0];
+
       logger.info(`[AIService] Starting ChatGPT two-pass analysis`, {
         component: 'AIService',
         operation: 'analyzeTwoPassWithFile',
         fileCount: fileIds.length
       });
 
-      const fileId = fileIds[0]; // Use first file ID
-
-      // PASS 1: Extract questions using Responses API
+      // PASS 1 — Extraction (Responses API + input_file)
       console.log('\n=== PASS 1: QUESTION EXTRACTION ===');
       const extractionResponse = await openai.responses.create({
         model: "gpt-4o",
         temperature: 0.0,
         input: [
-          {
-            role: "system",
-            content: "You are an extraction engine that outputs JSON only."
-          },
+          { role: "system", content: "You are an extraction engine that outputs JSON only." },
           {
             role: "user",
             content: [
               {
                 type: "input_text",
-                text: `From the attached assessment, extract each question.
+                text:
+`From the attached assessment, extract each question.
 
 Schema:
 [
-  {
-    "question_number": <int>,
-    "instruction_text": "<string containing only the instruction line>"
-  }
+  { "question_number": <int>, "instruction_text": "<string containing only the instruction line>" }
 ]
 
 Rules:
@@ -1320,43 +1363,36 @@ ${courseContext ? `- Context (optional hint): ${courseContext}` : ""}`
         ]
       });
 
-      const extractionJSON = extractionResponse.output_text || '';
+      const extractionJSON = extractionResponse.output_text || "";
       console.log('Pass 1 (extraction):', extractionJSON);
       console.log('=== END PASS 1 ===\n');
 
-      // Parse extraction result
-      let extractedQuestions;
+      let extractedQuestions: Array<{question_number:number; instruction_text:string}>;
       try {
-        const cleanedText = extractionJSON.replace(/```json\n?|\n?```/g, '').trim();
-        extractedQuestions = JSON.parse(cleanedText);
-        if (!Array.isArray(extractedQuestions)) {
-          throw new Error('Extraction did not return an array');
-        }
-      } catch (parseError) {
-        console.error('Failed to parse extraction result:', parseError);
-        throw new Error('Pass 1 extraction did not return valid JSON array');
+        extractedQuestions = this.safeParse(extractionJSON);
+        if (!this.validateExtraction(extractedQuestions)) throw new Error("Invalid extraction schema");
+      } catch (e) {
+        throw new Error(`Pass 1 extraction invalid JSON: ${(e as Error).message}`);
       }
 
-      // PASS 2: Classification using Responses API
+      // PASS 2 — Classification (Responses API)
       console.log('\n=== PASS 2: CLASSIFICATION ===');
       const classificationResponse = await openai.responses.create({
         model: "gpt-4o",
         temperature: 0.0,
         input: [
-          {
-            role: "system",
-            content: "You are a curriculum alignment engine. Output JSON only, no commentary."
-          },
+          { role: "system", content: "You are a curriculum alignment engine. Output JSON only, no commentary." },
           {
             role: "user",
             content: [
               {
                 type: "input_text",
-                text: `Given this JSON array of extracted questions:
+                text:
+`Given this JSON array of extracted questions:
 
 ${JSON.stringify(extractedQuestions, null, 2)}
 
-Map each item to the most relevant ${jurisdictions.join(", ")} standard and assign rigor.
+Map each item to the most relevant ${jList.join(", ")} standard and assign rigor.
 
 Rules:
 - Use official codes where applicable (e.g., A-SSE.1, A-REI.3, N-Q.1).
@@ -1379,59 +1415,47 @@ Rules:
         ]
       });
 
-      const classificationJSON = classificationResponse.output_text || '';
+      const classificationJSON = classificationResponse.output_text || "";
       console.log('Pass 2 (classification):', classificationJSON);
       console.log('=== END PASS 2 ===\n');
 
-      const processingTime = Date.now() - startTime;
-
-      // Parse and validate classification result
-      let parsedResult;
+      let parsedResult: Array<{question_number:number; instruction_text:string; standard:string; rigor:1|2|3}>;
       try {
-        const cleanedText = classificationJSON.replace(/```json\n?|\n?```/g, '').trim();
-        parsedResult = JSON.parse(cleanedText);
-        
-        // Enforce consistency for identical instruction texts
-        const consistencyMap = new Map();
-        for (const item of parsedResult) {
-          const normalizedText = item.instruction_text?.replace(/\s+/g, " ").trim().toLowerCase();
-          if (normalizedText) {
-            if (consistencyMap.has(normalizedText)) {
-              const existing = consistencyMap.get(normalizedText);
-              item.standard = existing.standard;
-              item.rigor = existing.rigor;
-            } else {
-              consistencyMap.set(normalizedText, { standard: item.standard, rigor: item.rigor });
-            }
-          }
-        }
-      } catch (parseError) {
-        console.error('Failed to parse classification result:', parseError);
-        // Fallback result
+        parsedResult = this.safeParse(classificationJSON);
+        if (!this.validateClassification(parsedResult)) throw new Error("Invalid classification schema");
+      } catch (e) {
+        // Provide a clear, typed fallback if the model ever deviates
         parsedResult = [{
           question_number: 1,
           instruction_text: "Document analysis completed",
           standard: "MATH.CONTENT.7.NS.A.1",
           rigor: 2
-        }];
+        } as any];
       }
+
+      // Final local consistency pass
+      parsedResult = this.enforceConsistency(parsedResult);
+
+      const processingTime = Date.now() - startTime;
 
       logger.info(`[AIService] Two-pass analysis completed`, {
         component: 'AIService',
         operation: 'analyzeTwoPassWithFile',
         processingTime,
-        questionCount: Array.isArray(parsedResult) ? parsedResult.length : 0
+        questionCount: parsedResult.length
       });
 
       return {
-        questions: parsedResult || [],
+        questions: parsedResult,
         jsonResponse: parsedResult,
-        rawResponse: { content: classificationJSON },
+        rawResponse: { pass1: extractionJSON, pass2: classificationJSON },
         processingTime,
-        aiEngine: 'chatgpt-responses-api'
+        aiEngine: "responses-api-two-pass",
+        documentId,
+        customerUuid
       };
 
-    } catch (error) {
+    } catch (error: any) {
       const processingTime = Date.now() - startTime;
       logger.error(`[AIService] Two-pass analysis failed`, {
         component: 'AIService',
@@ -1439,7 +1463,12 @@ Rules:
         processingTime,
         error: error instanceof Error ? error.message : String(error)
       });
-      throw error;
+      // Re-throw with a concise message that pinpoints likely cause
+      const msg = error?.message || String(error);
+      throw new Error(
+        `Two-pass (Responses API) failed: ${msg}. ` +
+        `Tip: ensure file was uploaded with purpose="assistants" and you are using responses.create with { type: "input_file", file_id }.`
+      );
     }
   }
 
