@@ -886,7 +886,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
                 },
                 rawResponse: analysisResult.rawResponse,
                 processingTime: analysisResult.processingTime,
-                aiEngine: 'openai'
+                aiEngine: 'chatgpt'
                 }
               }
             };
@@ -948,7 +948,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
                   },
                   rawResponse: analysisResult.rawResponse,
                   processingTime: analysisResult.processingTime,
-                  aiEngine: 'openai'
+                  aiEngine: 'chatgpt'
                 }
               }
             };
@@ -1017,7 +1017,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
                   rigor: question.rigor,
                   rawResponse: analysisResult.rawResponse,
                   processingTime: analysisResult.processingTime,
-                  aiEngine: 'openai'
+                  aiEngine: 'chatgpt'
                 }
               }
             };
@@ -1070,7 +1070,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
                   rigor: analysisResult.rigor,
                   rawResponse: analysisResult.rawResponse,
                   processingTime: analysisResult.processingTime,
-                  aiEngine: 'openai'
+                  aiEngine: 'chatgpt'
                 }
               }
             };
@@ -1303,7 +1303,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
           }
         ],
         temperature: OPENAI_TEMPERATURE,
-        max_tokens: 4000
+        max_completion_tokens: 4000
       });
 
       const responseText = gpt5Response.choices[0]?.message?.content || '';
@@ -1582,7 +1582,7 @@ Analyze this question and provide the classification as a single JSON object fol
           }
         ],
         temperature: OPENAI_TEMPERATURE,
-        max_tokens: 2000
+        max_completion_tokens: 2000
       });
 
       const responseText = gpt5Response.choices[0]?.message?.content || '';
@@ -1630,7 +1630,7 @@ Analyze this question and provide the classification as a single JSON object fol
         rawResponse: gpt5Response,
         processingTime,
         jsonResponse: questionResult,
-        aiEngine: 'openai'
+        aiEngine: 'chatgpt'
       };
 
       logger.info(`[AIService] Question classification completed`, {
@@ -1693,7 +1693,7 @@ Analyze ONLY this question and provide the result as a single JSON object follow
           }
         ],
         temperature: OPENAI_TEMPERATURE,
-        max_tokens: 4000
+        max_completion_tokens: 4000
       });
 
       const responseText = gpt5Response.choices[0]?.message?.content || '';
@@ -1736,7 +1736,7 @@ Analyze ONLY this question and provide the result as a single JSON object follow
         rawResponse: gpt5Response,
         processingTime,
         jsonResponse: questionResult,
-        aiEngine: 'openai'
+        aiEngine: 'chatgpt'
       };
 
       logger.info(`[AIService] Single question file analysis completed`, {
@@ -1796,7 +1796,7 @@ Analyze ONLY this question and provide the result as a single JSON object follow
             }))
           }
         ],
-        max_tokens: 10000,
+        max_completion_tokens: 10000,
         temperature: OPENAI_TEMPERATURE
       });
 
@@ -2636,7 +2636,7 @@ Analyze ONLY this question and provide the result as a single JSON object follow
                 },
                 rawResponse: analysisResult.rawResponse,
                 processingTime: analysisResult.processingTime,
-                aiEngine: 'openai'
+                aiEngine: 'chatgpt'
                 }
               }
             };
@@ -2698,7 +2698,7 @@ Analyze ONLY this question and provide the result as a single JSON object follow
                   },
                   rawResponse: analysisResult.rawResponse,
                   processingTime: analysisResult.processingTime,
-                  aiEngine: 'openai'
+                  aiEngine: 'chatgpt'
                 }
               }
             };

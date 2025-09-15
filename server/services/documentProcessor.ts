@@ -55,9 +55,9 @@ export class DocumentProcessor {
 
       // Try OpenAI file upload for PDFs first, fallback to text extraction
       let analysisResults: any;
-      let uploadedFileId: string | undefined;
       let extractedText: string | undefined;
       const courseContext = document.courseTitle || undefined;
+      let uploadedFileId: string | undefined;
       
       try {
         // Check if file is a PDF and try direct file upload to OpenAI
