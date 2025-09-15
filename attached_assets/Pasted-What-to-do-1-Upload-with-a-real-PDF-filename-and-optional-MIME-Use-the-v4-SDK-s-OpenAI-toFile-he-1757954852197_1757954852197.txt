@@ -1,0 +1,90 @@
+What to do
+1) Upload with a real PDF filename (and optional MIME)
+
+Use the v4 SDK’s OpenAI.toFile helper or a ReadStream that includes a path with .pdf.
+
+import OpenAI from "openai";
+import fs from "fs";
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+// Option A: using toFile (works with buffers/streams and sets a filename)
+const bytes = fs.readFileSync("/absolute/path/Integers_Test.pdf");
+const fileObj = await OpenAI.toFile(bytes, "Integers_Test.pdf", { type: "application/pdf" });
+
+const uploaded = await openai.files.create({
+  file: fileObj,                 // has name + type
+  purpose: "assistants",
+});
+
+// Option B: using createReadStream with a real .pdf path
+const uploaded2 = await openai.files.create({
+  file: fs.createReadStream("/absolute/path/Integers_Test.pdf"), // path carries the .pdf name
+  purpose: "assistants",
+});
+
+// Sanity check
+const meta = await openai.files.retrieve(uploaded.id);
+console.log({ id: meta.id, filename: meta.filename, status: meta.status });
+// Expect: filename ends with .pdf, status === "processed"
+
+
+If your file bytes come from S3/GCS (no filename), you must provide one via toFile(..., "whatever.pdf").
+
+2) Use that file id in your Responses call
+
+Your two-pass function is fine; just make sure the fileId you pass is from a correctly uploaded .pdf file.
+
+// Inside your Pass 1 call (unchanged)
+const extractionResponse = await openai.responses.create({
+  model: "gpt-4o",
+  temperature: 0.0,
+  input: [
+    { role: "system", content: "You are an extraction engine that outputs JSON only." },
+    {
+      role: "user",
+      content: [
+        { type: "input_text", text: /* instructions... */ },
+        { type: "input_file", file_id: fileId } // <- must refer to a proper .pdf upload
+      ]
+    }
+  ]
+});
+
+3) Add a guard before you call Pass 1
+
+This prevents the exact error you hit:
+
+async function assertPdfReady(openai: OpenAI, fileId: string) {
+  const f = await openai.files.retrieve(fileId);
+  if (!f) throw new Error(`File ${fileId} not found`);
+  if (!/\.pdf$/i.test(f.filename || "")) {
+    throw new Error(`File ${fileId} has no .pdf filename (got "${f.filename || "unknown"}"). Re-upload with a .pdf name.`);
+  }
+  if (f.status !== "processed") {
+    throw new Error(`File ${fileId} is not processed yet (status: ${f.status}).`);
+  }
+  return f;
+}
+
+
+Call it right after you pick fileId:
+
+await assertPdfReady(openai, fileId);
+
+Drop-in fix for your function
+
+Replace your upload step upstream (where you create fileIds) with one of the upload snippets above, or—if you only receive a buffer—wrap it with OpenAI.toFile(buffer, "assessment.pdf", { type: "application/pdf" }). Then keep your analyzeTwoPassWithFile exactly as you posted, but add the guard:
+
+// right after: const fileId = fileIds[0];
+await assertPdfReady(openai, fileId);
+
+Common causes of this error
+
+Uploading a Buffer without a name → type “none”.
+
+Uploading a temp stream whose path lacks .pdf (e.g., /tmp/upload-xyz) → no extension.
+
+Using a file uploaded for a different purpose ("fine-tune") → not valid here (your error is type, but purpose can cause different failures).
+
+Passing a deleted file id (would usually be “not found,” not “got none,” but worth checking).

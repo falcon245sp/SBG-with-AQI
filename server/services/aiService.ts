@@ -1254,6 +1254,27 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     });
   }
 
+  // Guard function to verify PDF file is ready for Responses API
+  private async assertPdfReady(fileId: string): Promise<any> {
+    try {
+      const file = await openai.files.retrieve(fileId);
+      if (!file) {
+        throw new Error(`File ${fileId} not found`);
+      }
+      if (!/\.pdf$/i.test(file.filename || "")) {
+        throw new Error(`File ${fileId} has no .pdf filename (got "${file.filename || "unknown"}"). Re-upload with a .pdf name.`);
+      }
+      if (file.status !== "processed") {
+        throw new Error(`File ${fileId} is not processed yet (status: ${file.status}).`);
+      }
+      console.log(`✅ PDF file verified: ${file.filename} (status: ${file.status})`);
+      return file;
+    } catch (error) {
+      console.error(`❌ PDF verification failed for ${fileId}:`, error);
+      throw error;
+    }
+  }
+
   // ChatGPT's superior two-pass method using Responses API
   async analyzeTwoPassWithFile(
     fileIds: string[],
@@ -1268,6 +1289,9 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     try {
       if (!fileIds?.length) throw new Error("No fileIds provided.");
       const fileId = fileIds[0];
+
+      // Add ChatGPT's suggested guard to verify PDF is ready
+      await this.assertPdfReady(fileId);
 
       logger.info(`[AIService] Starting ChatGPT two-pass analysis`, {
         component: 'AIService',
