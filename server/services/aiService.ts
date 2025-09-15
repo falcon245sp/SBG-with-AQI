@@ -1309,6 +1309,12 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       const responseText = gpt5Response.choices[0]?.message?.content || '';
       const processingTime = Date.now() - startTime;
 
+      // 🔍 CONSOLE LOG: Pass 1 Raw JSON Response from OpenAI
+      console.log('\n=== PASS 1 RAW OPENAI RESPONSE ===');
+      console.log('Response Text:', responseText);
+      console.log('Response Length:', responseText.length);
+      console.log('=== END PASS 1 RAW RESPONSE ===\n');
+
       // Parse the extraction response
       let extractedQuestions;
       try {
@@ -1581,6 +1587,13 @@ Analyze this question and provide the classification as a single JSON object fol
 
       const responseText = gpt5Response.choices[0]?.message?.content || '';
       const processingTime = Date.now() - startTime;
+
+      // 🔍 CONSOLE LOG: Pass 2 Raw JSON Response from OpenAI
+      console.log('\n=== PASS 2 RAW OPENAI RESPONSE ===');
+      console.log('Question Number:', extractedQuestion.question_number);
+      console.log('Response Text:', responseText);
+      console.log('Response Length:', responseText.length);
+      console.log('=== END PASS 2 RAW RESPONSE ===\n');
 
       // Parse the classification response
       let questionResult;
