@@ -53,145 +53,45 @@ export class DocumentProcessor {
         component: 'DocumentProcessor'
       });
 
-      // Try OpenAI file upload for PDFs first, fallback to text extraction
-      let analysisResults: any;
-      let extractedText: string | undefined;
+      // Use text extraction approach (Chat Completions API doesn't support file_ids)
       const courseContext = document.courseTitle || undefined;
-      let uploadedFileId: string | undefined;
       
-      try {
-        // Check if file is a PDF and try direct file upload to OpenAI
-        if (document.mimeType === 'application/pdf') {
-          // console.log(`📄 Attempting OpenAI file upload for PDF: ${document.originalPath}`);
-          
-          logger.documentProcessing('Starting OpenAI file upload', {
-            documentId,
-            fileName: document.originalPath,
-            component: 'DocumentProcessor'
-          });
-          
-          uploadedFileId = await aiService.uploadFileToOpenAI(document.originalPath);
-          // console.log(`✅ Successfully uploaded PDF to OpenAI. File ID: ${uploadedFileId}`);
-          
-          // Use file-based analysis with OpenAI
-          logger.documentProcessing('Starting file-based AI analysis', {
-            documentId,
-            component: 'DocumentProcessor',
-            operation: 'fileBasedAnalysis'
-          });
-          
-          // Use new two-pass approach: extract questions first, then classify each individually
-          const fileAnalysisResult = await aiService.analyzeTwoPassWithFile(
-            [uploadedFileId],
-            document.jurisdictions,
-            courseContext,
-            documentId,
-            document.customerUuid
-          );
-          
-          // Transform file analysis result to match expected format
-          analysisResults = {
-            questions: [{
-              text: fileAnalysisResult.standards?.[0]?.description || "PDF file analysis completed",
-              context: `File-based analysis of ${document.name}`,
-              aiResults: {
-                grok: fileAnalysisResult
-              }
-            }]
-          };
-          
-          // If the file analysis returned multiple questions, use those instead
-          if (fileAnalysisResult.jsonResponse && Array.isArray(fileAnalysisResult.jsonResponse)) {
-            console.log(`✅ File analysis extracted ${fileAnalysisResult.jsonResponse.length} individual questions`);
-            
-            analysisResults = {
-              questions: fileAnalysisResult.jsonResponse.map((question: any, index: number) => ({
-                text: question.questionSummary || `Question ${index + 1}`,
-                context: `File-based analysis - Question ${question.question || index + 1}: ${question.questionSummary || 'Educational assessment'}`,
-                problemNumber: question.question || index + 1,
-                aiResults: {
-                  grok: {
-                    standards: [{
-                      code: question.standard,
-                      description: question.questionSummary,
-                      jurisdiction: document.jurisdictions[0] || 'Common Core',
-                      gradeLevel: '9-12',
-                      subject: 'Mathematics'
-                    }],
-                    rigor: {
-                      level: question.rigor,
-                      dokLevel: question.rigor === 'mild' ? 'DOK 1' : question.rigor === 'medium' ? 'DOK 2' : 'DOK 3',
-                      justification: question.justification,
-                      confidence: 0.85
-                    },
-                    rawResponse: fileAnalysisResult.rawResponse,
-                    processingTime: fileAnalysisResult.processingTime,
-                    aiEngine: 'gpt-5-mini-file'
-                  }
-                }
-              }))
-            };
-          }
-          
-          logger.documentProcessing('File-based AI analysis completed', {
-            documentId,
-            component: 'DocumentProcessor',
-            operation: 'fileBasedAnalysis'
-          });
-          
-          console.log(`🎯 Successfully completed file-based analysis for document: ${documentId}`);
-          
-        } else {
-          throw new Error('File type not supported for direct upload - falling back to text extraction');
-        }
-        
-      } catch (fileUploadError) {
-        console.log(`⚠️ File upload failed, falling back to text extraction: ${fileUploadError instanceof Error ? fileUploadError.message : 'Unknown error'}`);
-        
-        // Cleanup uploaded file if it exists
-        if (uploadedFileId) {
-          await aiService.deleteFileFromOpenAI(uploadedFileId);
-          uploadedFileId = undefined;
-        }
-        
-        // Fallback to text extraction approach
-        logger.documentProcessing('Starting text extraction fallback', {
-          documentId,
-          fileName: document.originalPath,
-          component: 'DocumentProcessor'
-        });
-        
-        extractedText = await this.extractTextFromDocument(document.originalPath, document.mimeType);
-        
-        if (!extractedText || extractedText.trim().length === 0) {
-          throw new Error('No text content could be extracted from the document');
-        }
-        
-        // Log extracted text for debugging
-        await debugLogger.logDocumentExtraction(documentId, extractedText);
-        
-        logger.documentProcessing('Text extraction completed', {
-          documentId,
-          component: 'DocumentProcessor',
-          operation: 'textExtraction'
-        });
-        
-        // Send extracted text to AI engines for analysis
-        analysisResults = focusStandards && focusStandards.length > 0
-          ? await aiService.analyzeDocumentWithStandards(
-              extractedText,
-              document.mimeType,
-              document.jurisdictions,
-              focusStandards,
-              courseContext
-            )
-          : await aiService.analyzeDocument(
-              extractedText,
-              document.mimeType,
-              document.jurisdictions,
-              courseContext
-            );
+      logger.documentProcessing('Starting text extraction', {
+        documentId,
+        fileName: document.originalPath,
+        component: 'DocumentProcessor'
+      });
+      
+      const extractedText = await this.extractTextFromDocument(document.originalPath, document.mimeType);
+      
+      if (!extractedText || extractedText.trim().length === 0) {
+        throw new Error('No text content could be extracted from the document');
       }
+      
+      // Log extracted text for debugging
+      await debugLogger.logDocumentExtraction(documentId, extractedText);
+      
+      logger.documentProcessing('Text extraction completed', {
+        documentId,
+        component: 'DocumentProcessor',
+        operation: 'textExtraction'
+      });
+      
+      // Send extracted text to AI engines for analysis
+      const analysisResults = focusStandards && focusStandards.length > 0
+        ? await aiService.analyzeDocumentWithStandards(
+            extractedText,
+            document.mimeType,
+            document.jurisdictions,
+            focusStandards,
+            courseContext
+          )
+        : await aiService.analyzeDocument(
+            extractedText,
+            document.mimeType,
+            document.jurisdictions,
+            courseContext
+          );
       
       // Create question records from AI analysis
       logger.documentProcessing('AI analysis completed', {
