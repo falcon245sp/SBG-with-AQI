@@ -1107,81 +1107,11 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     customPrompt?: string,
     course?: string
   ): Promise<AIAnalysisResult> {
-    const startTime = Date.now();
-    const basePrompt = customPrompt || ANALYSIS_PROMPT;
-    const prompt = basePrompt.replace('{JURISDICTIONS}', jurisdictions.join(' and ')).replace('{COURSE}', course || 'General Mathematics');
-    
-    try {
-      const response = await openai.chat.completions.create({
-        model: OPENAI_MODEL, // ChatGPT 4o-mini model
-        messages: [
-          {
-            role: "system",
-            content: prompt
-          },
-          {
-            role: "user",
-            content: `Question: ${questionText}\n\nContext: ${context}`
-          }
-        ],
-        max_completion_tokens: 1000,
-        response_format: {
-          type: "json_schema",
-          json_schema: ANALYSIS_RESULT_SCHEMA
-        }
-      });
-
-      const processingTime = Date.now() - startTime;
-      const result = JSON.parse(response.choices[0].message.content || '{}');
-      
-      return {
-        standards: result.standards,
-        rigor: result.rigor,
-        rawResponse: response,
-        processingTime
-      };
-    } catch (error) {
-      console.error('ChatGPT 4o-mini analysis error:', error);
-      throw new Error(`ChatGPT 4o-mini analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    throw new Error('This method has been removed. Use analyzeTwoPassWithFile() instead - it provides superior ChatGPT Responses API analysis with better accuracy and consistency.');
   }
 
   async analyzeChatGPT(questionText: string, context: string, jurisdictions: string[], course?: string): Promise<AIAnalysisResult> {
-    const startTime = Date.now();
-    
-    try {
-      const response = await openai.chat.completions.create({
-        model: OPENAI_MODEL, // ChatGPT 4o-mini model
-        messages: [
-          {
-            role: "system",
-            content: ANALYSIS_PROMPT.replace('{JURISDICTIONS}', jurisdictions.join(' and ')).replace('{COURSE}', course || 'General Mathematics')
-          },
-          {
-            role: "user",
-            content: `Question: ${questionText}\n\nContext: ${context}`
-          }
-        ],
-        max_completion_tokens: 1000,
-        response_format: {
-          type: "json_schema",
-          json_schema: ANALYSIS_RESULT_SCHEMA
-        }
-      });
-
-      const processingTime = Date.now() - startTime;
-      const result = JSON.parse(response.choices[0].message.content || '{}');
-      
-      return {
-        standards: result.standards,
-        rigor: result.rigor,
-        rawResponse: response,
-        processingTime
-      };
-    } catch (error) {
-      console.error('ChatGPT 4o-mini analysis error:', error);
-      throw new Error(`ChatGPT 4o-mini analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    throw new Error('This method has been removed. Use analyzeTwoPassWithFile() instead - it provides superior ChatGPT Responses API analysis with better accuracy and consistency.');
   }
 
   async analyzeGPT5WithPrompt(
@@ -1191,44 +1121,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     customPrompt?: string,
     course?: string
   ): Promise<AIAnalysisResult> {
-    const startTime = Date.now();
-    const basePrompt = customPrompt || ANALYSIS_PROMPT;
-    const prompt = basePrompt.replace('{JURISDICTIONS}', jurisdictions.join(' and ')).replace('{COURSE}', course || 'General Mathematics');
-    
-    try {
-      const response = await openai.chat.completions.create({
-        model: OPENAI_MODEL,
-        messages: [
-          {
-            role: "system",
-            content: prompt
-          },
-          {
-            role: "user",
-            content: `Question: ${questionText}\n\nContext: ${context}`
-          }
-        ],
-        max_completion_tokens: 10000,
-        temperature: OPENAI_TEMPERATURE,
-        response_format: {
-          type: "json_schema",
-          json_schema: ANALYSIS_RESULT_SCHEMA
-        }
-      });
-
-      const processingTime = Date.now() - startTime;
-      const result = JSON.parse(response.choices[0].message.content || '{}');
-      
-      return {
-        standards: result.standards,
-        rigor: result.rigor,
-        rawResponse: response,
-        processingTime
-      };
-    } catch (error) {
-      console.error(`${OPENAI_MODEL} analysis error:`, error);
-      throw new Error(`${OPENAI_MODEL} analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    throw new Error('This method has been removed. Use analyzeTwoPassWithFile() instead - it provides superior ChatGPT Responses API analysis with better accuracy and consistency.');
   }
 
 
@@ -1327,13 +1220,12 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
 
       logger.info(`[AIService] Starting ChatGPT two-pass analysis`, {
         component: 'AIService',
-        operation: 'analyzeTwoPassWithFile',
-        fileCount: fileIds.length
+        operation: 'analyzeTwoPassWithFile'
       });
 
       // PASS 1 — Extraction (Responses API + input_file)
       console.log('\n=== PASS 1: QUESTION EXTRACTION ===');
-      const extractionResponse = await openai.responses.create({
+      const extractionResponse = await (openai as any).responses.create({
         model: "gpt-4o",
         temperature: 0.0,
         input: [
@@ -1377,7 +1269,7 @@ ${courseContext ? `- Context (optional hint): ${courseContext}` : ""}`
 
       // PASS 2 — Classification (Responses API)
       console.log('\n=== PASS 2: CLASSIFICATION ===');
-      const classificationResponse = await openai.responses.create({
+      const classificationResponse = await (openai as any).responses.create({
         model: "gpt-4o",
         temperature: 0.0,
         input: [
@@ -1440,9 +1332,7 @@ Rules:
 
       logger.info(`[AIService] Two-pass analysis completed`, {
         component: 'AIService',
-        operation: 'analyzeTwoPassWithFile',
-        processingTime,
-        questionCount: parsedResult.length
+        operation: 'analyzeTwoPassWithFile'
       });
 
       return {
@@ -1501,104 +1391,7 @@ Rules:
     jurisdictions: string[], 
     course: string
   ): Promise<AIAnalysisResult> {
-    const startTime = Date.now();
-    
-    try {
-      logger.info(`[AIService] Classifying extracted question ${extractedQuestion.question_number}`, {
-        component: 'AIService',
-        operation: 'classifyQuestion'
-      });
-
-      const prompt = CLASSIFICATION_PROMPT
-        .replace(/{JURISDICTIONS}/g, jurisdictions.join(', '))
-        .replace(/{COURSE}/g, course);
-
-      const classificationInput = `${prompt}
-
-Input question to classify:
-${JSON.stringify(extractedQuestion)}
-
-Analyze this question and provide the classification as a single JSON object following the exact output schema above.`;
-
-      const gpt5Response = await openai.chat.completions.create({
-        model: OPENAI_MODEL,
-        messages: [
-          {
-            role: "user",
-            content: classificationInput
-          }
-        ],
-        temperature: OPENAI_TEMPERATURE,
-        max_completion_tokens: 2000
-      });
-
-      const responseText = gpt5Response.choices[0]?.message?.content || '';
-      const processingTime = Date.now() - startTime;
-
-      // 🔍 CONSOLE LOG: Pass 2 Raw JSON Response from OpenAI
-      console.log('\n=== PASS 2 RAW OPENAI RESPONSE ===');
-      console.log('Question Number:', extractedQuestion.question_number);
-      console.log('Response Text:', responseText);
-      console.log('Response Length:', responseText.length);
-      console.log('=== END PASS 2 RAW RESPONSE ===\n');
-
-      // Parse the classification response
-      let questionResult;
-      try {
-        const cleanedText = String(responseText).replace(/```json\n?|\n?```/g, '').trim();
-        questionResult = JSON.parse(cleanedText);
-        
-        if (!questionResult.question_number || !questionResult.standard || !questionResult.rigor) {
-          throw new Error('Missing required fields in classification response');
-        }
-      } catch (parseError) {
-        console.error('Failed to parse question classification:', parseError);
-        const errorMsg = parseError instanceof Error ? parseError.message : String(parseError);
-        throw new Error(`Failed to parse classification response: ${errorMsg}`);
-      }
-
-      // Convert numeric rigor to level names  
-      const rigorLevel = questionResult.rigor === 1 ? 'mild' : questionResult.rigor === 2 ? 'medium' : 'spicy';
-      
-      const result: AIAnalysisResult = {
-        standards: [{
-          code: questionResult.standard,
-          description: questionResult.instruction_text || `Standard ${questionResult.standard}`,
-          jurisdiction: jurisdictions[0] || "Common Core State Standards",
-          gradeLevel: "9-12",
-          subject: "Mathematics"
-        }],
-        rigor: {
-          level: rigorLevel,
-          dokLevel: `DOK ${questionResult.rigor}`,
-          justification: `Rigor level ${questionResult.rigor} based on instruction analysis`,
-          confidence: 0.90
-        },
-        rawResponse: gpt5Response,
-        processingTime,
-        jsonResponse: questionResult,
-        aiEngine: 'chatgpt'
-      };
-
-      logger.info(`[AIService] Question classification completed`, {
-        component: 'AIService',
-        operation: 'classifyQuestion',
-        processingTime,
-        standard: questionResult.standard,
-        rigor: questionResult.rigor
-      });
-
-      return result;
-    } catch (error) {
-      const processingTime = Date.now() - startTime;
-      logger.error(`[AIService] Question classification failed`, {
-        component: 'AIService',
-        operation: 'classifyQuestion',
-        processingTime,
-        error: error instanceof Error ? error.message : String(error)
-      });
-      throw error;
-    }
+    throw new Error('This method has been removed. Use analyzeTwoPassWithFile() instead - it provides superior ChatGPT Responses API analysis with integrated extraction and classification in a single workflow.');
   }
 
   async analyzeGPT5SingleQuestionWithFile(
@@ -1608,105 +1401,7 @@ Analyze this question and provide the classification as a single JSON object fol
     questionNumber: number,
     questionText: string
   ): Promise<AIAnalysisResult> {
-    const startTime = Date.now();
-    
-    try {
-      logger.info(`[AIService] Analyzing single question ${questionNumber} with file upload approach`, {
-        component: 'AIService',
-        operation: 'singleQuestionFileAnalysis',
-        fileCount: fileIds.length
-      });
-
-      const prompt = ANALYSIS_PROMPT
-        .replace(/{JURISDICTIONS}/g, jurisdictions.join(', '))
-        .replace(/{COURSE}/g, course);
-
-      const singleQuestionPrompt = `${prompt}
-
-Focus specifically on Question ${questionNumber}: ${questionText.substring(0, 200)}...
-
-Analyze ONLY this question and provide the result as a single JSON object following the exact output schema above.`;
-
-      const gpt5Response = await openai.chat.completions.create({
-        model: OPENAI_MODEL,
-        messages: [
-          {
-            role: "user",
-            content: `${singleQuestionPrompt}\n\nAnalyze question ${questionNumber} from the attached document.`,
-            attachments: fileIds.map(fileId => ({
-              file_id: fileId,
-              tools: [{ type: "file_search" }]
-            }))
-          }
-        ],
-        temperature: OPENAI_TEMPERATURE,
-        max_completion_tokens: 4000
-      });
-
-      const responseText = gpt5Response.choices[0]?.message?.content || '';
-      const processingTime = Date.now() - startTime;
-
-      // Parse the single question JSON response
-      let questionResult;
-      try {
-        // Clean and parse the JSON response
-        const cleanedText = responseText.replace(/```json\n?|\n?```/g, '').trim();
-        questionResult = JSON.parse(cleanedText);
-        
-        // Validate required fields
-        if (!questionResult.question_number || !questionResult.standard || !questionResult.rigor) {
-          throw new Error('Missing required fields in response');
-        }
-      } catch (parseError) {
-        console.error('Failed to parse single question analysis:', parseError);
-        const errorMsg = parseError instanceof Error ? parseError.message : String(parseError);
-        throw new Error(`Failed to parse AI response for question ${questionNumber}: ${errorMsg}`);
-      }
-
-      // Convert numeric rigor to level names  
-      const rigorLevel = questionResult.rigor === 1 ? 'mild' : questionResult.rigor === 2 ? 'medium' : 'spicy';
-      
-      const result: AIAnalysisResult = {
-        standards: [{
-          code: questionResult.standard,
-          description: questionResult.instruction_text || `Standard ${questionResult.standard}`,
-          jurisdiction: jurisdictions[0] || "Common Core State Standards",
-          gradeLevel: "9-12",
-          subject: "Mathematics"
-        }],
-        rigor: {
-          level: rigorLevel,
-          dokLevel: `DOK ${questionResult.rigor}`,
-          justification: `Rigor level ${questionResult.rigor} based on instruction analysis`,
-          confidence: 0.90 // Higher confidence due to focused analysis
-        },
-        rawResponse: gpt5Response,
-        processingTime,
-        jsonResponse: questionResult,
-        aiEngine: 'chatgpt'
-      };
-
-      logger.info(`[AIService] Single question file analysis completed`, {
-        component: 'AIService',
-        operation: 'singleQuestionFileAnalysis',
-        processingTime,
-        standard: questionResult.standard,
-        rigor: questionResult.rigor
-      });
-
-      return result;
-    } catch (error) {
-      const processingTime = Date.now() - startTime;
-      logger.error(`[AIService] Single question file analysis failed`, {
-        component: 'AIService',
-        operation: 'singleQuestionFileAnalysis',
-        questionNumber,
-        error: error.message,
-        processingTime
-      });
-
-      throw new Error(`Single question file analysis failed: ${error.message}`);
-    }
+    throw new Error('This method has been removed. Use analyzeTwoPassWithFile() instead - it provides superior ChatGPT Responses API analysis with better accuracy and consistency.');
   }
 
   async analyzeGPT5WithFile(
@@ -1715,101 +1410,7 @@ Analyze ONLY this question and provide the result as a single JSON object follow
     course?: string,
     customPrompt?: string
   ): Promise<AIAnalysisResult> {
-    const startTime = Date.now();
-    let gpt5Response: any = null;
-    
-    try {
-      console.log(`=== ${OPENAI_MODEL} FILE ANALYSIS DEBUG ===`);
-      console.log(`File IDs: ${fileIds.join(', ')}`);
-      
-      const basePrompt = customPrompt || this.generatePromptWithStandards(undefined, jurisdictions, course);
-      console.log('System prompt length:', basePrompt.length);
-      console.log('Model:', OPENAI_MODEL);
-      console.log('Max tokens:', 10000);
-      
-      gpt5Response = await openai.chat.completions.create({
-        model: OPENAI_MODEL,
-        messages: [
-          {
-            role: "system",
-            content: basePrompt
-          },
-          {
-            role: "user",
-            content: "Please analyze the uploaded document(s) for educational standards and rigor levels. Focus on identifying all individual questions/problems in the document.",
-            attachments: fileIds.map(fileId => ({
-              file_id: fileId,
-              tools: [{ type: "file_search" }]
-            }))
-          }
-        ],
-        max_completion_tokens: 10000,
-        temperature: OPENAI_TEMPERATURE
-      });
-
-      const processingTime = Date.now() - startTime;
-      const rawContent = gpt5Response.choices[0]?.message?.content || '';
-      
-      console.log(`=== ${OPENAI_MODEL} FILE ANALYSIS RESPONSE ===`);
-      console.log('Response length:', rawContent.length);
-      console.log('Response preview:', rawContent.substring(0, 200));
-      
-      // Use robust JSON extraction for question list
-      const extractionResult = extractAndValidateQuestionList(rawContent);
-      
-      if (extractionResult.success && extractionResult.data) {
-        console.log(`✅ Successfully extracted ${extractionResult.data.length} questions from file analysis`);
-        
-        // Transform to analysis result format using first question for compatibility
-        const firstQuestion = extractionResult.data[0];
-        if (firstQuestion) {
-          return {
-            standards: [{
-              code: firstQuestion.standard,
-              description: firstQuestion.questionSummary,
-              jurisdiction: jurisdictions[0] || 'Common Core',
-              gradeLevel: '9-12',
-              subject: 'Mathematics'
-            }],
-            rigor: {
-              level: firstQuestion.rigor,
-              dokLevel: firstQuestion.rigor === 'mild' ? 'DOK 1' : firstQuestion.rigor === 'medium' ? 'DOK 2' : 'DOK 3',
-              justification: firstQuestion.justification,
-              confidence: 0.85
-            },
-            rawResponse: gpt5Response,
-            processingTime,
-            jsonResponse: extractionResult.data,
-            aiEngine: 'gpt-5-mini-file'
-          };
-        }
-      }
-      
-      // Fallback to basic analysis result
-      console.log('⚠️ Using fallback analysis result format');
-      return {
-        standards: [{
-          code: 'UNKNOWN',
-          description: 'File analysis completed',
-          jurisdiction: jurisdictions[0] || 'Common Core',
-          gradeLevel: '9-12',
-          subject: 'Mathematics'
-        }],
-        rigor: {
-          level: 'medium',
-          dokLevel: 'DOK 2',
-          justification: 'File-based analysis',
-          confidence: 0.7
-        },
-        rawResponse: gpt5Response,
-        processingTime,
-        aiEngine: 'gpt-5-mini-file'
-      };
-      
-    } catch (error) {
-      console.error(`${OPENAI_MODEL} file analysis error:`, error);
-      throw new Error(`${OPENAI_MODEL} file analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    throw new Error('This method has been removed. Use analyzeTwoPassWithFile() instead - it provides superior ChatGPT Responses API analysis with better accuracy and consistency.');
   }
 
   async analyzeGPT5(
@@ -1819,182 +1420,12 @@ Analyze ONLY this question and provide the result as a single JSON object follow
     course?: string,
     fileIds?: string[]
   ): Promise<AIAnalysisResult> {
-    // If file IDs are provided, use file-based analysis
-    if (fileIds && fileIds.length > 0) {
-      console.log(`Using file-based analysis with ${fileIds.length} file(s)`);
-      return this.analyzeGPT5WithFile(fileIds, jurisdictions, course);
-    }
-    
-    // Original text-based analysis
-    const startTime = Date.now();
-    let gpt5Response: any = null;
-    
-    try {
-      console.log(`=== ${OPENAI_MODEL} API CALL DEBUG ===`);
-      const dynamicPrompt = ANALYSIS_PROMPT.replace('{JURISDICTIONS}', jurisdictions.join(' and ')).replace('{COURSE}', course || 'General Mathematics');
-      console.log('System prompt length:', dynamicPrompt.length);
-      console.log('User content length:', `Question: ${questionText}\n\nContext: ${context}`.length);
-      console.log('Model:', OPENAI_MODEL);
-      console.log('Max tokens:', 10000);
-      
-      gpt5Response = await openai.chat.completions.create({
-        model: OPENAI_MODEL,
-        messages: [
-          {
-            role: "system",
-            content: dynamicPrompt
-          },
-          {
-            role: "user",
-            content: `Question: ${questionText}\n\nContext: ${context}`
-          }
-        ],
-        max_completion_tokens: 10000,
-        temperature: OPENAI_TEMPERATURE,
-        response_format: {
-          type: "json_schema",
-          json_schema: ANALYSIS_RESULT_SCHEMA
-        }
-      });
-
-      const processingTime = Date.now() - startTime;
-      const result = JSON.parse(gpt5Response.choices[0].message.content || '{}');
-      
-      return {
-        standards: result.standards,
-        rigor: result.rigor,
-        rawResponse: gpt5Response,
-        processingTime
-      };
-    } catch (error) {
-      console.error(`${OPENAI_MODEL} analysis error:`, error);
-      throw new Error(`${OPENAI_MODEL} analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    throw new Error('This method has been removed. Use analyzeTwoPassWithFile() instead - it provides superior ChatGPT Responses API analysis with better accuracy and consistency.');
   }
 
   // Keep existing debugging code for reference but streamline the return
   async analyzeGPT5_OLD_DEBUG_VERSION(questionText: string, context: string, jurisdictions: string[], course?: string): Promise<AIAnalysisResult> {
-    const startTime = Date.now();
-    let gpt5Response: any = null;
-    
-    try {
-      console.log('=== GPT-4o-mini API CALL DEBUG ===');
-      console.log('Response status:', gpt5Response.choices?.[0]?.finish_reason);
-      console.log('Content length:', gpt5Response.choices?.[0]?.message?.content?.length || 0);
-      console.log('Raw content (first 500 chars):', (gpt5Response.choices?.[0]?.message?.content || '').substring(0, 500));
-      console.log('Raw content (last 100 chars):', (gpt5Response.choices?.[0]?.message?.content || '').slice(-100));
-      
-      // Parse structured JSON response
-      const rawContent = gpt5Response.choices?.[0]?.message?.content || '';
-      const processingTime = Date.now() - startTime;
-      
-      console.log('=== GROK STRUCTURED JSON RESPONSE ===');
-      console.log('Raw content length:', rawContent.length);
-      console.log('=== END STRUCTURED JSON RESPONSE ===');
-      
-      // Use robust JSON extraction for GPT-4o-mini responses
-      console.log('=== ATTEMPTING ROBUST JSON EXTRACTION ===');
-      const extractionResult = extractAndValidateQuestionList(rawContent);
-      
-      if (extractionResult.success && extractionResult.data) {
-        console.log('✅ GPT-4o-mini ROBUST EXTRACTION SUCCESS!');
-        const validatedQuestions = extractionResult.data;
-        console.log('Number of validated questions:', validatedQuestions.length);
-        
-        // Transform with Common Standards lookup
-        const transformedResults = await this.transformGrokResponse(
-          validatedQuestions.map(q => ({
-            question: q.question,
-            standard: q.standard,
-            rigor: q.rigor,
-            justification: q.justification
-          })), 
-          jurisdictions
-        );
-        
-        const questions = validatedQuestions.map((item: QuestionListItem, index: number) => {
-          const transformed = transformedResults[index];
-          console.log(`Question ${item.question}: ${item.standard} (${item.rigor})`);
-          
-          return {
-            questionNumber: item.question.toString(),
-            questionText: `Question ${item.question}: ${item.questionSummary}`,
-            standards: transformed.standards,
-            rigor: transformed.rigor,
-            rawResponse: gpt5Response,
-            processingTime,
-            aiEngine: 'gpt-4o-mini'
-          };
-        });
-        
-        // Return first question's data for compatibility
-        if (questions.length === 0) {
-          throw new Error('GPT-4o-mini analysis succeeded but no questions could be extracted from the response');
-        }
-        const firstQuestion = questions[0];
-        
-        return {
-          standards: firstQuestion.standards,
-          rigor: firstQuestion.rigor,
-          rawResponse: gpt5Response,
-          processingTime,
-          jsonResponse: validatedQuestions, // Store validated questions
-          allQuestions: questions
-        };
-      } else {
-        console.error('❌ GPT-4o-mini ROBUST EXTRACTION FAILED:', extractionResult.error);
-        console.error('Cleaned content was:', extractionResult.cleanedContent?.substring(0, 500));
-        
-        throw new Error(`GPT-4o-mini JSON extraction failed: ${extractionResult.error}`);
-      }
-      
-    } catch (error) {
-      console.error('=== GROK JSON PARSE ERROR DEBUG ===');
-      console.error('Error:', error instanceof Error ? error.message : 'Unknown error');
-      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-      
-      // Now we can access the response from the outer scope
-      if (gpt5Response?.choices?.[0]?.message?.content) {
-        const failedContent = gpt5Response.choices[0].message.content;
-        console.error('=== MALFORMED JSON CONTENT ANALYSIS ===');
-        console.error('Content length:', failedContent.length);
-        
-        // Find the error position if it's a JSON parse error
-        if (error instanceof Error && error.message.includes('position')) {
-          const positionMatch = error.message.match(/position (\d+)/);
-          if (positionMatch) {
-            const errorPos = parseInt(positionMatch[1]);
-            console.error(`Content around error position ${errorPos}:`);
-            console.error(`Position ${Math.max(0, errorPos - 50)} to ${errorPos + 50}:`, 
-              failedContent.substring(Math.max(0, errorPos - 50), errorPos + 50));
-            
-            // Show character codes around the error position
-            const errorChar = failedContent[errorPos];
-            console.error(`Character at error position: "${errorChar}" (code: ${errorChar?.charCodeAt(0) || 'N/A'})`);
-          }
-        }
-        
-        console.error('Full content (first 1000 chars):');
-        console.error(failedContent.substring(0, 1000));
-        console.error('Full content (last 500 chars):');
-        console.error(failedContent.slice(-500));
-        
-        // Check for common JSON formatting issues
-        const hasUnescapedQuotes = failedContent.includes('"') && failedContent.includes('\\"');
-        const hasTrailingCommas = /,\s*[}\]]/g.test(failedContent);
-        const hasUnterminatedStrings = /"\s*$/m.test(failedContent);
-        
-        console.error('JSON formatting analysis:');
-        console.error('- Has unescaped quotes:', hasUnescapedQuotes);
-        console.error('- Has trailing commas:', hasTrailingCommas);
-        console.error('- Has unterminated strings:', hasUnterminatedStrings);
-        console.error('=== END MALFORMED JSON ANALYSIS ===');
-      } else {
-        console.error('No response content available for analysis');
-      }
-      
-      throw new Error(`GPT-4o-mini old debug version analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    throw new Error('This method has been removed. Use analyzeTwoPassWithFile() instead - it provides superior ChatGPT Responses API analysis with better accuracy and consistency.');
   }
 
   private parseNaturalLanguageResponse(content: string): { standards: EducationalStandard[], rigor: RigorAssessment } {
