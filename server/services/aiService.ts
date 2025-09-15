@@ -37,6 +37,14 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY_ENV_VAR || "default_key",
 });
 
+// Anti-caching feature flag for testing (prevents ChatGPT from returning cached responses)
+const TESTING_ANTI_CACHE = process.env.TESTING_ANTI_CACHE === 'true';
+
+// Generate nonce for preventing ChatGPT response caching during testing
+function generateNonce(): string {
+  return TESTING_ANTI_CACHE ? `[nonce:${Date.now()}]` : '';
+}
+
 // GPT-4o-mini compatible JSON schemas for structured output
 export const QUESTION_LIST_SCHEMA = {
   name: "QuestionList",
@@ -1305,11 +1313,12 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
 
       // PASS 1 — Extraction (Responses API + input_file)
       console.log('\n=== PASS 1: QUESTION EXTRACTION ===');
+      const nonce1 = generateNonce();
       const extractionResponse = await (openai as any).responses.create({
         model: "gpt-4o",
         temperature: 0.0,
         input: [
-          { role: "system", content: "You are an extraction engine that outputs JSON only." },
+          { role: "system", content: `You are an extraction engine that outputs JSON only. ${nonce1}` },
           {
             role: "user",
             content: [
@@ -1565,11 +1574,12 @@ Rules:
         .replace(/<jurisdiction>/g, jurisdiction)
         .replace(/<course>/g, course);
       
+      const nonce2 = generateNonce();
       const classificationResponse = await (openai as any).responses.create({
         model: "gpt-4o",
         temperature: 0.0,
         input: [
-          { role: "system", content: "You are a curriculum alignment engine. Output JSON only, no commentary." },
+          { role: "system", content: `You are a curriculum alignment engine. Output JSON only, no commentary. ${nonce2}` },
           {
             role: "user",
             content: [
