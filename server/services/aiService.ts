@@ -1290,8 +1290,8 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         operation: 'extractQuestions'
       });
 
-      // Use ChatGPT's exact working pattern
-      const gpt5Response = await openai.chat.completions.create({
+      // Prepare the API call object
+      const apiRequest = {
         model: "gpt-5",  // ChatGPT's working model name
         temperature: 0.2,
         top_p: 1.0,
@@ -1307,7 +1307,18 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         ],
         file_ids: fileIds,  // ChatGPT's exact file attachment pattern
         max_completion_tokens: 4000
-      });
+      };
+
+      // 🔍 CONSOLE LOG: Complete API Request Being Sent to ChatGPT
+      console.log('\n=== COMPLETE API REQUEST TO CHATGPT ===');
+      console.log('API Endpoint: chat.completions.create');
+      console.log('Full Request Object:', JSON.stringify(apiRequest, null, 2));
+      console.log('File IDs Array:', fileIds);
+      console.log('File IDs Count:', fileIds.length);
+      console.log('=== END API REQUEST LOGGING ===\n');
+
+      // Use ChatGPT's exact working pattern
+      const gpt5Response = await openai.chat.completions.create(apiRequest);
 
       const responseText = gpt5Response.choices[0]?.message?.content || '';
       const processingTime = Date.now() - startTime;
