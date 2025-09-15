@@ -1141,19 +1141,22 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       const stats = fs.statSync(filePath);
       console.log(`File size: ${stats.size} bytes`);
       
-      // Upload file to OpenAI using OpenAI.toFile for proper filename/extension handling
-      const fileStream = fs.createReadStream(filePath);
-      let fileToUpload;
+      // ALWAYS upload with explicit .pdf filename and proper MIME type
+      const fileBytes = fs.readFileSync(filePath);
       
-      if (originalFileName && mimeType) {
-        // Use OpenAI.toFile to ensure proper filename and MIME type
-        fileToUpload = await OpenAI.toFile(fileStream, originalFileName, { type: mimeType });
-        console.log(`📎 Using original filename with extension: ${originalFileName}`);
-      } else {
-        // Fallback to basic file stream (legacy behavior)
-        fileToUpload = fileStream;
-        console.log(`⚠️ No original filename provided, using basic file stream`);
+      // Ensure we have a .pdf filename - extract from originalFileName or provide default
+      let pdfFileName = originalFileName;
+      if (!pdfFileName || typeof pdfFileName !== 'string') {
+        pdfFileName = 'document.pdf'; // Only as last resort if no original name
+      } else if (!pdfFileName.toLowerCase().endsWith('.pdf')) {
+        pdfFileName = `${pdfFileName}.pdf`; // Add .pdf if missing
       }
+      
+      // Always use OpenAI.toFile with explicit filename and MIME type for reliability
+      const fileToUpload = await OpenAI.toFile(fileBytes, pdfFileName, { 
+        type: mimeType || 'application/pdf' 
+      });
+      console.log(`📎 Uploading with explicit PDF filename: ${pdfFileName}`);
       
       const response = await openai.files.create({
         file: fileToUpload,
@@ -1261,8 +1264,10 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       if (!file) {
         throw new Error(`File ${fileId} not found`);
       }
-      if (!/\.pdf$/i.test(file.filename || "")) {
-        throw new Error(`File ${fileId} has no .pdf filename (got "${file.filename || "unknown"}"). Re-upload with a .pdf name.`);
+      // Safe check: ensure filename exists and is a string before calling endsWith
+      const filename = file.filename;
+      if (!filename || typeof filename !== 'string' || !filename.toLowerCase().endsWith('.pdf')) {
+        throw new Error(`File ${fileId} has no .pdf filename (got "${filename || "undefined"}"). Re-upload with a .pdf name.`);
       }
       if (file.status !== "processed") {
         throw new Error(`File ${fileId} is not processed yet (status: ${file.status}).`);
