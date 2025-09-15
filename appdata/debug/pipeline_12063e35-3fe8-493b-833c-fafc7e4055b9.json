@@ -17,5 +17,77 @@
   ],
   "totalProcessingTime": 5998,
   "extractedText": "Name ___________________________  Date __________________\n\nIntegers Test – Version 1\n\n1\n\n3\n\n5\n\n7\n\n9\n\nComplete the prime factorization for \nthe number below.\n\n2\n\nComplete the prime factorization for \nthe number below.\n\n90\n\n130\n\nGraph both of your numbers on a \nnumber line and then write an inequality \nto compare the two numbers.\n−7 𝑎𝑎𝑎𝑎𝑎𝑎 − 5\n\nAdd the two integers. \n\n13 + (−6)\n\nSubtract the two integers. \n\nGraph both of your numbers on a \nnumber line and then write an inequality \nto compare the two numbers.\n4 𝑎𝑎𝑎𝑎𝑎𝑎 − 2\n\nAdd the two integers. \n\n(−9) + (−5)\n\nSubtract the two integers. \n\n4\n\n6\n\n8\n\n15 − (−7)\n\n−12 − (−3)\n\nSubtract the two integers. \n\n10\n\nMultiply the two integers.\n\n(−5) − 8\n\n(−6)(−8)\n\n\fName ___________________________  Date __________________\n\nIntegers Test – Version 1\n\n11\n\nMultiply the two integers.\n\n(−15)(4)\n\n12\n\nUse the order of operations to solve \neach problem.\n\n6 9 − 15 + (−2)\n\n13\n\nUse the order of operations to solve \neach problem.\n\n14\n\nUse the order of operations to solve \neach problem.\n\n11 −\n\n24\n6\n\n+ 9 − 3(4)\n\n3(−2)(6 + (−4))\n22\n\n15\n\nUse the order of operations to solve \neach problem.\n\n16\n\nUse the order of operations to solve \neach problem.\n\n82−5(6 − 3)\n\n−4(12 − 14)(6 + 2)\n\n17\n\nDivide the two integers. \n\n18\n\nDivide the two integers. \n\n39 ÷ (−3)\n\n−121\n11\n\n19\n\nDivide the two integers. \n\n20\n\nDivide the two integers. \n\n−96 ÷ (−6)\n\n168\n−7",
-  "extractedTextLength": 1387
+  "extractedTextLength": 1387,
+  "dbStorageStarted": "2025-09-15T05:52:26.124Z",
+  "dbStorageCompleted": "2025-09-15T05:52:26.350Z",
+  "dbStoredQuestions": [
+    {
+      "id": "38a14d09-4f6c-4977-8157-f9ce52d61ccc",
+      "documentId": "12063e35-3fe8-493b-833c-fafc7e4055b9",
+      "questionNumber": "1",
+      "questionText": "Apply and extend previous understandings of addition and subtraction to add and subtract rational numbers; represent addition and subtraction on a number line and use ordering and absolute value to compare numbers.",
+      "context": "Question 1: Analysis for standard 7.NS.A.1",
+      "questionType": null,
+      "createdAt": "2025-09-15T05:52:26.157Z",
+      "aiResults": {
+        "grok": {
+          "standards": [
+            {
+              "code": "7.NS.A.1",
+              "description": "Apply and extend previous understandings of addition and subtraction to add and subtract rational numbers; represent addition and subtraction on a number line and use ordering and absolute value to compare numbers.",
+              "jurisdiction": "Common Core State Standards (CCSS)",
+              "gradeLevel": "7",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "DOK 2",
+            "justification": "The assessment items focus primarily on performing and applying integer operations (addition, subtraction, multiplication, division), graphing integers on a number line, and writing inequalities — all tasks that align most directly with 7.NS.A.1 (representing and comparing integers on the number line and computing with them). Problems include straightforward computation (recall/application) and some multi-step application (order of operations, prime factorization, and comparing on a number line), so overall cognitive demand is moderate (application/reasoning at DOK 2).",
+            "confidence": 0.84
+          },
+          "rawResponse": {
+            "id": "chatcmpl-CFwPtCAStzx78sit6gKgk0u2vxBoq",
+            "object": "chat.completion",
+            "created": 1757915509,
+            "model": "gpt-5-mini-2025-08-07",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\n  \"standards\": [\n    {\n      \"code\": \"7.NS.A.1\",\n      \"description\": \"Apply and extend previous understandings of addition and subtraction to add and subtract rational numbers; represent addition and subtraction on a number line and use ordering and absolute value to compare numbers.\",\n      \"jurisdiction\": \"Common Core State Standards (CCSS)\",\n      \"gradeLevel\": \"7\",\n      \"subject\": \"Mathematics\"\n    }\n  ],\n  \"rigor\": {\n    \"level\": \"medium\",\n    \"dokLevel\": \"DOK 2\",\n    \"justification\": \"The assessment items focus primarily on performing and applying integer operations (addition, subtraction, multiplication, division), graphing integers on a number line, and writing inequalities — all tasks that align most directly with 7.NS.A.1 (representing and comparing integers on the number line and computing with them). Problems include straightforward computation (recall/application) and some multi-step application (order of operations, prime factorization, and comparing on a number line), so overall cognitive demand is moderate (application/reasoning at DOK 2).\",\n    \"confidence\": 0.84\n  }\n}",
+                  "refusal": null,
+                  "annotations": []
+                },
+                "finish_reason": "stop"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 766,
+              "completion_tokens": 1668,
+              "total_tokens": 2434,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 1408,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+              }
+            },
+            "service_tier": "default",
+            "system_fingerprint": null
+          },
+          "processingTime": 26358,
+          "aiEngine": "chatgpt"
+        }
+      }
+    }
+  ],
+  "dbStoredAiResponses": [],
+  "dbStoredResults": [],
+  "dbStorageChecksum": "cd44e91ca45f19167a23e12a90be8e86"
 }
