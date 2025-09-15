@@ -1295,13 +1295,10 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         messages: [
           {
             role: "user",
-            content: `${EXTRACTION_PROMPT}\n\nExtract all questions from the attached document.`,
-            attachments: fileIds.map(fileId => ({
-              file_id: fileId,
-              tools: [{ type: "file_search" }]
-            }))
+            content: `${EXTRACTION_PROMPT}\n\nExtract all questions from the attached document.`
           }
         ],
+        file_ids: fileIds,  // Correct format: top-level parameter like ChatGPT's Python example
         temperature: OPENAI_TEMPERATURE,
         max_completion_tokens: 4000
       });
