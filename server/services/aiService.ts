@@ -363,6 +363,9 @@ Output schema:
   "rigor": <1|2|3>
 }`;
 
+// Legacy prompt for backward compatibility
+const ANALYSIS_PROMPT = CLASSIFICATION_PROMPT;
+
 export class AIService {
   // Transform new Grok JSON format to match downstream contracts
   private async transformGrokResponse(
