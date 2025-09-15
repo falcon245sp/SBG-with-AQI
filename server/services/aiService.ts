@@ -1349,24 +1349,20 @@ ${courseContext ? `- Context (optional hint): ${courseContext}` : ""}`
 
       // PASS 2 — Classification (Responses API)
       console.log('\n=== PASS 2: CLASSIFICATION ===');
-      const classificationResponse = await (openai as any).responses.create({
-        model: "gpt-4o",
-        temperature: 0.0,
-        input: [
-          { role: "system", content: "You are a curriculum alignment engine. Output JSON only, no commentary." },
-          {
-            role: "user",
-            content: [
-              {
-                type: "input_text",
-                text:
-`Given this JSON array of extracted questions:
+      
+      // Parse jurisdiction and course from jList for dynamic placeholders
+      const fullStandards = jList.join(", ");
+      const [jurisdiction, ...courseParts] = fullStandards.split(" ");
+      const course = courseParts.join(" ");
+      
+      // Template with dynamic placeholders
+      const promptTemplate = `Given this JSON array of extracted questions:
 
 ${JSON.stringify(extractedQuestions, null, 2)}
 
-Map each item to the most relevant ${jList.join(", ")} standard and assign rigor.
-CRITICAL: You MUST use ${jList.join(", ")} standards only.
-Context: This is a ${jList.join(", ")} assessment.
+Map each item to the most relevant <jurisdiction> <course> standard and assign rigor.
+CRITICAL: You MUST use <course> standards only.
+Context: This is a <course> assessment.
 
 Rules:
 - Use official codes where applicable (e.g., A-SSE.1, A-REI.3, N-Q.1).
@@ -1382,7 +1378,24 @@ Rules:
     "standard": "<code>",
     "rigor": <1|2|3>
   }
-]`
+]`;
+
+      // Replace dynamic placeholders with actual values
+      const finalPrompt = promptTemplate
+        .replace(/<jurisdiction>/g, jurisdiction)
+        .replace(/<course>/g, course);
+      
+      const classificationResponse = await (openai as any).responses.create({
+        model: "gpt-4o",
+        temperature: 0.0,
+        input: [
+          { role: "system", content: "You are a curriculum alignment engine. Output JSON only, no commentary." },
+          {
+            role: "user",
+            content: [
+              {
+                type: "input_text",
+                text: finalPrompt
               }
             ]
           }
@@ -1516,24 +1529,20 @@ ${extractedText}`
 
       // PASS 2 — Classification (Responses API)
       console.log('\n=== PASS 2: CLASSIFICATION (TEXT INPUT) ===');
-      const classificationResponse = await (openai as any).responses.create({
-        model: "gpt-4o",
-        temperature: 0.0,
-        input: [
-          { role: "system", content: "You are a curriculum alignment engine. Output JSON only, no commentary." },
-          {
-            role: "user",
-            content: [
-              {
-                type: "input_text",
-                text:
-`Given this JSON array of extracted questions:
+      
+      // Parse jurisdiction and course from jList for dynamic placeholders
+      const fullStandards = jList.join(", ");
+      const [jurisdiction, ...courseParts] = fullStandards.split(" ");
+      const course = courseParts.join(" ");
+      
+      // Template with dynamic placeholders
+      const promptTemplate = `Given this JSON array of extracted questions:
 
 ${JSON.stringify(extractedQuestions, null, 2)}
 
-Map each item to the most relevant ${jList.join(", ")} standard and assign rigor.
-CRITICAL: You MUST use ${jList.join(", ")} standards only.
-Context: This is a ${jList.join(", ")} assessment.
+Map each item to the most relevant <jurisdiction> <course> standard and assign rigor.
+CRITICAL: You MUST use <course> standards only.
+Context: This is a <course> assessment.
 
 Rules:
 - Use official codes where applicable (e.g., A-SSE.1, A-REI.3, N-Q.1).
@@ -1549,7 +1558,24 @@ Rules:
     "standard": "<code>",
     "rigor": <1|2|3>
   }
-]`
+]`;
+
+      // Replace dynamic placeholders with actual values
+      const finalPrompt = promptTemplate
+        .replace(/<jurisdiction>/g, jurisdiction)
+        .replace(/<course>/g, course);
+      
+      const classificationResponse = await (openai as any).responses.create({
+        model: "gpt-4o",
+        temperature: 0.0,
+        input: [
+          { role: "system", content: "You are a curriculum alignment engine. Output JSON only, no commentary." },
+          {
+            role: "user",
+            content: [
+              {
+                type: "input_text",
+                text: finalPrompt
               }
             ]
           }
