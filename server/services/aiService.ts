@@ -1585,8 +1585,7 @@ Rules:
               {
                 type: "input_text",
                 text: finalPrompt
-              },
-              { type: "input_file", file_id: fileId }
+              }
             ]
           }
         ]
