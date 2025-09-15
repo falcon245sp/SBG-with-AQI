@@ -53,45 +53,92 @@ export class DocumentProcessor {
         component: 'DocumentProcessor'
       });
 
-      // Use text extraction approach (Chat Completions API doesn't support file_ids)
+      // Try OpenAI Assistants API for PDF upload (file_ids work with Assistants API, not Chat Completions)
+      let analysisResults: any;
+      let extractedText: string | undefined;
       const courseContext = document.courseTitle || undefined;
+      let uploadedFileId: string | undefined;
       
-      logger.documentProcessing('Starting text extraction', {
-        documentId,
-        fileName: document.originalPath,
-        component: 'DocumentProcessor'
-      });
-      
-      const extractedText = await this.extractTextFromDocument(document.originalPath, document.mimeType);
-      
-      if (!extractedText || extractedText.trim().length === 0) {
-        throw new Error('No text content could be extracted from the document');
+      try {
+        // Upload PDF to OpenAI and use Assistants API
+        logger.documentProcessing('Starting OpenAI file upload for Assistants API', {
+          documentId,
+          fileName: document.originalPath,
+          component: 'DocumentProcessor'
+        });
+        
+        uploadedFileId = await aiService.uploadFileToOpenAI(document.originalPath);
+        
+        logger.documentProcessing('Starting Assistants API analysis', {
+          documentId,
+          component: 'DocumentProcessor',
+          operation: 'assistantsApiAnalysis'
+        });
+        
+        // Use Assistants API with file attachment
+        const fileAnalysisResult = await aiService.analyzeWithAssistantsAPI(
+          [uploadedFileId],
+          document.jurisdictions,
+          courseContext,
+          documentId,
+          document.customerUuid
+        );
+        
+        analysisResults = fileAnalysisResult;
+        
+        logger.documentProcessing('Assistants API analysis completed', {
+          documentId,
+          component: 'DocumentProcessor',
+          operation: 'assistantsApiAnalysis'
+        });
+        
+      } catch (fileUploadError) {
+        console.log(`⚠️ Assistants API failed, falling back to text extraction: ${fileUploadError instanceof Error ? fileUploadError.message : 'Unknown error'}`);
+        
+        // Cleanup uploaded file if it exists
+        if (uploadedFileId) {
+          await aiService.deleteFileFromOpenAI(uploadedFileId);
+          uploadedFileId = undefined;
+        }
+        
+        // Fallback to text extraction approach
+        logger.documentProcessing('Starting text extraction fallback', {
+          documentId,
+          fileName: document.originalPath,
+          component: 'DocumentProcessor'
+        });
+        
+        extractedText = await this.extractTextFromDocument(document.originalPath, document.mimeType);
+        
+        if (!extractedText || extractedText.trim().length === 0) {
+          throw new Error('No text content could be extracted from the document');
+        }
+        
+        // Log extracted text for debugging
+        await debugLogger.logDocumentExtraction(documentId, extractedText);
+        
+        logger.documentProcessing('Text extraction completed', {
+          documentId,
+          component: 'DocumentProcessor',
+          operation: 'textExtraction'
+        });
+        
+        // Send extracted text to AI engines for analysis
+        analysisResults = focusStandards && focusStandards.length > 0
+          ? await aiService.analyzeDocumentWithStandards(
+              extractedText,
+              document.mimeType,
+              document.jurisdictions,
+              focusStandards,
+              courseContext
+            )
+          : await aiService.analyzeDocument(
+              extractedText,
+              document.mimeType,
+              document.jurisdictions,
+              courseContext
+            );
       }
-      
-      // Log extracted text for debugging
-      await debugLogger.logDocumentExtraction(documentId, extractedText);
-      
-      logger.documentProcessing('Text extraction completed', {
-        documentId,
-        component: 'DocumentProcessor',
-        operation: 'textExtraction'
-      });
-      
-      // Send extracted text to AI engines for analysis
-      const analysisResults = focusStandards && focusStandards.length > 0
-        ? await aiService.analyzeDocumentWithStandards(
-            extractedText,
-            document.mimeType,
-            document.jurisdictions,
-            focusStandards,
-            courseContext
-          )
-        : await aiService.analyzeDocument(
-            extractedText,
-            document.mimeType,
-            document.jurisdictions,
-            courseContext
-          );
       
       // Create question records from AI analysis
       logger.documentProcessing('AI analysis completed', {

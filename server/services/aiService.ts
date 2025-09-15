@@ -1264,6 +1264,134 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     }
   }
 
+  // Assistants API workflow for file uploads (file_ids work here, not in Chat Completions)
+  async analyzeWithAssistantsAPI(
+    fileIds: string[],
+    jurisdictions: string[] = [],
+    courseContext?: string,
+    documentId?: string,
+    customerUuid?: string
+  ): Promise<any> {
+    const startTime = Date.now();
+    
+    try {
+      logger.info(`[AIService] Starting Assistants API analysis`, {
+        component: 'AIService',
+        operation: 'analyzeWithAssistantsAPI',
+        fileCount: fileIds.length
+      });
+
+      // Step 1: Create an assistant with file_search tool
+      const assistant = await openai.beta.assistants.create({
+        name: "Standards Sherpa Document Analyzer",
+        instructions: `You are an expert educational content analyzer specializing in standards alignment and cognitive rigor assessment. Analyze the attached document and extract all individual questions, then for each question provide:
+1. Standards alignment (CCSS codes and descriptions) 
+2. Rigor level (mild, medium, spicy) based on Depth of Knowledge
+3. Detailed justification for both standards and rigor assessment
+
+Return results as JSON with this exact structure:
+{
+  "questions": [
+    {
+      "question": 1,
+      "questionSummary": "Brief description of question",
+      "standard": "CCSS.MATH.CONTENT.X.X.X",
+      "rigor": "medium",
+      "justification": "Detailed explanation of standards alignment and rigor level"
+    }
+  ]
+}`,
+        model: "gpt-4o",
+        tools: [{ type: "file_search" }]
+      });
+
+      // Step 2: Create a thread
+      const thread = await openai.beta.threads.create();
+
+      // Step 3: Add message with file attachments
+      await openai.beta.threads.messages.create(thread.id, {
+        role: "user",
+        content: `Analyze the attached educational document and extract all questions with standards alignment and rigor assessment for ${jurisdictions.join(', ')} standards.${courseContext ? ` Course context: ${courseContext}` : ''}`,
+        attachments: fileIds.map(fileId => ({
+          file_id: fileId,
+          tools: [{ type: "file_search" }]
+        }))
+      });
+
+      // Step 4: Run the assistant
+      const run = await openai.beta.threads.runs.createAndPoll(thread.id, {
+        assistant_id: assistant.id
+      });
+
+      if (run.status === 'completed') {
+        // Step 5: Get the results
+        const messages = await openai.beta.threads.messages.list(thread.id);
+        const responseMessage = messages.data[0];
+        
+        if (responseMessage?.content?.[0]?.type === 'text') {
+          const responseText = responseMessage.content[0].text.value;
+          const processingTime = Date.now() - startTime;
+
+          // 🔍 CONSOLE LOG: Assistants API Response
+          console.log('\n=== ASSISTANTS API RESPONSE ===');
+          console.log('Response Text:', responseText);
+          console.log('Response Length:', responseText.length);
+          console.log('Processing Time:', processingTime);
+          console.log('=== END ASSISTANTS API RESPONSE ===\n');
+
+          // Parse the response 
+          let parsedResult;
+          try {
+            const cleanedText = responseText.replace(/```json\n?|\n?```/g, '').trim();
+            parsedResult = JSON.parse(cleanedText);
+          } catch (parseError) {
+            console.error('Failed to parse Assistants API response:', parseError);
+            // Return raw response if parsing fails
+            parsedResult = {
+              questions: [{
+                question: 1,
+                questionSummary: "Document analysis completed",
+                standard: "Analysis from Assistants API",
+                rigor: "medium",
+                justification: responseText
+              }]
+            };
+          }
+
+          // Cleanup
+          await openai.beta.assistants.del(assistant.id);
+
+          logger.info(`[AIService] Assistants API analysis completed`, {
+            component: 'AIService',
+            operation: 'analyzeWithAssistantsAPI',
+            processingTime,
+            questionCount: parsedResult.questions?.length || 0
+          });
+
+          return {
+            questions: parsedResult.questions || [],
+            jsonResponse: parsedResult.questions,
+            rawResponse: { content: responseText },
+            processingTime,
+            aiEngine: 'assistants-api'
+          };
+        }
+      }
+
+      throw new Error(`Assistant run failed with status: ${run.status}`);
+
+    } catch (error) {
+      const processingTime = Date.now() - startTime;
+      logger.error(`[AIService] Assistants API analysis failed`, {
+        component: 'AIService',
+        operation: 'analyzeWithAssistantsAPI',
+        processingTime,
+        error: error instanceof Error ? error.message : String(error)
+      });
+      throw error;
+    }
+  }
+
   async deleteFileFromOpenAI(fileId: string): Promise<void> {
     try {
       console.log(`=== DELETING FILE FROM OPENAI ===`);
@@ -1290,9 +1418,8 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         operation: 'extractQuestions'
       });
 
-      // RESEARCH CONCLUSION: file_ids parameter is NOT supported in ChatGPT Chat Completions API
-      // This confirmed our web search findings. Text extraction approach works perfectly.
-      throw new Error('File attachment approach not supported - Chat Completions API does not accept file_ids parameter');
+      // IMPORTANT: Chat Completions API doesn't support file_ids - use Assistants API instead
+      throw new Error('Use analyzeWithAssistantsAPI for file uploads - Chat Completions API does not accept file_ids parameter');
     } catch (error) {
       const processingTime = Date.now() - startTime;
       logger.error(`[AIService] Question extraction failed`, {
