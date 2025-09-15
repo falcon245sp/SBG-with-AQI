@@ -1125,10 +1125,12 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
   }
 
 
-  async uploadFileToOpenAI(filePath: string): Promise<string> {
+  async uploadFileToOpenAI(filePath: string, originalFileName?: string, mimeType?: string): Promise<string> {
     try {
       console.log(`=== UPLOADING FILE TO OPENAI ===`);
       console.log(`File path: ${filePath}`);
+      console.log(`Original filename: ${originalFileName || 'not provided'}`);
+      console.log(`MIME type: ${mimeType || 'not provided'}`);
       
       // Check if file exists
       if (!fs.existsSync(filePath)) {
@@ -1139,10 +1141,22 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       const stats = fs.statSync(filePath);
       console.log(`File size: ${stats.size} bytes`);
       
-      // Upload file to OpenAI
+      // Upload file to OpenAI using OpenAI.toFile for proper filename/extension handling
       const fileStream = fs.createReadStream(filePath);
+      let fileToUpload;
+      
+      if (originalFileName && mimeType) {
+        // Use OpenAI.toFile to ensure proper filename and MIME type
+        fileToUpload = await OpenAI.toFile(fileStream, originalFileName, { type: mimeType });
+        console.log(`📎 Using original filename with extension: ${originalFileName}`);
+      } else {
+        // Fallback to basic file stream (legacy behavior)
+        fileToUpload = fileStream;
+        console.log(`⚠️ No original filename provided, using basic file stream`);
+      }
+      
       const response = await openai.files.create({
-        file: fileStream,
+        file: fileToUpload,
         purpose: "assistants"
       });
       
@@ -1201,6 +1215,43 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       }
     }
     return items;
+  }
+
+  // Helper function to normalize results with aiResults.openai format for document processor compatibility
+  private normalizeToAiResultsFormat(parsedResult: Array<{question_number:number; instruction_text:string; standard:string; rigor:1|2|3}>): Array<{question_number:number; instruction_text:string; aiResults: any}> {
+    return parsedResult.map(item => {
+      // Convert rigor level to DOK and rigor description
+      const rigorMap = {
+        1: { level: 'mild' as const, dokLevel: 'DOK 1', justification: 'Basic recall or simple procedure' },
+        2: { level: 'medium' as const, dokLevel: 'DOK 2', justification: 'Application of concepts or multi-step process' },
+        3: { level: 'spicy' as const, dokLevel: 'DOK 3', justification: 'Strategic thinking, reasoning, or complex problem solving' }
+      };
+
+      const rigorInfo = rigorMap[item.rigor] || rigorMap[2]; // Default to medium if unexpected value
+
+      return {
+        question_number: item.question_number,
+        instruction_text: item.instruction_text,
+        aiResults: {
+          openai: {
+            standards: [{
+              code: item.standard,
+              description: `Standard ${item.standard}`,
+              jurisdiction: "Common Core State Standards",
+              gradeLevel: "9-12",
+              subject: "Mathematics"
+            }],
+            rigor: {
+              level: rigorInfo.level,
+              dokLevel: rigorInfo.dokLevel,
+              justification: rigorInfo.justification,
+              confidence: 0.85
+            },
+            aiEngine: 'openai'
+          }
+        }
+      };
+    });
   }
 
   // ChatGPT's superior two-pass method using Responses API
@@ -1328,6 +1379,9 @@ Rules:
       // Final local consistency pass
       parsedResult = this.enforceConsistency(parsedResult);
 
+      // Normalize results to include aiResults.openai format for document processor compatibility
+      const normalizedQuestions = this.normalizeToAiResultsFormat(parsedResult);
+
       const processingTime = Date.now() - startTime;
 
       logger.info(`[AIService] Two-pass analysis completed`, {
@@ -1336,7 +1390,7 @@ Rules:
       });
 
       return {
-        questions: parsedResult,
+        questions: normalizedQuestions,
         jsonResponse: parsedResult,
         rawResponse: { pass1: extractionJSON, pass2: classificationJSON },
         processingTime,
@@ -1490,6 +1544,9 @@ Rules:
       // Final local consistency pass
       parsedResult = this.enforceConsistency(parsedResult);
 
+      // Normalize results to include aiResults.openai format for document processor compatibility
+      const normalizedQuestions = this.normalizeToAiResultsFormat(parsedResult);
+
       const processingTime = Date.now() - startTime;
 
       logger.info(`[AIService] Two-pass text analysis completed`, {
@@ -1498,7 +1555,7 @@ Rules:
       });
 
       return {
-        questions: parsedResult,
+        questions: normalizedQuestions,
         jsonResponse: parsedResult,
         rawResponse: { pass1: extractionJSON, pass2: classificationJSON },
         processingTime,

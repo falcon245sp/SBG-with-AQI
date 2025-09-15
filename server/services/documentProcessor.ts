@@ -69,7 +69,7 @@ export class DocumentProcessor {
           component: 'DocumentProcessor'
         });
         
-        uploadedFileId = await aiService.uploadFileToOpenAI(document.originalPath);
+        uploadedFileId = await aiService.uploadFileToOpenAI(document.originalPath, document.name, document.mimeType);
         
         logger.documentProcessing('Starting ChatGPT two-pass analysis', {
           documentId,
