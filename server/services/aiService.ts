@@ -5,8 +5,8 @@ import fs from 'fs';
 import path from 'path';
 
 // Using OpenAI GPT-5-mini model for better analysis results  
-const OPENAI_MODEL = "gpt-4o";
-const OPENAI_TEMPERATURE = parseFloat(process.env.OPENAI_TEMPERATURE || "0.2");
+const OPENAI_MODEL = "gpt-5-mini";
+const OPENAI_TEMPERATURE = 1.0; // GPT-5-mini requires temperature=1.0
 
 console.log(`AI Service initialized with OpenAI model: ${OPENAI_MODEL}`);
 
