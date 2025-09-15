@@ -1186,7 +1186,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     );
   }
 
-  private enforceConsistency(items: Array<{instruction_text:string; standard:string; rigor:1|2|3}>) {
+  private enforceConsistency(items: Array<{question_number:number; instruction_text:string; standard:string; rigor:1|2|3}>): Array<{question_number:number; instruction_text:string; standard:string; rigor:1|2|3}> {
     const norm = (t: string) => t.replace(/\s+/g, " ").trim().toLowerCase();
     const seen = new Map<string, {standard:string; rigor:1|2|3}>();
     for (const it of items) {

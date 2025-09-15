@@ -169,7 +169,7 @@ export class DocumentProcessor {
         const question = await DatabaseWriteService.createQuestion({
           documentId: document.id,
           questionNumber: String(i + 1), // Use sequential numbering
-          questionText: questionData.text,
+          questionText: questionData.instruction_text,
           context: questionData.context || '',
         });
         questionRecords.push({ ...question, aiResults: questionData.aiResults });
