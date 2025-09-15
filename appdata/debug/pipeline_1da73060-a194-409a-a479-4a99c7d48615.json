@@ -1,0 +1,288 @@
+{
+  "documentId": "1da73060-a194-409a-a479-4a99c7d48615",
+  "customerUuid": "43155b6c-895f-476a-9c4b-1b4446825715",
+  "originalFileSize": 89391,
+  "originalMimeType": "application/pdf",
+  "processingVersion": "two-pass-v1",
+  "createdAt": "2025-09-15T06:02:33.595Z",
+  "pass1Started": "2025-09-15T06:02:34.094Z",
+  "pass1Completed": "2025-09-15T06:02:40.430Z",
+  "pass1RawResponse": null,
+  "pass1ExtractedQuestions": [],
+  "pass1QuestionCount": 0,
+  "pass1ErrorMessage": "Failed to parse extraction response: Unexpected token 'I', \"I don't se\"... is not valid JSON",
+  "pass1Checksum": "facda9778e1d974ae9d07502c4328296",
+  "aiEnginesUsed": [
+    "openai"
+  ],
+  "totalProcessingTime": 6337,
+  "extractedText": "Name ___________________________  Date __________________\n\nVariables, Terms, and Expressions Test – Version 2\n\n1\n\nComplete the table by substituting values \ninto the expressions.\n\n2\n\nComplete the table by substituting values \ninto the expressions.\n\n7𝑥𝑥 − 8\n\n𝑥𝑥\n\n−3\n\n1\n\n−3𝑦𝑦 + 14\n\n𝑦𝑦\n\n0\n\n7\n\nWrite the number in exponential form.\n\n3\n\n4\n\nWrite the number in exponential form.\n\n162\n\n275\n\n5\n\nDetermine whether the given expressions \nare equivalent. \n\n6\n\nDetermine whether the given expressions \nare equivalent. \n\n16𝑥𝑥 − 44 𝑎𝑎𝑎𝑎𝑎𝑎 − 2(8𝑥𝑥 + 11)\n\n6𝑥𝑥3𝑦𝑦𝑧𝑧2 𝑎𝑎𝑎𝑎𝑎𝑎 (−2𝑥𝑥𝑦𝑦𝑧𝑧)(−3𝑥𝑥2𝑧𝑧)\n\n7\n\nDetermine whether the given expressions \nare equivalent. \n\n8\n\nMultiply the given terms and simplify.\n\n(3𝑥𝑥𝑦𝑦2)(−𝑥𝑥𝑦𝑦)\n\n5𝑥𝑥 − 25\n−5\n\n𝑎𝑎𝑎𝑎𝑎𝑎 − 𝑥𝑥 + 5\n\n9\n\nMultiply the given terms and simplify.\n\n10\n\nMultiply the given terms and simplify.\n\n(−4𝑥𝑥3𝑦𝑦𝑧𝑧)(6𝑦𝑦2)\n\n(6𝑥𝑥𝑦𝑦2𝑧𝑧)(−3𝑦𝑦𝑧𝑧2)\n\n\fName ___________________________  Date __________________\n\nVariables, Terms, and Expressions Test – Version 2\n\n11\n\nSimplify the given expression.\n\n12\n\nSimplify the given expression.\n\n(−7𝑥𝑥3𝑦𝑦𝑧𝑧2)2\n\n(3𝑥𝑥5𝑦𝑦3𝑧𝑧)3\n\n13\n\nCombine like terms and simplify.\n\n14\n\nCombine like terms and simplify.\n\n−3𝑦𝑦 + 5𝑥𝑥 − 6𝑥𝑥 − 2𝑦𝑦 + 7 − 11\n\n−5𝑥𝑥 + 2𝑥𝑥𝑦𝑦 − 3𝑦𝑦 + 7𝑥𝑥 − 𝑥𝑥 − 8𝑥𝑥𝑦𝑦\n\n15\n\nUse the distributive property to simplify\nthe expression.\n\n16\n\nUse the distributive property to simplify\nthe expression.\n\n−3(5𝑥𝑥 + 1)\n\n2(7𝑦𝑦 + 18)\n\n17\n\nUse the distributive property to simplify\nthe expression.\n\n18\n\nUse the distributive property to simplify\nthe expression.\n\n−6(−3𝑦𝑦 + 4)\n\n9(−5𝑦𝑦 − 7)\n\n19\n\nFind the value of the expression when \n𝑎𝑎 = −5, 𝑏𝑏 = 2, 𝑎𝑎𝑎𝑎𝑎𝑎 𝑐𝑐 = 3.\n\n20\n\nFind the value of the expression when \n𝑎𝑎 = 5, 𝑏𝑏 = −1, 𝑎𝑎𝑎𝑎𝑎𝑎 𝑐𝑐 = 6.\n\n7𝑎𝑎 + 3𝑏𝑏𝑐𝑐\n\n−14𝑏𝑏 + 11𝑐𝑐\n5𝑎𝑎 + 5𝑏𝑏",
+  "extractedTextLength": 1868,
+  "dbStorageStarted": "2025-09-15T06:03:56.200Z",
+  "dbStorageCompleted": "2025-09-15T06:03:57.065Z",
+  "dbStoredQuestions": [
+    {
+      "id": "05c01914-319f-4fd8-a1be-9a2f2e03af24",
+      "documentId": "1da73060-a194-409a-a479-4a99c7d48615",
+      "questionNumber": "1",
+      "questionText": "Write, read, and evaluate expressions in which letters stand for numbers (evaluate expressions by substituting given values).",
+      "context": "Question 1: Analysis for standard CCSS.MATH.CONTENT.6.EE.A.2",
+      "questionType": null,
+      "createdAt": "2025-09-15T06:03:56.233Z",
+      "aiResults": {
+        "grok": {
+          "standards": [
+            {
+              "code": "CCSS.MATH.CONTENT.6.EE.A.2",
+              "description": "Write, read, and evaluate expressions in which letters stand for numbers (evaluate expressions by substituting given values).",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "6",
+              "subject": "Mathematics (Expressions & Equations) -- used for Questions 1, 2, 19, 20 (substitution / evaluate expressions)"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "DOK 2",
+            "justification": "Most items require applying procedures (substitution, use of distributive property, combining like terms, multiplying/simplifying monomials and applying exponent rules) rather than pure recall or extended reasoning. Only the explicit 'write in exponential form' items are primarily recall-level.",
+            "confidence": 0.9
+          },
+          "rawResponse": {
+            "id": "chatcmpl-CFwaPKbbTibcsPzjEvG0P92uqMphC",
+            "object": "chat.completion",
+            "created": 1757916161,
+            "model": "gpt-5-mini-2025-08-07",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\n  \"standards\": [\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.EE.A.2\",\n      \"description\": \"Write, read, and evaluate expressions in which letters stand for numbers (evaluate expressions by substituting given values).\",\n      \"jurisdiction\": \"Common Core State Standards\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics (Expressions & Equations) -- used for Questions 1, 2, 19, 20 (substitution / evaluate expressions)\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.EE.A.1\",\n      \"description\": \"Write and evaluate numerical expressions involving whole-number exponents (write numbers in exponential form).\",\n      \"jurisdiction\": \"Common Core State Standards\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics (Expressions & Equations) -- used for Questions 3, 4 (exponential form)\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.EE.A.3\",\n      \"description\": \"Apply the properties of operations to generate equivalent expressions (use distributive property, collect like terms, test expressions for equivalence).\",\n      \"jurisdiction\": \"Common Core State Standards\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics (Expressions & Equations) -- used for Questions 5, 6, 7, 13, 14, 15, 16, 17, 18 (determine equivalence, combine like terms, distributive property)\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.8.EE.A.1\",\n      \"description\": \"Know and apply the properties of integer exponents to generate equivalent expressions (simplify products and powers of variable expressions).\",\n      \"jurisdiction\": \"Common Core State Standards\",\n      \"gradeLevel\": \"8\",\n      \"subject\": \"Mathematics (Expressions & Equations) -- used for Questions 8, 9, 10, 11, 12 (multiply monomials, simplify powers / exponent rules)\"\n    }\n  ],\n  \"rigor\": {\n    \"level\": \"medium\",\n    \"dokLevel\": \"DOK 2\",\n    \"justification\": \"Most items require applying procedures (substitution, use of distributive property, combining like terms, multiplying/simplifying monomials and applying exponent rules) rather than pure recall or extended reasoning. Only the explicit 'write in exponential form' items are primarily recall-level.\",\n    \"confidence\": 0.9\n  }\n}",
+                  "refusal": null,
+                  "annotations": []
+                },
+                "finish_reason": "stop"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 1255,
+              "completion_tokens": 4207,
+              "total_tokens": 5462,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 3648,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+              }
+            },
+            "service_tier": "default",
+            "system_fingerprint": null
+          },
+          "processingTime": 60958,
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "076f5423-afe0-4c19-a1b9-ddff33f02fdb",
+      "documentId": "1da73060-a194-409a-a479-4a99c7d48615",
+      "questionNumber": "2",
+      "questionText": "Write and evaluate numerical expressions involving whole-number exponents (write numbers in exponential form).",
+      "context": "Question 2: Analysis for standard CCSS.MATH.CONTENT.6.EE.A.1",
+      "questionType": null,
+      "createdAt": "2025-09-15T06:03:56.304Z",
+      "aiResults": {
+        "grok": {
+          "standards": [
+            {
+              "code": "CCSS.MATH.CONTENT.6.EE.A.1",
+              "description": "Write and evaluate numerical expressions involving whole-number exponents (write numbers in exponential form).",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "6",
+              "subject": "Mathematics (Expressions & Equations) -- used for Questions 3, 4 (exponential form)"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "DOK 2",
+            "justification": "Most items require applying procedures (substitution, use of distributive property, combining like terms, multiplying/simplifying monomials and applying exponent rules) rather than pure recall or extended reasoning. Only the explicit 'write in exponential form' items are primarily recall-level.",
+            "confidence": 0.9
+          },
+          "rawResponse": {
+            "id": "chatcmpl-CFwaPKbbTibcsPzjEvG0P92uqMphC",
+            "object": "chat.completion",
+            "created": 1757916161,
+            "model": "gpt-5-mini-2025-08-07",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\n  \"standards\": [\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.EE.A.2\",\n      \"description\": \"Write, read, and evaluate expressions in which letters stand for numbers (evaluate expressions by substituting given values).\",\n      \"jurisdiction\": \"Common Core State Standards\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics (Expressions & Equations) -- used for Questions 1, 2, 19, 20 (substitution / evaluate expressions)\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.EE.A.1\",\n      \"description\": \"Write and evaluate numerical expressions involving whole-number exponents (write numbers in exponential form).\",\n      \"jurisdiction\": \"Common Core State Standards\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics (Expressions & Equations) -- used for Questions 3, 4 (exponential form)\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.EE.A.3\",\n      \"description\": \"Apply the properties of operations to generate equivalent expressions (use distributive property, collect like terms, test expressions for equivalence).\",\n      \"jurisdiction\": \"Common Core State Standards\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics (Expressions & Equations) -- used for Questions 5, 6, 7, 13, 14, 15, 16, 17, 18 (determine equivalence, combine like terms, distributive property)\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.8.EE.A.1\",\n      \"description\": \"Know and apply the properties of integer exponents to generate equivalent expressions (simplify products and powers of variable expressions).\",\n      \"jurisdiction\": \"Common Core State Standards\",\n      \"gradeLevel\": \"8\",\n      \"subject\": \"Mathematics (Expressions & Equations) -- used for Questions 8, 9, 10, 11, 12 (multiply monomials, simplify powers / exponent rules)\"\n    }\n  ],\n  \"rigor\": {\n    \"level\": \"medium\",\n    \"dokLevel\": \"DOK 2\",\n    \"justification\": \"Most items require applying procedures (substitution, use of distributive property, combining like terms, multiplying/simplifying monomials and applying exponent rules) rather than pure recall or extended reasoning. Only the explicit 'write in exponential form' items are primarily recall-level.\",\n    \"confidence\": 0.9\n  }\n}",
+                  "refusal": null,
+                  "annotations": []
+                },
+                "finish_reason": "stop"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 1255,
+              "completion_tokens": 4207,
+              "total_tokens": 5462,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 3648,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+              }
+            },
+            "service_tier": "default",
+            "system_fingerprint": null
+          },
+          "processingTime": 60958,
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "3d3756d3-a095-46b4-9e76-8883afe3a677",
+      "documentId": "1da73060-a194-409a-a479-4a99c7d48615",
+      "questionNumber": "3",
+      "questionText": "Apply the properties of operations to generate equivalent expressions (use distributive property, collect like terms, test expressions for equivalence).",
+      "context": "Question 3: Analysis for standard CCSS.MATH.CONTENT.6.EE.A.3",
+      "questionType": null,
+      "createdAt": "2025-09-15T06:03:56.381Z",
+      "aiResults": {
+        "grok": {
+          "standards": [
+            {
+              "code": "CCSS.MATH.CONTENT.6.EE.A.3",
+              "description": "Apply the properties of operations to generate equivalent expressions (use distributive property, collect like terms, test expressions for equivalence).",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "6",
+              "subject": "Mathematics (Expressions & Equations) -- used for Questions 5, 6, 7, 13, 14, 15, 16, 17, 18 (determine equivalence, combine like terms, distributive property)"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "DOK 2",
+            "justification": "Most items require applying procedures (substitution, use of distributive property, combining like terms, multiplying/simplifying monomials and applying exponent rules) rather than pure recall or extended reasoning. Only the explicit 'write in exponential form' items are primarily recall-level.",
+            "confidence": 0.9
+          },
+          "rawResponse": {
+            "id": "chatcmpl-CFwaPKbbTibcsPzjEvG0P92uqMphC",
+            "object": "chat.completion",
+            "created": 1757916161,
+            "model": "gpt-5-mini-2025-08-07",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\n  \"standards\": [\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.EE.A.2\",\n      \"description\": \"Write, read, and evaluate expressions in which letters stand for numbers (evaluate expressions by substituting given values).\",\n      \"jurisdiction\": \"Common Core State Standards\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics (Expressions & Equations) -- used for Questions 1, 2, 19, 20 (substitution / evaluate expressions)\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.EE.A.1\",\n      \"description\": \"Write and evaluate numerical expressions involving whole-number exponents (write numbers in exponential form).\",\n      \"jurisdiction\": \"Common Core State Standards\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics (Expressions & Equations) -- used for Questions 3, 4 (exponential form)\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.EE.A.3\",\n      \"description\": \"Apply the properties of operations to generate equivalent expressions (use distributive property, collect like terms, test expressions for equivalence).\",\n      \"jurisdiction\": \"Common Core State Standards\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics (Expressions & Equations) -- used for Questions 5, 6, 7, 13, 14, 15, 16, 17, 18 (determine equivalence, combine like terms, distributive property)\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.8.EE.A.1\",\n      \"description\": \"Know and apply the properties of integer exponents to generate equivalent expressions (simplify products and powers of variable expressions).\",\n      \"jurisdiction\": \"Common Core State Standards\",\n      \"gradeLevel\": \"8\",\n      \"subject\": \"Mathematics (Expressions & Equations) -- used for Questions 8, 9, 10, 11, 12 (multiply monomials, simplify powers / exponent rules)\"\n    }\n  ],\n  \"rigor\": {\n    \"level\": \"medium\",\n    \"dokLevel\": \"DOK 2\",\n    \"justification\": \"Most items require applying procedures (substitution, use of distributive property, combining like terms, multiplying/simplifying monomials and applying exponent rules) rather than pure recall or extended reasoning. Only the explicit 'write in exponential form' items are primarily recall-level.\",\n    \"confidence\": 0.9\n  }\n}",
+                  "refusal": null,
+                  "annotations": []
+                },
+                "finish_reason": "stop"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 1255,
+              "completion_tokens": 4207,
+              "total_tokens": 5462,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 3648,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+              }
+            },
+            "service_tier": "default",
+            "system_fingerprint": null
+          },
+          "processingTime": 60958,
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "e003a802-b7e6-48da-8101-7248c463b637",
+      "documentId": "1da73060-a194-409a-a479-4a99c7d48615",
+      "questionNumber": "4",
+      "questionText": "Know and apply the properties of integer exponents to generate equivalent expressions (simplify products and powers of variable expressions).",
+      "context": "Question 4: Analysis for standard CCSS.MATH.CONTENT.8.EE.A.1",
+      "questionType": null,
+      "createdAt": "2025-09-15T06:03:56.452Z",
+      "aiResults": {
+        "grok": {
+          "standards": [
+            {
+              "code": "CCSS.MATH.CONTENT.8.EE.A.1",
+              "description": "Know and apply the properties of integer exponents to generate equivalent expressions (simplify products and powers of variable expressions).",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "8",
+              "subject": "Mathematics (Expressions & Equations) -- used for Questions 8, 9, 10, 11, 12 (multiply monomials, simplify powers / exponent rules)"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "DOK 2",
+            "justification": "Most items require applying procedures (substitution, use of distributive property, combining like terms, multiplying/simplifying monomials and applying exponent rules) rather than pure recall or extended reasoning. Only the explicit 'write in exponential form' items are primarily recall-level.",
+            "confidence": 0.9
+          },
+          "rawResponse": {
+            "id": "chatcmpl-CFwaPKbbTibcsPzjEvG0P92uqMphC",
+            "object": "chat.completion",
+            "created": 1757916161,
+            "model": "gpt-5-mini-2025-08-07",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\n  \"standards\": [\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.EE.A.2\",\n      \"description\": \"Write, read, and evaluate expressions in which letters stand for numbers (evaluate expressions by substituting given values).\",\n      \"jurisdiction\": \"Common Core State Standards\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics (Expressions & Equations) -- used for Questions 1, 2, 19, 20 (substitution / evaluate expressions)\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.EE.A.1\",\n      \"description\": \"Write and evaluate numerical expressions involving whole-number exponents (write numbers in exponential form).\",\n      \"jurisdiction\": \"Common Core State Standards\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics (Expressions & Equations) -- used for Questions 3, 4 (exponential form)\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.EE.A.3\",\n      \"description\": \"Apply the properties of operations to generate equivalent expressions (use distributive property, collect like terms, test expressions for equivalence).\",\n      \"jurisdiction\": \"Common Core State Standards\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics (Expressions & Equations) -- used for Questions 5, 6, 7, 13, 14, 15, 16, 17, 18 (determine equivalence, combine like terms, distributive property)\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.8.EE.A.1\",\n      \"description\": \"Know and apply the properties of integer exponents to generate equivalent expressions (simplify products and powers of variable expressions).\",\n      \"jurisdiction\": \"Common Core State Standards\",\n      \"gradeLevel\": \"8\",\n      \"subject\": \"Mathematics (Expressions & Equations) -- used for Questions 8, 9, 10, 11, 12 (multiply monomials, simplify powers / exponent rules)\"\n    }\n  ],\n  \"rigor\": {\n    \"level\": \"medium\",\n    \"dokLevel\": \"DOK 2\",\n    \"justification\": \"Most items require applying procedures (substitution, use of distributive property, combining like terms, multiplying/simplifying monomials and applying exponent rules) rather than pure recall or extended reasoning. Only the explicit 'write in exponential form' items are primarily recall-level.\",\n    \"confidence\": 0.9\n  }\n}",
+                  "refusal": null,
+                  "annotations": []
+                },
+                "finish_reason": "stop"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 1255,
+              "completion_tokens": 4207,
+              "total_tokens": 5462,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 3648,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+              }
+            },
+            "service_tier": "default",
+            "system_fingerprint": null
+          },
+          "processingTime": 60958,
+          "aiEngine": "chatgpt"
+        }
+      }
+    }
+  ],
+  "dbStoredAiResponses": [],
+  "dbStoredResults": [],
+  "dbStorageChecksum": "c5a66d9a2ec0d770a086a2c8b919f1ec"
+}
