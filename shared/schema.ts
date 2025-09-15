@@ -432,6 +432,64 @@ export const gradeSubmissions = pgTable("grade_submissions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// DEBUG: Two-Pass Analysis Pipeline Logging - captures complete data flow for debugging
+export const debugPipelineLogs = pgTable("debug_pipeline_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  documentId: varchar("document_id").notNull().references(() => documents.id),
+  customerUuid: varchar("customer_uuid").notNull().references(() => users.customerUuid),
+  
+  // Original document data
+  originalFileName: text("original_file_name").notNull(),
+  originalFileSize: integer("original_file_size").notNull(),
+  originalMimeType: text("original_mime_type").notNull(),
+  
+  // Extracted document content
+  extractedText: text("extracted_text"), // Raw text extracted from document
+  extractedTextLength: integer("extracted_text_length"),
+  
+  // Pass 1: Extraction results
+  pass1Started: timestamp("pass1_started"),
+  pass1Completed: timestamp("pass1_completed"),
+  pass1RawResponse: jsonb("pass1_raw_response"), // Complete AI response from extraction
+  pass1ExtractedQuestions: jsonb("pass1_extracted_questions"), // Parsed questions array
+  pass1QuestionCount: integer("pass1_question_count"),
+  pass1ErrorMessage: text("pass1_error_message"),
+  
+  // Pass 2: Classification results  
+  pass2Started: timestamp("pass2_started"),
+  pass2Completed: timestamp("pass2_completed"),
+  pass2Classifications: jsonb("pass2_classifications"), // Complete AI classifications for each question
+  pass2StandardsFound: jsonb("pass2_standards_found"), // Standards identified per question
+  pass2RigorLevels: jsonb("pass2_rigor_levels"), // Rigor levels per question
+  pass2ErrorMessage: text("pass2_error_message"),
+  
+  // Database storage results
+  dbStorageStarted: timestamp("db_storage_started"),
+  dbStorageCompleted: timestamp("db_storage_completed"),
+  dbStoredQuestions: jsonb("db_stored_questions"), // What was actually stored in questions table
+  dbStoredAiResponses: jsonb("db_stored_ai_responses"), // What was stored in ai_responses table
+  dbStoredResults: jsonb("db_stored_results"), // What was stored in question_results table
+  dbStorageErrorMessage: text("db_storage_error_message"),
+  
+  // UX display data (what user sees)
+  uxDisplayData: jsonb("ux_display_data"), // Complete data sent to frontend
+  uxFetchTimestamp: timestamp("ux_fetch_timestamp"),
+  uxErrorMessage: text("ux_error_message"),
+  
+  // Data integrity checksums for verification
+  pass1Checksum: varchar("pass1_checksum"), // Hash of Pass 1 results
+  pass2Checksum: varchar("pass2_checksum"), // Hash of Pass 2 results
+  dbStorageChecksum: varchar("db_storage_checksum"), // Hash of stored data
+  uxDisplayChecksum: varchar("ux_display_checksum"), // Hash of displayed data
+  
+  // Processing metadata
+  processingVersion: varchar("processing_version").notNull().default("two-pass-v1"), 
+  aiEnginesUsed: jsonb("ai_engines_used"), // Which AI engines were called
+  totalProcessingTime: integer("total_processing_time"), // Total milliseconds
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   googleId: true,
@@ -639,6 +697,47 @@ export type InsertTeacherOverride = z.infer<typeof insertTeacherOverrideSchema>;
 export type InsertConfirmedAnalysis = z.infer<typeof insertConfirmedAnalysisSchema>;
 export type InsertQrSequenceNumber = z.infer<typeof insertQrSequenceNumberSchema>;
 export type InsertGradeSubmission = z.infer<typeof insertGradeSubmissionSchema>;
+
+export const insertDebugPipelineLogSchema = createInsertSchema(debugPipelineLogs).pick({
+  documentId: true,
+  customerUuid: true,
+  originalFileName: true,
+  originalFileSize: true,
+  originalMimeType: true,
+  extractedText: true,
+  extractedTextLength: true,
+  pass1Started: true,
+  pass1Completed: true,
+  pass1RawResponse: true,
+  pass1ExtractedQuestions: true,
+  pass1QuestionCount: true,
+  pass1ErrorMessage: true,
+  pass2Started: true,
+  pass2Completed: true,
+  pass2Classifications: true,
+  pass2StandardsFound: true,
+  pass2RigorLevels: true,
+  pass2ErrorMessage: true,
+  dbStorageStarted: true,
+  dbStorageCompleted: true,
+  dbStoredQuestions: true,
+  dbStoredAiResponses: true,
+  dbStoredResults: true,
+  dbStorageErrorMessage: true,
+  uxDisplayData: true,
+  uxFetchTimestamp: true,
+  uxErrorMessage: true,
+  pass1Checksum: true,
+  pass2Checksum: true,
+  dbStorageChecksum: true,
+  uxDisplayChecksum: true,
+  processingVersion: true,
+  aiEnginesUsed: true,
+  totalProcessingTime: true,
+});
+
+export type DebugPipelineLog = typeof debugPipelineLogs.$inferSelect;
+export type InsertDebugPipelineLog = z.infer<typeof insertDebugPipelineLogSchema>;
 
 // V1.0 Insert Schemas
 export const insertAccountabilityMatrixEntrySchema = createInsertSchema(accountabilityMatrixEntries).pick({
