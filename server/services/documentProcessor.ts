@@ -19,6 +19,9 @@ export class DocumentProcessor {
     callbackUrl?: string, 
     focusStandards?: string[]
   ): Promise<void> {
+    // Declare uploadedFileId at function scope so it's accessible in error handling
+    let uploadedFileId: string | undefined;
+    
     try {
       // console.log(`\n🚀 DOCUMENT PROCESSING STARTED: ${documentId}`);
       // console.log(`📄 Processing parameters: callbackUrl=${!!callbackUrl}, focusStandards=${focusStandards?.length || 0}`);
@@ -57,7 +60,6 @@ export class DocumentProcessor {
       let analysisResults: any;
       let extractedText: string | undefined;
       const courseContext = document.courseTitle || undefined;
-      let uploadedFileId: string | undefined;
       
       try {
         // Upload PDF to OpenAI and use ChatGPT's two-pass method
@@ -123,21 +125,26 @@ export class DocumentProcessor {
           operation: 'textExtraction'
         });
         
-        // Send extracted text to AI engines for analysis
-        analysisResults = focusStandards && focusStandards.length > 0
-          ? await aiService.analyzeDocumentWithStandards(
-              extractedText,
-              document.mimeType,
-              document.jurisdictions,
-              focusStandards,
-              courseContext
-            )
-          : await aiService.analyzeDocument(
-              extractedText,
-              document.mimeType,
-              document.jurisdictions,
-              courseContext
-            );
+        // Send extracted text to AI engines for analysis using new ChatGPT Responses API
+        logger.documentProcessing('Starting ChatGPT two-pass analysis with text input', {
+          documentId,
+          component: 'DocumentProcessor',
+          operation: 'chatgptTwoPassTextAnalysis'
+        });
+        
+        analysisResults = await aiService.analyzeTwoPassWithText(
+          extractedText,
+          document.jurisdictions,
+          courseContext,
+          documentId,
+          document.customerUuid
+        );
+        
+        logger.documentProcessing('ChatGPT two-pass text analysis completed', {
+          documentId,
+          component: 'DocumentProcessor',
+          operation: 'chatgptTwoPassTextAnalysis'
+        });
       }
       
       // Create question records from AI analysis
@@ -168,27 +175,22 @@ export class DocumentProcessor {
         questionRecords.push({ ...question, aiResults: questionData.aiResults });
       }
 
-      // Store AI analysis results for each question with JSON voting
+      // Store AI analysis results for each question with direct AI pipeline
       // console.log(`\n🔄 PROCESSING ${questionRecords.length} QUESTIONS WITH NEW DIRECT AI PIPELINE`);
-      const storedAiResponses = [];
-      const storedResults = [];
       
       for (const question of questionRecords) {
         // console.log(`📝 About to process question ${question.questionNumber} with NEW PIPELINE`);
-        const aiResults = await this.storeAIResultsWithJsonVoting(question, question.aiResults);
-        if (aiResults) {
-          storedAiResponses.push(...(aiResults.aiResponses || []));
-          storedResults.push(...(aiResults.questionResults || []));
-        }
+        await this.storeAIResultsWithJsonVoting(question, question.aiResults);
+        // Note: storeAIResultsWithJsonVoting returns void and directly stores results to database
       }
       console.log(`✅ COMPLETED PROCESSING ALL QUESTIONS WITH NEW PIPELINE\n`);
 
-      // Debug logging: Complete DB storage phase
+      // Debug logging: Complete DB storage phase (using empty arrays for legacy compatibility)
       await debugLogger.logDbStorageResults(
         documentId, 
         questionRecords, 
-        storedAiResponses, 
-        storedResults
+        [], // storedAiResponses - no longer collected as results are stored directly
+        []  // storedResults - no longer collected as results are stored directly
       );
 
       // Update status to completed
