@@ -69,7 +69,11 @@ export class DocumentProcessor {
           component: 'DocumentProcessor'
         });
         
-        uploadedFileId = await aiService.uploadFileToOpenAI(document.originalPath, document.name, document.mimeType);
+        // Ensure filename has .pdf extension for OpenAI file upload
+        const fileName = document.originalFilename || document.name;
+        const fileNameWithExtension = fileName.endsWith('.pdf') ? fileName : `${fileName}.pdf`;
+        
+        uploadedFileId = await aiService.uploadFileToOpenAI(document.originalPath, fileNameWithExtension, document.mimeType);
         
         logger.documentProcessing('Starting ChatGPT two-pass analysis', {
           documentId,

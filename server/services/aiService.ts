@@ -1247,7 +1247,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
               justification: rigorInfo.justification,
               confidence: 0.85
             },
-            aiEngine: 'openai'
+            aiEngine: 'chatgpt'
           }
         }
       };
