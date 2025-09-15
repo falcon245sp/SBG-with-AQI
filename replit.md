@@ -116,6 +116,9 @@ Preferred communication style: Simple, everyday language.
 ### Technical Debt & Future Improvements
 - **AI Response Parsing Centralization**: Refactor code so that API response parsing from AI engines happens in only one place and is served to other functions via an internal API, eliminating duplicate parsing logic across multiple analysis functions.
 
+### Known Issues & Bugs
+- **🚨 CRITICAL: Configuration Loop Bug** (September 15, 2025): Users with completed onboarding and configured classrooms sometimes get stuck in endless configuration loop showing "No configured courses found. Please complete the course configuration first." despite having successfully configured courses. **Workaround**: Clear user sessions to force fresh authentication state. **Root Cause**: Frontend routing logic doesn't properly recognize completed configuration state from database.
+
 ### Feature Specifications
 - **Student Facing Test Cover Sheet**: PDF export with four-column layout (Question, Standard, Topic, Rigor Level).
 - **Teacher Override System**: Database and UI for teachers to save corrections to AI analysis, including confidence scoring and "Revert to Sherpa" functionality; export processors respect teacher overrides.
