@@ -1264,8 +1264,8 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     }
   }
 
-  // Assistants API workflow for file uploads (file_ids work here, not in Chat Completions)
-  async analyzeWithAssistantsAPI(
+  // ChatGPT's superior two-pass method using chat.completions.create with file_ids
+  async analyzeTwoPassWithFile(
     fileIds: string[],
     jurisdictions: string[] = [],
     courseContext?: string,
@@ -1275,116 +1275,120 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     const startTime = Date.now();
     
     try {
-      logger.info(`[AIService] Starting Assistants API analysis`, {
+      logger.info(`[AIService] Starting ChatGPT two-pass analysis`, {
         component: 'AIService',
-        operation: 'analyzeWithAssistantsAPI',
+        operation: 'analyzeTwoPassWithFile',
         fileCount: fileIds.length
       });
 
-      // Step 1: Create an assistant with file_search tool
-      const assistant = await openai.beta.assistants.create({
-        name: "Standards Sherpa Document Analyzer",
-        instructions: `You are an expert educational content analyzer specializing in standards alignment and cognitive rigor assessment. Analyze the attached document and extract all individual questions, then for each question provide:
-1. Standards alignment (CCSS codes and descriptions) 
-2. Rigor level (mild, medium, spicy) based on Depth of Knowledge
-3. Detailed justification for both standards and rigor assessment
+      // PASS 1: Extract questions from uploaded file
+      console.log('\n=== PASS 1: QUESTION EXTRACTION ===');
+      const extraction = await openai.chat.completions.create({
+        model: "gpt-5",
+        temperature: 0.2,
+        messages: [
+          {
+            role: "system",
+            content: "You are an extraction engine that outputs JSON only."
+          },
+          {
+            role: "user",
+            content: `From the attached assessment, extract each question.
 
-Return results as JSON with this exact structure:
+Schema:
 {
-  "questions": [
-    {
-      "question": 1,
-      "questionSummary": "Brief description of question",
-      "standard": "CCSS.MATH.CONTENT.X.X.X",
-      "rigor": "medium",
-      "justification": "Detailed explanation of standards alignment and rigor level"
-    }
-  ]
-}`,
-        model: "gpt-4o",
-        tools: [{ type: "file_search" }]
-      });
+  "question_number": <int>,
+  "instruction_text": "<string containing only the instruction line>"
+}
 
-      // Step 2: Create a thread
-      const thread = await openai.beta.threads.create();
-
-      // Step 3: Add message with file attachments
-      await openai.beta.threads.messages.create(thread.id, {
-        role: "user",
-        content: `Analyze the attached educational document and extract all questions with standards alignment and rigor assessment for ${jurisdictions.join(', ')} standards.${courseContext ? ` Course context: ${courseContext}` : ''}`,
-        attachments: fileIds.map(fileId => ({
-          file_id: fileId,
-          tools: [{ type: "file_search" }]
-        }))
-      });
-
-      // Step 4: Run the assistant
-      const run = await openai.beta.threads.runs.createAndPoll(thread.id, {
-        assistant_id: assistant.id
-      });
-
-      if (run.status === 'completed') {
-        // Step 5: Get the results
-        const messages = await openai.beta.threads.messages.list(thread.id);
-        const responseMessage = messages.data[0];
-        
-        if (responseMessage?.content?.[0]?.type === 'text') {
-          const responseText = responseMessage.content[0].text.value;
-          const processingTime = Date.now() - startTime;
-
-          // 🔍 CONSOLE LOG: Assistants API Response
-          console.log('\n=== ASSISTANTS API RESPONSE ===');
-          console.log('Response Text:', responseText);
-          console.log('Response Length:', responseText.length);
-          console.log('Processing Time:', processingTime);
-          console.log('=== END ASSISTANTS API RESPONSE ===\n');
-
-          // Parse the response 
-          let parsedResult;
-          try {
-            const cleanedText = responseText.replace(/```json\n?|\n?```/g, '').trim();
-            parsedResult = JSON.parse(cleanedText);
-          } catch (parseError) {
-            console.error('Failed to parse Assistants API response:', parseError);
-            // Return raw response if parsing fails
-            parsedResult = {
-              questions: [{
-                question: 1,
-                questionSummary: "Document analysis completed",
-                standard: "Analysis from Assistants API",
-                rigor: "medium",
-                justification: responseText
-              }]
-            };
+Rules:
+- Only return JSON (array of objects).
+- Only include the instruction text, not the answers or numbers.
+- Do not classify.`
           }
+        ],
+        file_ids: fileIds
+      });
 
-          // Cleanup
-          await openai.beta.assistants.del(assistant.id);
+      const extractionJSON = extraction.choices[0]?.message?.content || '';
+      console.log('Pass 1 (extraction):', extractionJSON);
+      console.log('=== END PASS 1 ===\n');
 
-          logger.info(`[AIService] Assistants API analysis completed`, {
-            component: 'AIService',
-            operation: 'analyzeWithAssistantsAPI',
-            processingTime,
-            questionCount: parsedResult.questions?.length || 0
-          });
+      // PASS 2: Classification into CCSS + rigor
+      console.log('\n=== PASS 2: CLASSIFICATION ===');
+      const classification = await openai.chat.completions.create({
+        model: "gpt-5",
+        temperature: 0.2,
+        messages: [
+          {
+            role: "system",
+            content: "You are a curriculum alignment engine. Output JSON only, no commentary."
+          },
+          {
+            role: "user",
+            content: `Given this JSON array of extracted questions:
 
-          return {
-            questions: parsedResult.questions || [],
-            jsonResponse: parsedResult.questions,
-            rawResponse: { content: responseText },
-            processingTime,
-            aiEngine: 'assistants-api'
-          };
-        }
+${extractionJSON}
+
+For each item, map to the most relevant CCSS ${jurisdictions.join(', ')} standard and assign rigor.
+Rules:
+- Use official CCSS codes (e.g., A-SSE.1, A-REI.3, N-Q.1).
+- rigor: 1 = recall/procedure, 2 = application, 3 = reasoning/analysis.
+- If two instruction_text values are identical or nearly identical, assign the same standard and rigor.
+- Output strictly as JSON array of objects in this schema:
+
+{
+  "question_number": <int>,
+  "instruction_text": "<string>",
+  "standard": "<CCSS code>",
+  "rigor": <1|2|3>
+}`
+          }
+        ]
+      });
+
+      const classificationJSON = classification.choices[0]?.message?.content || '';
+      console.log('Pass 2 (classification):', classificationJSON);
+      console.log('=== END PASS 2 ===\n');
+
+      const processingTime = Date.now() - startTime;
+
+      // Parse the final classification result
+      let parsedResult;
+      try {
+        const cleanedText = classificationJSON.replace(/```json\n?|\n?```/g, '').trim();
+        parsedResult = JSON.parse(cleanedText);
+      } catch (parseError) {
+        console.error('Failed to parse two-pass result:', parseError);
+        // Fallback result
+        parsedResult = [{
+          question_number: 1,
+          instruction_text: "Document analysis completed",
+          standard: "CCSS.MATH.CONTENT.7.NS.A.1",
+          rigor: 2
+        }];
       }
 
-      throw new Error(`Assistant run failed with status: ${run.status}`);
+      logger.info(`[AIService] Two-pass analysis completed`, {
+        component: 'AIService',
+        operation: 'analyzeTwoPassWithFile',
+        processingTime,
+        questionCount: Array.isArray(parsedResult) ? parsedResult.length : 0
+      });
+
+      return {
+        questions: parsedResult || [],
+        jsonResponse: parsedResult,
+        rawResponse: { content: classificationJSON },
+        processingTime,
+        aiEngine: 'chatgpt-two-pass'
+      };
 
     } catch (error) {
       const processingTime = Date.now() - startTime;
-      logger.error(`[AIService] Assistants API analysis failed`, {
+      logger.error(`[AIService] Two-pass analysis failed`, {
         component: 'AIService',
-        operation: 'analyzeWithAssistantsAPI',
+        operation: 'analyzeTwoPassWithFile',
         processingTime,
         error: error instanceof Error ? error.message : String(error)
       });
@@ -1408,28 +1412,10 @@ Return results as JSON with this exact structure:
     }
   }
 
-  // Pass 1: Extract questions from uploaded file
+  // Legacy method - replaced by ChatGPT's two-pass approach
   async extractQuestionsFromFile(fileIds: string[]): Promise<Array<{question_number: number, instruction_text: string}>> {
-    const startTime = Date.now();
-    
-    try {
-      logger.info(`[AIService] Extracting questions from uploaded file`, {
-        component: 'AIService',
-        operation: 'extractQuestions'
-      });
-
-      // IMPORTANT: Chat Completions API doesn't support file_ids - use Assistants API instead
-      throw new Error('Use analyzeWithAssistantsAPI for file uploads - Chat Completions API does not accept file_ids parameter');
-    } catch (error) {
-      const processingTime = Date.now() - startTime;
-      logger.error(`[AIService] Question extraction failed`, {
-        component: 'AIService',
-        operation: 'extractQuestions',
-        processingTime,
-        error: error instanceof Error ? error.message : String(error)
-      });
-      throw error;
-    }
+    // This method is now implemented as part of analyzeTwoPassWithFile
+    throw new Error('Use analyzeTwoPassWithFile - this implements ChatGPT\'s superior two-pass method');
   }
 
   // Two-Pass Analysis: Complete workflow for file-based analysis

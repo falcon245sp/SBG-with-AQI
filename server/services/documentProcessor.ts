@@ -60,8 +60,8 @@ export class DocumentProcessor {
       let uploadedFileId: string | undefined;
       
       try {
-        // Upload PDF to OpenAI and use Assistants API
-        logger.documentProcessing('Starting OpenAI file upload for Assistants API', {
+        // Upload PDF to OpenAI and use ChatGPT's two-pass method
+        logger.documentProcessing('Starting OpenAI file upload for ChatGPT two-pass analysis', {
           documentId,
           fileName: document.originalPath,
           component: 'DocumentProcessor'
@@ -69,14 +69,14 @@ export class DocumentProcessor {
         
         uploadedFileId = await aiService.uploadFileToOpenAI(document.originalPath);
         
-        logger.documentProcessing('Starting Assistants API analysis', {
+        logger.documentProcessing('Starting ChatGPT two-pass analysis', {
           documentId,
           component: 'DocumentProcessor',
-          operation: 'assistantsApiAnalysis'
+          operation: 'chatgptTwoPassAnalysis'
         });
         
-        // Use Assistants API with file attachment
-        const fileAnalysisResult = await aiService.analyzeWithAssistantsAPI(
+        // Use ChatGPT's two-pass method with file attachment
+        const fileAnalysisResult = await aiService.analyzeTwoPassWithFile(
           [uploadedFileId],
           document.jurisdictions,
           courseContext,
@@ -86,14 +86,14 @@ export class DocumentProcessor {
         
         analysisResults = fileAnalysisResult;
         
-        logger.documentProcessing('Assistants API analysis completed', {
+        logger.documentProcessing('ChatGPT two-pass analysis completed', {
           documentId,
           component: 'DocumentProcessor',
-          operation: 'assistantsApiAnalysis'
+          operation: 'chatgptTwoPassAnalysis'
         });
         
       } catch (fileUploadError) {
-        console.log(`⚠️ Assistants API failed, falling back to text extraction: ${fileUploadError instanceof Error ? fileUploadError.message : 'Unknown error'}`);
+        console.log(`⚠️ ChatGPT two-pass analysis failed, falling back to text extraction: ${fileUploadError instanceof Error ? fileUploadError.message : 'Unknown error'}`);
         
         // Cleanup uploaded file if it exists
         if (uploadedFileId) {
