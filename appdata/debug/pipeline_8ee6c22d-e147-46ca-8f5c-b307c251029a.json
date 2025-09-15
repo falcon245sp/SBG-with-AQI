@@ -17,5 +17,272 @@
   ],
   "totalProcessingTime": 84,
   "extractedText": "Name ___________________________  Date __________________\n\nIntegers Test – Version 1\n\n1\n\n3\n\n5\n\n7\n\n9\n\nComplete the prime factorization for \nthe number below.\n\n2\n\nComplete the prime factorization for \nthe number below.\n\n90\n\n130\n\nGraph both of your numbers on a \nnumber line and then write an inequality \nto compare the two numbers.\n−7 𝑎𝑎𝑎𝑎𝑎𝑎 − 5\n\nAdd the two integers. \n\n13 + (−6)\n\nSubtract the two integers. \n\nGraph both of your numbers on a \nnumber line and then write an inequality \nto compare the two numbers.\n4 𝑎𝑎𝑎𝑎𝑎𝑎 − 2\n\nAdd the two integers. \n\n(−9) + (−5)\n\nSubtract the two integers. \n\n4\n\n6\n\n8\n\n15 − (−7)\n\n−12 − (−3)\n\nSubtract the two integers. \n\n10\n\nMultiply the two integers.\n\n(−5) − 8\n\n(−6)(−8)\n\n\fName ___________________________  Date __________________\n\nIntegers Test – Version 1\n\n11\n\nMultiply the two integers.\n\n(−15)(4)\n\n12\n\nUse the order of operations to solve \neach problem.\n\n6 9 − 15 + (−2)\n\n13\n\nUse the order of operations to solve \neach problem.\n\n14\n\nUse the order of operations to solve \neach problem.\n\n11 −\n\n24\n6\n\n+ 9 − 3(4)\n\n3(−2)(6 + (−4))\n22\n\n15\n\nUse the order of operations to solve \neach problem.\n\n16\n\nUse the order of operations to solve \neach problem.\n\n82−5(6 − 3)\n\n−4(12 − 14)(6 + 2)\n\n17\n\nDivide the two integers. \n\n18\n\nDivide the two integers. \n\n39 ÷ (−3)\n\n−121\n11\n\n19\n\nDivide the two integers. \n\n20\n\nDivide the two integers. \n\n−96 ÷ (−6)\n\n168\n−7",
-  "extractedTextLength": 1387
+  "extractedTextLength": 1387,
+  "dbStorageStarted": "2025-09-15T05:31:12.141Z",
+  "dbStorageCompleted": "2025-09-15T05:31:13.026Z",
+  "dbStoredQuestions": [
+    {
+      "id": "8e77ab5f-623d-4377-9ffb-5f62a34407ad",
+      "documentId": "8ee6c22d-e147-46ca-8f5c-b307c251029a",
+      "questionNumber": "1",
+      "questionText": "Apply and extend previous understandings of addition and subtraction to add and subtract rational numbers; represent addition and subtraction on a horizontal or vertical number line.",
+      "context": "Question 1: Analysis for standard CCSS.MATH.CONTENT.7.NS.A.1",
+      "questionType": null,
+      "createdAt": "2025-09-15T05:31:12.175Z",
+      "aiResults": {
+        "grok": {
+          "standards": [
+            {
+              "code": "CCSS.MATH.CONTENT.7.NS.A.1",
+              "description": "Apply and extend previous understandings of addition and subtraction to add and subtract rational numbers; represent addition and subtraction on a horizontal or vertical number line.",
+              "jurisdiction": "Common Core State Standards (CCSS)",
+              "gradeLevel": "7",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "1-2",
+            "justification": "The items primarily require procedural computation (prime factorization, adding/subtracting/multiplying/dividing integers, plotting/comparing integers on a number line, and evaluating expressions using order of operations). These are routine procedures and simple applications of rules rather than multi-step problem solving or deep reasoning, so Depth of Knowledge is centered at DOK 1 (recall/perform) and low DOK 2 (basic application).",
+            "confidence": 0.88
+          },
+          "rawResponse": {
+            "id": "chatcmpl-CFw5IiC0EAjnnYjrk1dmL45m3enBP",
+            "object": "chat.completion",
+            "created": 1757914232,
+            "model": "gpt-5-mini-2025-08-07",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\n  \"standards\": [\n    {\n      \"code\": \"CCSS.MATH.CONTENT.7.NS.A.1\",\n      \"description\": \"Apply and extend previous understandings of addition and subtraction to add and subtract rational numbers; represent addition and subtraction on a horizontal or vertical number line.\",\n      \"jurisdiction\": \"Common Core State Standards (CCSS)\",\n      \"gradeLevel\": \"7\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.7.NS.A.2\",\n      \"description\": \"Apply and extend previous understandings of multiplication and division and of fractions to multiply and divide rational numbers; understand and apply rules for multiplying and dividing integers (sign rules).\",\n      \"jurisdiction\": \"Common Core State Standards (CCSS)\",\n      \"gradeLevel\": \"7\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.NS.B.4\",\n      \"description\": \"Find the greatest common factor and least common multiple of two whole numbers; use prime factorization to express a number as a product of primes.\",\n      \"jurisdiction\": \"Common Core State Standards (CCSS)\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.EE.A.2\",\n      \"description\": \"Write, read, and evaluate numerical expressions, including with parentheses and negative numbers (order of operations).\",\n      \"jurisdiction\": \"Common Core State Standards (CCSS)\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics\"\n    }\n  ],\n  \"rigor\": {\n    \"level\": \"mild\",\n    \"dokLevel\": \"1-2\",\n    \"justification\": \"The items primarily require procedural computation (prime factorization, adding/subtracting/multiplying/dividing integers, plotting/comparing integers on a number line, and evaluating expressions using order of operations). These are routine procedures and simple applications of rules rather than multi-step problem solving or deep reasoning, so Depth of Knowledge is centered at DOK 1 (recall/perform) and low DOK 2 (basic application).\",\n    \"confidence\": 0.88\n  }\n}",
+                  "refusal": null,
+                  "annotations": []
+                },
+                "finish_reason": "stop"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 766,
+              "completion_tokens": 2606,
+              "total_tokens": 3372,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 2112,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+              }
+            },
+            "service_tier": "default",
+            "system_fingerprint": null
+          },
+          "processingTime": 25592,
+          "aiEngine": "grok"
+        }
+      }
+    },
+    {
+      "id": "e8baf714-454e-45a8-b4a8-292328692b1d",
+      "documentId": "8ee6c22d-e147-46ca-8f5c-b307c251029a",
+      "questionNumber": "2",
+      "questionText": "Apply and extend previous understandings of multiplication and division and of fractions to multiply and divide rational numbers; understand and apply rules for multiplying and dividing integers (sign rules).",
+      "context": "Question 2: Analysis for standard CCSS.MATH.CONTENT.7.NS.A.2",
+      "questionType": null,
+      "createdAt": "2025-09-15T05:31:12.247Z",
+      "aiResults": {
+        "grok": {
+          "standards": [
+            {
+              "code": "CCSS.MATH.CONTENT.7.NS.A.2",
+              "description": "Apply and extend previous understandings of multiplication and division and of fractions to multiply and divide rational numbers; understand and apply rules for multiplying and dividing integers (sign rules).",
+              "jurisdiction": "Common Core State Standards (CCSS)",
+              "gradeLevel": "7",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "1-2",
+            "justification": "The items primarily require procedural computation (prime factorization, adding/subtracting/multiplying/dividing integers, plotting/comparing integers on a number line, and evaluating expressions using order of operations). These are routine procedures and simple applications of rules rather than multi-step problem solving or deep reasoning, so Depth of Knowledge is centered at DOK 1 (recall/perform) and low DOK 2 (basic application).",
+            "confidence": 0.88
+          },
+          "rawResponse": {
+            "id": "chatcmpl-CFw5IiC0EAjnnYjrk1dmL45m3enBP",
+            "object": "chat.completion",
+            "created": 1757914232,
+            "model": "gpt-5-mini-2025-08-07",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\n  \"standards\": [\n    {\n      \"code\": \"CCSS.MATH.CONTENT.7.NS.A.1\",\n      \"description\": \"Apply and extend previous understandings of addition and subtraction to add and subtract rational numbers; represent addition and subtraction on a horizontal or vertical number line.\",\n      \"jurisdiction\": \"Common Core State Standards (CCSS)\",\n      \"gradeLevel\": \"7\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.7.NS.A.2\",\n      \"description\": \"Apply and extend previous understandings of multiplication and division and of fractions to multiply and divide rational numbers; understand and apply rules for multiplying and dividing integers (sign rules).\",\n      \"jurisdiction\": \"Common Core State Standards (CCSS)\",\n      \"gradeLevel\": \"7\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.NS.B.4\",\n      \"description\": \"Find the greatest common factor and least common multiple of two whole numbers; use prime factorization to express a number as a product of primes.\",\n      \"jurisdiction\": \"Common Core State Standards (CCSS)\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.EE.A.2\",\n      \"description\": \"Write, read, and evaluate numerical expressions, including with parentheses and negative numbers (order of operations).\",\n      \"jurisdiction\": \"Common Core State Standards (CCSS)\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics\"\n    }\n  ],\n  \"rigor\": {\n    \"level\": \"mild\",\n    \"dokLevel\": \"1-2\",\n    \"justification\": \"The items primarily require procedural computation (prime factorization, adding/subtracting/multiplying/dividing integers, plotting/comparing integers on a number line, and evaluating expressions using order of operations). These are routine procedures and simple applications of rules rather than multi-step problem solving or deep reasoning, so Depth of Knowledge is centered at DOK 1 (recall/perform) and low DOK 2 (basic application).\",\n    \"confidence\": 0.88\n  }\n}",
+                  "refusal": null,
+                  "annotations": []
+                },
+                "finish_reason": "stop"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 766,
+              "completion_tokens": 2606,
+              "total_tokens": 3372,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 2112,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+              }
+            },
+            "service_tier": "default",
+            "system_fingerprint": null
+          },
+          "processingTime": 25592,
+          "aiEngine": "grok"
+        }
+      }
+    },
+    {
+      "id": "46a4cb23-30c4-4178-b684-5a3002de806f",
+      "documentId": "8ee6c22d-e147-46ca-8f5c-b307c251029a",
+      "questionNumber": "3",
+      "questionText": "Find the greatest common factor and least common multiple of two whole numbers; use prime factorization to express a number as a product of primes.",
+      "context": "Question 3: Analysis for standard CCSS.MATH.CONTENT.6.NS.B.4",
+      "questionType": null,
+      "createdAt": "2025-09-15T05:31:12.323Z",
+      "aiResults": {
+        "grok": {
+          "standards": [
+            {
+              "code": "CCSS.MATH.CONTENT.6.NS.B.4",
+              "description": "Find the greatest common factor and least common multiple of two whole numbers; use prime factorization to express a number as a product of primes.",
+              "jurisdiction": "Common Core State Standards (CCSS)",
+              "gradeLevel": "6",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "1-2",
+            "justification": "The items primarily require procedural computation (prime factorization, adding/subtracting/multiplying/dividing integers, plotting/comparing integers on a number line, and evaluating expressions using order of operations). These are routine procedures and simple applications of rules rather than multi-step problem solving or deep reasoning, so Depth of Knowledge is centered at DOK 1 (recall/perform) and low DOK 2 (basic application).",
+            "confidence": 0.88
+          },
+          "rawResponse": {
+            "id": "chatcmpl-CFw5IiC0EAjnnYjrk1dmL45m3enBP",
+            "object": "chat.completion",
+            "created": 1757914232,
+            "model": "gpt-5-mini-2025-08-07",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\n  \"standards\": [\n    {\n      \"code\": \"CCSS.MATH.CONTENT.7.NS.A.1\",\n      \"description\": \"Apply and extend previous understandings of addition and subtraction to add and subtract rational numbers; represent addition and subtraction on a horizontal or vertical number line.\",\n      \"jurisdiction\": \"Common Core State Standards (CCSS)\",\n      \"gradeLevel\": \"7\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.7.NS.A.2\",\n      \"description\": \"Apply and extend previous understandings of multiplication and division and of fractions to multiply and divide rational numbers; understand and apply rules for multiplying and dividing integers (sign rules).\",\n      \"jurisdiction\": \"Common Core State Standards (CCSS)\",\n      \"gradeLevel\": \"7\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.NS.B.4\",\n      \"description\": \"Find the greatest common factor and least common multiple of two whole numbers; use prime factorization to express a number as a product of primes.\",\n      \"jurisdiction\": \"Common Core State Standards (CCSS)\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.EE.A.2\",\n      \"description\": \"Write, read, and evaluate numerical expressions, including with parentheses and negative numbers (order of operations).\",\n      \"jurisdiction\": \"Common Core State Standards (CCSS)\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics\"\n    }\n  ],\n  \"rigor\": {\n    \"level\": \"mild\",\n    \"dokLevel\": \"1-2\",\n    \"justification\": \"The items primarily require procedural computation (prime factorization, adding/subtracting/multiplying/dividing integers, plotting/comparing integers on a number line, and evaluating expressions using order of operations). These are routine procedures and simple applications of rules rather than multi-step problem solving or deep reasoning, so Depth of Knowledge is centered at DOK 1 (recall/perform) and low DOK 2 (basic application).\",\n    \"confidence\": 0.88\n  }\n}",
+                  "refusal": null,
+                  "annotations": []
+                },
+                "finish_reason": "stop"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 766,
+              "completion_tokens": 2606,
+              "total_tokens": 3372,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 2112,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+              }
+            },
+            "service_tier": "default",
+            "system_fingerprint": null
+          },
+          "processingTime": 25592,
+          "aiEngine": "grok"
+        }
+      }
+    },
+    {
+      "id": "bbf9a607-0c47-406a-9d6b-809326673305",
+      "documentId": "8ee6c22d-e147-46ca-8f5c-b307c251029a",
+      "questionNumber": "4",
+      "questionText": "Write, read, and evaluate numerical expressions, including with parentheses and negative numbers (order of operations).",
+      "context": "Question 4: Analysis for standard CCSS.MATH.CONTENT.6.EE.A.2",
+      "questionType": null,
+      "createdAt": "2025-09-15T05:31:12.400Z",
+      "aiResults": {
+        "grok": {
+          "standards": [
+            {
+              "code": "CCSS.MATH.CONTENT.6.EE.A.2",
+              "description": "Write, read, and evaluate numerical expressions, including with parentheses and negative numbers (order of operations).",
+              "jurisdiction": "Common Core State Standards (CCSS)",
+              "gradeLevel": "6",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "1-2",
+            "justification": "The items primarily require procedural computation (prime factorization, adding/subtracting/multiplying/dividing integers, plotting/comparing integers on a number line, and evaluating expressions using order of operations). These are routine procedures and simple applications of rules rather than multi-step problem solving or deep reasoning, so Depth of Knowledge is centered at DOK 1 (recall/perform) and low DOK 2 (basic application).",
+            "confidence": 0.88
+          },
+          "rawResponse": {
+            "id": "chatcmpl-CFw5IiC0EAjnnYjrk1dmL45m3enBP",
+            "object": "chat.completion",
+            "created": 1757914232,
+            "model": "gpt-5-mini-2025-08-07",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\n  \"standards\": [\n    {\n      \"code\": \"CCSS.MATH.CONTENT.7.NS.A.1\",\n      \"description\": \"Apply and extend previous understandings of addition and subtraction to add and subtract rational numbers; represent addition and subtraction on a horizontal or vertical number line.\",\n      \"jurisdiction\": \"Common Core State Standards (CCSS)\",\n      \"gradeLevel\": \"7\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.7.NS.A.2\",\n      \"description\": \"Apply and extend previous understandings of multiplication and division and of fractions to multiply and divide rational numbers; understand and apply rules for multiplying and dividing integers (sign rules).\",\n      \"jurisdiction\": \"Common Core State Standards (CCSS)\",\n      \"gradeLevel\": \"7\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.NS.B.4\",\n      \"description\": \"Find the greatest common factor and least common multiple of two whole numbers; use prime factorization to express a number as a product of primes.\",\n      \"jurisdiction\": \"Common Core State Standards (CCSS)\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics\"\n    },\n    {\n      \"code\": \"CCSS.MATH.CONTENT.6.EE.A.2\",\n      \"description\": \"Write, read, and evaluate numerical expressions, including with parentheses and negative numbers (order of operations).\",\n      \"jurisdiction\": \"Common Core State Standards (CCSS)\",\n      \"gradeLevel\": \"6\",\n      \"subject\": \"Mathematics\"\n    }\n  ],\n  \"rigor\": {\n    \"level\": \"mild\",\n    \"dokLevel\": \"1-2\",\n    \"justification\": \"The items primarily require procedural computation (prime factorization, adding/subtracting/multiplying/dividing integers, plotting/comparing integers on a number line, and evaluating expressions using order of operations). These are routine procedures and simple applications of rules rather than multi-step problem solving or deep reasoning, so Depth of Knowledge is centered at DOK 1 (recall/perform) and low DOK 2 (basic application).\",\n    \"confidence\": 0.88\n  }\n}",
+                  "refusal": null,
+                  "annotations": []
+                },
+                "finish_reason": "stop"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 766,
+              "completion_tokens": 2606,
+              "total_tokens": 3372,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 2112,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+              }
+            },
+            "service_tier": "default",
+            "system_fingerprint": null
+          },
+          "processingTime": 25592,
+          "aiEngine": "grok"
+        }
+      }
+    }
+  ],
+  "dbStoredAiResponses": [],
+  "dbStoredResults": [],
+  "dbStorageChecksum": "f89039bbf358b302a67731c76216e423"
 }

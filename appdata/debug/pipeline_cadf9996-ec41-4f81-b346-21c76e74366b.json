@@ -1,0 +1,93 @@
+{
+  "documentId": "cadf9996-ec41-4f81-b346-21c76e74366b",
+  "customerUuid": "6fd73505-1a03-4794-856f-675676426542",
+  "originalFileSize": 86092,
+  "originalMimeType": "application/pdf",
+  "processingVersion": "two-pass-v1",
+  "createdAt": "2025-09-15T05:31:14.700Z",
+  "pass1Started": "2025-09-15T05:31:15.683Z",
+  "pass1Completed": "2025-09-15T05:31:15.749Z",
+  "pass1RawResponse": null,
+  "pass1ExtractedQuestions": [],
+  "pass1QuestionCount": 0,
+  "pass1ErrorMessage": "400 Unknown parameter: 'file_ids'.",
+  "pass1Checksum": "facda9778e1d974ae9d07502c4328296",
+  "aiEnginesUsed": [
+    "openai"
+  ],
+  "totalProcessingTime": 69,
+  "extractedText": "Name ___________________________  Date __________________\n\nIntegers Test – Version 2\n\n1\n\n3\n\n5\n\n7\n\n9\n\nComplete the prime factorization for \nthe number below.\n\n2\n\nComplete the prime factorization for \nthe number below.\n\n195\n\n315\n\nGraph both of your numbers on a \nnumber line and then write an inequality \nto compare the two numbers.\n−2 𝑎𝑎𝑎𝑎𝑎𝑎 − 5\n\nAdd the two integers. \n\n7 + (−15)\n\nSubtract the two integers. \n\nGraph both of your numbers on a \nnumber line and then write an inequality \nto compare the two numbers.\n−8 𝑎𝑎𝑎𝑎𝑎𝑎 1\n\nAdd the two integers. \n\n(−3) + (−25)\n\nSubtract the two integers. \n\n4\n\n6\n\n8\n\n21 − (−8)\n\n−7 − (−12)\n\nSubtract the two integers. \n\n10\n\nMultiply the two integers.\n\n(−8) − 15\n\n(−5)(−1)\n\n\fName ___________________________  Date __________________\n\nIntegers Test – Version 2\n\n11\n\nMultiply the two integers.\n\n(−20)(3)\n\n12\n\nUse the order of operations to solve \neach problem.\n\n−10 + 2 7 − (−3)\n\n13\n\nUse the order of operations to solve \neach problem.\n\n14\n\nUse the order of operations to solve \neach problem.\n\n−\n\n26\n2\n\n+ 5 − 5(2)\n\n−4 2 + (9 + (−10))\n32\n\n15\n\nUse the order of operations to solve \neach problem.\n\n16\n\nUse the order of operations to solve \neach problem.\n\n5 + 42−3(2 − 6)\n\n− 15 − 21 +\n\n9\n3\n\n17\n\nDivide the two integers. \n\n18\n\nDivide the two integers. \n\n84 ÷ (−4)\n\n−63\n3\n\n19\n\nDivide the two integers. \n\n20\n\nDivide the two integers. \n\n−24 ÷ (−8)\n\n165\n−11",
+  "extractedTextLength": 1391,
+  "dbStorageStarted": "2025-09-15T05:32:02.137Z",
+  "dbStorageCompleted": "2025-09-15T05:32:02.367Z",
+  "dbStoredQuestions": [
+    {
+      "id": "7c092557-b85b-44d1-a59d-b3d4c3e3e4b4",
+      "documentId": "cadf9996-ec41-4f81-b346-21c76e74366b",
+      "questionNumber": "1",
+      "questionText": "Apply and extend previous understandings of addition and subtraction to add and subtract rational numbers; represent addition and subtraction on a horizontal or vertical number line diagram. (This standard encompasses performing operations with integers and representing numbers on a number line, including using inequalities.)",
+      "context": "Question 1: Analysis for standard CCSS.MATH.CONTENT.7.NS.A.1",
+      "questionType": null,
+      "createdAt": "2025-09-15T05:32:02.171Z",
+      "aiResults": {
+        "grok": {
+          "standards": [
+            {
+              "code": "CCSS.MATH.CONTENT.7.NS.A.1",
+              "description": "Apply and extend previous understandings of addition and subtraction to add and subtract rational numbers; represent addition and subtraction on a horizontal or vertical number line diagram. (This standard encompasses performing operations with integers and representing numbers on a number line, including using inequalities.)",
+              "jurisdiction": "Common Core State Standards (CCSS)",
+              "gradeLevel": "7",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "2",
+            "justification": "The document's items predominantly require procedural application of integer arithmetic (adding, subtracting, multiplying, dividing), graphing integers on a number line and writing inequalities, prime factorization, and evaluating expressions using order of operations. These tasks assess application of learned algorithms and representations rather than simple recall or complex multi-step reasoning.",
+            "confidence": 0.9
+          },
+          "rawResponse": {
+            "id": "chatcmpl-CFw60dmay7bPTLSNt0JSovGz5dVmR",
+            "object": "chat.completion",
+            "created": 1757914276,
+            "model": "gpt-5-mini-2025-08-07",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "{\n  \"standards\": [\n    {\n      \"code\": \"CCSS.MATH.CONTENT.7.NS.A.1\",\n      \"description\": \"Apply and extend previous understandings of addition and subtraction to add and subtract rational numbers; represent addition and subtraction on a horizontal or vertical number line diagram. (This standard encompasses performing operations with integers and representing numbers on a number line, including using inequalities.)\",\n      \"jurisdiction\": \"Common Core State Standards (CCSS)\",\n      \"gradeLevel\": \"7\",\n      \"subject\": \"Mathematics\"\n    }\n  ],\n  \"rigor\": {\n    \"level\": \"medium\",\n    \"dokLevel\": \"2\",\n    \"justification\": \"The document's items predominantly require procedural application of integer arithmetic (adding, subtracting, multiplying, dividing), graphing integers on a number line and writing inequalities, prime factorization, and evaluating expressions using order of operations. These tasks assess application of learned algorithms and representations rather than simple recall or complex multi-step reasoning.\",\n    \"confidence\": 0.9\n  }\n}",
+                  "refusal": null,
+                  "annotations": []
+                },
+                "finish_reason": "stop"
+              }
+            ],
+            "usage": {
+              "prompt_tokens": 768,
+              "completion_tokens": 1897,
+              "total_tokens": 2665,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 1664,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+              }
+            },
+            "service_tier": "default",
+            "system_fingerprint": null
+          },
+          "processingTime": 34353,
+          "aiEngine": "grok"
+        }
+      }
+    }
+  ],
+  "dbStoredAiResponses": [],
+  "dbStoredResults": [],
+  "dbStorageChecksum": "4c284003dd987c5e19cdd0e0ff2fbcf2"
+}

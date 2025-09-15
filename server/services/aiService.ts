@@ -886,7 +886,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
                 },
                 rawResponse: analysisResult.rawResponse,
                 processingTime: analysisResult.processingTime,
-                aiEngine: 'grok'
+                aiEngine: 'openai'
                 }
               }
             };
@@ -948,7 +948,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
                   },
                   rawResponse: analysisResult.rawResponse,
                   processingTime: analysisResult.processingTime,
-                  aiEngine: 'grok'
+                  aiEngine: 'openai'
                 }
               }
             };
@@ -1017,7 +1017,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
                   rigor: question.rigor,
                   rawResponse: analysisResult.rawResponse,
                   processingTime: analysisResult.processingTime,
-                  aiEngine: 'grok'
+                  aiEngine: 'openai'
                 }
               }
             };
@@ -1070,7 +1070,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
                   rigor: analysisResult.rigor,
                   rawResponse: analysisResult.rawResponse,
                   processingTime: analysisResult.processingTime,
-                  aiEngine: 'grok'
+                  aiEngine: 'openai'
                 }
               }
             };
@@ -2636,7 +2636,7 @@ Analyze ONLY this question and provide the result as a single JSON object follow
                 },
                 rawResponse: analysisResult.rawResponse,
                 processingTime: analysisResult.processingTime,
-                aiEngine: 'grok'
+                aiEngine: 'openai'
                 }
               }
             };
@@ -2698,7 +2698,7 @@ Analyze ONLY this question and provide the result as a single JSON object follow
                   },
                   rawResponse: analysisResult.rawResponse,
                   processingTime: analysisResult.processingTime,
-                  aiEngine: 'grok'
+                  aiEngine: 'openai'
                 }
               }
             };

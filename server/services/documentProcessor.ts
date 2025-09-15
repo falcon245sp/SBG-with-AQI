@@ -345,7 +345,7 @@ export class DocumentProcessor {
       }
       
       // Validate AI result exists  
-      const aiResult = aiResults.grok || aiResults.claude || aiResults.openai;
+      const aiResult = aiResults.openai || aiResults.grok || aiResults.claude;
       if (!aiResult) {
         throw new Error('No AI analysis result found');
       }
