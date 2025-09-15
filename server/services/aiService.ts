@@ -1290,16 +1290,23 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         operation: 'extractQuestions'
       });
 
-      const gpt5Response = await openai.responses.create({
+      const gpt5Response = await openai.chat.completions.create({
         model: OPENAI_MODEL,
-        input: `${EXTRACTION_PROMPT}\n\nExtract all questions from the attached document.`,
-        tools: [{ type: 'file_search', vector_store_ids: [] }],
-        file_ids: fileIds,
+        messages: [
+          {
+            role: "user",
+            content: `${EXTRACTION_PROMPT}\n\nExtract all questions from the attached document.`,
+            attachments: fileIds.map(fileId => ({
+              file_id: fileId,
+              tools: [{ type: "file_search" }]
+            }))
+          }
+        ],
         temperature: OPENAI_TEMPERATURE,
-        max_output_tokens: 4000
+        max_tokens: 4000
       });
 
-      const responseText = typeof gpt5Response.output_text === 'string' ? gpt5Response.output_text : '';
+      const responseText = gpt5Response.choices[0]?.message?.content || '';
       const processingTime = Date.now() - startTime;
 
       // Parse the extraction response
@@ -1560,14 +1567,19 @@ ${JSON.stringify(extractedQuestion)}
 
 Analyze this question and provide the classification as a single JSON object following the exact output schema above.`;
 
-      const gpt5Response = await openai.responses.create({
+      const gpt5Response = await openai.chat.completions.create({
         model: OPENAI_MODEL,
-        input: classificationInput,
+        messages: [
+          {
+            role: "user",
+            content: classificationInput
+          }
+        ],
         temperature: OPENAI_TEMPERATURE,
-        max_output_tokens: 2000
+        max_tokens: 2000
       });
 
-      const responseText = typeof gpt5Response.output_text === 'string' ? gpt5Response.output_text : '';
+      const responseText = gpt5Response.choices[0]?.message?.content || '';
       const processingTime = Date.now() - startTime;
 
       // Parse the classification response
@@ -1655,16 +1667,23 @@ Focus specifically on Question ${questionNumber}: ${questionText.substring(0, 20
 
 Analyze ONLY this question and provide the result as a single JSON object following the exact output schema above.`;
 
-      const gpt5Response = await openai.responses.create({
+      const gpt5Response = await openai.chat.completions.create({
         model: OPENAI_MODEL,
-        input: `${singleQuestionPrompt}\n\nAnalyze question ${questionNumber} from the attached document.`,
-        tools: [{ type: 'file_search', vector_store_ids: [] }],
-        file_ids: fileIds,
+        messages: [
+          {
+            role: "user",
+            content: `${singleQuestionPrompt}\n\nAnalyze question ${questionNumber} from the attached document.`,
+            attachments: fileIds.map(fileId => ({
+              file_id: fileId,
+              tools: [{ type: "file_search" }]
+            }))
+          }
+        ],
         temperature: OPENAI_TEMPERATURE,
-        max_output_tokens: 4000
+        max_tokens: 4000
       });
 
-      const responseText = typeof gpt5Response.output_text === 'string' ? gpt5Response.output_text : '';
+      const responseText = gpt5Response.choices[0]?.message?.content || '';
       const processingTime = Date.now() - startTime;
 
       // Parse the single question JSON response
@@ -1748,20 +1767,28 @@ Analyze ONLY this question and provide the result as a single JSON object follow
       console.log('Model:', OPENAI_MODEL);
       console.log('Max tokens:', 10000);
       
-      gpt5Response = await openai.responses.create({
+      gpt5Response = await openai.chat.completions.create({
         model: OPENAI_MODEL,
-        instructions: basePrompt,
-        user_message: "Please analyze the uploaded document(s) for educational standards and rigor levels. Focus on identifying all individual questions/problems in the document.",
-        attachments: fileIds.map(fileId => ({
-          file_id: fileId,
-          tools: [{ type: "file_search" }]
-        })),
-        max_output_tokens: 10000,
+        messages: [
+          {
+            role: "system",
+            content: basePrompt
+          },
+          {
+            role: "user",
+            content: "Please analyze the uploaded document(s) for educational standards and rigor levels. Focus on identifying all individual questions/problems in the document.",
+            attachments: fileIds.map(fileId => ({
+              file_id: fileId,
+              tools: [{ type: "file_search" }]
+            }))
+          }
+        ],
+        max_tokens: 10000,
         temperature: OPENAI_TEMPERATURE
       });
 
       const processingTime = Date.now() - startTime;
-      const rawContent = gpt5Response.text || gpt5Response.message?.content || '';
+      const rawContent = gpt5Response.choices[0]?.message?.content || '';
       
       console.log(`=== ${OPENAI_MODEL} FILE ANALYSIS RESPONSE ===`);
       console.log('Response length:', rawContent.length);
