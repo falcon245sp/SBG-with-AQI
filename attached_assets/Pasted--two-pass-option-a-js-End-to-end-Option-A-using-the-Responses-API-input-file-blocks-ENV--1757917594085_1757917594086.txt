@@ -1,0 +1,240 @@
+// two-pass-option-a.js
+// End-to-end Option A using the Responses API + input_file blocks.
+// ENV: export OPENAI_API_KEY=sk-...
+
+import OpenAI from "openai";
+import fs from "fs";
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+/** ----------------------------- Utilities ----------------------------- **/
+
+function stripCodeFences(s = "") {
+  // Remove ```json ... ``` or ``` ... ```
+  return s.replace(/```json\s*([\s\S]*?)\s*```/gi, "$1").replace(/```\s*([\s\S]*?)\s*```/gi, "$1").trim();
+}
+
+function safeJSONParse(s, fallback = null) {
+  try {
+    return JSON.parse(stripCodeFences(s));
+  } catch (e) {
+    console.error("[parse] JSON parse failed:", e?.message);
+    return fallback;
+  }
+}
+
+function validateExtractionArray(arr) {
+  // Expect: [{ question_number: number, instruction_text: string }, ...]
+  if (!Array.isArray(arr)) return false;
+  for (const o of arr) {
+    if (
+      typeof o !== "object" ||
+      typeof o.question_number !== "number" ||
+      typeof o.instruction_text !== "string" ||
+      !o.instruction_text.trim()
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function validateClassificationArray(arr) {
+  // Expect: [{ question_number, instruction_text, standard, rigor }, ...]
+  if (!Array.isArray(arr)) return false;
+  for (const o of arr) {
+    if (
+      typeof o !== "object" ||
+      typeof o.question_number !== "number" ||
+      typeof o.instruction_text !== "string" ||
+      typeof o.standard !== "string" ||
+      ![1, 2, 3].includes(o.rigor)
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/** Consistency: identical instruction_text → identical (standard, rigor) */
+function enforceConsistency(items) {
+  const map = new Map(); // key = normalized instruction_text, value = {standard, rigor}
+  const norm = (t) => t.replace(/\s+/g, " ").trim().toLowerCase();
+
+  for (const it of items) {
+    const k = norm(it.instruction_text);
+    if (!map.has(k)) {
+      map.set(k, { standard: it.standard, rigor: it.rigor });
+    } else {
+      const { standard, rigor } = map.get(k);
+      it.standard = standard;
+      it.rigor = rigor;
+    }
+  }
+  return items;
+}
+
+/** ----------------------------- OpenAI Calls ----------------------------- **/
+
+async function uploadPDF(filePath) {
+  // Upload once; reuse file.id in response calls via input_file content.
+  const res = await openai.files.create({
+    file: fs.createReadStream(filePath),
+    purpose: "assistants",
+  });
+  console.log("[upload] File ID:", res.id);
+  return res.id;
+}
+
+/**
+ * PASS 1: Extraction with Responses API
+ * Attaches the uploaded PDF via content: [{type:"input_file", file_id}]
+ * Returns an array of { question_number, instruction_text }
+ */
+async function pass1ExtractQuestions({ fileId, courseContext }) {
+  const system = {
+    role: "system",
+    content: "You are an extraction engine that outputs JSON only.",
+  };
+
+  const user = {
+    role: "user",
+    content: [
+      {
+        type: "input_text",
+        text:
+`From the attached assessment, extract each question.
+
+Schema:
+[
+  {
+    "question_number": <int>,
+    "instruction_text": "<string containing only the instruction line>"
+  }
+]
+
+Rules:
+- Output ONLY a JSON array (no commentary).
+- Only include the instruction text (no answers, numbers, or worked steps).
+- Do not classify or infer standards.
+${courseContext ? `- Context (optional hint): ${courseContext}` : ""}`,
+      },
+      { type: "input_file", file_id: fileId },
+    ],
+  };
+
+  const resp = await openai.responses.create({
+    model: "gpt-4o",     // recommended for determinism control
+    temperature: 0.0,    // fully deterministic extraction
+    input: [system, user],
+  });
+
+  const text = resp.output_text ?? "";
+  const json = safeJSONParse(text, []);
+  if (!validateExtractionArray(json)) {
+    throw new Error("Pass 1 extraction did not return a valid JSON array in the expected schema.");
+  }
+  console.log(`[pass1] Extracted ${json.length} questions`);
+  return json;
+}
+
+/**
+ * PASS 2: Classification with Responses API
+ * Accepts extracted array; asks model to assign standard + rigor.
+ * Returns array of { question_number, instruction_text, standard, rigor }
+ */
+async function pass2Classify({ extracted, jurisdictions = ["CCSS Algebra 1"] }) {
+  const system = {
+    role: "system",
+    content: "You are a curriculum alignment engine. Output JSON only, no commentary.",
+  };
+
+  const userText =
+`Given this JSON array of extracted questions:
+
+${JSON.stringify(extracted, null, 2)}
+
+Map each item to the most relevant ${jurisdictions.join(", ")} standard and assign rigor.
+
+Rules:
+- Use official CCSS codes where applicable (e.g., A-SSE.1, A-REI.3, N-Q.1).
+- rigor: 1 = recall/procedure, 2 = application, 3 = reasoning/analysis.
+- Use only the "instruction_text" field for classification.
+- If two instruction_text values are identical or nearly identical, they MUST receive the same standard and rigor.
+- Output strictly a JSON array of objects in this schema:
+
+[
+  {
+    "question_number": <int>,
+    "instruction_text": "<string>",
+    "standard": "<CCSS code>",
+    "rigor": <1|2|3>
+  }
+]`;
+
+  const resp = await openai.responses.create({
+    model: "gpt-4o",  // choose 4o for determinism; can swap models as needed
+    temperature: 0.0,
+    input: [
+      system,
+      { role: "user", content: [{ type: "input_text", text: userText }] },
+    ],
+  });
+
+  const text = resp.output_text ?? "";
+  const classified = safeJSONParse(text, []);
+  if (!validateClassificationArray(classified)) {
+    throw new Error("Pass 2 classification did not return a valid JSON array in the expected schema.");
+  }
+
+  // Enforce identical-instruction consistency locally as a final guard
+  const consistent = enforceConsistency(classified);
+  console.log(`[pass2] Classified ${consistent.length} questions`);
+  return consistent;
+}
+
+/** ----------------------------- Orchestrator ----------------------------- **/
+
+async function runTwoPass({
+  filePath,
+  jurisdictions = ["CCSS Algebra 1"],
+  courseContext, // optional hint string
+}) {
+  const t0 = Date.now();
+  const fileId = await uploadPDF(filePath);
+
+  // PASS 1
+  const extracted = await pass1ExtractQuestions({ fileId, courseContext });
+
+  // PASS 2
+  const classified = await pass2Classify({ extracted, jurisdictions });
+
+  const ms = Date.now() - t0;
+  return {
+    fileId,
+    questions: classified,
+    processingTimeMs: ms,
+  };
+}
+
+/** ----------------------------- Execute ----------------------------- **/
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  (async () => {
+    try {
+      // Change the path to your PDF
+      const result = await runTwoPass({
+        filePath: "Integers_Test.pdf",
+        jurisdictions: ["CCSS Algebra 1"],
+        courseContext:
+          "This is a high school Algebra 1 assessment. Focus on Algebra 1 standards when relevant.",
+      });
+
+      console.log("\n=== FINAL RESULT ===");
+      console.log(JSON.stringify(result, null, 2));
+    } catch (err) {
+      console.error("\n❌ Two-pass pipeline failed:", err?.message || err);
+      process.exit(1);
+    }
+  })();
+}

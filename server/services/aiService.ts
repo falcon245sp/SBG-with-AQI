@@ -1264,7 +1264,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     }
   }
 
-  // ChatGPT's superior two-pass method using chat.completions.create with file_ids
+  // ChatGPT's superior two-pass method using Responses API
   async analyzeTwoPassWithFile(
     fileIds: string[],
     jurisdictions: string[] = [],
@@ -1281,90 +1281,137 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         fileCount: fileIds.length
       });
 
-      // PASS 1: Extract questions from uploaded file
+      const fileId = fileIds[0]; // Use first file ID
+
+      // PASS 1: Extract questions using Responses API
       console.log('\n=== PASS 1: QUESTION EXTRACTION ===');
-      const extraction = await openai.chat.completions.create({
-        model: "gpt-5",
-        temperature: 0.2,
-        messages: [
+      const extractionResponse = await openai.responses.create({
+        model: "gpt-4o",
+        temperature: 0.0,
+        input: [
           {
             role: "system",
             content: "You are an extraction engine that outputs JSON only."
           },
           {
             role: "user",
-            content: `From the attached assessment, extract each question.
+            content: [
+              {
+                type: "input_text",
+                text: `From the attached assessment, extract each question.
 
 Schema:
-{
-  "question_number": <int>,
-  "instruction_text": "<string containing only the instruction line>"
-}
+[
+  {
+    "question_number": <int>,
+    "instruction_text": "<string containing only the instruction line>"
+  }
+]
 
 Rules:
-- Only return JSON (array of objects).
-- Only include the instruction text, not the answers or numbers.
-- Do not classify.`
+- Output ONLY a JSON array (no commentary).
+- Only include the instruction text (no answers, numbers, or worked steps).
+- Do not classify or infer standards.
+${courseContext ? `- Context (optional hint): ${courseContext}` : ""}`
+              },
+              { type: "input_file", file_id: fileId }
+            ]
           }
-        ],
-        file_ids: fileIds
+        ]
       });
 
-      const extractionJSON = extraction.choices[0]?.message?.content || '';
+      const extractionJSON = extractionResponse.output_text || '';
       console.log('Pass 1 (extraction):', extractionJSON);
       console.log('=== END PASS 1 ===\n');
 
-      // PASS 2: Classification into CCSS + rigor
+      // Parse extraction result
+      let extractedQuestions;
+      try {
+        const cleanedText = extractionJSON.replace(/```json\n?|\n?```/g, '').trim();
+        extractedQuestions = JSON.parse(cleanedText);
+        if (!Array.isArray(extractedQuestions)) {
+          throw new Error('Extraction did not return an array');
+        }
+      } catch (parseError) {
+        console.error('Failed to parse extraction result:', parseError);
+        throw new Error('Pass 1 extraction did not return valid JSON array');
+      }
+
+      // PASS 2: Classification using Responses API
       console.log('\n=== PASS 2: CLASSIFICATION ===');
-      const classification = await openai.chat.completions.create({
-        model: "gpt-5",
-        temperature: 0.2,
-        messages: [
+      const classificationResponse = await openai.responses.create({
+        model: "gpt-4o",
+        temperature: 0.0,
+        input: [
           {
             role: "system",
             content: "You are a curriculum alignment engine. Output JSON only, no commentary."
           },
           {
             role: "user",
-            content: `Given this JSON array of extracted questions:
+            content: [
+              {
+                type: "input_text",
+                text: `Given this JSON array of extracted questions:
 
-${extractionJSON}
+${JSON.stringify(extractedQuestions, null, 2)}
 
-For each item, map to the most relevant CCSS ${jurisdictions.join(', ')} standard and assign rigor.
+Map each item to the most relevant ${jurisdictions.join(", ")} standard and assign rigor.
+
 Rules:
-- Use official codes (e.g., A-SSE.1, A-REI.3, N-Q.1).
+- Use official codes where applicable (e.g., A-SSE.1, A-REI.3, N-Q.1).
 - rigor: 1 = recall/procedure, 2 = application, 3 = reasoning/analysis.
-- If two instruction_text values are identical or nearly identical, assign the same standard and rigor.
-- Output strictly as JSON array of objects in this schema:
+- Use only the "instruction_text" field for classification.
+- If two instruction_text values are identical or nearly identical, they MUST receive the same standard and rigor.
+- Output strictly a JSON array of objects in this schema:
 
-{
-  "question_number": <int>,
-  "instruction_text": "<string>",
-  "standard": "<CCSS code>",
-  "rigor": <1|2|3>
-}`
+[
+  {
+    "question_number": <int>,
+    "instruction_text": "<string>",
+    "standard": "<code>",
+    "rigor": <1|2|3>
+  }
+]`
+              }
+            ]
           }
         ]
       });
 
-      const classificationJSON = classification.choices[0]?.message?.content || '';
+      const classificationJSON = classificationResponse.output_text || '';
       console.log('Pass 2 (classification):', classificationJSON);
       console.log('=== END PASS 2 ===\n');
 
       const processingTime = Date.now() - startTime;
 
-      // Parse the final classification result
+      // Parse and validate classification result
       let parsedResult;
       try {
         const cleanedText = classificationJSON.replace(/```json\n?|\n?```/g, '').trim();
         parsedResult = JSON.parse(cleanedText);
+        
+        // Enforce consistency for identical instruction texts
+        const consistencyMap = new Map();
+        for (const item of parsedResult) {
+          const normalizedText = item.instruction_text?.replace(/\s+/g, " ").trim().toLowerCase();
+          if (normalizedText) {
+            if (consistencyMap.has(normalizedText)) {
+              const existing = consistencyMap.get(normalizedText);
+              item.standard = existing.standard;
+              item.rigor = existing.rigor;
+            } else {
+              consistencyMap.set(normalizedText, { standard: item.standard, rigor: item.rigor });
+            }
+          }
+        }
       } catch (parseError) {
-        console.error('Failed to parse two-pass result:', parseError);
+        console.error('Failed to parse classification result:', parseError);
         // Fallback result
         parsedResult = [{
           question_number: 1,
           instruction_text: "Document analysis completed",
-          standard: "CCSS.MATH.CONTENT.7.NS.A.1",
+          standard: "MATH.CONTENT.7.NS.A.1",
           rigor: 2
         }];
       }
@@ -1381,7 +1428,7 @@ Rules:
         jsonResponse: parsedResult,
         rawResponse: { content: classificationJSON },
         processingTime,
-        aiEngine: 'chatgpt-two-pass'
+        aiEngine: 'chatgpt-responses-api'
       };
 
     } catch (error) {
