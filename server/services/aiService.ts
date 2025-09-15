@@ -1332,7 +1332,7 @@ ${extractionJSON}
 
 For each item, map to the most relevant CCSS ${jurisdictions.join(', ')} standard and assign rigor.
 Rules:
-- Use official CCSS codes (e.g., A-SSE.1, A-REI.3, N-Q.1).
+- Use official codes (e.g., A-SSE.1, A-REI.3, N-Q.1).
 - rigor: 1 = recall/procedure, 2 = application, 3 = reasoning/analysis.
 - If two instruction_text values are identical or nearly identical, assign the same standard and rigor.
 - Output strictly as JSON array of objects in this schema:
