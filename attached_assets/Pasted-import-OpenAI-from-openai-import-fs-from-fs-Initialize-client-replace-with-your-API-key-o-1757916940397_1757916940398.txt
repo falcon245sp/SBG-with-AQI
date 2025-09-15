@@ -1,0 +1,100 @@
+import OpenAI from "openai";
+import fs from "fs";
+
+// Initialize client (replace with your API key or set via env)
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+async function runTwoPass() {
+  try {
+    //
+    // STEP 1: Upload the assessment PDF
+    //
+    const upload = await client.files.create({
+      file: fs.createReadStream("Integers_Test.pdf"),
+      purpose: "assistants", // required
+    });
+
+    console.log("Uploaded file ID:", upload.id);
+
+    //
+    // STEP 2: PASS 1 — Extract questions into JSON
+    //
+    const extraction = await client.chat.completions.create({
+      model: "gpt-5", // or "gpt-4o" if you want deterministic temp=0
+      temperature: 0.2,
+      messages: [
+        {
+          role: "system",
+          content: "You are an extraction engine that outputs JSON only.",
+        },
+        {
+          role: "user",
+          content: `
+From the attached assessment, extract each question.
+
+Schema:
+{
+  "question_number": <int>,
+  "instruction_text": "<string containing only the instruction line>"
+}
+
+Rules:
+- Only return JSON (array of objects).
+- Only include the instruction text, not the answers or numbers.
+- Do not classify.
+          `,
+        },
+      ],
+      file_ids: [upload.id],
+    });
+
+    const extractionJSON = extraction.choices[0].message.content;
+    console.log("Pass 1 (extraction):", extractionJSON);
+
+    //
+    // STEP 3: PASS 2 — Classification into CCSS + rigor
+    //
+    const classification = await client.chat.completions.create({
+      model: "gpt-5", // swap to "gpt-4o" with temp=0 for more determinism
+      temperature: 0.2,
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a curriculum alignment engine. Output JSON only, no commentary.",
+        },
+        {
+          role: "user",
+          content: `
+Given this JSON array of extracted questions:
+
+${extractionJSON}
+
+For each item, map to the most relevant CCSS Algebra 1 standard and assign rigor.
+Rules:
+- Use official CCSS codes (e.g., A-SSE.1, A-REI.3, N-Q.1).
+- rigor: 1 = recall/procedure, 2 = application, 3 = reasoning/analysis.
+- If two instruction_text values are identical or nearly identical, assign the same standard and rigor.
+- Output strictly as JSON array of objects in this schema:
+
+{
+  "question_number": <int>,
+  "instruction_text": "<string>",
+  "standard": "<CCSS code>",
+  "rigor": <1|2|3>
+}
+          `,
+        },
+      ],
+    });
+
+    const classificationJSON = classification.choices[0].message.content;
+    console.log("Pass 2 (classification):", classificationJSON);
+  } catch (err) {
+    console.error("Error:", err);
+  }
+}
+
+runTwoPass();
