@@ -70,7 +70,7 @@ export class DocumentProcessor {
         });
         
         // Ensure filename has .pdf extension for OpenAI file upload
-        const fileName = document.originalFilename || document.name;
+        const fileName = document.originalFilename || document.name || 'document.pdf';
         const fileNameWithExtension = fileName.endsWith('.pdf') ? fileName : `${fileName}.pdf`;
         
         uploadedFileId = await aiService.uploadFileToOpenAI(document.originalPath, fileNameWithExtension, document.mimeType);
