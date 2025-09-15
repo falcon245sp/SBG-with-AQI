@@ -1365,6 +1365,8 @@ ${courseContext ? `- Context (optional hint): ${courseContext}` : ""}`
 ${JSON.stringify(extractedQuestions, null, 2)}
 
 Map each item to the most relevant ${jList.join(", ")} standard and assign rigor.
+CRITICAL: You MUST use ${jList.join(", ")} standards only.
+Context: This is a ${jList.join(", ")} assessment.
 
 Rules:
 - Use official codes where applicable (e.g., A-SSE.1, A-REI.3, N-Q.1).
@@ -1530,6 +1532,8 @@ ${extractedText}`
 ${JSON.stringify(extractedQuestions, null, 2)}
 
 Map each item to the most relevant ${jList.join(", ")} standard and assign rigor.
+CRITICAL: You MUST use ${jList.join(", ")} standards only.
+Context: This is a ${jList.join(", ")} assessment.
 
 Rules:
 - Use official codes where applicable (e.g., A-SSE.1, A-REI.3, N-Q.1).
