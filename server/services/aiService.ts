@@ -15,11 +15,11 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-// Keep Grok client as fallback option
-const grok = new OpenAI({ 
-  baseURL: "https://api.x.ai/v1", 
-  apiKey: process.env.XAI_API_KEY || process.env.XAI_API_KEY_ENV_VAR || "default_key"
-});
+// DISABLED: Grok client removed - using OpenAI/ChatGPT only
+// const grok = new OpenAI({ 
+//   baseURL: "https://api.x.ai/v1", 
+//   apiKey: process.env.XAI_API_KEY || process.env.XAI_API_KEY_ENV_VAR || "default_key"
+// });
 
 /*
 <important_code_snippet_instructions>
@@ -667,7 +667,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       
       // Fallback to Grok with the full custom prompt
       const customPrompt = this.generateCustomPrompt(customization);
-      const grokResult = gpt5Result || await this.analyzeGrokWithPrompt(
+      const analysisResult = gpt5Result || await this.analyzeGrokWithPrompt(
         `Analyze this educational document (${mimeType}) for standards alignment and rigor level.`,
         `Document path: ${filePath}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
         jurisdictions,
@@ -676,14 +676,14 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
 );
       
       // Build response with both results when available
-      const aiResults: any = { grok: grokResult };
+      const aiResults: any = { grok: analysisResult };
       if (gpt5Result) {
         aiResults.gpt5 = gpt5Result;
       }
       
       // Check if GPT-4o-mini/Grok returned individual questions - parse from raw_response using robust extraction
       let extractedQuestions: QuestionListItem[] | null = null;
-      const mainResult = gpt5Result || grokResult;
+      const mainResult = gpt5Result || analysisResult;
       if (mainResult.rawResponse && mainResult.rawResponse.choices && mainResult.rawResponse.choices[0]) {
         const rawContent = mainResult.rawResponse.choices[0].message?.content || '';
         console.log('Attempting robust JSON extraction from custom configuration response...');
@@ -809,36 +809,23 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     try {
       console.log('Analyzing document content with length:', documentContent.length);
       
-      console.log(`Starting document analysis with ${OPENAI_MODEL} (primary) and Grok (fallback)`);
+      console.log(`Starting document analysis with ${OPENAI_MODEL} (ChatGPT only)`);
       
-      // Try GPT-5-mini first with the simple prompt
-      let gpt5Result: AIAnalysisResult | null = null;
-      try {
-        console.log(`Attempting ${OPENAI_MODEL} analysis...`);
-        gpt5Result = await this.analyzeGPT5(
-          `Analyze this educational document content for standards alignment and rigor level.`,
-          `Document content: ${documentContent}\n\nDocument type: ${mimeType}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
-          jurisdictions,
-          course
-        );
-        console.log(`✅ ${OPENAI_MODEL} analysis successful`);
-      } catch (error) {
-        console.error(`⚠️ ${OPENAI_MODEL} analysis failed, falling back to Grok:`, error);
-      }
-      
-      // Use GPT-4o-mini result if successful, otherwise fall back to Grok
-      const grokResult = gpt5Result || await this.analyzeGrok(
+      // Use GPT-5-mini for analysis
+      console.log(`Analyzing with ${OPENAI_MODEL}...`);
+      const analysisResult = await this.analyzeGPT5(
         `Analyze this educational document content for standards alignment and rigor level.`,
         `Document content: ${documentContent}\n\nDocument type: ${mimeType}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
         jurisdictions,
         course
-);
+      );
+      console.log(`✅ ${OPENAI_MODEL} analysis completed successfully`);
       
-      // Check if Grok returned individual questions - parse from raw_response using robust extraction
+      // Check if analysis returned individual questions - parse from raw_response using robust extraction
       let extractedQuestions: QuestionListItem[] | null = null;
-      if (grokResult.rawResponse && grokResult.rawResponse.choices && grokResult.rawResponse.choices[0]) {
-        const rawContent = grokResult.rawResponse.choices[0].message?.content || '';
-        console.log('Attempting robust JSON extraction from Grok response...');
+      if (analysisResult.rawResponse && analysisResult.rawResponse.choices && analysisResult.rawResponse.choices[0]) {
+        const rawContent = analysisResult.rawResponse.choices[0].message?.content || '';
+        console.log('Attempting robust JSON extraction from ChatGPT response...');
         
         const extractionResult = extractAndValidateQuestionList(rawContent);
         if (extractionResult.success && extractionResult.data) {
@@ -897,8 +884,8 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
                   justification: question.justification,
                   confidence: 0.85
                 },
-                rawResponse: grokResult.rawResponse,
-                processingTime: grokResult.processingTime,
+                rawResponse: analysisResult.rawResponse,
+                processingTime: analysisResult.processingTime,
                 aiEngine: 'grok'
                 }
               }
@@ -912,8 +899,8 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       }
       
       // Check if Grok returned individual questions in the old JSON format
-      if (grokResult.jsonResponse && grokResult.jsonResponse.problems && Array.isArray(grokResult.jsonResponse.problems)) {
-        console.log(`Creating ${grokResult.jsonResponse.problems.length} individual question entries from JSON response`);
+      if (analysisResult.jsonResponse && analysisResult.jsonResponse.problems && Array.isArray(analysisResult.jsonResponse.problems)) {
+        console.log(`Creating ${analysisResult.jsonResponse.problems.length} individual question entries from JSON response`);
         
         // Import the commonStandardsProjectService for standard lookups
         const { commonStandardsProjectService } = await import('./commonStandardsProjectService');
@@ -924,7 +911,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         
         // Process each problem and lookup standard descriptions
         const questionsWithStandardDescriptions = await Promise.all(
-          grokResult.jsonResponse.problems.map(async (problem: any) => {
+          analysisResult.jsonResponse.problems.map(async (problem: any) => {
             let standardDescription = problem.standardDescription || `Question ${problem.problemNumber}: ${problem.standardCode}`;
             
             // Lookup the actual standard description from Common Standards Project API
@@ -959,8 +946,8 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
                     justification: problem.rigorJustification || `${problem.rigorLevel} rigor level based on problem complexity`,
                     confidence: 0.85
                   },
-                  rawResponse: grokResult.rawResponse,
-                  processingTime: grokResult.processingTime,
+                  rawResponse: analysisResult.rawResponse,
+                  processingTime: analysisResult.processingTime,
                   aiEngine: 'grok'
                 }
               }
@@ -974,8 +961,8 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       }
       
       // If we have individual questions parsed from natural language, create separate question entries  
-      if (grokResult.allQuestions && grokResult.allQuestions.length > 0) {
-        console.log(`Creating ${grokResult.allQuestions.length} individual question entries from parsed response`);
+      if (analysisResult.allQuestions && analysisResult.allQuestions.length > 0) {
+        console.log(`Creating ${analysisResult.allQuestions.length} individual question entries from parsed response`);
         
         // Import the commonStandardsProjectService for standard lookups
         const { commonStandardsProjectService } = await import('./commonStandardsProjectService');
@@ -986,7 +973,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         
         // Process each question and lookup standard descriptions
         const questionsWithStandardDescriptions = await Promise.all(
-          grokResult.allQuestions.map(async (question, index) => {
+          analysisResult.allQuestions.map(async (question, index) => {
             // Update standards with Common Standards API descriptions
             let updatedStandards = question.standards;
             if (question.standards && question.standards.length > 0) {
@@ -1028,8 +1015,8 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
                 grok: {
                   standards: updatedStandards,
                   rigor: question.rigor,
-                  rawResponse: grokResult.rawResponse,
-                  processingTime: grokResult.processingTime,
+                  rawResponse: analysisResult.rawResponse,
+                  processingTime: analysisResult.processingTime,
                   aiEngine: 'grok'
                 }
               }
@@ -1044,7 +1031,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       
       // Fallback: Create individual question entries from the standards found
       console.log('Creating individual questions from detected standards for teacher use');
-      if (grokResult.standards && grokResult.standards.length > 0) {
+      if (analysisResult.standards && analysisResult.standards.length > 0) {
         // Import the commonStandardsProjectService for standard lookups
         const { commonStandardsProjectService } = await import('./commonStandardsProjectService');
         
@@ -1054,7 +1041,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         
         // Process each standard and lookup descriptions
         const questionsWithStandardDescriptions = await Promise.all(
-          grokResult.standards.map(async (standard, index) => {
+          analysisResult.standards.map(async (standard, index) => {
             let standardDescription = standard.description || `Question ${index + 1}: Educational content related to ${standard.code}`;
             
             // Lookup the actual standard description from Common Standards Project API
@@ -1080,9 +1067,9 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
                     ...standard,
                     description: standardDescription
                   }],
-                  rigor: grokResult.rigor,
-                  rawResponse: grokResult.rawResponse,
-                  processingTime: grokResult.processingTime,
+                  rigor: analysisResult.rigor,
+                  rawResponse: analysisResult.rawResponse,
+                  processingTime: analysisResult.processingTime,
                   aiEngine: 'grok'
                 }
               }
@@ -1102,7 +1089,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
           text: "Educational content analysis from uploaded document",
           context: `Document type: ${mimeType}, Content length: ${documentContent.length} chars, Jurisdictions: ${jurisdictions.join(', ')}`,
           aiResults: {
-            grok: grokResult
+            grok: analysisResult
           }
         }]
       };
@@ -2537,7 +2524,7 @@ Analyze ONLY this question and provide the result as a single JSON object follow
       const dynamicPrompt = this.generatePromptWithStandards(focusStandards, jurisdictions);
       
       console.log('Using Grok for document analysis with standards');
-      const grokResult = await this.analyzeGrokWithPrompt(
+      const analysisResult = await this.analyzeGrokWithPrompt(
         `Analyze this educational document content for standards alignment and rigor level.`,
         `Document content: ${documentContent}\n\nDocument type: ${mimeType}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
         jurisdictions,
@@ -2546,8 +2533,8 @@ Analyze ONLY this question and provide the result as a single JSON object follow
       
       // Check if GPT-4o-mini/Grok returned individual questions - parse from raw_response using robust extraction
       let extractedQuestions: QuestionListItem[] | null = null;
-      if (grokResult.rawResponse && grokResult.rawResponse.choices && grokResult.rawResponse.choices[0]) {
-        const rawContent = grokResult.rawResponse.choices[0].message?.content || '';
+      if (analysisResult.rawResponse && analysisResult.rawResponse.choices && analysisResult.rawResponse.choices[0]) {
+        const rawContent = analysisResult.rawResponse.choices[0].message?.content || '';
         console.log('Attempting robust JSON extraction from GPT-4o-mini/Grok response with standards...');
         
         const extractionResult = extractAndValidateQuestionList(rawContent);
@@ -2607,8 +2594,8 @@ Analyze ONLY this question and provide the result as a single JSON object follow
                   justification: question.justification,
                   confidence: 0.85
                 },
-                rawResponse: grokResult.rawResponse,
-                processingTime: grokResult.processingTime,
+                rawResponse: analysisResult.rawResponse,
+                processingTime: analysisResult.processingTime,
                 aiEngine: 'grok'
                 }
               }
@@ -2622,8 +2609,8 @@ Analyze ONLY this question and provide the result as a single JSON object follow
       }
       
       // Check if GPT-4o-mini/Grok returned individual questions in the old JSON format
-      if (grokResult.jsonResponse && grokResult.jsonResponse.problems && Array.isArray(grokResult.jsonResponse.problems)) {
-        console.log(`Creating ${grokResult.jsonResponse.problems.length} individual question entries from JSON response with standards`);
+      if (analysisResult.jsonResponse && analysisResult.jsonResponse.problems && Array.isArray(analysisResult.jsonResponse.problems)) {
+        console.log(`Creating ${analysisResult.jsonResponse.problems.length} individual question entries from JSON response with standards`);
         
         // Import the commonStandardsProjectService for standard lookups
         const { commonStandardsProjectService } = await import('./commonStandardsProjectService');
@@ -2634,7 +2621,7 @@ Analyze ONLY this question and provide the result as a single JSON object follow
         
         // Process each problem and lookup standard descriptions
         const questionsWithStandardDescriptions = await Promise.all(
-          grokResult.jsonResponse.problems.map(async (problem: any) => {
+          analysisResult.jsonResponse.problems.map(async (problem: any) => {
             let standardDescription = problem.standardDescription || `Question ${problem.problemNumber}: ${problem.standardCode}`;
             
             // Lookup the actual standard description from Common Standards Project API
@@ -2669,8 +2656,8 @@ Analyze ONLY this question and provide the result as a single JSON object follow
                     justification: problem.rigorJustification || `${problem.rigorLevel} rigor level based on problem complexity`,
                     confidence: 0.85
                   },
-                  rawResponse: grokResult.rawResponse,
-                  processingTime: grokResult.processingTime,
+                  rawResponse: analysisResult.rawResponse,
+                  processingTime: analysisResult.processingTime,
                   aiEngine: 'grok'
                 }
               }
@@ -2689,7 +2676,7 @@ Analyze ONLY this question and provide the result as a single JSON object follow
           text: "Educational content analysis from uploaded document",
           context: `Document type: ${mimeType}, Content length: ${documentContent.length} chars, Jurisdictions: ${jurisdictions.join(', ')}, Focus Standards: ${focusStandards?.join(', ') || 'None specified'}`,
           aiResults: {
-            grok: grokResult
+            grok: analysisResult
           }
         }]
       };
