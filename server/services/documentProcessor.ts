@@ -20,8 +20,8 @@ export class DocumentProcessor {
     focusStandards?: string[]
   ): Promise<void> {
     try {
-      console.log(`\n🚀 DOCUMENT PROCESSING STARTED: ${documentId}`);
-      console.log(`📄 Processing parameters: callbackUrl=${!!callbackUrl}, focusStandards=${focusStandards?.length || 0}`);
+      // console.log(`\n🚀 DOCUMENT PROCESSING STARTED: ${documentId}`);
+      // console.log(`📄 Processing parameters: callbackUrl=${!!callbackUrl}, focusStandards=${focusStandards?.length || 0}`);
       
       logger.documentProcessing('Starting document processing', {
         documentId,
@@ -62,7 +62,7 @@ export class DocumentProcessor {
       try {
         // Check if file is a PDF and try direct file upload to OpenAI
         if (document.mimeType === 'application/pdf') {
-          console.log(`📄 Attempting OpenAI file upload for PDF: ${document.originalPath}`);
+          // console.log(`📄 Attempting OpenAI file upload for PDF: ${document.originalPath}`);
           
           logger.documentProcessing('Starting OpenAI file upload', {
             documentId,
@@ -71,7 +71,7 @@ export class DocumentProcessor {
           });
           
           uploadedFileId = await aiService.uploadFileToOpenAI(document.originalPath);
-          console.log(`✅ Successfully uploaded PDF to OpenAI. File ID: ${uploadedFileId}`);
+          // console.log(`✅ Successfully uploaded PDF to OpenAI. File ID: ${uploadedFileId}`);
           
           // Use file-based analysis with OpenAI
           logger.documentProcessing('Starting file-based AI analysis', {
@@ -222,12 +222,12 @@ export class DocumentProcessor {
       }
 
       // Store AI analysis results for each question with JSON voting
-      console.log(`\n🔄 PROCESSING ${questionRecords.length} QUESTIONS WITH NEW DIRECT AI PIPELINE`);
+      // console.log(`\n🔄 PROCESSING ${questionRecords.length} QUESTIONS WITH NEW DIRECT AI PIPELINE`);
       const storedAiResponses = [];
       const storedResults = [];
       
       for (const question of questionRecords) {
-        console.log(`📝 About to process question ${question.questionNumber} with NEW PIPELINE`);
+        // console.log(`📝 About to process question ${question.questionNumber} with NEW PIPELINE`);
         const aiResults = await this.storeAIResultsWithJsonVoting(question, question.aiResults);
         if (aiResults) {
           storedAiResponses.push(...(aiResults.aiResponses || []));
@@ -268,7 +268,7 @@ export class DocumentProcessor {
         });
       }
 
-      console.log(`Completed processing for document: ${documentId}`);
+      // console.log(`Completed processing for document: ${documentId}`);
       
       // Cleanup uploaded files after successful processing
       if (uploadedFileId) {

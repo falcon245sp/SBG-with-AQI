@@ -627,7 +627,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTeacherClassrooms(customerUuid: string): Promise<Classroom[]> {
-    console.log('🔍 [DB-QUERY] Fetching teacher classrooms for customerUuid:', customerUuid);
+    // console.log('🔍 [DB-QUERY] Fetching teacher classrooms for customerUuid:', customerUuid);
     
     // Import the explicit projection to ensure camelCase output
     const { classroomSelect } = await import('./dbMapper.js');
@@ -638,17 +638,17 @@ export class DatabaseStorage implements IStorage {
       .where(eq(classrooms.customerUuid, customerUuid))
       .orderBy(classrooms.name);
     
-    console.log('🔍 [DB-QUERY] Database returned classrooms:', {
-      count: results.length,
-      customerUuid,
-      classrooms: results.map(c => ({
-        id: c.id,
-        name: c.name,
-        courseTitle: c.courseTitle,
-        courseConfigurationCompleted: c.courseConfigurationCompleted,
-        sbgEnabled: c.sbgEnabled
-      }))
-    });
+    // console.log('🔍 [DB-QUERY] Database returned classrooms:', {
+    //   count: results.length,
+    //   customerUuid,
+    //   classrooms: results.map(c => ({
+    //     id: c.id,
+    //     name: c.name,
+    //     courseTitle: c.courseTitle,
+    //     courseConfigurationCompleted: c.courseConfigurationCompleted,
+    //     sbgEnabled: c.sbgEnabled
+    //   }))
+    // });
     
     return results;
   }

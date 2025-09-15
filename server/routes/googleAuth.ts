@@ -341,43 +341,43 @@ export async function getUserClassrooms(req: Request, res: Response) {
   try {
     const { user, customerUuid } = await ActiveUserService.requireActiveUserAndCustomerUuid(req);
     
-    console.log('🔍 [CLASSROOMS-API] Fetching classrooms for user:', {
-      userId: user.id,
-      customerUuid,
-      email: user.email
-    });
+    // console.log('🔍 [CLASSROOMS-API] Fetching classrooms for user:', {
+    //   userId: user.id,
+    //   customerUuid,
+    //   email: user.email
+    // });
     
     const classrooms = await storage.getTeacherClassrooms(customerUuid);
     
-    console.log('🔍 [CLASSROOMS-API] Raw database results:', {
-      count: classrooms.length,
-      classrooms: classrooms.map(c => ({
-        id: c.id,
-        name: c.name,
-        courseTitle: c.courseTitle,
-        course_title: c.course_title, // Check both camelCase and snake_case
-        courseConfigurationCompleted: c.courseConfigurationCompleted,
-        course_configuration_completed: c.course_configuration_completed, // Check both formats
-        sbgEnabled: c.sbgEnabled,
-        sbg_enabled: c.sbg_enabled // Check both formats
-      }))
-    });
+    // console.log('🔍 [CLASSROOMS-API] Raw database results:', {
+    //   count: classrooms.length,
+    //   classrooms: classrooms.map(c => ({
+    //     id: c.id,
+    //     name: c.name,
+    //     courseTitle: c.courseTitle,
+    //     course_title: c.course_title, // Check both camelCase and snake_case
+    //     courseConfigurationCompleted: c.courseConfigurationCompleted,
+    //     course_configuration_completed: c.course_configuration_completed, // Check both formats
+    //     sbgEnabled: c.sbgEnabled,
+    //     sbg_enabled: c.sbg_enabled // Check both formats
+    //   }))
+    // });
     
     // Log specifically configured classrooms
     const configuredClassrooms = classrooms.filter(c => c.course_configuration_completed || c.courseConfigurationCompleted);
-    console.log('🔍 [CLASSROOMS-API] Configured classrooms found:', {
-      count: configuredClassrooms.length,
-      configured: configuredClassrooms.map(c => ({
-        name: c.name,
-        courseTitle: c.course_title || c.courseTitle,
-        configured: c.course_configuration_completed || c.courseConfigurationCompleted
-      }))
-    });
+    // console.log('🔍 [CLASSROOMS-API] Configured classrooms found:', {
+    //   count: configuredClassrooms.length,
+    //   configured: configuredClassrooms.map(c => ({
+    //     name: c.name,
+    //     courseTitle: c.course_title || c.courseTitle,
+    //     configured: c.course_configuration_completed || c.courseConfigurationCompleted
+    //   }))
+    // });
     
-    console.log('🔍 [CLASSROOMS-API] Sending response to frontend:', {
-      totalClassrooms: classrooms.length,
-      responseSize: JSON.stringify(classrooms).length
-    });
+    // console.log('🔍 [CLASSROOMS-API] Sending response to frontend:', {
+    //   totalClassrooms: classrooms.length,
+    //   responseSize: JSON.stringify(classrooms).length
+    // });
     
     res.json(classrooms);
   } catch (error) {
