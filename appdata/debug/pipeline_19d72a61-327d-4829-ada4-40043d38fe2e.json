@@ -1,0 +1,595 @@
+{
+  "documentId": "19d72a61-327d-4829-ada4-40043d38fe2e",
+  "customerUuid": "43155b6c-895f-476a-9c4b-1b4446825715",
+  "originalFileSize": 79905,
+  "originalMimeType": "application/pdf",
+  "processingVersion": "two-pass-v1",
+  "createdAt": "2025-09-15T23:06:36.426Z",
+  "dbStorageStarted": "2025-09-15T23:06:47.816Z",
+  "dbStorageCompleted": "2025-09-15T23:06:52.157Z",
+  "dbStoredQuestions": [
+    {
+      "id": "5cf4da3d-91e6-4ee6-9ecc-408c0a9f6b62",
+      "documentId": "19d72a61-327d-4829-ada4-40043d38fe2e",
+      "questionNumber": "1",
+      "questionText": "Solve for �.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:06:47.856Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "A-REI.3",
+              "description": "Standard A-REI.3",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "9a0dec94-dd0d-4f7d-b549-ac28c235c408",
+      "documentId": "19d72a61-327d-4829-ada4-40043d38fe2e",
+      "questionNumber": "2",
+      "questionText": "Solve for �.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:06:47.928Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "A-REI.3",
+              "description": "Standard A-REI.3",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "1ec05613-bfb3-4827-9204-364ac925655e",
+      "documentId": "19d72a61-327d-4829-ada4-40043d38fe2e",
+      "questionNumber": "3",
+      "questionText": "Solve for �.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:06:48.000Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "A-REI.3",
+              "description": "Standard A-REI.3",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "55a48351-7b67-47fe-9dfd-ab146b0b744c",
+      "documentId": "19d72a61-327d-4829-ada4-40043d38fe2e",
+      "questionNumber": "4",
+      "questionText": "Solve for �.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:06:48.072Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "A-REI.3",
+              "description": "Standard A-REI.3",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "dce0d706-8c76-4732-b805-297d1786fc35",
+      "documentId": "19d72a61-327d-4829-ada4-40043d38fe2e",
+      "questionNumber": "5",
+      "questionText": "Solve for �.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:06:48.144Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "A-REI.3",
+              "description": "Standard A-REI.3",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "c4a87a43-e9ec-4cf2-9053-2d3b66e1d3ca",
+      "documentId": "19d72a61-327d-4829-ada4-40043d38fe2e",
+      "questionNumber": "6",
+      "questionText": "Solve for �.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:06:48.217Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "A-REI.3",
+              "description": "Standard A-REI.3",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "e99c9c5c-acaf-48d6-89bb-551871c3cb6c",
+      "documentId": "19d72a61-327d-4829-ada4-40043d38fe2e",
+      "questionNumber": "7",
+      "questionText": "Solve for �.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:06:48.289Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "A-REI.3",
+              "description": "Standard A-REI.3",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "1cb19014-d4b3-46bf-9aa5-f5659eb9c2ea",
+      "documentId": "19d72a61-327d-4829-ada4-40043d38fe2e",
+      "questionNumber": "8",
+      "questionText": "Solve for �.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:06:48.361Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "A-REI.3",
+              "description": "Standard A-REI.3",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "41f76560-4509-4c00-9dca-aa3973bc9a20",
+      "documentId": "19d72a61-327d-4829-ada4-40043d38fe2e",
+      "questionNumber": "9",
+      "questionText": "Solve for �.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:06:48.433Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "A-REI.3",
+              "description": "Standard A-REI.3",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "b9713aa9-cd3e-47d6-8336-28b30972f1be",
+      "documentId": "19d72a61-327d-4829-ada4-40043d38fe2e",
+      "questionNumber": "10",
+      "questionText": "Solve for �.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:06:48.504Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "A-REI.3",
+              "description": "Standard A-REI.3",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "74313a20-c0b0-4dc0-972b-7998064a1564",
+      "documentId": "19d72a61-327d-4829-ada4-40043d38fe2e",
+      "questionNumber": "11",
+      "questionText": "Solve for �.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:06:48.576Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "A-REI.3",
+              "description": "Standard A-REI.3",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "0c4bcc6c-5c88-421a-ad42-6ee4fdfab775",
+      "documentId": "19d72a61-327d-4829-ada4-40043d38fe2e",
+      "questionNumber": "12",
+      "questionText": "Solve for �.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:06:48.648Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "A-REI.3",
+              "description": "Standard A-REI.3",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "8e7fa048-4b54-42aa-a2fd-92939adc5906",
+      "documentId": "19d72a61-327d-4829-ada4-40043d38fe2e",
+      "questionNumber": "13",
+      "questionText": "Solve for �.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:06:48.720Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "A-REI.3",
+              "description": "Standard A-REI.3",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "2da4e89e-113b-4136-932f-5a006d388a34",
+      "documentId": "19d72a61-327d-4829-ada4-40043d38fe2e",
+      "questionNumber": "14",
+      "questionText": "Solve for �.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:06:48.792Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "A-REI.3",
+              "description": "Standard A-REI.3",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "f8d2b1b4-4c3c-471c-9a79-a34966d91fcf",
+      "documentId": "19d72a61-327d-4829-ada4-40043d38fe2e",
+      "questionNumber": "15",
+      "questionText": "Solve for �.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:06:48.864Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "A-REI.3",
+              "description": "Standard A-REI.3",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "c98bb9a6-10af-4990-8d0e-0253c39f6ebf",
+      "documentId": "19d72a61-327d-4829-ada4-40043d38fe2e",
+      "questionNumber": "16",
+      "questionText": "Solve for �.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:06:48.936Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "A-REI.3",
+              "description": "Standard A-REI.3",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "9e82a440-6c1e-4456-a4ee-936c21961f30",
+      "documentId": "19d72a61-327d-4829-ada4-40043d38fe2e",
+      "questionNumber": "17",
+      "questionText": "Solve for �.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:06:49.008Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "A-REI.3",
+              "description": "Standard A-REI.3",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "dd9c8a3b-c530-4ea4-b7b9-4701e21f7a26",
+      "documentId": "19d72a61-327d-4829-ada4-40043d38fe2e",
+      "questionNumber": "18",
+      "questionText": "Solve for �.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:06:49.080Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "A-REI.3",
+              "description": "Standard A-REI.3",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "3680a193-0887-417d-894a-193050575b6a",
+      "documentId": "19d72a61-327d-4829-ada4-40043d38fe2e",
+      "questionNumber": "19",
+      "questionText": "Solve for �.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:06:49.152Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "A-REI.3",
+              "description": "Standard A-REI.3",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "6082a529-9af2-4372-898d-24fc1e0b485f",
+      "documentId": "19d72a61-327d-4829-ada4-40043d38fe2e",
+      "questionNumber": "20",
+      "questionText": "Solve for �.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:06:49.224Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "A-REI.3",
+              "description": "Standard A-REI.3",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    }
+  ],
+  "dbStoredAiResponses": [],
+  "dbStoredResults": [],
+  "dbStorageChecksum": "79b98ca65b5aff3cb6d9ca8711f379d4"
+}

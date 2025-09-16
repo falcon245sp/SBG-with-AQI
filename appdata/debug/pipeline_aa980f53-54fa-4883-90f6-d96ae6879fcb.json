@@ -1,0 +1,537 @@
+{
+  "documentId": "aa980f53-54fa-4883-90f6-d96ae6879fcb",
+  "customerUuid": "43155b6c-895f-476a-9c4b-1b4446825715",
+  "originalFileSize": 113946,
+  "originalMimeType": "application/pdf",
+  "processingVersion": "two-pass-v1",
+  "createdAt": "2025-09-15T23:08:25.615Z",
+  "dbStorageStarted": "2025-09-15T23:08:54.792Z",
+  "dbStorageCompleted": "2025-09-15T23:08:59.272Z",
+  "dbStoredQuestions": [
+    {
+      "id": "28cd0745-1c8e-4c94-a4be-8e3e7f9ae9c1",
+      "documentId": "aa980f53-54fa-4883-90f6-d96ae6879fcb",
+      "questionNumber": "1",
+      "questionText": "Plot the given points on the coordinate plane.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:08:55.284Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "5.G.A.1",
+              "description": "Standard 5.G.A.1",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "0e2a8143-8801-4796-8549-f79d3b6dde61",
+      "documentId": "aa980f53-54fa-4883-90f6-d96ae6879fcb",
+      "questionNumber": "2",
+      "questionText": "Write the ordered pair that names each point.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:08:55.359Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "5.G.A.1",
+              "description": "Standard 5.G.A.1",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "b046204a-e52f-4590-857a-be701726effb",
+      "documentId": "aa980f53-54fa-4883-90f6-d96ae6879fcb",
+      "questionNumber": "3",
+      "questionText": "Complete the table. Then, graph the line.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:08:55.433Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "8.F.A.1",
+              "description": "Standard 8.F.A.1",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "DOK 2",
+            "justification": "Application of concepts or multi-step process",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "1bb51186-5a79-4aac-8e47-d21c5924e1dc",
+      "documentId": "aa980f53-54fa-4883-90f6-d96ae6879fcb",
+      "questionNumber": "4",
+      "questionText": "Complete the table. Then, graph the line.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:08:55.507Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "8.F.A.1",
+              "description": "Standard 8.F.A.1",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "DOK 2",
+            "justification": "Application of concepts or multi-step process",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "97d9a2ef-90ba-4925-8b90-9b05f190223e",
+      "documentId": "aa980f53-54fa-4883-90f6-d96ae6879fcb",
+      "questionNumber": "5",
+      "questionText": "Graph the equation � = −3.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:08:55.580Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "8.F.A.1",
+              "description": "Standard 8.F.A.1",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "b17e1a75-3a19-4a12-a5a3-64c4f2a31543",
+      "documentId": "aa980f53-54fa-4883-90f6-d96ae6879fcb",
+      "questionNumber": "6",
+      "questionText": "Graph the equation � = 1.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:08:55.654Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "8.F.A.1",
+              "description": "Standard 8.F.A.1",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "815206a5-0d23-4660-8d35-07bed4cedd49",
+      "documentId": "aa980f53-54fa-4883-90f6-d96ae6879fcb",
+      "questionNumber": "7",
+      "questionText": "Graph the equation � = 4.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:08:55.730Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "8.F.A.1",
+              "description": "Standard 8.F.A.1",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "9c8a539f-a96f-466f-b8fb-0349754333f4",
+      "documentId": "aa980f53-54fa-4883-90f6-d96ae6879fcb",
+      "questionNumber": "8",
+      "questionText": "Draw a line with the slope � = 5 2 through the point on the graph.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:08:55.804Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "8.EE.B.5",
+              "description": "Standard 8.EE.B.5",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "DOK 2",
+            "justification": "Application of concepts or multi-step process",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "d2d0329a-515d-4460-a87e-107dcb7f95da",
+      "documentId": "aa980f53-54fa-4883-90f6-d96ae6879fcb",
+      "questionNumber": "9",
+      "questionText": "Draw a line with the slope � = −3 through the point on the graph.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:08:55.877Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "8.EE.B.5",
+              "description": "Standard 8.EE.B.5",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "DOK 2",
+            "justification": "Application of concepts or multi-step process",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "cf0bbcf9-d0f1-4d43-a65e-6abf2ae8b120",
+      "documentId": "aa980f53-54fa-4883-90f6-d96ae6879fcb",
+      "questionNumber": "10",
+      "questionText": "Graph the line with the given point and slope.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:08:55.952Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "8.EE.B.5",
+              "description": "Standard 8.EE.B.5",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "DOK 2",
+            "justification": "Application of concepts or multi-step process",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "e7d70712-5952-4d22-ac0b-52dfaa18a485",
+      "documentId": "aa980f53-54fa-4883-90f6-d96ae6879fcb",
+      "questionNumber": "11",
+      "questionText": "Write the equation in �=��+� form. Then, identify the slope and �-intercept.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:08:56.025Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "8.EE.B.6",
+              "description": "Standard 8.EE.B.6",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "DOK 2",
+            "justification": "Application of concepts or multi-step process",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "660d071e-5da6-41bb-a6eb-d10e9996e225",
+      "documentId": "aa980f53-54fa-4883-90f6-d96ae6879fcb",
+      "questionNumber": "12",
+      "questionText": "Identify the slope and �-intercept, then graph.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:08:56.099Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "8.EE.B.5",
+              "description": "Standard 8.EE.B.5",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "DOK 2",
+            "justification": "Application of concepts or multi-step process",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "59695f28-b831-49a9-9747-25be967a7fff",
+      "documentId": "aa980f53-54fa-4883-90f6-d96ae6879fcb",
+      "questionNumber": "13",
+      "questionText": "Identify the slope and �-intercept, then graph.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:08:56.174Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "8.EE.B.5",
+              "description": "Standard 8.EE.B.5",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "DOK 2",
+            "justification": "Application of concepts or multi-step process",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "0f0c495d-4efa-46e2-8d45-2d8bb3c0ace6",
+      "documentId": "aa980f53-54fa-4883-90f6-d96ae6879fcb",
+      "questionNumber": "14",
+      "questionText": "Identify the slope and �-intercept, then graph.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:08:56.247Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "8.EE.B.5",
+              "description": "Standard 8.EE.B.5",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "DOK 2",
+            "justification": "Application of concepts or multi-step process",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "5c239518-441f-461a-a53f-d71994a0dd5e",
+      "documentId": "aa980f53-54fa-4883-90f6-d96ae6879fcb",
+      "questionNumber": "15",
+      "questionText": "Identify the slope and �-intercept, then graph.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:08:56.321Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "8.EE.B.5",
+              "description": "Standard 8.EE.B.5",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "DOK 2",
+            "justification": "Application of concepts or multi-step process",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "7051e19d-d572-49a9-b722-2fc7f7d44ee4",
+      "documentId": "aa980f53-54fa-4883-90f6-d96ae6879fcb",
+      "questionNumber": "16",
+      "questionText": "Graph the inequality � > 2.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:08:56.395Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "8.EE.B.5",
+              "description": "Standard 8.EE.B.5",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "DOK 2",
+            "justification": "Application of concepts or multi-step process",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "f7041f39-d1f7-4c1d-bca7-073a42bdb0fa",
+      "documentId": "aa980f53-54fa-4883-90f6-d96ae6879fcb",
+      "questionNumber": "17",
+      "questionText": "Graph the inequality y ≥ −1.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:08:56.469Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "8.EE.B.5",
+              "description": "Standard 8.EE.B.5",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "DOK 2",
+            "justification": "Application of concepts or multi-step process",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "03945658-73cf-45b1-ba4f-5c30c1245ab2",
+      "documentId": "aa980f53-54fa-4883-90f6-d96ae6879fcb",
+      "questionNumber": "18",
+      "questionText": "Graph the inequality y ≥ 5.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-15T23:08:56.543Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "8.EE.B.5",
+              "description": "Standard 8.EE.B.5",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "DOK 2",
+            "justification": "Application of concepts or multi-step process",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    }
+  ],
+  "dbStoredAiResponses": [],
+  "dbStoredResults": [],
+  "dbStorageChecksum": "9a977a2e8074b55cc1c00dd7eedece4e"
+}
