@@ -1436,18 +1436,53 @@ ${courseContext ? `- Context (optional hint): ${courseContext}` : ""}`
       const course = courseParts.join(" ");
       
       // Get ALLOWED_CODES from CSP API for this jurisdiction/course
-      // For now, we'll need to determine the standard set ID from jurisdictions/course
-      // TODO: This should be passed from the document's configured course
       let allowedCodes: string[] = [];
       
       try {
-        // For testing, try to get Algebra 1 standards if course contains "Algebra"
-        if (course.toLowerCase().includes('algebra')) {
-          // This is a placeholder - in production, the standardSetId should come from document configuration
-          allowedCodes = await generateAllowedCodesForStandardSet('49D22BF3-5E9D-42A3-9DCD-FA3E9B0804F8'); // Example Algebra 1 set ID
+        console.log(`[AIService] Looking up standard set for jurisdiction: "${jurisdiction}", course: "${course}"`);
+        
+        // Step 1: Get all jurisdictions from CSP API
+        const jurisdictions = await commonStandardsProjectService.getJurisdictions();
+        
+        // Step 2: Find the matching jurisdiction
+        const targetJurisdiction = jurisdictions.find(j => 
+          j.title.toLowerCase().includes(jurisdiction.toLowerCase()) ||
+          (jurisdiction === 'CCSS' && (j.title.toLowerCase().includes('common core') || j.title.toLowerCase().includes('ccss')))
+        );
+        
+        if (!targetJurisdiction) {
+          console.log(`[AIService] Could not find jurisdiction matching "${jurisdiction}"`);
+          throw new Error(`Jurisdiction "${jurisdiction}" not found in CSP API`);
         }
+        
+        console.log(`[AIService] Found jurisdiction: ${targetJurisdiction.title} (${targetJurisdiction.id})`);
+        
+        // Step 3: Get standard sets for this jurisdiction
+        const standardSets = await commonStandardsProjectService.getStandardSetsForJurisdiction(targetJurisdiction.id);
+        
+        // Step 4: Find the matching course/standard set
+        const targetStandardSet = standardSets.find(set => 
+          set.title.toLowerCase().includes(course.toLowerCase()) ||
+          (course.toLowerCase().includes('algebra') && set.title.toLowerCase().includes('algebra')) ||
+          (course.toLowerCase().includes('geometry') && set.title.toLowerCase().includes('geometry'))
+        );
+        
+        if (!targetStandardSet) {
+          console.log(`[AIService] Could not find standard set matching course "${course}" in jurisdiction "${targetJurisdiction.title}"`);
+          console.log(`[AIService] Available standard sets: ${standardSets.map(s => s.title).join(', ')}`);
+          throw new Error(`Course "${course}" not found in jurisdiction "${targetJurisdiction.title}"`);
+        }
+        
+        console.log(`[AIService] Found standard set: ${targetStandardSet.title} (${targetStandardSet.id})`);
+        
+        // Step 5: Generate ALLOWED_CODES for this specific standard set
+        allowedCodes = await generateAllowedCodesForStandardSet(targetStandardSet.id);
+        
+        console.log(`[AIService] Generated ${allowedCodes.length} ALLOWED_CODES for ${targetJurisdiction.title} - ${targetStandardSet.title}`);
+        
       } catch (error) {
-        console.log(`[AIService] Could not fetch ALLOWED_CODES, using fallback prompt: ${error}`);
+        console.log(`[AIService] Could not fetch ALLOWED_CODES for "${jurisdiction}" - "${course}": ${error}`);
+        console.log(`[AIService] Falling back to unconstrained prompt`);
       }
       
       // Template with ALLOWED_LIST approach
