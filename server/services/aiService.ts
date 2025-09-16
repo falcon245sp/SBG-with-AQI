@@ -1370,7 +1370,7 @@ ${courseContext ? `- Context (optional hint): ${courseContext}` : ""}`
 ${JSON.stringify(extractedQuestions, null, 2)}
 
 Map each item to the most relevant <jurisdiction> <course> standard and assign rigor.
-CRITICAL: You MUST use <course> standards only.
+CRITICAL: You MUST use <course> standards and only those standards.
 Context: This is a <course> assessment.
 
 Rules:
