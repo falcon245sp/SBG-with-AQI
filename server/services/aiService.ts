@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import Anthropic from '@anthropic-ai/sdk';
 import { logger } from '../utils/logger';
 import { debugLogger } from './debugLogger';
+import { CommonStandardsProjectService } from './commonStandardsProjectService';
 import fs from 'fs';
 import path from 'path';
 
@@ -37,12 +38,83 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY_ENV_VAR || "default_key",
 });
 
+// Initialize Common Standards Project service
+const commonStandardsProjectService = new CommonStandardsProjectService();
+
 // Anti-caching feature flag for testing (prevents ChatGPT from returning cached responses)
 const TESTING_ANTI_CACHE = process.env.TESTING_ANTI_CACHE === 'true';
 
 // Generate nonce for preventing ChatGPT response caching during testing
 function generateNonce(): string {
   return TESTING_ANTI_CACHE ? `[nonce:${Date.now()}]` : '';
+}
+
+// Generate ALLOWED_CODES JSON from CSP API for a specific standard set
+async function generateAllowedCodesForStandardSet(standardSetId: string): Promise<string[]> {
+  try {
+    console.log(`[AIService] Generating ALLOWED_CODES for standard set: ${standardSetId}`);
+    
+    const standards = await commonStandardsProjectService.getStandardsForSet(standardSetId);
+    
+    // Extract only valid standard codes (filter out cluster/domain headers)
+    const allowedCodes = standards
+      .filter(standard => {
+        const code = standard.statementNotation || standard.asnIdentifier;
+        const description = standard.description || '';
+        
+        // Filter out domain/cluster headers and category items
+        if (!code || !description) return false;
+        
+        // Filter out items that are just ID numbers
+        if (/^S?\d+$/.test(code.trim())) return false;
+        
+        // Must contain actual standard designator patterns
+        const hasValidStandardFormat = 
+          /CCSS\..*\.\d+$/.test(code) ||  // Common Core format
+          /^\d*-?[A-Z]{2,3}\d+-\d+$/.test(code) ||  // NGSS format
+          /[A-Z]+\..*\.\d+/.test(code) ||  // State standards
+          /\w+\.\w+\.\d+/.test(code);  // Domain.cluster.standard format
+        
+        if (!hasValidStandardFormat) return false;
+        
+        // Common Core: keep individual standards (ends with numbers)
+        if (code.includes('CCSS') || code.includes('HSA') || code.includes('HSG') || code.includes('HSF')) {
+          return /\.\d+$/.test(code);
+        }
+        
+        // NGSS: keep performance expectations
+        if (code.includes('NGSS') || code.includes('-PS') || code.includes('-LS') || code.includes('-ESS') || code.includes('-ETS')) {
+          return /\d+-\d+$/.test(code);
+        }
+        
+        // Filter out category/domain items in descriptions
+        const isCategory = description.toLowerCase().includes('category') ||
+                          description.toLowerCase().includes('domain') ||
+                          description.toLowerCase().includes('cluster');
+        
+        return !isCategory;
+      })
+      .map(standard => {
+        let code = standard.statementNotation || standard.asnIdentifier;
+        
+        // Clean up CCSS codes by removing verbose prefix
+        if (code.startsWith('CCSS.Math.Content.')) {
+          code = code.replace('CCSS.Math.Content.', '');
+        }
+        
+        return code;
+      })
+      .filter((code, index, array) => array.indexOf(code) === index) // Remove duplicates
+      .sort();
+    
+    console.log(`[AIService] Generated ${allowedCodes.length} ALLOWED_CODES for standard set ${standardSetId}`);
+    return allowedCodes;
+    
+  } catch (error) {
+    console.error(`[AIService] Error generating ALLOWED_CODES for standard set ${standardSetId}:`, error);
+    // Return empty array on error - this will cause OUT_OF_SCOPE results which is better than hallucinated codes
+    return [];
+  }
 }
 
 // GPT-4o-mini compatible JSON schemas for structured output
@@ -1364,14 +1436,58 @@ ${courseContext ? `- Context (optional hint): ${courseContext}` : ""}`
       const [jurisdiction, ...courseParts] = fullStandards.split(" ");
       const course = courseParts.join(" ");
       
-      // Template with dynamic placeholders
-      const promptTemplate = `Given this JSON array of extracted questions:
+      // Get ALLOWED_CODES from CSP API for this jurisdiction/course
+      // For now, we'll need to determine the standard set ID from jurisdictions/course
+      // TODO: This should be passed from the document's configured course
+      let allowedCodes: string[] = [];
+      
+      try {
+        // For testing, try to get Algebra 1 standards if course contains "Algebra"
+        if (course.toLowerCase().includes('algebra')) {
+          // This is a placeholder - in production, the standardSetId should come from document configuration
+          allowedCodes = await generateAllowedCodesForStandardSet('49D22BF3-5E9D-42A3-9DCD-FA3E9B0804F8'); // Example Algebra 1 set ID
+        }
+      } catch (error) {
+        console.log(`[AIService] Could not fetch ALLOWED_CODES, using fallback prompt: ${error}`);
+      }
+      
+      // Template with ALLOWED_LIST approach
+      const promptTemplate = allowedCodes.length > 0 
+        ? `Context:
+- Jurisdiction: ${jurisdiction}
+- Course: ${course}
+- ALLOWED_CODES (JSON array of strings for this course in this jurisdiction):
+${JSON.stringify(allowedCodes)}
+
+Given this JSON array of extracted questions:
+${JSON.stringify(extractedQuestions, null, 2)}
+
+Task:
+For each item, map to the single most relevant standard from ALLOWED_CODES and assign rigor.
+
+Rules:
+- Choose ONLY from ALLOWED_CODES. Do NOT invent or copy in other codes.
+- If nothing fits, set "standard": "OUT_OF_SCOPE".
+- rigor: 1 = recall/procedure, 2 = application, 3 = reasoning/analysis.
+- Use only "instruction_text" for classification (ignore numbers/answers/formatting).
+- Identical or near-identical instruction_text MUST yield the same (standard, rigor).
+
+Output strictly a JSON array with objects in this schema:
+[
+  {
+    "question_number": <int>,
+    "instruction_text": "<string>",
+    "standard": "<one of ALLOWED_CODES or 'OUT_OF_SCOPE'>",
+    "rigor": <1|2|3>
+  }
+]`
+        : `Given this JSON array of extracted questions:
 
 ${JSON.stringify(extractedQuestions, null, 2)}
 
-Map each item to the most relevant <jurisdiction> <course> standard and assign rigor.
-CRITICAL: You MUST use <course> standards and only those standards.
-Context: This is a <course> assessment.
+Map each item to the most relevant ${jurisdiction} ${course} standard and assign rigor.
+CRITICAL: You MUST use ${course} standards and only those standards.
+Context: This is a ${course} assessment.
 
 Rules:
 - Use official codes where applicable (e.g., A-SSE.1, A-REI.3, N-Q.1).
@@ -1568,11 +1684,6 @@ Rules:
   }
 ]`;
 
-      // Replace dynamic placeholders with actual values
-      const finalPrompt = promptTemplate
-        .replace(/<jurisdiction>/g, jurisdiction)
-        .replace(/<course>/g, course);
-      
       const nonce2 = generateNonce();
       const classificationResponse = await (openai as any).responses.create({
         model: "gpt-4o",
@@ -1584,7 +1695,7 @@ Rules:
             content: [
               {
                 type: "input_text",
-                text: finalPrompt
+                text: promptTemplate
               }
             ]
           }
