@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { logger } from '../utils/logger';
 import { debugLogger } from './debugLogger';
 import { commonStandardsProjectService } from './commonStandardsProjectService';
+import { storage } from '../storage';
 import fs from 'fs';
 import path from 'path';
 
@@ -1367,6 +1368,8 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     documentId?: string,
     customerUuid?: string
   ): Promise<any> {
+    console.log(`[AIService] ENTER analyzeTwoPassWithFile - course: "${courseContext}", customer: "${customerUuid}"`);
+    
     const startTime = Date.now();
     const jList = jurisdictions.length ? jurisdictions : ["CCSS Algebra 1"];
 
@@ -1438,14 +1441,24 @@ ${courseContext ? `- Context (optional hint): ${courseContext}` : ""}`
       try {
         console.log(`[AIService] Looking up classroom for course: "${course}", customerUuid: "${customerUuid}"`);
         
-        // Import storage to query database
-        const { storage } = await import('../storage.js');
+        // Find classroom with matching courseTitle and customerUuid using correct method
+        const classrooms = await storage.getTeacherClassrooms(customerUuid);
+        console.log(`[AIService] Found ${classrooms.length} classrooms for customer`);
+        console.log(`[AIService] Available classrooms: ${classrooms.map(c => `"${c.courseTitle || 'Untitled'}" (${c.enabledStandards?.length || 0} standards)`).join(', ')}`);
         
-        // Find classroom with matching courseTitle and customerUuid
-        const classrooms = await storage.getClassroomsByCustomerUuid(customerUuid);
-        const matchingClassroom = classrooms.find(classroom => 
-          classroom.courseTitle && classroom.courseTitle.toLowerCase() === course.toLowerCase()
-        );
+        // If no specific course provided, try to find any classroom with enabled standards
+        let matchingClassroom;
+        if (course === "Unknown Course" && classrooms.length === 1 && classrooms[0].enabledStandards?.length) {
+          // Single classroom with standards - use it
+          matchingClassroom = classrooms[0];
+          course = matchingClassroom.courseTitle || "Default Course";
+          console.log(`[AIService] No course specified, using single classroom: "${course}"`);
+        } else {
+          // Look for exact course match
+          matchingClassroom = classrooms.find(classroom => 
+            classroom.courseTitle && classroom.courseTitle.toLowerCase() === course.toLowerCase()
+          );
+        }
         
         if (matchingClassroom && matchingClassroom.enabledStandards && Array.isArray(matchingClassroom.enabledStandards)) {
           allowedCodes = matchingClassroom.enabledStandards;
