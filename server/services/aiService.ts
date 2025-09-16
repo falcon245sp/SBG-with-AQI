@@ -2,7 +2,7 @@ import OpenAI from "openai";
 import Anthropic from '@anthropic-ai/sdk';
 import { logger } from '../utils/logger';
 import { debugLogger } from './debugLogger';
-import { CommonStandardsProjectService } from './commonStandardsProjectService';
+import { commonStandardsProjectService } from './commonStandardsProjectService';
 import fs from 'fs';
 import path from 'path';
 
@@ -38,8 +38,7 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY_ENV_VAR || "default_key",
 });
 
-// Initialize Common Standards Project service
-const commonStandardsProjectService = new CommonStandardsProjectService();
+// Use imported Common Standards Project service instance
 
 // Anti-caching feature flag for testing (prevents ChatGPT from returning cached responses)
 const TESTING_ANTI_CACHE = process.env.TESTING_ANTI_CACHE === 'true';
@@ -1718,6 +1717,29 @@ Rules:
           standard: "MATH.CONTENT.7.NS.A.1",
           rigor: 2
         } as any];
+      }
+
+      // ENFORCE ALLOWED_CODES constraint: validate output against CSP standards
+      if (allowedCodes.length > 0) {
+        let constraintViolations = 0;
+        parsedResult = parsedResult.map(result => {
+          const isValidStandard = allowedCodes.includes(result.standard) || result.standard === "OUT_OF_SCOPE";
+          if (!isValidStandard) {
+            constraintViolations++;
+            console.log(`⚠️ CONSTRAINT VIOLATION: ChatGPT returned invalid standard "${result.standard}" not in ALLOWED_CODES. Correcting to OUT_OF_SCOPE.`);
+            return {
+              ...result,
+              standard: "OUT_OF_SCOPE"
+            };
+          }
+          return result;
+        });
+        
+        if (constraintViolations > 0) {
+          console.log(`🛡️ ALLOWED_CODES enforcement: Fixed ${constraintViolations} constraint violations`);
+        } else {
+          console.log(`✅ ALLOWED_CODES validation: All ${parsedResult.length} standards are valid`);
+        }
       }
 
       // Final local consistency pass
