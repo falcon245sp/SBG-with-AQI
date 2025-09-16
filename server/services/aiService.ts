@@ -1430,10 +1430,31 @@ ${courseContext ? `- Context (optional hint): ${courseContext}` : ""}`
       // PASS 2 — Classification (Responses API)
       console.log('\n=== PASS 2: CLASSIFICATION ===');
       
-      // Parse jurisdiction and course from jList for dynamic placeholders
-      const fullStandards = jList.join(", ");
-      const [jurisdiction, ...courseParts] = fullStandards.split(" ");
-      const course = courseParts.join(" ");
+      // Parse jurisdiction and course from jList (array format: [jurisdiction, course])
+      let jurisdiction: string;
+      let course: string;
+      
+      if (jList.length >= 2) {
+        // jList format: ["Common Core State Standards", "Algebra 1"]
+        jurisdiction = jList[0];
+        course = jList[1];
+      } else if (jList.length === 1) {
+        // Fallback: try to split single string
+        const parts = jList[0].split(" ");
+        if (parts.length >= 2) {
+          jurisdiction = parts[0];
+          course = parts.slice(1).join(" ");
+        } else {
+          jurisdiction = "CCSS";
+          course = jList[0];
+        }
+      } else {
+        // Default fallback
+        jurisdiction = "CCSS";
+        course = "Algebra 1";
+      }
+      
+      console.log(`[AIService] Parsed from jList: jurisdiction="${jurisdiction}", course="${course}" (from jList: ${JSON.stringify(jList)})`);
       
       // Get ALLOWED_CODES from CSP API for this jurisdiction/course
       let allowedCodes: string[] = [];

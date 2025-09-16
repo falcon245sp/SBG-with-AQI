@@ -1,0 +1,595 @@
+{
+  "documentId": "baf3a066-95b0-4b1f-b468-6fa7ecc5603b",
+  "customerUuid": "43155b6c-895f-476a-9c4b-1b4446825715",
+  "originalFileSize": 85428,
+  "originalMimeType": "application/pdf",
+  "processingVersion": "two-pass-v1",
+  "createdAt": "2025-09-16T04:42:17.021Z",
+  "dbStorageStarted": "2025-09-16T04:42:48.999Z",
+  "dbStorageCompleted": "2025-09-16T04:42:53.778Z",
+  "dbStoredQuestions": [
+    {
+      "id": "317910e3-41b4-4b3d-808b-ef744585a8d2",
+      "documentId": "baf3a066-95b0-4b1f-b468-6fa7ecc5603b",
+      "questionNumber": "1",
+      "questionText": "Complete the prime factorization for the number below.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-16T04:42:49.489Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "6.NS.B.4",
+              "description": "Standard 6.NS.B.4",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "2be4c18b-dd4c-4049-81cd-d883101a431f",
+      "documentId": "baf3a066-95b0-4b1f-b468-6fa7ecc5603b",
+      "questionNumber": "2",
+      "questionText": "Complete the prime factorization for the number below.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-16T04:42:49.562Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "6.NS.B.4",
+              "description": "Standard 6.NS.B.4",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "66f4393c-4122-45c8-a25f-75424dfbe92f",
+      "documentId": "baf3a066-95b0-4b1f-b468-6fa7ecc5603b",
+      "questionNumber": "3",
+      "questionText": "Graph both of your numbers on a number line and then write an inequality to compare the two numbers.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-16T04:42:49.634Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "6.NS.C.7",
+              "description": "Standard 6.NS.C.7",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "DOK 2",
+            "justification": "Application of concepts or multi-step process",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "0152f1c1-00d8-45e3-9aeb-83c689885dc5",
+      "documentId": "baf3a066-95b0-4b1f-b468-6fa7ecc5603b",
+      "questionNumber": "4",
+      "questionText": "Graph both of your numbers on a number line and then write an inequality to compare the two numbers.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-16T04:42:49.706Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "6.NS.C.7",
+              "description": "Standard 6.NS.C.7",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "medium",
+            "dokLevel": "DOK 2",
+            "justification": "Application of concepts or multi-step process",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "13d6613e-d3b1-4059-95d8-744d9dd144ef",
+      "documentId": "baf3a066-95b0-4b1f-b468-6fa7ecc5603b",
+      "questionNumber": "5",
+      "questionText": "Add the two integers.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-16T04:42:49.777Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "7.NS.A.1",
+              "description": "Standard 7.NS.A.1",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "c4608339-eae7-406f-a94e-63efb2d812cd",
+      "documentId": "baf3a066-95b0-4b1f-b468-6fa7ecc5603b",
+      "questionNumber": "6",
+      "questionText": "Add the two integers.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-16T04:42:49.848Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "7.NS.A.1",
+              "description": "Standard 7.NS.A.1",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "d980479f-2e99-4a14-9218-95679275279e",
+      "documentId": "baf3a066-95b0-4b1f-b468-6fa7ecc5603b",
+      "questionNumber": "7",
+      "questionText": "Subtract the two integers.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-16T04:42:49.919Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "7.NS.A.1",
+              "description": "Standard 7.NS.A.1",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "83b79c66-a0f7-42c3-8f34-22ca7bfa710b",
+      "documentId": "baf3a066-95b0-4b1f-b468-6fa7ecc5603b",
+      "questionNumber": "8",
+      "questionText": "Subtract the two integers.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-16T04:42:49.990Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "7.NS.A.1",
+              "description": "Standard 7.NS.A.1",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "c839d4dc-863a-4f3b-ae7a-804b3f70178f",
+      "documentId": "baf3a066-95b0-4b1f-b468-6fa7ecc5603b",
+      "questionNumber": "9",
+      "questionText": "Subtract the two integers.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-16T04:42:50.061Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "7.NS.A.1",
+              "description": "Standard 7.NS.A.1",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "4d04919f-fed0-4091-bf0e-62cb88ca823f",
+      "documentId": "baf3a066-95b0-4b1f-b468-6fa7ecc5603b",
+      "questionNumber": "10",
+      "questionText": "Multiply the two integers.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-16T04:42:50.132Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "7.NS.A.2",
+              "description": "Standard 7.NS.A.2",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "62b5ee4b-4297-4063-8703-920e5f6c72c8",
+      "documentId": "baf3a066-95b0-4b1f-b468-6fa7ecc5603b",
+      "questionNumber": "11",
+      "questionText": "Multiply the two integers.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-16T04:42:50.203Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "7.NS.A.2",
+              "description": "Standard 7.NS.A.2",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "5817ee41-d4ff-4b63-8421-d0a65bd86699",
+      "documentId": "baf3a066-95b0-4b1f-b468-6fa7ecc5603b",
+      "questionNumber": "12",
+      "questionText": "Use the order of operations to solve each problem.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-16T04:42:50.274Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "6.EE.A.2",
+              "description": "Standard 6.EE.A.2",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "6ae50480-eb91-4c43-9b5c-da3e71a9b994",
+      "documentId": "baf3a066-95b0-4b1f-b468-6fa7ecc5603b",
+      "questionNumber": "13",
+      "questionText": "Use the order of operations to solve each problem.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-16T04:42:50.345Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "6.EE.A.2",
+              "description": "Standard 6.EE.A.2",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "97b2f36b-0c0c-40cd-98fb-4425a98bcd32",
+      "documentId": "baf3a066-95b0-4b1f-b468-6fa7ecc5603b",
+      "questionNumber": "14",
+      "questionText": "Use the order of operations to solve each problem.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-16T04:42:50.417Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "6.EE.A.2",
+              "description": "Standard 6.EE.A.2",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "1a0db405-74c8-49db-9524-23af3aae2a25",
+      "documentId": "baf3a066-95b0-4b1f-b468-6fa7ecc5603b",
+      "questionNumber": "15",
+      "questionText": "Use the order of operations to solve each problem.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-16T04:42:50.489Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "6.EE.A.2",
+              "description": "Standard 6.EE.A.2",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "c39ae8d0-0572-4e27-a854-33fa7f157951",
+      "documentId": "baf3a066-95b0-4b1f-b468-6fa7ecc5603b",
+      "questionNumber": "16",
+      "questionText": "Use the order of operations to solve each problem.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-16T04:42:50.560Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "6.EE.A.2",
+              "description": "Standard 6.EE.A.2",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "7bbb0d29-a311-4898-88a4-73256a132c85",
+      "documentId": "baf3a066-95b0-4b1f-b468-6fa7ecc5603b",
+      "questionNumber": "17",
+      "questionText": "Divide the two integers.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-16T04:42:50.631Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "7.NS.A.2",
+              "description": "Standard 7.NS.A.2",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "f496d31c-e924-44fd-a853-452956b66999",
+      "documentId": "baf3a066-95b0-4b1f-b468-6fa7ecc5603b",
+      "questionNumber": "18",
+      "questionText": "Divide the two integers.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-16T04:42:50.702Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "7.NS.A.2",
+              "description": "Standard 7.NS.A.2",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "786184fe-2414-4449-83cd-c5139e3a3ed9",
+      "documentId": "baf3a066-95b0-4b1f-b468-6fa7ecc5603b",
+      "questionNumber": "19",
+      "questionText": "Divide the two integers.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-16T04:42:50.773Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "7.NS.A.2",
+              "description": "Standard 7.NS.A.2",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    },
+    {
+      "id": "07da09d9-f3c7-43c9-a439-a02ae7f1a5f9",
+      "documentId": "baf3a066-95b0-4b1f-b468-6fa7ecc5603b",
+      "questionNumber": "20",
+      "questionText": "Divide the two integers.",
+      "context": "",
+      "questionType": null,
+      "createdAt": "2025-09-16T04:42:50.844Z",
+      "aiResults": {
+        "openai": {
+          "standards": [
+            {
+              "code": "7.NS.A.2",
+              "description": "Standard 7.NS.A.2",
+              "jurisdiction": "Common Core State Standards",
+              "gradeLevel": "9-12",
+              "subject": "Mathematics"
+            }
+          ],
+          "rigor": {
+            "level": "mild",
+            "dokLevel": "DOK 1",
+            "justification": "Basic recall or simple procedure",
+            "confidence": 0.85
+          },
+          "aiEngine": "chatgpt"
+        }
+      }
+    }
+  ],
+  "dbStoredAiResponses": [],
+  "dbStoredResults": [],
+  "dbStorageChecksum": "f270f69c5f36fb23c1aacaf8d9f5edda"
+}
