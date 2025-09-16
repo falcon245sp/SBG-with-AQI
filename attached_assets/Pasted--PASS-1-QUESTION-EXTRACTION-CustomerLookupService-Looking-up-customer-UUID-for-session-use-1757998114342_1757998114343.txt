@@ -1,0 +1,79 @@
+=== PASS 1: QUESTION EXTRACTION ===
+[CustomerLookupService] Looking up customer UUID for session user: 2bc21da9-1ca6-44f6-afe2-a21b449285d7
+[CustomerLookupService] Found customer UUID: 43155b6c-895f-476a-9c4b-1b4446825715 for session user: 2bc21da9-1ca6-44f6-afe2-a21b449285d7
+[Documents] Fetching documents for customer: 43155b6c-895f-476a-9c4b-1b4446825715
+[Documents] Found 1 documents for customer: 43155b6c-895f-476a-9c4b-1b4446825715
+2025-09-16T04:46:21.136Z [INFO] API Request | method=GET, path=/api/documents, statusCode=200, duration=217, requestId=64a34fd318ea810ffe0510b190d7492f, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36, ip=10.83.5.58, sessionId=xN1SpH9mTXejTC89PBEefcvdjD5QQOui
+[CustomerLookupService] Looking up customer UUID for session user: 2bc21da9-1ca6-44f6-afe2-a21b449285d7
+[CustomerLookupService] Found customer UUID: 43155b6c-895f-476a-9c4b-1b4446825715 for session user: 2bc21da9-1ca6-44f6-afe2-a21b449285d7
+[Documents] Fetching documents for customer: 43155b6c-895f-476a-9c4b-1b4446825715
+[Documents] Found 1 documents for customer: 43155b6c-895f-476a-9c4b-1b4446825715
+2025-09-16T04:46:24.131Z [INFO] API Request | method=GET, path=/api/documents, statusCode=200, duration=215, requestId=2311696297a863949b04b11867d7d391, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36, ip=10.83.5.58, sessionId=xN1SpH9mTXejTC89PBEefcvdjD5QQOui
+[CustomerLookupService] Looking up customer UUID for session user: 2bc21da9-1ca6-44f6-afe2-a21b449285d7
+[CustomerLookupService] Found customer UUID: 43155b6c-895f-476a-9c4b-1b4446825715 for session user: 2bc21da9-1ca6-44f6-afe2-a21b449285d7
+[Documents] Fetching documents for customer: 43155b6c-895f-476a-9c4b-1b4446825715
+[Documents] Found 1 documents for customer: 43155b6c-895f-476a-9c4b-1b4446825715
+2025-09-16T04:46:27.122Z [INFO] API Request | method=GET, path=/api/documents, statusCode=200, duration=214, requestId=ec86c602436c20003ae4670950e5f017, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36, ip=10.83.5.58, sessionId=xN1SpH9mTXejTC89PBEefcvdjD5QQOui
+[CustomerLookupService] Looking up customer UUID for session user: 2bc21da9-1ca6-44f6-afe2-a21b449285d7
+[CustomerLookupService] Found customer UUID: 43155b6c-895f-476a-9c4b-1b4446825715 for session user: 2bc21da9-1ca6-44f6-afe2-a21b449285d7
+[Documents] Fetching documents for customer: 43155b6c-895f-476a-9c4b-1b4446825715
+[Documents] Found 1 documents for customer: 43155b6c-895f-476a-9c4b-1b4446825715
+2025-09-16T04:46:30.118Z [INFO] API Request | method=GET, path=/api/documents, statusCode=200, duration=215, requestId=6adb6569174353d8f14bbf58feb4eb62, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36, ip=10.83.5.58, sessionId=xN1SpH9mTXejTC89PBEefcvdjD5QQOui
+[CustomerLookupService] Looking up customer UUID for session user: 2bc21da9-1ca6-44f6-afe2-a21b449285d7
+[CustomerLookupService] Found customer UUID: 43155b6c-895f-476a-9c4b-1b4446825715 for session user: 2bc21da9-1ca6-44f6-afe2-a21b449285d7
+[Documents] Fetching documents for customer: 43155b6c-895f-476a-9c4b-1b4446825715
+[Documents] Found 1 documents for customer: 43155b6c-895f-476a-9c4b-1b4446825715
+2025-09-16T04:46:33.130Z [INFO] API Request | method=GET, path=/api/documents, statusCode=200, duration=214, requestId=da97314cb87e3f664b6a7a1e5a24020d, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36, ip=10.83.5.58, sessionId=xN1SpH9mTXejTC89PBEefcvdjD5QQOui
+[CustomerLookupService] Looking up customer UUID for session user: 2bc21da9-1ca6-44f6-afe2-a21b449285d7
+[CustomerLookupService] Found customer UUID: 43155b6c-895f-476a-9c4b-1b4446825715 for session user: 2bc21da9-1ca6-44f6-afe2-a21b449285d7
+[Documents] Fetching documents for customer: 43155b6c-895f-476a-9c4b-1b4446825715
+[Documents] Found 1 documents for customer: 43155b6c-895f-476a-9c4b-1b4446825715
+2025-09-16T04:46:36.125Z [INFO] API Request | method=GET, path=/api/documents, statusCode=200, duration=216, requestId=3555ae57bf0156e133fe357a73805fdf, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36, ip=10.83.5.58, sessionId=xN1SpH9mTXejTC89PBEefcvdjD5QQOui
+[ExportProcessor] Found 0 pending exports
+[CustomerLookupService] Looking up customer UUID for session user: 2bc21da9-1ca6-44f6-afe2-a21b449285d7
+[CustomerLookupService] Found customer UUID: 43155b6c-895f-476a-9c4b-1b4446825715 for session user: 2bc21da9-1ca6-44f6-afe2-a21b449285d7
+[Documents] Fetching documents for customer: 43155b6c-895f-476a-9c4b-1b4446825715
+[Documents] Found 1 documents for customer: 43155b6c-895f-476a-9c4b-1b4446825715
+2025-09-16T04:46:39.121Z [INFO] API Request | method=GET, path=/api/documents, statusCode=200, duration=216, requestId=672f85c5095dd6ffb7e96eea08cd9339, userAgent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36, ip=10.83.5.58, sessionId=xN1SpH9mTXejTC89PBEefcvdjD5QQOui
+Pass 1 (extraction): ```json
+[
+    { "question_number": 1, "instruction_text": "Complete the prime factorization for the number below." },
+    { "question_number": 2, "instruction_text": "Complete the prime factorization for the number below." },
+    { "question_number": 3, "instruction_text": "Graph both of your numbers on a number line and then write an inequality to compare the two numbers." },
+    { "question_number": 4, "instruction_text": "Graph both of your numbers on a number line and then write an inequality to compare the two numbers." },
+    { "question_number": 5, "instruction_text": "Add the two integers." },
+    { "question_number": 6, "instruction_text": "Add the two integers." },
+    { "question_number": 7, "instruction_text": "Subtract the two integers." },
+    { "question_number": 8, "instruction_text": "Subtract the two integers." },
+    { "question_number": 9, "instruction_text": "Subtract the two integers." },
+    { "question_number": 10, "instruction_text": "Multiply the two integers." },
+    { "question_number": 11, "instruction_text": "Multiply the two integers." },
+    { "question_number": 12, "instruction_text": "Use the order of operations to solve each problem." },
+    { "question_number": 13, "instruction_text": "Use the order of operations to solve each problem." },
+    { "question_number": 14, "instruction_text": "Use the order of operations to solve each problem." },
+    { "question_number": 15, "instruction_text": "Use the order of operations to solve each problem." },
+    { "question_number": 16, "instruction_text": "Use the order of operations to solve each problem." },
+    { "question_number": 17, "instruction_text": "Divide the two integers." },
+    { "question_number": 18, "instruction_text": "Divide the two integers." },
+    { "question_number": 19, "instruction_text": "Divide the two integers." },
+    { "question_number": 20, "instruction_text": "Divide the two integers." }
+]
+```
+=== END PASS 1 ===
+
+
+=== PASS 2: CLASSIFICATION ===
+[AIService] Parsed from jList: jurisdiction="Common", course="Core" (from jList: ["Common Core"])
+[AIService] Looking up standard set for jurisdiction: "Common", course: "Core"
+[CommonStandardsProjectService] Returning 715 cached jurisdictions
+[AIService] Found jurisdiction: Common Career Technical Core (CCTC) (0918E6D0F9114840BF95A0493A245DD8)
+[CommonStandardsProjectService] Returning 2 cached standard sets for jurisdiction 0918E6D0F9114840BF95A0493A245DD8
+[AIService] Could not find standard set matching course "Core" in jurisdiction "Common Career Technical Core (CCTC)"
+[AIService] Available standard sets: Career Technical Education- High School, Career Technical Education- High School
+[AIService] Could not fetch ALLOWED_CODES for "Common" - "Core": Error: Course "Core" not found in jurisdiction "Common Career Technical Core (CCTC)"
+[AIService] Falling back to unconstrained prompt
+[CustomerLookupService] Looking up customer UUID for session user: 2bc21da9-1ca6-44f6-afe2-a21b449285d7
+[CustomerLookupService] Found customer UUID: 43155b6c-895f-476a-9c4b-1b4446825715 for session user: 2bc21da9-1ca6-44f6-afe2-a21b449285d7
+[Documents] Fetching documents for customer: 43155b6c-895f-476a-9c4b-1b4446825715
+[Documents] Found 1 documents for customer: 43155b6c-895f-476a-9c4b-1b4446825715
+2025-09-16T04:46:42.122Z [INFO] API Request | method=GET, path=/api/documents, statusCode=200, duration=217, requestId=bbdef897bdc5
