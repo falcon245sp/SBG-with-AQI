@@ -1430,79 +1430,38 @@ ${courseContext ? `- Context (optional hint): ${courseContext}` : ""}`
       // PASS 2 — Classification (Responses API)
       console.log('\n=== PASS 2: CLASSIFICATION ===');
       
-      // Parse jurisdiction and course from jList (array format: [jurisdiction, course])
-      let jurisdiction: string;
-      let course: string;
-      
-      if (jList.length >= 2) {
-        // jList format: ["Common Core State Standards", "Algebra 1"]
-        jurisdiction = jList[0];
-        course = jList[1];
-      } else if (jList.length === 1) {
-        // Fallback: try to split single string
-        const parts = jList[0].split(" ");
-        if (parts.length >= 2) {
-          jurisdiction = parts[0];
-          course = parts.slice(1).join(" ");
-        } else {
-          jurisdiction = "CCSS";
-          course = jList[0];
-        }
-      } else {
-        // Default fallback
-        jurisdiction = "CCSS";
-        course = "Algebra 1";
-      }
-      
-      console.log(`[AIService] Parsed from jList: jurisdiction="${jurisdiction}", course="${course}" (from jList: ${JSON.stringify(jList)})`);
-      
-      // Get ALLOWED_CODES from CSP API for this jurisdiction/course
+      // Get ALLOWED_CODES from database (classroom's enabledStandards)
       let allowedCodes: string[] = [];
+      let jurisdiction = "CCSS";  // Default for display purposes
+      let course = courseContext || "Unknown Course";
       
       try {
-        console.log(`[AIService] Looking up standard set for jurisdiction: "${jurisdiction}", course: "${course}"`);
+        console.log(`[AIService] Looking up classroom for course: "${course}", customerUuid: "${customerUuid}"`);
         
-        // Step 1: Get all jurisdictions from CSP API
-        const jurisdictions = await commonStandardsProjectService.getJurisdictions();
+        // Import storage to query database
+        const { storage } = await import('../storage.js');
         
-        // Step 2: Find the matching jurisdiction
-        const targetJurisdiction = jurisdictions.find(j => 
-          j.title.toLowerCase().includes(jurisdiction.toLowerCase()) ||
-          (jurisdiction === 'CCSS' && (j.title.toLowerCase().includes('common core') || j.title.toLowerCase().includes('ccss')))
+        // Find classroom with matching courseTitle and customerUuid
+        const classrooms = await storage.getClassroomsByCustomerUuid(customerUuid);
+        const matchingClassroom = classrooms.find(classroom => 
+          classroom.courseTitle && classroom.courseTitle.toLowerCase() === course.toLowerCase()
         );
         
-        if (!targetJurisdiction) {
-          console.log(`[AIService] Could not find jurisdiction matching "${jurisdiction}"`);
-          throw new Error(`Jurisdiction "${jurisdiction}" not found in CSP API`);
+        if (matchingClassroom && matchingClassroom.enabledStandards && Array.isArray(matchingClassroom.enabledStandards)) {
+          allowedCodes = matchingClassroom.enabledStandards;
+          jurisdiction = matchingClassroom.standardsJurisdiction || "CCSS";
+          
+          console.log(`[AIService] Found classroom with ${allowedCodes.length} enabled standards for course "${course}"`);
+          console.log(`[AIService] Standards jurisdiction: ${jurisdiction}`);
+          console.log(`[AIService] Sample enabled standards: ${allowedCodes.slice(0, 5).join(', ')}${allowedCodes.length > 5 ? '...' : ''}`);
+        } else {
+          console.log(`[AIService] Could not find classroom with enabledStandards for course "${course}" and customer ${customerUuid}`);
+          console.log(`[AIService] Available classrooms: ${classrooms.map(c => c.courseTitle || 'Untitled').join(', ')}`);
+          throw new Error(`No configured classroom found for course "${course}"`);
         }
-        
-        console.log(`[AIService] Found jurisdiction: ${targetJurisdiction.title} (${targetJurisdiction.id})`);
-        
-        // Step 3: Get standard sets for this jurisdiction
-        const standardSets = await commonStandardsProjectService.getStandardSetsForJurisdiction(targetJurisdiction.id);
-        
-        // Step 4: Find the matching course/standard set
-        const targetStandardSet = standardSets.find(set => 
-          set.title.toLowerCase().includes(course.toLowerCase()) ||
-          (course.toLowerCase().includes('algebra') && set.title.toLowerCase().includes('algebra')) ||
-          (course.toLowerCase().includes('geometry') && set.title.toLowerCase().includes('geometry'))
-        );
-        
-        if (!targetStandardSet) {
-          console.log(`[AIService] Could not find standard set matching course "${course}" in jurisdiction "${targetJurisdiction.title}"`);
-          console.log(`[AIService] Available standard sets: ${standardSets.map(s => s.title).join(', ')}`);
-          throw new Error(`Course "${course}" not found in jurisdiction "${targetJurisdiction.title}"`);
-        }
-        
-        console.log(`[AIService] Found standard set: ${targetStandardSet.title} (${targetStandardSet.id})`);
-        
-        // Step 5: Generate ALLOWED_CODES for this specific standard set
-        allowedCodes = await generateAllowedCodesForStandardSet(targetStandardSet.id);
-        
-        console.log(`[AIService] Generated ${allowedCodes.length} ALLOWED_CODES for ${targetJurisdiction.title} - ${targetStandardSet.title}`);
         
       } catch (error) {
-        console.log(`[AIService] Could not fetch ALLOWED_CODES for "${jurisdiction}" - "${course}": ${error}`);
+        console.log(`[AIService] Could not fetch ALLOWED_CODES from database for course "${course}": ${error}`);
         console.log(`[AIService] Falling back to unconstrained prompt`);
       }
       
