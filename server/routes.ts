@@ -271,8 +271,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           let enabledStandards: string[] = [];
           if (mapping.selectedCourseId) {
             try {
-              const standards = await commonStandardsProjectService.getStandardsForCourse(mapping.selectedCourseId);
-              enabledStandards = standards.map(standard => standard.code).filter(Boolean);
+              const standards = await commonStandardsProjectService.getStandardsForSet(mapping.selectedCourseId);
+              enabledStandards = standards.map(standard => standard.statementNotation).filter(Boolean);
               console.log('🏫 [STANDARDS-CONFIG] Fetched standards for course:', {
                 courseId: mapping.selectedCourseId,
                 standardsCount: enabledStandards.length
