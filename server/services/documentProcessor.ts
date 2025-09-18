@@ -166,16 +166,43 @@ export class DocumentProcessor {
       // Debug logging: Start DB storage phase
       await debugLogger.logDbStorageStart(documentId);
       
+      // Use canonical analysis format (new unified schema) with fallback to legacy
+      const canonicalQuestions = analysisResults.canonicalAnalysis?.questions ?? analysisResults.questions ?? [];
+      
+      // Validate we have questions to process
+      if (canonicalQuestions.length === 0) {
+        logger.error('No questions found in AI analysis results', {
+          documentId,
+          component: 'DocumentProcessor',
+          operation: 'questionValidation'
+        });
+        console.error(`[DocumentProcessor] AI analysis missing questions - canonical: ${!!analysisResults.canonicalAnalysis}, legacy: ${!!analysisResults.questions}, keys: ${Object.keys(analysisResults).join(', ')}`);
+        throw new Error(`AI analysis failed to extract any questions from document ${documentId}`);
+      }
+      
       const questionRecords = [];
-      for (let i = 0; i < analysisResults.questions.length; i++) {
-        const questionData = analysisResults.questions[i];
+      for (let i = 0; i < canonicalQuestions.length; i++) {
+        const questionData = canonicalQuestions[i];
+        
+        // Handle both canonical and legacy formats
+        const questionText = questionData.questionText || questionData.instruction_text || `Question ${i + 1}`;
+        const context = questionData.context || '';
+        const questionNumber = String(questionData.questionNumber || i + 1);
+        
         const question = await DatabaseWriteService.createQuestion({
           documentId: document.id,
-          questionNumber: String(i + 1), // Use sequential numbering
-          questionText: questionData.instruction_text,
-          context: questionData.context || '',
+          questionNumber, 
+          questionText,
+          context,
         });
-        questionRecords.push({ ...question, aiResults: questionData.aiResults });
+        
+        // Convert canonical format to expected aiResults format for storage
+        const aiResults = questionData.rawAiResults || questionData.aiResults || {
+          standards: questionData.standards || [],
+          rigor: questionData.rigor || { level: 'mild', confidence: 0.8 }
+        };
+        
+        questionRecords.push({ ...question, aiResults });
       }
 
       // Store AI analysis results for each question with direct AI pipeline
