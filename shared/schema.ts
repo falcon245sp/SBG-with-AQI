@@ -649,6 +649,54 @@ export const insertQrSequenceNumberSchema = createInsertSchema(qrSequenceNumbers
   isUsed: true,
 });
 
+// =============================================================================
+// CANONICAL ANALYSIS OUTPUT SCHEMAS
+// =============================================================================
+// These schemas unify all AI analysis results across the system
+// Used by: aiService, documentProcessor, storage layer, UI components
+
+export const CanonicalStandardSchema = z.object({
+  code: z.string(),
+  description: z.string(), 
+  jurisdiction: z.string(),
+  gradeLevel: z.string(),
+  subject: z.string(),
+});
+
+export const CanonicalRigorSchema = z.object({
+  level: z.enum(['mild', 'medium', 'spicy']),
+  dokLevel: z.string(),
+  justification: z.string(),
+  confidence: z.number().min(0).max(1),
+});
+
+export const CanonicalQuestionSchema = z.object({
+  questionNumber: z.number().int().positive(),
+  questionText: z.string(),
+  questionSummary: z.string().optional(), // Brief description for UI
+  context: z.string().optional(),
+  standards: z.array(CanonicalStandardSchema),
+  rigor: CanonicalRigorSchema,
+  rawAiResults: z.record(z.any()).optional(), // Store original AI responses for debugging
+});
+
+export const CanonicalAnalysisOutputSchema = z.object({
+  documentId: z.string(),
+  questions: z.array(CanonicalQuestionSchema),
+  processingMetadata: z.object({
+    analysisMethod: z.string(), // 'two-pass', 'text-fallback', etc.
+    aiEngine: z.string(), // 'openai', 'claude', etc.
+    processingTime: z.number(),
+    timestamp: z.string(),
+  }),
+});
+
+// Type exports for TypeScript
+export type CanonicalStandard = z.infer<typeof CanonicalStandardSchema>;
+export type CanonicalRigor = z.infer<typeof CanonicalRigorSchema>;
+export type CanonicalQuestion = z.infer<typeof CanonicalQuestionSchema>;
+export type CanonicalAnalysisOutput = z.infer<typeof CanonicalAnalysisOutputSchema>;
+
 export const insertGradeSubmissionSchema = createInsertSchema(gradeSubmissions).pick({
   sequenceNumberId: true,
   rubricDocumentId: true,
