@@ -908,7 +908,7 @@ export default function GoogleClassroomIntegration() {
             // Get enabled standards (defaults to all if none explicitly disabled)
             const enabledStandards = cspStandards
               .filter(standard => selectedStandardsMap[standard.id] ?? true)
-              .map(standard => standard.id);
+              .map(standard => standard.code);
             
             // If this is bulk configuration, handle all classrooms in the group
             if (bulkConfiguringClassrooms.length > 0) {
