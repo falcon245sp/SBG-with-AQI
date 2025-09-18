@@ -379,7 +379,20 @@ export async function getUserClassrooms(req: Request, res: Response) {
     //   responseSize: JSON.stringify(classrooms).length
     // });
     
-    res.json(classrooms);
+    // Transform field names from snake_case to camelCase for frontend
+    const transformedClassrooms = classrooms.map(classroom => ({
+      ...classroom,
+      courseTitle: classroom.course_title || classroom.courseTitle,
+      courseConfigurationCompleted: classroom.course_configuration_completed || classroom.courseConfigurationCompleted,
+      sbgEnabled: classroom.sbg_enabled || classroom.sbgEnabled,
+      detectedSubjectArea: classroom.detected_subject_area || classroom.detectedSubjectArea,
+      standardsJurisdiction: classroom.standards_jurisdiction || classroom.standardsJurisdiction,
+      enabledStandards: classroom.enabled_standards || classroom.enabledStandards,
+      classroomConnected: classroom.classroom_connected || classroom.classroomConnected,
+      googleClassroomId: classroom.google_classroom_id || classroom.googleClassroomId
+    }));
+
+    res.json(transformedClassrooms);
   } catch (error) {
     console.error('❌ [CLASSROOMS-API] Error fetching user classrooms:', error);
     res.status(500).json({ error: 'Failed to fetch classrooms' });
