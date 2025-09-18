@@ -1311,29 +1311,8 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
   }
   
 
-  async analyzeChatGPTWithPrompt(
-    questionText: string, 
-    context: string, 
-    jurisdictions: string[], 
-    customPrompt?: string,
-    course?: string
-  ): Promise<AIAnalysisResult> {
-    throw new Error('This method has been removed. Use analyzeTwoPassWithFile() instead - it provides superior ChatGPT Responses API analysis with better accuracy and consistency.');
-  }
 
-  async analyzeChatGPT(questionText: string, context: string, jurisdictions: string[], course?: string): Promise<AIAnalysisResult> {
-    throw new Error('This method has been removed. Use analyzeTwoPassWithFile() instead - it provides superior ChatGPT Responses API analysis with better accuracy and consistency.');
-  }
 
-  async analyzeGPT5WithPrompt(
-    questionText: string, 
-    context: string, 
-    jurisdictions: string[], 
-    customPrompt?: string,
-    course?: string
-  ): Promise<AIAnalysisResult> {
-    throw new Error('This method has been removed. Use analyzeTwoPassWithFile() instead - it provides superior ChatGPT Responses API analysis with better accuracy and consistency.');
-  }
 
 
   async uploadFileToOpenAI(filePath: string, originalFileName?: string, mimeType?: string): Promise<string> {
@@ -1775,24 +1754,24 @@ Rules:
 
       // Get ALLOWED_CODES from database (classroom's enabledStandards) - same logic as file analysis
       let allowedCodes: string[] = [];
-      let jurisdiction = "CCSS";  // Default for display purposes
-      let course = courseContext || "Unknown Course";
+      let textJurisdiction = "CCSS";  // Default for display purposes
+      let textCourse = courseContext || "Unknown Course";
       
       try {
-        console.log(`[AIService] Looking up classroom for course: "${course}", customerUuid: "${customerUuid}"`);
+        console.log(`[AIService] Looking up classroom for course: "${textCourse}", customerUuid: "${customerUuid}"`);
         
         // Get all classrooms for this customer
-        const classrooms = await storage.getClassroomsForCustomer(customerUuid);
+        const classrooms = await storage.getTeacherClassrooms(customerUuid);
         console.log(`[AIService] Found ${classrooms.length} classrooms for customer`);
         
         if (classrooms.length > 0) {
-          const classroomInfo = classrooms.map(c => `"${c.name}" (${(c.enabledStandards || []).length} standards)`);
+          const classroomInfo = classrooms.map((c: any) => `"${c.name}" (${(c.enabledStandards || []).length} standards)`);
           console.log(`[AIService] Available classrooms: ${classroomInfo.join(', ')}`);
         }
         
         // Find classroom that matches the course context and has enabledStandards
-        const matchingClassroom = classrooms.find(classroom => 
-          classroom.name === course && 
+        const matchingClassroom = classrooms.find((classroom: any) => 
+          classroom.name === textCourse && 
           classroom.enabledStandards && 
           Array.isArray(classroom.enabledStandards) && 
           classroom.enabledStandards.length > 0
@@ -1800,20 +1779,20 @@ Rules:
         
         if (matchingClassroom && matchingClassroom.enabledStandards && Array.isArray(matchingClassroom.enabledStandards)) {
           allowedCodes = matchingClassroom.enabledStandards;
-          jurisdiction = matchingClassroom.standardsJurisdiction || "CCSS";
+          textJurisdiction = matchingClassroom.standardsJurisdiction || "CCSS";
           
-          console.log(`[AIService] Found classroom with ${allowedCodes.length} enabled standards for course "${course}"`);
-          console.log(`[AIService] Standards jurisdiction: ${jurisdiction}`);
+          console.log(`[AIService] Found classroom with ${allowedCodes.length} enabled standards for course "${textCourse}"`);
+          console.log(`[AIService] Standards jurisdiction: ${textJurisdiction}`);
           console.log(`[AIService] Sample enabled standards: ${allowedCodes.slice(0, 5).join(', ')}${allowedCodes.length > 5 ? '...' : ''}`);
         } else {
-          console.log(`[AIService] Could not find classroom with enabledStandards for course "${course}" and customer ${customerUuid}`);
+          console.log(`[AIService] Could not find classroom with enabledStandards for course "${textCourse}" and customer ${customerUuid}`);
           if (classrooms.length > 0) {
-            const availableClassrooms = classrooms.map(c => c.name);
+            const availableClassrooms = classrooms.map((c: any) => c.name);
             console.log(`[AIService] Available classrooms: ${availableClassrooms.join(', ')}`);
           }
         }
       } catch (error) {
-        console.log(`[AIService] Could not fetch ALLOWED_CODES from database for course "${course}": ${error}`);
+        console.log(`[AIService] Could not fetch ALLOWED_CODES from database for course "${textCourse}": ${error}`);
       }
       
       if (allowedCodes.length === 0) {
@@ -1869,10 +1848,9 @@ ${extractedText}`
       // PASS 2 — Classification (Responses API)
       console.log('\n=== PASS 2: CLASSIFICATION (TEXT INPUT) ===');
       
-      // Parse jurisdiction and course from jList for dynamic placeholders
-      const fullStandards = jList.join(", ");
-      const [jurisdiction, ...courseParts] = fullStandards.split(" ");
-      const course = courseParts.join(" ");
+      // Use allowedCodes jurisdiction if available, otherwise parse from jList
+      const finalJurisdiction = allowedCodes.length > 0 ? textJurisdiction : jList[0]?.split(' ')[0] || "CCSS";
+      const finalCourse = allowedCodes.length > 0 ? textCourse : jList[0]?.split(' ').slice(1).join(' ') || "Unknown Course";
       
       // Template with dynamic placeholders
       const promptTemplate = `Given this JSON array of extracted questions:
@@ -2039,39 +2017,9 @@ Rules:
     throw new Error('This method has been removed. Use analyzeTwoPassWithFile() instead - it provides superior ChatGPT Responses API analysis with integrated extraction and classification in a single workflow.');
   }
 
-  async analyzeGPT5SingleQuestionWithFile(
-    fileIds: string[], 
-    jurisdictions: string[], 
-    course: string, 
-    questionNumber: number,
-    questionText: string
-  ): Promise<AIAnalysisResult> {
-    throw new Error('This method has been removed. Use analyzeTwoPassWithFile() instead - it provides superior ChatGPT Responses API analysis with better accuracy and consistency.');
-  }
 
-  async analyzeGPT5WithFile(
-    fileIds: string[], 
-    jurisdictions: string[], 
-    course?: string,
-    customPrompt?: string
-  ): Promise<AIAnalysisResult> {
-    throw new Error('This method has been removed. Use analyzeTwoPassWithFile() instead - it provides superior ChatGPT Responses API analysis with better accuracy and consistency.');
-  }
 
-  async analyzeGPT5(
-    questionText: string, 
-    context: string, 
-    jurisdictions: string[], 
-    course?: string,
-    fileIds?: string[]
-  ): Promise<AIAnalysisResult> {
-    throw new Error('This method has been removed. Use analyzeTwoPassWithFile() instead - it provides superior ChatGPT Responses API analysis with better accuracy and consistency.');
-  }
 
-  // Keep existing debugging code for reference but streamline the return
-  async analyzeGPT5_OLD_DEBUG_VERSION(questionText: string, context: string, jurisdictions: string[], course?: string): Promise<AIAnalysisResult> {
-    throw new Error('This method has been removed. Use analyzeTwoPassWithFile() instead - it provides superior ChatGPT Responses API analysis with better accuracy and consistency.');
-  }
 
   private parseNaturalLanguageResponse(content: string): { standards: EducationalStandard[], rigor: RigorAssessment } {
     console.log('=== PARSING RESPONSE (JSON OR NATURAL LANGUAGE) ===');
@@ -2749,10 +2697,26 @@ Rules:
     }
   }
 
-  // Compatibility wrappers for existing method calls (delegates to GPT-4o-mini)
+  // Compatibility wrappers for existing method calls (delegates to canonical two-pass)
   async analyzeGrok(questionText: string, context: string, jurisdictions: string[], course?: string): Promise<AIAnalysisResult> {
-    console.log('Using GPT-4o-mini for analysis (via analyzeGrok compatibility wrapper)');
-    return this.analyzeGPT5(questionText, context, jurisdictions, course);
+    console.log('Using canonical two-pass analysis (via analyzeGrok compatibility wrapper)');
+    // Use text-based analysis since we have extracted text
+    const textAnalysis = await this.analyzeTwoPassWithText(questionText, jurisdictions, course);
+    
+    // Adapt to legacy AIAnalysisResult format for compatibility
+    return {
+      standards: textAnalysis.canonicalAnalysis?.questions.map(q => ({
+        code: q.standard || '',
+        description: `Standard ${q.standard}`,
+        jurisdiction: 'Common Core',
+        gradeLevel: 'Grade 9-12',
+        subject: 'Mathematics'
+      })) || [],
+      rigor: textAnalysis.canonicalAnalysis?.questions[0]?.rigor || { level: 'mild', dokLevel: '1', justification: 'Default rigor', confidence: 0.5 },
+      rawResponse: textAnalysis.rawResponse || {},
+      processingTime: textAnalysis.processingTime || 0,
+      aiEngine: 'canonical-two-pass'
+    };
   }
 
   async analyzeGrokWithPrompt(
@@ -2762,8 +2726,25 @@ Rules:
     customPrompt?: string,
     course?: string
   ): Promise<AIAnalysisResult> {
-    console.log('Using GPT-4o-mini for analysis (via analyzeGrokWithPrompt compatibility wrapper)');
-    return this.analyzeGPT5WithPrompt(questionText, context, jurisdictions, customPrompt, course);
+    console.log('Using canonical two-pass analysis (via analyzeGrokWithPrompt compatibility wrapper)');
+    // Use text-based analysis since we have extracted text
+    const combinedText = `${context}\n\n${questionText}${customPrompt ? '\n\nAdditional context: ' + customPrompt : ''}`;
+    const textAnalysis = await this.analyzeTwoPassWithText(combinedText, jurisdictions, course);
+    
+    // Adapt to legacy AIAnalysisResult format for compatibility
+    return {
+      standards: textAnalysis.canonicalAnalysis?.questions.map(q => ({
+        code: q.standard || '',
+        description: `Standard ${q.standard}`,
+        jurisdiction: 'Common Core', 
+        gradeLevel: 'Grade 9-12',
+        subject: 'Mathematics'
+      })) || [],
+      rigor: textAnalysis.canonicalAnalysis?.questions[0]?.rigor || { level: 'mild', dokLevel: '1', justification: 'Default rigor', confidence: 0.5 },
+      rawResponse: textAnalysis.rawResponse || {},
+      processingTime: textAnalysis.processingTime || 0,
+      aiEngine: 'canonical-two-pass'
+    };
   }
 
   async analyzeQuestion(questionText: string, context: string, jurisdictions: string[], course?: string): Promise<{

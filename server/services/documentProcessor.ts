@@ -166,17 +166,28 @@ export class DocumentProcessor {
       // Debug logging: Start DB storage phase
       await debugLogger.logDbStorageStart(documentId);
       
-      // Use canonical analysis format (new unified schema) with fallback to legacy
-      const canonicalQuestions = analysisResults.canonicalAnalysis?.questions ?? analysisResults.questions ?? [];
+      // Use canonical analysis format (no legacy fallback - all analysis paths must provide canonicalAnalysis)
+      if (!analysisResults.canonicalAnalysis?.questions) {
+        logger.error('AI analysis missing canonicalAnalysis.questions', {
+          documentId,
+          component: 'DocumentProcessor',
+          operation: 'canonicalValidation'
+        });
+        console.error(`[DocumentProcessor] Analysis structure - hasCanonicalAnalysis: ${!!analysisResults.canonicalAnalysis}, keys: ${Object.keys(analysisResults).join(', ')}`);
+        console.error(`[DocumentProcessor] CRITICAL: AI analysis missing canonicalAnalysis.questions - all analysis paths must use canonical schema`);
+        throw new Error(`AI analysis failed: canonicalAnalysis.questions missing for document ${documentId}. This indicates a bug in the analysis pipeline.`);
+      }
+      
+      const canonicalQuestions = analysisResults.canonicalAnalysis.questions;
       
       // Validate we have questions to process
       if (canonicalQuestions.length === 0) {
-        logger.error('No questions found in AI analysis results', {
+        logger.error('No questions found in canonical analysis', {
           documentId,
           component: 'DocumentProcessor',
           operation: 'questionValidation'
         });
-        console.error(`[DocumentProcessor] AI analysis missing questions - canonical: ${!!analysisResults.canonicalAnalysis}, legacy: ${!!analysisResults.questions}, keys: ${Object.keys(analysisResults).join(', ')}`);
+        console.error(`[DocumentProcessor] AI analysis returned empty questions array in canonicalAnalysis`);
         throw new Error(`AI analysis failed to extract any questions from document ${documentId}`);
       }
       
