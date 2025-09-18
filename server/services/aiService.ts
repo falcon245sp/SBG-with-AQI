@@ -1773,6 +1773,53 @@ Rules:
         operation: 'analyzeTwoPassWithText'
       });
 
+      // Get ALLOWED_CODES from database (classroom's enabledStandards) - same logic as file analysis
+      let allowedCodes: string[] = [];
+      let jurisdiction = "CCSS";  // Default for display purposes
+      let course = courseContext || "Unknown Course";
+      
+      try {
+        console.log(`[AIService] Looking up classroom for course: "${course}", customerUuid: "${customerUuid}"`);
+        
+        // Get all classrooms for this customer
+        const classrooms = await storage.getClassroomsForCustomer(customerUuid);
+        console.log(`[AIService] Found ${classrooms.length} classrooms for customer`);
+        
+        if (classrooms.length > 0) {
+          const classroomInfo = classrooms.map(c => `"${c.name}" (${(c.enabledStandards || []).length} standards)`);
+          console.log(`[AIService] Available classrooms: ${classroomInfo.join(', ')}`);
+        }
+        
+        // Find classroom that matches the course context and has enabledStandards
+        const matchingClassroom = classrooms.find(classroom => 
+          classroom.name === course && 
+          classroom.enabledStandards && 
+          Array.isArray(classroom.enabledStandards) && 
+          classroom.enabledStandards.length > 0
+        );
+        
+        if (matchingClassroom && matchingClassroom.enabledStandards && Array.isArray(matchingClassroom.enabledStandards)) {
+          allowedCodes = matchingClassroom.enabledStandards;
+          jurisdiction = matchingClassroom.standardsJurisdiction || "CCSS";
+          
+          console.log(`[AIService] Found classroom with ${allowedCodes.length} enabled standards for course "${course}"`);
+          console.log(`[AIService] Standards jurisdiction: ${jurisdiction}`);
+          console.log(`[AIService] Sample enabled standards: ${allowedCodes.slice(0, 5).join(', ')}${allowedCodes.length > 5 ? '...' : ''}`);
+        } else {
+          console.log(`[AIService] Could not find classroom with enabledStandards for course "${course}" and customer ${customerUuid}`);
+          if (classrooms.length > 0) {
+            const availableClassrooms = classrooms.map(c => c.name);
+            console.log(`[AIService] Available classrooms: ${availableClassrooms.join(', ')}`);
+          }
+        }
+      } catch (error) {
+        console.log(`[AIService] Could not fetch ALLOWED_CODES from database for course "${course}": ${error}`);
+      }
+      
+      if (allowedCodes.length === 0) {
+        console.log(`[AIService] Falling back to unconstrained prompt`);
+      }
+
       // PASS 1 — Extraction (Responses API with input_text)
       console.log('\n=== PASS 1: QUESTION EXTRACTION (TEXT INPUT) ===');
       const extractionResponse = await (openai as any).responses.create({
