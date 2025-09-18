@@ -1624,6 +1624,7 @@ ${JSON.stringify(extractedQuestions, null, 2)}
 
 Map each item to the most relevant ${jurisdiction} ${course} standard and assign rigor.
 CRITICAL: You MUST use ${course} standards and only those standards.
+FALLBACK RULE: If no ${course} standard matches a question, use the standard from the HIGHEST prerequisite course below ${course} level (e.g., for Algebra 1, use middle school standards if needed).
 Context: This is a ${course} assessment.
 
 Rules:
@@ -1859,6 +1860,7 @@ ${JSON.stringify(extractedQuestions, null, 2)}
 
 Map each item to the most relevant <jurisdiction> <course> standard and assign rigor.
 CRITICAL: You MUST use <course> standards only.
+FALLBACK RULE: If no <course> standard matches a question, use the standard from the HIGHEST prerequisite course below <course> level (e.g., for Algebra 1, use middle school standards if needed).
 Context: This is a <course> assessment.
 
 Rules:
