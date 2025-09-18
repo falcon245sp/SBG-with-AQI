@@ -166,6 +166,7 @@ export default function OnboardingStandardsConfiguration() {
     mutationFn: (data: any) => apiRequest('PUT', '/api/user/complete-standards-configuration', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/classrooms'] }); // Invalidate classrooms cache
       toast({
         title: "Configuration Complete!",
         description: "Welcome to Standards Sherpa! Your dashboard is ready.",
