@@ -374,10 +374,17 @@ export async function getUserClassrooms(req: Request, res: Response) {
     //   }))
     // });
     
-    // console.log('🔍 [CLASSROOMS-API] Sending response to frontend:', {
-    //   totalClassrooms: classrooms.length,
-    //   responseSize: JSON.stringify(classrooms).length
-    // });
+    console.log('🔍 [CLASSROOMS-API] Sending response to frontend:', {
+      totalClassrooms: classrooms.length,
+      responseSize: JSON.stringify(classrooms).length,
+      firstClassroomFields: classrooms[0] ? {
+        id: classrooms[0].id,
+        name: classrooms[0].name,
+        courseConfigurationCompleted: classrooms[0].courseConfigurationCompleted,
+        sbgEnabled: classrooms[0].sbgEnabled,
+        hasEnabledStandards: !!classrooms[0].enabledStandards
+      } : null
+    });
     
     res.json(classrooms);
   } catch (error) {
