@@ -50,10 +50,10 @@ export default function OnboardingCheck() {
       standardsConfigurationCompleted
     });
 
-    // If ALL onboarding is complete, go to dashboard
+    // If ALL onboarding is complete, go to course selection first
     if (onboardingCompleted && standardsConfigurationCompleted) {
-      console.log('[OnboardingCheck] Complete onboarding finished, redirecting to dashboard');
-      setLocation('/dashboard');
+      console.log('[OnboardingCheck] Complete onboarding finished, redirecting to course selection');
+      setLocation('/course-selection');
       return;
     }
 
