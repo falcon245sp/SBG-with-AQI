@@ -210,7 +210,7 @@ export class DocumentProcessor {
       
       for (const question of questionRecords) {
         // console.log(`📝 About to process question ${question.questionNumber} with NEW PIPELINE`);
-        await this.storeAIResultsWithJsonVoting(question, question.aiResults);
+        await this.storeCanonicalAIResults(question, question.aiResults);
         // Note: storeAIResultsWithJsonVoting returns void and directly stores results to database
       }
       console.log(`✅ COMPLETED PROCESSING ALL QUESTIONS WITH NEW PIPELINE\n`);
@@ -305,23 +305,11 @@ export class DocumentProcessor {
     }
   }
 
-  private async storeAIResultsWithJsonVoting(question: any, aiResults: any): Promise<void> {
+  private async storeCanonicalAIResults(question: any, aiResults: any): Promise<void> {
     try {
-      console.log(`\n===== DIRECT AI TO DRAFT ANALYSIS =====`);
-      console.log(`Processing AI results for question ${question.id} (${question.questionNumber})`);
+      console.log(`\n===== CANONICAL SCHEMA PROCESSING =====`);
+      console.log(`Processing canonical AI results for question ${question.id} (${question.questionNumber})`);
       console.log(`Question Text: ${question.questionText?.substring(0, 100)}...`);
-      console.log('Raw AI results received:', JSON.stringify(aiResults, null, 2));
-      
-      // Extra debug for first 4 questions (should be MILD)
-      if (parseInt(question.questionNumber) <= 4) {
-        console.log(`\n[MILD CHECK] Question ${question.questionNumber} Raw AI Data:`);
-        if (aiResults.grok?.rigor) {
-          console.log(`[MILD CHECK] - Grok Rigor Raw: ${JSON.stringify(aiResults.grok.rigor)}`);
-        }
-        if (aiResults.claude?.rigor) {
-          console.log(`[MILD CHECK] - Claude Rigor Raw: ${JSON.stringify(aiResults.claude.rigor)}`);
-        }
-      }
       
       // Validate AI result exists  
       const aiResult = aiResults.openai || aiResults.grok || aiResults.claude;
@@ -329,43 +317,48 @@ export class DocumentProcessor {
         throw new Error('No AI analysis result found');
       }
       
-      console.log(`Using AI result from engine: ${aiResult.aiEngine || 'unknown'}`);
-      console.log('Direct AI standards:', JSON.stringify(aiResult.standards));
-      console.log('Direct AI rigor:', JSON.stringify(aiResult.rigor));
+      console.log(`Using AI result from engine: ${aiResult.aiEngine || 'openai'}`);
+      console.log('Canonical AI standards:', JSON.stringify(aiResult.standards));
+      console.log('Canonical AI rigor:', JSON.stringify(aiResult.rigor));
       
-      // Store raw AI response for reference (optional - keep for debugging)
+      // Convert numeric rigor to canonical format
+      let rigorLevel: 'mild' | 'medium' | 'spicy' = 'mild';
+      let rigorConfidence = 0.8;
+      
+      if (aiResult.rigor) {
+        if (typeof aiResult.rigor === 'number') {
+          // Handle numeric rigor (1, 2, 3) from canonical schema
+          rigorLevel = aiResult.rigor === 1 ? 'mild' : aiResult.rigor === 2 ? 'medium' : 'spicy';
+        } else if (typeof aiResult.rigor === 'object' && aiResult.rigor.level) {
+          // Handle object format
+          rigorLevel = aiResult.rigor.level;
+          rigorConfidence = aiResult.rigor.confidence || 0.8;
+        }
+      }
+      
+      // Store raw AI response for reference
       await this.storeIndividualAIResponses(question, { [aiResult.aiEngine || 'openai']: aiResult });
       
-      // NO CONSENSUS - Use AI response directly as DRAFT
+      // Store canonical analysis results
       await DatabaseWriteService.createQuestionResult({
         questionId: question.id,
         consensusStandards: aiResult.standards || [],
-        consensusRigorLevel: aiResult.rigor?.level || 'mild',
-        standardsVotes: {}, // No voting needed
-        rigorVotes: {}, // No voting needed  
-        confidenceScore: (aiResult.rigor?.confidence || 0.8).toString(),
+        consensusRigorLevel: rigorLevel,
+        standardsVotes: {}, // No voting needed with canonical schema
+        rigorVotes: {}, // No voting needed with canonical schema
+        confidenceScore: rigorConfidence.toString(),
       });
       
-      // Extra debug for first 4 questions
-      if (parseInt(question.questionNumber) <= 4) {
-        console.log(`\n[MILD CHECK] Question ${question.questionNumber} DRAFT Analysis (Direct from AI):`);
-        console.log(`[MILD CHECK] - Standards: ${JSON.stringify(aiResult.standards)}`);
-        console.log(`[MILD CHECK] - Rigor Level: ${aiResult.rigor?.level}`);
-        console.log(`[MILD CHECK] - Confidence: ${aiResult.rigor?.confidence}`);
-      }
-      console.log(`===== END DIRECT AI TO DRAFT =====\n`);
+      console.log(`[CANONICAL] Question ${question.questionNumber} stored with rigor: ${rigorLevel}`);
+      console.log(`===== END CANONICAL PROCESSING =====\n`);
       
-      console.log(`Successfully stored DRAFT analysis for question ${question.id} directly from AI response`);
     } catch (error) {
-      console.error(`=== DETAILED ERROR ANALYSIS for question ${question.id} ===`);
-      console.error('Error type:', error instanceof Error ? error.constructor.name : typeof error);
+      console.error(`=== CANONICAL PROCESSING ERROR for question ${question.id} ===`);
       console.error('Error message:', error instanceof Error ? error.message : String(error));
-      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       console.error('Raw AI results structure:', JSON.stringify(aiResults, null, 2));
-      console.error('Question details:', JSON.stringify(question, null, 2));
-      console.error('=== END ERROR ANALYSIS ===');
+      console.error('=== END CANONICAL ERROR ===');
       
-      throw error; // No fallback needed - direct AI storage
+      throw error;
     }
   }
   
