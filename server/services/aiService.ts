@@ -6,6 +6,12 @@ import { commonStandardsProjectService } from './commonStandardsProjectService';
 import { storage } from '../storage';
 import fs from 'fs';
 import path from 'path';
+import type { 
+  CanonicalAnalysisOutput, 
+  CanonicalQuestion, 
+  CanonicalStandard, 
+  CanonicalRigor 
+} from '../../shared/schema';
 
 // Using OpenAI GPT-5-mini model for better analysis results  
 const OPENAI_MODEL = "gpt-5-mini";
@@ -43,6 +49,131 @@ const anthropic = new Anthropic({
 
 // Anti-caching feature flag for testing (prevents ChatGPT from returning cached responses)
 const TESTING_ANTI_CACHE = process.env.TESTING_ANTI_CACHE === 'true';
+
+// =============================================================================
+// CANONICAL FORMAT ADAPTERS
+// =============================================================================
+// These functions convert between legacy AI output formats and the canonical schema
+
+/**
+ * Convert legacy AI standards format to canonical standard format
+ */
+function adaptToCanonicalStandard(legacyStandard: any): CanonicalStandard {
+  return {
+    code: legacyStandard.code || legacyStandard.standard || 'UNKNOWN',
+    description: legacyStandard.description || `Standard ${legacyStandard.code || legacyStandard.standard || 'UNKNOWN'}`,
+    jurisdiction: legacyStandard.jurisdiction || 'UNKNOWN',
+    gradeLevel: legacyStandard.gradeLevel || legacyStandard.grade_level || 'UNKNOWN',
+    subject: legacyStandard.subject || 'UNKNOWN',
+  };
+}
+
+/**
+ * Convert legacy AI rigor format to canonical rigor format
+ */
+function adaptToCanonicalRigor(legacyRigor: any, legacyJustification?: string): CanonicalRigor {
+  // Handle numeric rigor (1/2/3 format from text-based flow)
+  if (typeof legacyRigor === 'number') {
+    const level = legacyRigor === 1 ? 'mild' : legacyRigor === 2 ? 'medium' : 'spicy';
+    return {
+      level,
+      dokLevel: `DOK ${legacyRigor}`,
+      justification: legacyJustification || `Numeric rigor level: ${legacyRigor}`,
+      confidence: 0.8,
+    };
+  }
+  
+  // Handle string rigor format (preserve separate justification field)
+  if (typeof legacyRigor === 'string') {
+    const level = legacyRigor as 'mild' | 'medium' | 'spicy';
+    return {
+      level,
+      dokLevel: level === 'mild' ? 'DOK 1' : level === 'medium' ? 'DOK 2' : 'DOK 3',
+      justification: legacyJustification || `Assigned rigor level: ${level}`,
+      confidence: 0.8,
+    };
+  }
+  
+  // Handle object rigor format
+  return {
+    level: legacyRigor.level || 'mild',
+    dokLevel: legacyRigor.dokLevel || legacyRigor.dok_level || 'DOK 1',
+    justification: legacyRigor.justification || legacyRigor.rigor_justification || legacyJustification || 'No justification provided',
+    confidence: legacyRigor.confidence || 0.8,
+  };
+}
+
+/**
+ * Convert legacy AI question format to canonical question format
+ */
+function adaptToCanonicalQuestion(legacyQuestion: any, index: number): CanonicalQuestion {
+  // Handle standards - could be array or single object
+  let standards: CanonicalStandard[] = [];
+  if (legacyQuestion.standards) {
+    if (Array.isArray(legacyQuestion.standards)) {
+      standards = legacyQuestion.standards.map(adaptToCanonicalStandard);
+    } else {
+      standards = [adaptToCanonicalStandard(legacyQuestion.standards)];
+    }
+  } else if (legacyQuestion.standard) {
+    // Handle single standard field
+    standards = [adaptToCanonicalStandard({ code: legacyQuestion.standard })];
+  }
+
+  // Handle question number - support both snake_case and camelCase, and string numbers
+  let questionNumber = index + 1; // fallback
+  if (legacyQuestion.questionNumber) {
+    questionNumber = typeof legacyQuestion.questionNumber === 'string' ? 
+      parseInt(legacyQuestion.questionNumber, 10) : legacyQuestion.questionNumber;
+  } else if (legacyQuestion.question_number) {
+    questionNumber = typeof legacyQuestion.question_number === 'string' ? 
+      parseInt(legacyQuestion.question_number, 10) : legacyQuestion.question_number;
+  } else if (legacyQuestion.question) {
+    questionNumber = typeof legacyQuestion.question === 'string' ? 
+      parseInt(legacyQuestion.question, 10) : legacyQuestion.question;
+  }
+
+  // Extract separate justification field if present (QUESTION_LIST_SCHEMA pattern)
+  const separateJustification = legacyQuestion.justification;
+
+  return {
+    questionNumber,
+    questionText: legacyQuestion.instruction_text || legacyQuestion.questionText || legacyQuestion.text || 'No question text',
+    questionSummary: legacyQuestion.questionSummary || undefined,
+    context: legacyQuestion.context || undefined,
+    standards,
+    rigor: adaptToCanonicalRigor(legacyQuestion.rigor, separateJustification),
+    rawAiResults: legacyQuestion.aiResults || legacyQuestion.rawAiResults,
+  };
+}
+
+/**
+ * Convert legacy aiService analysis output to canonical format
+ */
+function adaptToCanonicalAnalysisOutput(
+  legacyOutput: any, 
+  documentId: string,
+  analysisMethod: string = 'legacy'
+): CanonicalAnalysisOutput {
+  const questions: CanonicalQuestion[] = [];
+  
+  if (legacyOutput.questions && Array.isArray(legacyOutput.questions)) {
+    for (let i = 0; i < legacyOutput.questions.length; i++) {
+      questions.push(adaptToCanonicalQuestion(legacyOutput.questions[i], i));
+    }
+  }
+
+  return {
+    documentId,
+    questions,
+    processingMetadata: {
+      analysisMethod,
+      aiEngine: legacyOutput.aiEngine || 'openai',
+      processingTime: legacyOutput.processingTime || 0,
+      timestamp: new Date().toISOString(),
+    },
+  };
+}
 
 // Generate nonce for preventing ChatGPT response caching during testing
 function generateNonce(): string {
@@ -1585,7 +1716,8 @@ Rules:
         operation: 'analyzeTwoPassWithFile'
       });
 
-      return {
+      // Legacy format for backward compatibility
+      const legacyResult = {
         questions: normalizedQuestions,
         jsonResponse: parsedResult,
         rawResponse: { pass1: extractionJSON, pass2: classificationJSON },
@@ -1594,6 +1726,15 @@ Rules:
         documentId,
         customerUuid
       };
+
+      // Add canonical format for new consumers
+      legacyResult.canonicalAnalysis = adaptToCanonicalAnalysisOutput(
+        legacyResult,
+        documentId || 'unknown',
+        'two-pass-file'
+      );
+
+      return legacyResult;
 
     } catch (error: any) {
       const processingTime = Date.now() - startTime;
@@ -1783,7 +1924,8 @@ Rules:
         operation: 'analyzeTwoPassWithText'
       });
 
-      return {
+      // Legacy format for backward compatibility
+      const legacyResult = {
         questions: normalizedQuestions,
         jsonResponse: parsedResult,
         rawResponse: { pass1: extractionJSON, pass2: classificationJSON },
@@ -1792,6 +1934,15 @@ Rules:
         documentId,
         customerUuid
       };
+
+      // Add canonical format for new consumers
+      legacyResult.canonicalAnalysis = adaptToCanonicalAnalysisOutput(
+        legacyResult,
+        documentId || 'unknown',
+        'two-pass-text'
+      );
+
+      return legacyResult;
 
     } catch (error: any) {
       const processingTime = Date.now() - startTime;
