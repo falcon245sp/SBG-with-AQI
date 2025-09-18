@@ -1618,21 +1618,30 @@ Output strictly a JSON array with objects in this schema:
     "rigor": <1|2|3>
   }
 ]`
-        : `Given this JSON array of extracted questions:
+        : `You are a curriculum alignment engine.
+
+Primary rule: Use ONLY standards from the specified course (${jurisdiction} ${course}).
+
+If no standard from that course fits:
+- Choose the highest-level standard from the immediate prerequisite course in the same jurisdiction 
+  (e.g., if the course is Algebra 1, prerequisites are from Grade 8 Math; 
+  if the course is Geometry, prerequisites are from Algebra 1).
+- "Highest-level" means the most advanced code within that prerequisite set 
+  that matches the instruction.
+
+Never output codes from unrelated courses or other jurisdictions.
+If absolutely no match exists, use:
+  "standard": "OUT_OF_SCOPE"
+  "rigor": 1
+
+Be consistent: identical instruction_text ⇒ identical (standard, rigor).
+Output JSON only, per the user schema.
+
+Given this JSON array of extracted questions:
 
 ${JSON.stringify(extractedQuestions, null, 2)}
 
-Map each item to the most relevant ${jurisdiction} ${course} standard and assign rigor.
-CRITICAL: You MUST use ${course} standards and only those standards.
-FALLBACK RULE: If no ${course} standard matches a question, use the standard from the HIGHEST prerequisite course below ${course} level (e.g., for Algebra 1, use the highest middle school standards if needed).
-Context: This is a ${course} assessment.
-
-Rules:
-- Use official codes where applicable (e.g., A-SSE.1, A-REI.3, N-Q.1).
-- rigor: 1 = recall/procedure, 2 = application, 3 = reasoning/analysis.
-- Use only the "instruction_text" field for classification.
-- If two instruction_text values are identical or nearly identical, they MUST receive the same standard and rigor.
-- Output strictly a JSON array of objects in this schema:
+Output strictly a JSON array of objects in this schema:
 
 [
   {
@@ -1854,21 +1863,30 @@ ${extractedText}`
       const finalCourse = allowedCodes.length > 0 ? textCourse : jList[0]?.split(' ').slice(1).join(' ') || "Unknown Course";
       
       // Template with dynamic placeholders
-      const promptTemplate = `Given this JSON array of extracted questions:
+      const promptTemplate = `You are a curriculum alignment engine.
+
+Primary rule: Use ONLY standards from the specified course (<jurisdiction> <course>).
+
+If no standard from that course fits:
+- Choose the highest-level standard from the immediate prerequisite course in the same jurisdiction 
+  (e.g., if the course is Algebra 1, prerequisites are from Grade 8 Math; 
+  if the course is Geometry, prerequisites are from Algebra 1).
+- "Highest-level" means the most advanced code within that prerequisite set 
+  that matches the instruction.
+
+Never output codes from unrelated courses or other jurisdictions.
+If absolutely no match exists, use:
+  "standard": "OUT_OF_SCOPE"
+  "rigor": 1
+
+Be consistent: identical instruction_text ⇒ identical (standard, rigor).
+Output JSON only, per the user schema.
+
+Given this JSON array of extracted questions:
 
 ${JSON.stringify(extractedQuestions, null, 2)}
 
-Map each item to the most relevant <jurisdiction> <course> standard and assign rigor.
-CRITICAL: You MUST use <course> standards only.
-FALLBACK RULE: If no <course> standard matches a question, use the standard from the HIGHEST prerequisite course below <course> level (e.g., for Algebra 1, use the highest middle school standards if needed).
-Context: This is a <course> assessment.
-
-Rules:
-- Use official codes where applicable (e.g., A-SSE.1, A-REI.3, N-Q.1).
-- rigor: 1 = recall/procedure, 2 = application, 3 = reasoning/analysis.
-- Use only the "instruction_text" field for classification.
-- If two instruction_text values are identical or nearly identical, they MUST receive the same standard and rigor.
-- Output strictly a JSON array of objects in this schema:
+Output strictly a JSON array of objects in this schema:
 
 [
   {
