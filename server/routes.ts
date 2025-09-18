@@ -267,10 +267,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
             courseConfigurationCompleted: true
           });
           
+          // Fetch standards for the selected course to populate enabledStandards
+          let enabledStandards: string[] = [];
+          if (mapping.selectedCourseId) {
+            try {
+              const standards = await commonStandardsProjectService.getStandardsForCourse(mapping.selectedCourseId);
+              enabledStandards = standards.map(standard => standard.code).filter(Boolean);
+              console.log('🏫 [STANDARDS-CONFIG] Fetched standards for course:', {
+                courseId: mapping.selectedCourseId,
+                standardsCount: enabledStandards.length
+              });
+            } catch (error) {
+              console.error('🏫 [STANDARDS-CONFIG] Error fetching standards for course:', mapping.selectedCourseId, error);
+              // Continue without standards rather than failing the entire configuration
+            }
+          }
+
           await storage.updateClassroom(mapping.classroomId, {
             sbgEnabled: mapping.enableSBG,
             courseTitle: readableCourseName, // ✅ Store readable name instead of technical ID
-            courseConfigurationCompleted: true
+            courseConfigurationCompleted: true,
+            enabledStandards: enabledStandards // ✅ Now populate the standards array
           });
         }
       }
