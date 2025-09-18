@@ -59,7 +59,7 @@ export class DocumentProcessor {
       // Try OpenAI Assistants API for PDF upload (file_ids work with Assistants API, not Chat Completions)
       let analysisResults: any;
       let extractedText: string | undefined;
-      const courseContext = document.courseTitle || undefined;
+      const courseContext = document.courseId || undefined;
       
       try {
         // Upload PDF to OpenAI and use ChatGPT's two-pass method

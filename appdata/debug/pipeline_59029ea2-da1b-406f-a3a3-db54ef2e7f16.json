@@ -1,0 +1,16 @@
+{
+  "documentId": "59029ea2-da1b-406f-a3a3-db54ef2e7f16",
+  "customerUuid": "aa11b727-4b48-4a67-b27e-378ffe5ec447",
+  "originalFileSize": 85428,
+  "originalMimeType": "application/pdf",
+  "processingVersion": "two-pass-v1",
+  "createdAt": "2025-09-18T18:57:44.076Z",
+  "extractedText": "Name ___________________________  Date __________________\n\nIntegers Test – Version 1\n\n1\n\n3\n\n5\n\n7\n\n9\n\nComplete the prime factorization for \nthe number below.\n\n2\n\nComplete the prime factorization for \nthe number below.\n\n90\n\n130\n\nGraph both of your numbers on a \nnumber line and then write an inequality \nto compare the two numbers.\n−7 𝑎𝑎𝑎𝑎𝑎𝑎 − 5\n\nAdd the two integers. \n\n13 + (−6)\n\nSubtract the two integers. \n\nGraph both of your numbers on a \nnumber line and then write an inequality \nto compare the two numbers.\n4 𝑎𝑎𝑎𝑎𝑎𝑎 − 2\n\nAdd the two integers. \n\n(−9) + (−5)\n\nSubtract the two integers. \n\n4\n\n6\n\n8\n\n15 − (−7)\n\n−12 − (−3)\n\nSubtract the two integers. \n\n10\n\nMultiply the two integers.\n\n(−5) − 8\n\n(−6)(−8)\n\n\fName ___________________________  Date __________________\n\nIntegers Test – Version 1\n\n11\n\nMultiply the two integers.\n\n(−15)(4)\n\n12\n\nUse the order of operations to solve \neach problem.\n\n6 9 − 15 + (−2)\n\n13\n\nUse the order of operations to solve \neach problem.\n\n14\n\nUse the order of operations to solve \neach problem.\n\n11 −\n\n24\n6\n\n+ 9 − 3(4)\n\n3(−2)(6 + (−4))\n22\n\n15\n\nUse the order of operations to solve \neach problem.\n\n16\n\nUse the order of operations to solve \neach problem.\n\n82−5(6 − 3)\n\n−4(12 − 14)(6 + 2)\n\n17\n\nDivide the two integers. \n\n18\n\nDivide the two integers. \n\n39 ÷ (−3)\n\n−121\n11\n\n19\n\nDivide the two integers. \n\n20\n\nDivide the two integers. \n\n−96 ÷ (−6)\n\n168\n−7",
+  "extractedTextLength": 1387,
+  "dbStorageCompleted": "2025-09-18T18:58:41.199Z",
+  "dbStoredQuestions": [],
+  "dbStoredAiResponses": [],
+  "dbStoredResults": [],
+  "dbStorageErrorMessage": "Two-pass text analysis (Responses API) failed: Cannot read properties of undefined (reading 'level'). Tip: ensure extractedText is provided and you are using responses.create with { type: \"input_text\", text }.",
+  "dbStorageChecksum": "0fa1342bf2b76ae5a8cd3cb964d576a6"
+}
