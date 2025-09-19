@@ -1617,7 +1617,9 @@ ${courseContext ? `- Context (optional hint): ${courseContext}` : ""}`
 
       let extractedQuestions: Array<{question_number:number; instruction_text:string}>;
       try {
-        extractedQuestions = this.safeParse(extractionJSON);
+        const parsed = this.safeParse(extractionJSON);
+        if (!Array.isArray(parsed)) throw new Error("Parsed data is not an array");
+        extractedQuestions = parsed;
         if (!this.validateExtraction(extractedQuestions)) throw new Error("Invalid extraction schema");
       } catch (e) {
         throw new Error(`Pass 1 extraction invalid JSON: ${(e as Error).message}`);
@@ -1635,7 +1637,8 @@ ${courseContext ? `- Context (optional hint): ${courseContext}` : ""}`
         console.log(`[AIService] Looking up classroom for course: "${course}", customerUuid: "${customerUuid}"`);
         
         // Find classroom with matching courseTitle and customerUuid using correct method
-        const classrooms = await storage.getTeacherClassrooms(customerUuid);
+        const classroomResult = await storage.getTeacherClassrooms(customerUuid ?? 'unknown');
+        const classrooms = Array.isArray(classroomResult) ? classroomResult : [];
         console.log(`[AIService] Found ${classrooms.length} classrooms for customer`);
         console.log(`[AIService] Available classrooms: ${classrooms.map(c => `"${c.courseTitle || 'Untitled'}" (${c.enabledStandards?.length || 0} standards)`).join(', ')}`);
         
@@ -1749,8 +1752,7 @@ ${courseContext ? `- Context (optional hint): ${courseContext}` : ""}`
       const processingTime = Date.now() - startTime;
       logger.error(`[AIService] Two-pass analysis failed`, {
         component: 'AIService',
-        operation: 'analyzeTwoPassWithFile',
-        error: error instanceof Error ? error.message : String(error)
+        operation: 'analyzeTwoPassWithFile'
       });
       // Re-throw with a concise message that pinpoints likely cause
       const msg = error?.message || String(error);
@@ -1791,7 +1793,8 @@ ${courseContext ? `- Context (optional hint): ${courseContext}` : ""}`
         console.log(`[AIService] Looking up classroom for course: "${textCourse}", customerUuid: "${customerUuid}"`);
         
         // Get all classrooms for this customer
-        const classrooms = await storage.getTeacherClassrooms(customerUuid);
+        const classroomResult = await storage.getTeacherClassrooms(customerUuid ?? 'unknown');
+        const classrooms = Array.isArray(classroomResult) ? classroomResult : [];
         console.log(`[AIService] Found ${classrooms.length} classrooms for customer`);
         
         if (classrooms.length > 0) {
@@ -1869,7 +1872,9 @@ ${extractedText}`
 
       let extractedQuestions: Array<{question_number:number; instruction_text:string}>;
       try {
-        extractedQuestions = this.safeParse(extractionJSON);
+        const parsed = this.safeParse(extractionJSON);
+        if (!Array.isArray(parsed)) throw new Error("Parsed data is not an array");
+        extractedQuestions = parsed;
         if (!this.validateExtraction(extractedQuestions)) throw new Error("Invalid extraction schema");
       } catch (e) {
         throw new Error(`Pass 1 extraction invalid JSON: ${(e as Error).message}`);
@@ -1981,8 +1986,7 @@ ${extractedText}`
       const processingTime = Date.now() - startTime;
       logger.error(`[AIService] Two-pass text analysis failed`, {
         component: 'AIService',
-        operation: 'analyzeTwoPassWithText',
-        error: error instanceof Error ? error.message : String(error)
+        operation: 'analyzeTwoPassWithText'
       });
       // Re-throw with a concise message that pinpoints likely cause
       const msg = error?.message || String(error);
