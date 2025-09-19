@@ -553,30 +553,103 @@ Rules:
 - Do not add commentary.
 - Only output the instruction text exactly as written.`;
 
-// Pass 2: Classification Prompt
-const CLASSIFICATION_PROMPT = `You are a curriculum alignment engine.
+// Centralized prompt construction utilities
+const SYSTEM_PROMPTS = {
+  EXTRACTION: "You are an extraction engine that outputs JSON only.",
+  CLASSIFICATION: "You are a curriculum alignment engine. Output JSON only, no commentary.",
+} as const;
 
-Task:
-Given the following JSON object representing a single assessment item, 
-map it to the most relevant {JURISDICTIONS} standard (at the {COURSE} level) 
-and assign rigor (1 = recall, 2 = application, 3 = reasoning).
+const PROMPT_TEMPLATES = {
+  PASS2_CURRICULUM_ENGINE: `You are a curriculum alignment engine.
 
-Rules:
-- Use only the "instruction_text" field for classification.
-- Be consistent: if two instruction_text values are identical or nearly identical, 
-  assign the same standard and rigor.
-- If more than one standard seems possible, choose the most directly assessed one.
+Primary rule: Use ONLY standards from the specified course ({JURISDICTION} {COURSE}).
 
-Output schema:
+If no standard from that course fits:
+- Choose the highest-level standard from the immediate prerequisite course in the same jurisdiction 
+  (e.g., if the course is Algebra 1, prerequisites are from Grade 8 Math; 
+  if the course is Geometry, prerequisites are from Algebra 1).
+- "Highest-level" means the most advanced code within that prerequisite set 
+  that matches the instruction.
+
+Never output codes from unrelated courses or other jurisdictions.
+If absolutely no match exists, use:
+  "standard": "OUT_OF_SCOPE"
+  "rigor": 1
+
+Be consistent: identical instruction_text ⇒ identical (standard, rigor).
+Output JSON only, per the user schema.`,
+
+  JSON_SCHEMA: `[
+  {
+    "question_number": <int>,
+    "instruction_text": "<string>",
+    "standard": "<code>",
+    "rigor": <1|2|3>
+  }
+]`
+} as const;
+
+// Legacy compatibility prompt for Claude analysis functions
+const LEGACY_ANALYSIS_PROMPT = `Analyze this educational content for standards alignment and rigor level.
+
+Task: Map to relevant {JURISDICTIONS} standards for {COURSE} and assign rigor level.
+
+Output JSON format:
 {
-  "question_number": <int>,
-  "instruction_text": "<string>",
-  "standard": "<{JURISDICTIONS} code>",
-  "rigor": <1|2|3>
+  "standards": [{"code": "standard_code", "description": "description", "jurisdiction": "jurisdiction", "gradeLevel": "grade", "subject": "subject"}],
+  "rigor": {"level": "mild|medium|spicy", "dokLevel": "DOK 1-4", "justification": "reasoning", "confidence": 0.8}
 }`;
 
-// Legacy prompt for backward compatibility
-const ANALYSIS_PROMPT = CLASSIFICATION_PROMPT;
+// Utility function to build Pass 2 classification prompts
+function buildClassificationPrompt(
+  extractedQuestions: Array<{question_number: number; instruction_text: string}>,
+  jurisdiction: string,
+  course: string,
+  allowedCodes?: string[]
+): string {
+  if (allowedCodes && allowedCodes.length > 0) {
+    return `Context:
+- Jurisdiction: ${jurisdiction}
+- Course: ${course}
+- ALLOWED_CODES (JSON array of strings for this course in this jurisdiction):
+${JSON.stringify(allowedCodes)}
+
+Given this JSON array of extracted questions:
+${JSON.stringify(extractedQuestions, null, 2)}
+
+Task:
+For each item, map to the single most relevant standard from ALLOWED_CODES and assign rigor.
+
+Rules:
+- Choose ONLY from ALLOWED_CODES. Do NOT invent or copy in other codes.
+- If nothing fits, set "standard": "OUT_OF_SCOPE".
+- rigor: 1 = recall/procedure, 2 = application, 3 = reasoning/analysis.
+- Use only "instruction_text" for classification (ignore numbers/answers/formatting).
+- Identical or near-identical instruction_text MUST yield the same (standard, rigor).
+
+Output strictly a JSON array with objects in this schema:
+[
+  {
+    "question_number": <int>,
+    "instruction_text": "<string>",
+    "standard": "<one of ALLOWED_CODES or 'OUT_OF_SCOPE'>",
+    "rigor": <1|2|3>
+  }
+]`;
+  } else {
+    return PROMPT_TEMPLATES.PASS2_CURRICULUM_ENGINE
+      .replace(/{JURISDICTION}/g, jurisdiction)
+      .replace(/{COURSE}/g, course) + `
+
+Given this JSON array of extracted questions:
+
+${JSON.stringify(extractedQuestions, null, 2)}
+
+Output strictly a JSON array of objects in this schema:
+
+${PROMPT_TEMPLATES.JSON_SCHEMA}`;
+  }
+}
 
 export class AIService {
   // Transform new Grok JSON format to match downstream contracts
@@ -864,13 +937,21 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         // Use the simple proven prompt that worked perfectly with ChatGPT 5.0
         const jurisdictionPriority = customization?.jurisdictionPriority || jurisdictions;
         
-        gpt5Result = await this.analyzeGPT5WithPrompt(
-          `Analyze this educational document (${mimeType}) for standards alignment and rigor level.`,
-          `Document path: ${filePath}. Focus on jurisdictions: ${jurisdictionPriority.join(', ')}. Custom configuration applied.`,
-          jurisdictionPriority,
-          ANALYSIS_PROMPT,
-          course
+        // Use the new two-pass analysis system instead of legacy GPT5 analysis
+        const analysisResult = await this.analyzeTwoPassWithFile(
+          [filePath], // fileIds should be an array
+          jurisdictionPriority, // jurisdictions as string array
+          course,
+          undefined, // documentId
+          'anonymous' // customerUuid - should be passed from calling code
         );
+        gpt5Result = {
+          standards: [],
+          rigor: { level: 'medium', dokLevel: 'DOK 2', justification: 'Analyzed with two-pass system', confidence: 0.8 },
+          rawResponse: analysisResult,
+          processingTime: 0,
+          aiEngine: 'openai-two-pass'
+        };
         console.log('✅ GPT-5 analysis with custom configuration successful');
       } catch (error) {
         console.error('⚠️ GPT-5 analysis with custom configuration failed, falling back to Grok:', error);
@@ -1024,11 +1105,13 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       
       // Use GPT-5-mini for analysis
       console.log(`Analyzing with ${OPENAI_MODEL}...`);
-      const analysisResult = await this.analyzeGPT5(
-        `Analyze this educational document content for standards alignment and rigor level.`,
-        `Document content: ${documentContent}\n\nDocument type: ${mimeType}. Focus on jurisdictions: ${jurisdictions.join(', ')}`,
+      // Use two-pass analysis with text content instead of non-existent analyzeGPT5
+      const analysisResult = await this.analyzeTwoPassWithText(
+        documentContent,
         jurisdictions,
-        course
+        course || 'Unknown Course',
+        undefined, // documentId
+        'anonymous' // customerUuid - should be passed from calling code
       );
       console.log(`✅ ${OPENAI_MODEL} analysis completed successfully`);
       
@@ -1184,7 +1267,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         
         // Process each question and lookup standard descriptions
         const questionsWithStandardDescriptions = await Promise.all(
-          analysisResult.allQuestions.map(async (question, index) => {
+          analysisResult.allQuestions.map(async (question: any, index: number) => {
             // Update standards with Common Standards API descriptions
             let updatedStandards = question.standards;
             if (question.standards && question.standards.length > 0) {
@@ -1252,7 +1335,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         
         // Process each standard and lookup descriptions
         const questionsWithStandardDescriptions = await Promise.all(
-          analysisResult.standards.map(async (standard, index) => {
+          analysisResult.standards.map(async (standard: any, index: number) => {
             let standardDescription = standard.description || `Question ${index + 1}: Educational content related to ${standard.code}`;
             
             // Lookup the actual standard description from Common Standards Project API
@@ -1588,80 +1671,17 @@ ${courseContext ? `- Context (optional hint): ${courseContext}` : ""}`
         console.log(`[AIService] Falling back to unconstrained prompt`);
       }
       
-      // Template with ALLOWED_LIST approach
-      const promptTemplate = allowedCodes.length > 0 
-        ? `Context:
-- Jurisdiction: ${jurisdiction}
-- Course: ${course}
-- ALLOWED_CODES (JSON array of strings for this course in this jurisdiction):
-${JSON.stringify(allowedCodes)}
+      // Use centralized prompt builder
+      const promptTemplate = buildClassificationPrompt(extractedQuestions, jurisdiction, course, allowedCodes);
 
-Given this JSON array of extracted questions:
-${JSON.stringify(extractedQuestions, null, 2)}
-
-Task:
-For each item, map to the single most relevant standard from ALLOWED_CODES and assign rigor.
-
-Rules:
-- Choose ONLY from ALLOWED_CODES. Do NOT invent or copy in other codes.
-- If nothing fits, set "standard": "OUT_OF_SCOPE".
-- rigor: 1 = recall/procedure, 2 = application, 3 = reasoning/analysis.
-- Use only "instruction_text" for classification (ignore numbers/answers/formatting).
-- Identical or near-identical instruction_text MUST yield the same (standard, rigor).
-
-Output strictly a JSON array with objects in this schema:
-[
-  {
-    "question_number": <int>,
-    "instruction_text": "<string>",
-    "standard": "<one of ALLOWED_CODES or 'OUT_OF_SCOPE'>",
-    "rigor": <1|2|3>
-  }
-]`
-        : `You are a curriculum alignment engine.
-
-Primary rule: Use ONLY standards from the specified course (${jurisdiction} ${course}).
-
-If no standard from that course fits:
-- Choose the highest-level standard from the immediate prerequisite course in the same jurisdiction 
-  (e.g., if the course is Algebra 1, prerequisites are from Grade 8 Math; 
-  if the course is Geometry, prerequisites are from Algebra 1).
-- "Highest-level" means the most advanced code within that prerequisite set 
-  that matches the instruction.
-
-Never output codes from unrelated courses or other jurisdictions.
-If absolutely no match exists, use:
-  "standard": "OUT_OF_SCOPE"
-  "rigor": 1
-
-Be consistent: identical instruction_text ⇒ identical (standard, rigor).
-Output JSON only, per the user schema.
-
-Given this JSON array of extracted questions:
-
-${JSON.stringify(extractedQuestions, null, 2)}
-
-Output strictly a JSON array of objects in this schema:
-
-[
-  {
-    "question_number": <int>,
-    "instruction_text": "<string>",
-    "standard": "<code>",
-    "rigor": <1|2|3>
-  }
-]`;
-
-      // Replace dynamic placeholders with actual values
-      const finalPrompt = promptTemplate
-        .replace(/<jurisdiction>/g, jurisdiction)
-        .replace(/<course>/g, course);
+      // Prompt is already finalized by buildClassificationPrompt
+      const finalPrompt = promptTemplate;
       
       const classificationResponse = await (openai as any).responses.create({
         model: "gpt-4o",
         temperature: 0.0,
         input: [
-          { role: "system", content: "You are a curriculum alignment engine. Output JSON only, no commentary." },
+          { role: "system", content: SYSTEM_PROMPTS.CLASSIFICATION },
           {
             role: "user",
             content: [
@@ -1815,7 +1835,7 @@ Output strictly a JSON array of objects in this schema:
         model: "gpt-4o",
         temperature: 0.0,
         input: [
-          { role: "system", content: "You are an extraction engine that outputs JSON only." },
+          { role: "system", content: SYSTEM_PROMPTS.EXTRACTION },
           {
             role: "user",
             content: [
@@ -1862,47 +1882,15 @@ ${extractedText}`
       const finalJurisdiction = allowedCodes.length > 0 ? textJurisdiction : jList[0]?.split(' ')[0] || "CCSS";
       const finalCourse = allowedCodes.length > 0 ? textCourse : jList[0]?.split(' ').slice(1).join(' ') || "Unknown Course";
       
-      // Template with dynamic placeholders
-      const promptTemplate = `You are a curriculum alignment engine.
-
-Primary rule: Use ONLY standards from the specified course (<jurisdiction> <course>).
-
-If no standard from that course fits:
-- Choose the highest-level standard from the immediate prerequisite course in the same jurisdiction 
-  (e.g., if the course is Algebra 1, prerequisites are from Grade 8 Math; 
-  if the course is Geometry, prerequisites are from Algebra 1).
-- "Highest-level" means the most advanced code within that prerequisite set 
-  that matches the instruction.
-
-Never output codes from unrelated courses or other jurisdictions.
-If absolutely no match exists, use:
-  "standard": "OUT_OF_SCOPE"
-  "rigor": 1
-
-Be consistent: identical instruction_text ⇒ identical (standard, rigor).
-Output JSON only, per the user schema.
-
-Given this JSON array of extracted questions:
-
-${JSON.stringify(extractedQuestions, null, 2)}
-
-Output strictly a JSON array of objects in this schema:
-
-[
-  {
-    "question_number": <int>,
-    "instruction_text": "<string>",
-    "standard": "<code>",
-    "rigor": <1|2|3>
-  }
-]`;
+      // Use centralized prompt builder
+      const promptTemplate = buildClassificationPrompt(extractedQuestions, finalJurisdiction, finalCourse, allowedCodes);
 
       const nonce2 = generateNonce();
       const classificationResponse = await (openai as any).responses.create({
         model: "gpt-4o",
         temperature: 0.0,
         input: [
-          { role: "system", content: `You are a curriculum alignment engine. Output JSON only, no commentary. ${nonce2}` },
+          { role: "system", content: `${SYSTEM_PROMPTS.CLASSIFICATION} ${nonce2}` },
           {
             role: "user",
             content: [
@@ -2450,7 +2438,7 @@ Output strictly a JSON array of objects in this schema:
     course?: string
   ): Promise<AIAnalysisResult> {
     const startTime = Date.now();
-    const basePrompt = customPrompt || ANALYSIS_PROMPT;
+    const basePrompt = customPrompt || LEGACY_ANALYSIS_PROMPT;
     const prompt = basePrompt.replace('{JURISDICTIONS}', jurisdictions.join(' and ')).replace('{COURSE}', course || 'General Course');
     
     try {
@@ -2486,7 +2474,7 @@ Output strictly a JSON array of objects in this schema:
     const startTime = Date.now();
     
     try {
-      const prompt = ANALYSIS_PROMPT.replace('{JURISDICTIONS}', jurisdictions.join(' and ')).replace('{COURSE}', course || 'General Course');
+      const prompt = LEGACY_ANALYSIS_PROMPT.replace('{JURISDICTIONS}', jurisdictions.join(' and ')).replace('{COURSE}', course || 'General Course');
       const response = await anthropic.messages.create({
         max_tokens: 1024,
         messages: [
@@ -2725,7 +2713,7 @@ Output strictly a JSON array of objects in this schema:
     
     // Adapt to legacy AIAnalysisResult format for compatibility
     return {
-      standards: textAnalysis.canonicalAnalysis?.questions.map(q => ({
+      standards: textAnalysis.canonicalAnalysis?.questions.map((q: any) => ({
         code: q.standard || '',
         description: `Standard ${q.standard}`,
         jurisdiction: 'Common Core',
@@ -2753,7 +2741,7 @@ Output strictly a JSON array of objects in this schema:
     
     // Adapt to legacy AIAnalysisResult format for compatibility
     return {
-      standards: textAnalysis.canonicalAnalysis?.questions.map(q => ({
+      standards: textAnalysis.canonicalAnalysis?.questions.map((q: any) => ({
         code: q.standard || '',
         description: `Standard ${q.standard}`,
         jurisdiction: 'Common Core', 
