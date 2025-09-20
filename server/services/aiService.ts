@@ -1519,7 +1519,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
 
   // Helper function to normalize results with aiResults.openai format for document processor compatibility
   private normalizeToAiResultsFormat(parsedResult: Array<{questionNumber:number; instructionText:string; standard:string; rigor:1|2|3}>): Array<{questionNumber:number; instructionText:string; aiResults: any}> {
-    return parsedResult.map(item => {
+    return parsedResult.map((item, index) => {
       // Convert rigor level to DOK and rigor description
       const rigorMap = {
         1: { level: 'mild' as const, dokLevel: 'DOK 1', justification: 'Basic recall or simple procedure' },
@@ -1527,7 +1527,21 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
         3: { level: 'spicy' as const, dokLevel: 'DOK 3', justification: 'Strategic thinking, reasoning, or complex problem solving' }
       };
 
-      const rigorInfo = rigorMap[item.rigor] || rigorMap[2]; // Default to medium if unexpected value
+      // Ensure rigor is a number for proper object key lookup
+      const rigorKey = typeof item.rigor === 'string' ? parseInt(item.rigor, 10) : item.rigor;
+      const validRigorKey = [1, 2, 3].includes(rigorKey) ? rigorKey : 2; // Default to medium
+      
+      const rigorInfo = rigorMap[validRigorKey as keyof typeof rigorMap];
+      
+      if (!rigorInfo) {
+        console.error(`[ERROR] rigorInfo is undefined for rigor: ${item.rigor} (${typeof item.rigor}) -> ${validRigorKey}`);
+        // Fallback to medium rigor
+        const fallbackRigor = rigorMap[2];
+        if (!fallbackRigor) {
+          throw new Error(`Critical error: rigorMap[2] is undefined - this should never happen`);
+        }
+        console.warn(`[WARN] Using fallback medium rigor for item ${index}`);
+      }
 
       return {
         questionNumber: item.questionNumber,
@@ -1542,9 +1556,9 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
               subject: "Mathematics"
             }],
             rigor: {
-              level: rigorInfo.level,
-              dokLevel: rigorInfo.dokLevel,
-              justification: rigorInfo.justification,
+              level: (rigorInfo || rigorMap[2]).level,
+              dokLevel: (rigorInfo || rigorMap[2]).dokLevel,
+              justification: (rigorInfo || rigorMap[2]).justification,
               confidence: 0.85
             },
             aiEngine: 'chatgpt'
