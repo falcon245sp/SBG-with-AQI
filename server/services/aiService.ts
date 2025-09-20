@@ -180,6 +180,24 @@ function generateNonce(): string {
   return TESTING_ANTI_CACHE ? `[nonce:${Date.now()}]` : '';
 }
 
+// Convert snake_case AI responses to camelCase for TypeScript consistency
+function convertSnakeToCamel(obj: any): any {
+  if (Array.isArray(obj)) {
+    return obj.map(convertSnakeToCamel);
+  }
+  
+  if (obj && typeof obj === 'object') {
+    const converted: any = {};
+    for (const key in obj) {
+      const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+      converted[camelKey] = convertSnakeToCamel(obj[key]);
+    }
+    return converted;
+  }
+  
+  return obj;
+}
+
 // Generate ALLOWED_CODES JSON from CSP API for a specific standard set
 async function generateAllowedCodesForStandardSet(standardSetId: string): Promise<string[]> {
   try {
@@ -576,13 +594,13 @@ If absolutely no match exists, use:
   "standard": "OUT_OF_SCOPE"
   "rigor": 1
 
-Be consistent: identical instruction_text ⇒ identical (standard, rigor).
+Be consistent: identical instructionText ⇒ identical (standard, rigor).
 Output JSON only, per the user schema.`,
 
   JSON_SCHEMA: `[
   {
-    "question_number": <int>,
-    "instruction_text": "<string>",
+    "questionNumber": <int>,
+    "instructionText": "<string>",
     "standard": "<code>",
     "rigor": <1|2|3>
   }
@@ -602,7 +620,7 @@ Output JSON format:
 
 // Utility function to build Pass 2 classification prompts
 function buildClassificationPrompt(
-  extractedQuestions: Array<{question_number: number; instruction_text: string}>,
+  extractedQuestions: Array<{questionNumber: number; instructionText: string}>,
   jurisdiction: string,
   course: string,
   allowedCodes?: string[]
@@ -630,14 +648,14 @@ Rules:
     that matches the instruction.
 - If absolutely no match exists, set "standard": "OUT_OF_SCOPE".
 - rigor: 1 = recall/procedure, 2 = application, 3 = reasoning/analysis.
-- Use only "instruction_text" for classification (ignore numbers/answers/formatting).
-- Identical or near-identical instruction_text MUST yield the same (standard, rigor).
+- Use only "instructionText" for classification (ignore numbers/answers/formatting).
+- Identical or near-identical instructionText MUST yield the same (standard, rigor).
 
 Output strictly a JSON array with objects in this schema:
 [
   {
-    "question_number": <int>,
-    "instruction_text": "<string>",
+    "questionNumber": <int>,
+    "instructionText": "<string>",
     "standard": "<one of ALLOWED_CODES or 'OUT_OF_SCOPE'>",
     "rigor": <1|2|3>
   }
@@ -1465,28 +1483,28 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
     return JSON.parse(this.stripFences(s));
   }
 
-  private validateExtraction(arr: any): arr is Array<{question_number:number; instruction_text:string}> {
+  private validateExtraction(arr: any): arr is Array<{questionNumber:number; instructionText:string}> {
     return Array.isArray(arr) && arr.every(
-      (o) => o && typeof o.question_number === "number" && typeof o.instruction_text === "string" && o.instruction_text.trim().length > 0
+      (o) => o && typeof o.questionNumber === "number" && typeof o.instructionText === "string" && o.instructionText.trim().length > 0
     );
   }
 
-  private validateClassification(arr: any): arr is Array<{question_number:number; instruction_text:string; standard:string; rigor:1|2|3}> {
+  private validateClassification(arr: any): arr is Array<{questionNumber:number; instructionText:string; standard:string; rigor:1|2|3}> {
     return Array.isArray(arr) && arr.every(
       (o) =>
         o &&
-        typeof o.question_number === "number" &&
-        typeof o.instruction_text === "string" &&
+        typeof o.questionNumber === "number" &&
+        typeof o.instructionText === "string" &&
         typeof o.standard === "string" &&
         [1, 2, 3].includes(o.rigor)
     );
   }
 
-  private enforceConsistency(items: Array<{question_number:number; instruction_text:string; standard:string; rigor:1|2|3}>): Array<{question_number:number; instruction_text:string; standard:string; rigor:1|2|3}> {
+  private enforceConsistency(items: Array<{questionNumber:number; instructionText:string; standard:string; rigor:1|2|3}>): Array<{questionNumber:number; instructionText:string; standard:string; rigor:1|2|3}> {
     const norm = (t: string) => t.replace(/\s+/g, " ").trim().toLowerCase();
     const seen = new Map<string, {standard:string; rigor:1|2|3}>();
     for (const it of items) {
-      const k = norm(it.instruction_text || "");
+      const k = norm(it.instructionText || "");
       if (!k) continue;
       if (seen.has(k)) {
         const { standard, rigor } = seen.get(k)!;
@@ -1500,7 +1518,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
   }
 
   // Helper function to normalize results with aiResults.openai format for document processor compatibility
-  private normalizeToAiResultsFormat(parsedResult: Array<{question_number:number; instruction_text:string; standard:string; rigor:1|2|3}>): Array<{question_number:number; instruction_text:string; aiResults: any}> {
+  private normalizeToAiResultsFormat(parsedResult: Array<{questionNumber:number; instructionText:string; standard:string; rigor:1|2|3}>): Array<{questionNumber:number; instructionText:string; aiResults: any}> {
     return parsedResult.map(item => {
       // Convert rigor level to DOK and rigor description
       const rigorMap = {
@@ -1512,8 +1530,8 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       const rigorInfo = rigorMap[item.rigor] || rigorMap[2]; // Default to medium if unexpected value
 
       return {
-        question_number: item.question_number,
-        instruction_text: item.instruction_text,
+        questionNumber: item.questionNumber,
+        instructionText: item.instructionText,
         aiResults: {
           openai: {
             standards: [{
@@ -1602,7 +1620,7 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
 
 Schema:
 [
-  { "question_number": <int>, "instruction_text": "<string containing only the instruction line>" }
+  { "questionNumber": <int>, "instructionText": "<string containing only the instruction line>" }
 ]
 
 Rules:
@@ -1621,11 +1639,12 @@ ${courseContext ? `- Context (optional hint): ${courseContext}` : ""}`
       console.log('Pass 1 (extraction):', extractionJSON);
       console.log('=== END PASS 1 ===\n');
 
-      let extractedQuestions: Array<{question_number:number; instruction_text:string}>;
+      let extractedQuestions: Array<{questionNumber:number; instructionText:string}>;
       try {
         const parsed = this.safeParse(extractionJSON);
         if (!Array.isArray(parsed)) throw new Error("Parsed data is not an array");
-        extractedQuestions = parsed;
+        // Convert snake_case AI response to camelCase for TypeScript consistency
+        extractedQuestions = convertSnakeToCamel(parsed);
         if (!this.validateExtraction(extractedQuestions)) throw new Error("Invalid extraction schema");
       } catch (e) {
         throw new Error(`Pass 1 extraction invalid JSON: ${(e as Error).message}`);
@@ -1707,15 +1726,17 @@ ${courseContext ? `- Context (optional hint): ${courseContext}` : ""}`
       console.log('Pass 2 (classification):', classificationJSON);
       console.log('=== END PASS 2 ===\n');
 
-      let parsedResult: Array<{question_number:number; instruction_text:string; standard:string; rigor:1|2|3}>;
+      let parsedResult: Array<{questionNumber:number; instructionText:string; standard:string; rigor:1|2|3}>;
       try {
-        parsedResult = this.safeParse(classificationJSON);
+        const rawParsed = this.safeParse(classificationJSON);
+        // Convert snake_case AI response to camelCase for TypeScript consistency
+        parsedResult = convertSnakeToCamel(rawParsed);
         if (!this.validateClassification(parsedResult)) throw new Error("Invalid classification schema");
       } catch (e) {
         // Provide a clear, typed fallback if the model ever deviates
         parsedResult = [{
-          question_number: 1,
-          instruction_text: "Document analysis completed",
+          questionNumber: 1,
+          instructionText: "Document analysis completed",
           standard: "MATH.CONTENT.7.NS.A.1",
           rigor: 2
         } as any];
@@ -1876,11 +1897,12 @@ ${extractedText}`
       console.log('Pass 1 (extraction):', extractionJSON);
       console.log('=== END PASS 1 ===\n');
 
-      let extractedQuestions: Array<{question_number:number; instruction_text:string}>;
+      let extractedQuestions: Array<{questionNumber:number; instructionText:string}>;
       try {
         const parsed = this.safeParse(extractionJSON);
         if (!Array.isArray(parsed)) throw new Error("Parsed data is not an array");
-        extractedQuestions = parsed;
+        // Convert snake_case AI response to camelCase for TypeScript consistency
+        extractedQuestions = convertSnakeToCamel(parsed);
         if (!this.validateExtraction(extractedQuestions)) throw new Error("Invalid extraction schema");
       } catch (e) {
         throw new Error(`Pass 1 extraction invalid JSON: ${(e as Error).message}`);
@@ -1918,15 +1940,17 @@ ${extractedText}`
       console.log('Pass 2 (classification):', classificationJSON);
       console.log('=== END PASS 2 ===\n');
 
-      let parsedResult: Array<{question_number:number; instruction_text:string; standard:string; rigor:1|2|3}>;
+      let parsedResult: Array<{questionNumber:number; instructionText:string; standard:string; rigor:1|2|3}>;
       try {
-        parsedResult = this.safeParse(classificationJSON);
+        const rawParsed = this.safeParse(classificationJSON);
+        // Convert snake_case AI response to camelCase for TypeScript consistency
+        parsedResult = convertSnakeToCamel(rawParsed);
         if (!this.validateClassification(parsedResult)) throw new Error("Invalid classification schema");
       } catch (e) {
         // Provide a clear, typed fallback if the model ever deviates
         parsedResult = [{
-          question_number: 1,
-          instruction_text: "Text-based document analysis completed",
+          questionNumber: 1,
+          instructionText: "Text-based document analysis completed",
           standard: "MATH.CONTENT.7.NS.A.1",
           rigor: 2
         } as any];
