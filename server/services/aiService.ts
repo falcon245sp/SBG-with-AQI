@@ -2044,7 +2044,7 @@ ${extractedText}`
   }
 
   // Legacy method - replaced by ChatGPT's two-pass approach
-  async extractQuestionsFromFile(fileIds: string[]): Promise<Array<{question_number: number, instruction_text: string}>> {
+  async extractQuestionsFromFile(fileIds: string[]): Promise<Array<{questionNumber: number, instructionText: string}>> {
     // This method is now implemented as part of analyzeTwoPassWithFile
     throw new Error('Use analyzeTwoPassWithFile - this implements ChatGPT\'s superior two-pass method');
   }
@@ -2052,7 +2052,7 @@ ${extractedText}`
 
   // Pass 2: Classify a single extracted question
   async classifyExtractedQuestion(
-    extractedQuestion: {question_number: number, instruction_text: string}, 
+    extractedQuestion: {questionNumber: number, instructionText: string}, 
     jurisdictions: string[], 
     course: string
   ): Promise<AIAnalysisResult> {

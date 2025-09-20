@@ -196,7 +196,7 @@ export class DocumentProcessor {
         const questionData = canonicalQuestions[i];
         
         // Handle both canonical and legacy formats
-        const questionText = questionData.questionText || questionData.instruction_text || `Question ${i + 1}`;
+        const questionText = questionData.questionText || questionData.instructionText || `Question ${i + 1}`;
         const context = questionData.context || '';
         const questionNumber = String(questionData.questionNumber || i + 1);
         
