@@ -1644,7 +1644,7 @@ ${courseContext ? `- Context (optional hint): ${courseContext}` : ""}`
         
         // Find classroom with matching courseTitle and customerUuid using correct method
         const classroomResult = await storage.getTeacherClassrooms(customerUuid ?? 'unknown');
-        const classrooms = Array.isArray(classroomResult) ? classroomResult : [];
+        const classrooms: any[] = Array.isArray(classroomResult) ? classroomResult : [];
         console.log(`[AIService] Found ${classrooms.length} classrooms for customer`);
         console.log(`[AIService] Available classrooms: ${classrooms.map(c => `"${c.courseTitle || 'Untitled'}" (${c.enabledStandards?.length || 0} standards)`).join(', ')}`);
         
