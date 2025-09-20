@@ -622,7 +622,13 @@ For each item, map to the single most relevant standard from ALLOWED_CODES and a
 
 Rules:
 - Choose ONLY from ALLOWED_CODES. Do NOT invent or copy in other codes.
-- If nothing fits, set "standard": "OUT_OF_SCOPE".
+- If no standard from that course fits:
+  - Choose the highest-level standard from the immediate prerequisite course in the same jurisdiction 
+    (e.g., if the course is Algebra 1, prerequisites are from Grade 8 Math; 
+    if the course is Geometry, prerequisites are from Algebra 1).
+  - "Highest-level" means the most advanced code within that prerequisite set 
+    that matches the instruction.
+- If absolutely no match exists, set "standard": "OUT_OF_SCOPE".
 - rigor: 1 = recall/procedure, 2 = application, 3 = reasoning/analysis.
 - Use only "instruction_text" for classification (ignore numbers/answers/formatting).
 - Identical or near-identical instruction_text MUST yield the same (standard, rigor).
@@ -1729,7 +1735,7 @@ ${courseContext ? `- Context (optional hint): ${courseContext}` : ""}`
       });
 
       // Legacy format for backward compatibility
-      const legacyResult = {
+      const legacyResult: any = {
         questions: normalizedQuestions,
         jsonResponse: parsedResult,
         rawResponse: { pass1: extractionJSON, pass2: classificationJSON },
@@ -1963,7 +1969,7 @@ ${extractedText}`
       });
 
       // Legacy format for backward compatibility
-      const legacyResult = {
+      const legacyResult: any = {
         questions: normalizedQuestions,
         jsonResponse: parsedResult,
         rawResponse: { pass1: extractionJSON, pass2: classificationJSON },
