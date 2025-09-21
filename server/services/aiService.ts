@@ -1534,13 +1534,8 @@ RESPONSE FORMAT EXAMPLE (clean JSON only):
       const rigorInfo = rigorMap[validRigorKey as keyof typeof rigorMap];
       
       if (!rigorInfo) {
-        console.error(`[ERROR] rigorInfo is undefined for rigor: ${item.rigor} (${typeof item.rigor}) -> ${validRigorKey}`);
-        // Fallback to medium rigor
-        const fallbackRigor = rigorMap[2];
-        if (!fallbackRigor) {
-          throw new Error(`Critical error: rigorMap[2] is undefined - this should never happen`);
-        }
-        console.warn(`[WARN] Using fallback medium rigor for item ${index}`);
+        // This should never happen due to validRigorKey logic above, but adding safety check
+        throw new Error(`Critical error: Unable to map rigor value ${item.rigor} to valid rigor info`);
       }
 
       return {
