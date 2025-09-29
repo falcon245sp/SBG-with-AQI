@@ -1,7 +1,10 @@
 import { defineConfig } from "drizzle-kit";
 
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL, ensure the database is provisioned");
+const databaseUrl = process.env.DATABASE_URL || 
+  `postgresql://${process.env.GOOGLE_SQL_USERNAME}:${process.env.GOOGLE_SQL_PASSWORD}@${process.env.GOOGLE_SQL_HOST}:5432/${process.env.GOOGLE_SQL_DATABASE}?sslmode=require`;
+
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL or Google Cloud SQL credentials required");
 }
 
 export default defineConfig({
@@ -9,6 +12,6 @@ export default defineConfig({
   schema: "./shared/schema.ts",
   dialect: "postgresql",
   dbCredentials: {
-    url: process.env.DATABASE_URL,
+    url: databaseUrl,
   },
 });

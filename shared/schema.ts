@@ -16,7 +16,22 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { ProcessingStatus, TeacherReviewStatus, AssetType, ExportType, AiEngine, RigorLevel, GradeSubmissionStatus, AssignmentWorkType, AssignmentState, BusinessDefaults } from "./businessEnums";
 
-// Session storage table for Replit Auth
+// =============================================================================
+// =============================================================================
+
+// User role enum for hierarchical permissions (from AQI)
+export const userRoleEnum = pgEnum("user_role", ["teacher", "subject_lead", "site_admin", "district_admin"]);
+
+// Scope level enum for subject team leads (from AQI)
+export const scopeLevelEnum = pgEnum("scope_level", ["school", "district"]);
+
+// Assessment status enum (from AQI)
+export const assessmentStatusEnum = pgEnum("assessment_status", ["pending", "processing", "completed", "failed"]);
+
+// =============================================================================
+// =============================================================================
+
+// Session storage table
 export const sessions = pgTable(
   "sessions",
   {
@@ -26,6 +41,25 @@ export const sessions = pgTable(
   },
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
+
+// Districts table - top level of organizational hierarchy (from AQI)
+export const districts = pgTable("districts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Schools table - site level, belongs to districts (from AQI)
+export const schools = pgTable("schools", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  districtId: varchar("district_id").notNull(),
+  name: varchar("name").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_schools_district_id").on(table.districtId)
+]);
 
 // User storage table - supports both OAuth and username/password auth
 export const users = pgTable("users", {
