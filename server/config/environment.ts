@@ -94,11 +94,16 @@ class EnvironmentManager {
       performanceWarnThresholdMs: this.getStableEnvVar('PERFORMANCE_WARN_THRESHOLD_MS', 5000) as number, // 5 seconds
       
       // File Path Configuration (STABLE_)
-      uploadsDir: this.getStableEnvVar('UPLOADS_DIR', 'appdata/uploads') as string,
-      generatedDir: this.getStableEnvVar('GENERATED_DIR', 'appdata/generated') as string,
-      rubricsDir: this.getStableEnvVar('RUBRICS_DIR', 'appdata/generated/rubrics') as string,
-      coversheetsDir: this.getStableEnvVar('COVERSHEETS_DIR', 'appdata/generated/coversheets') as string,
-      gradedDir: this.getStableEnvVar('GRADED_DIR', 'appdata/generated/graded') as string,
+      uploadsDir: this.getStableEnvVar('UPLOADS_DIR', 
+        this.isProduction() ? '/tmp/uploads' : 'appdata/uploads') as string,
+      generatedDir: this.getStableEnvVar('GENERATED_DIR', 
+        this.isProduction() ? '/tmp/generated' : 'appdata/generated') as string,
+      rubricsDir: this.getStableEnvVar('RUBRICS_DIR', 
+        this.isProduction() ? '/tmp/generated/rubrics' : 'appdata/generated/rubrics') as string,
+      coversheetsDir: this.getStableEnvVar('COVERSHEETS_DIR', 
+        this.isProduction() ? '/tmp/generated/coversheets' : 'appdata/generated/coversheets') as string,
+      gradedDir: this.getStableEnvVar('GRADED_DIR', 
+        this.isProduction() ? '/tmp/generated/graded' : 'appdata/generated/graded') as string,
     };
   }
 }
