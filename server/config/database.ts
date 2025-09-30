@@ -8,9 +8,13 @@ export async function createDatabaseConnection() {
   const isProduction = process.env.NODE_ENV === 'production';
   
   if (isProduction && process.env.GOOGLE_CLOUD_PROJECT) {
+    console.log('[Database] Using Cloud SQL connector for production');
+    const instanceConnectionName = `${process.env.GOOGLE_CLOUD_PROJECT}:${process.env.GOOGLE_SQL_REGION || 'us-central1'}:${process.env.GOOGLE_SQL_INSTANCE || 'aqi-development'}`;
+    console.log('[Database] Instance connection name:', instanceConnectionName);
+    
     const clientOpts = await connector.getOptions({
-      instanceConnectionName: `${process.env.GOOGLE_CLOUD_PROJECT}:${process.env.GOOGLE_SQL_REGION || 'us-central1'}:${process.env.GOOGLE_SQL_INSTANCE || 'aqi-database'}`,
-      ipType: 'PUBLIC' as any,
+      instanceConnectionName,
+      ipType: 'PRIVATE' as any,
     });
 
     const sql = postgres({
@@ -26,6 +30,7 @@ export async function createDatabaseConnection() {
 
     return drizzle(sql);
   } else {
+    console.log('[Database] Using direct connection for development');
     const connectionString = process.env.DATABASE_URL || 
       `postgresql://${process.env.GOOGLE_SQL_USERNAME}:${process.env.GOOGLE_SQL_PASSWORD}@${process.env.GOOGLE_SQL_HOST}:5432/${process.env.GOOGLE_SQL_DATABASE}?sslmode=require`;
     

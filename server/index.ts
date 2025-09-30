@@ -49,6 +49,10 @@ app.use(requestLoggingMiddleware);
   
   try {
     console.log('[Startup] Testing database connection...');
+    console.log('[Startup] DATABASE_URL configured:', !!process.env.DATABASE_URL);
+    console.log('[Startup] GOOGLE_CLOUD_PROJECT:', process.env.GOOGLE_CLOUD_PROJECT);
+    console.log('[Startup] GOOGLE_SQL_INSTANCE:', process.env.GOOGLE_SQL_INSTANCE);
+    
     const testPool = new Pool({ connectionString: process.env.DATABASE_URL });
     await testPool.query('SELECT 1');
     await testPool.end();
