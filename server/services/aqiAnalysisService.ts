@@ -322,25 +322,6 @@ class AQIAnalysisService {
         throw statusError; // Re-throw to trigger error handling
       }
 
-      // Store detailed results in assessment table - with error handling
-      try {
-        await db.execute(sql`
-          UPDATE assessments
-          SET analysis_results = jsonb_set(
-            COALESCE(analysis_results,'{}'::jsonb), '{items}', to_jsonb(${JSON.stringify(processedItems)}::json), true
-          ), updated_at = now()
-          WHERE id = ${assessmentId}
-        `);
-        
-        logger.info('✅ Assessment detailed results stored', {
-          component: 'aqi-analysis'
-        });
-      } catch (dbError) {
-        logger.error('❌ Failed to store detailed results', {
-          component: 'aqi-analysis'
-        });
-        throw dbError; // Re-throw to trigger error handling
-      }
 
       logger.info('AQI analysis completed successfully', {
         component: 'aqi-analysis'
