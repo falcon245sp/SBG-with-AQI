@@ -18,22 +18,22 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: [
       'build',
-      '-t', 'gcr.io/$PROJECT_ID/${_SERVICE_NAME:-sbg-with-aqi}:$BUILD_ID',
-      '-t', 'gcr.io/$PROJECT_ID/${_SERVICE_NAME:-sbg-with-aqi}:latest',
+      '-t', 'gcr.io/$PROJECT_ID/sbg-with-aqi:$BUILD_ID',
+      '-t', 'gcr.io/$PROJECT_ID/sbg-with-aqi:latest',
       '.'
     ]
     
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/${_SERVICE_NAME:-sbg-with-aqi}:$BUILD_ID']
+    args: ['push', 'gcr.io/$PROJECT_ID/sbg-with-aqi:$BUILD_ID']
     
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/${_SERVICE_NAME:-sbg-with-aqi}:latest']
+    args: ['push', 'gcr.io/$PROJECT_ID/sbg-with-aqi:latest']
     
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
     args: [
-      'run', 'deploy', '${_SERVICE_NAME:-sbg-with-aqi}',
-      '--image', 'gcr.io/$PROJECT_ID/${_SERVICE_NAME:-sbg-with-aqi}:$BUILD_ID',
+      'run', 'deploy', 'sbg-with-aqi',
+      '--image', 'gcr.io/$PROJECT_ID/sbg-with-aqi:$BUILD_ID',
       '--region', '${_REGION:-us-central1}',
       '--platform', 'managed',
       '--allow-unauthenticated',
@@ -54,7 +54,7 @@ steps:
     args:
       - '-c'
       - |
-        SERVICE_URL=$$(gcloud run services describe ${_SERVICE_NAME:-sbg-with-aqi} \
+        SERVICE_URL=$$(gcloud run services describe sbg-with-aqi \
           --region=${_REGION:-us-central1} --format="value(status.url)")
         echo "Service deployed at: $$SERVICE_URL"
         sleep 30
