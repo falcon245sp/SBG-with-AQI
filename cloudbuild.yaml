@@ -51,7 +51,7 @@ steps:
           --set-env-vars "NODE_ENV=production,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_SQL_REGION=us-central1,GOOGLE_SQL_INSTANCE=aqi-development,ENCRYPTION_KEY=production-encryption-key-32-chars-long,GOOGLE_SQL_DATABASE=aqi_development,GOOGLE_SQL_USERNAME=postgres" \
           --set-env-vars "PROD_GOOGLE_CLIENT_ID=placeholder-client-id,PROD_GOOGLE_CLIENT_SECRET=placeholder-client-secret,PROD_SESSION_SECRET=production-session-secret-change-me,PROD_WEB_SERVICE_API_KEY=dps_demo_key_development_only" \
           --set-env-vars "PROD_GOOGLE_REDIRECT_URI=$${SERVICE_URL}/auth/google/callback,PROD_WEB_SERVICE_BASE_URL=$${SERVICE_URL}" \
-          --set-env-vars "DATABASE_URL=postgresql://postgres:${_GOOGLE_SQL_PASSWORD}@localhost/aqi_development?host=/cloudsql/$PROJECT_ID:us-central1:aqi-development&sslmode=disable" \
+          --set-env-vars "DATABASE_URL=postgresql://postgres:${_GOOGLE_SQL_PASSWORD}@/aqi_development?host=/cloudsql/$PROJECT_ID:us-central1:aqi-development&sslmode=disable" \
           --set-env-vars "OPENAI_API_KEY=${_OPENAI_API_KEY},GOOGLE_SQL_PASSWORD=${_GOOGLE_SQL_PASSWORD}" \
           --add-cloudsql-instances $PROJECT_ID:us-central1:aqi-development
     
