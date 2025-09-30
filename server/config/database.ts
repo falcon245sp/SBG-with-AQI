@@ -17,12 +17,13 @@ export async function createDatabaseConnection() {
       ipType: 'PUBLIC' as any,
     });
 
+    console.log('[Database] Cloud SQL connector options:', JSON.stringify(clientOpts, null, 2));
+    
     const sql = postgres({
       ...clientOpts,
       database: process.env.GOOGLE_SQL_DATABASE,
       username: process.env.GOOGLE_SQL_USERNAME,
       password: process.env.GOOGLE_SQL_PASSWORD,
-      ssl: 'require',
       max: 10,
       idle_timeout: 20,
       connect_timeout: 10,
