@@ -31,33 +31,30 @@ echo ""
 gcloud config set project $PROJECT_ID
 
 echo "🔧 Enabling required Google Cloud APIs..."
-gcloud services enable appengine.googleapis.com
+gcloud services enable cloudbuild.googleapis.com
+gcloud services enable run.googleapis.com
 gcloud services enable sqladmin.googleapis.com
+gcloud services enable containerregistry.googleapis.com
 
-echo "🏗️  Deploying to App Engine with F1 instances (Cost-Optimized Settings)..."
-echo "   - F1 instance class (lowest cost option)"
+echo "🏗️  Building and deploying with Cloud Build (Cost-Optimized Settings)..."
 echo "   - Scales to zero when not in use (no idle costs)"
+echo "   - 1GB memory, 1 CPU (efficient resource allocation)"
 echo "   - Max 5 instances (cost control)"
 echo ""
-
-echo "📦 Building application..."
-npm run build
-
-echo "🚀 Deploying to App Engine..."
-gcloud app deploy app.yaml --quiet
+gcloud builds submit --config cloudbuild.yaml .
 
 echo ""
 echo "✅ Deployment completed successfully!"
 echo ""
 echo "🌐 Your SBG with AQI Platform should be available at:"
-gcloud app browse --no-launch-browser
+gcloud run services describe $SERVICE_NAME --region=$REGION --format="value(status.url)"
 echo ""
 echo "📊 To view logs:"
-echo "   gcloud app logs tail -s default"
+echo "   gcloud logs tail --service=$SERVICE_NAME"
 echo ""
 echo "🔧 Cost Management:"
-echo "   Stop service:  gcloud app versions stop --service=default --version=\$(gcloud app versions list --service=default --sort-by=~version.createTime --limit=1 --format='value(version.id)')"
-echo "   Start service: App Engine automatically starts when receiving requests"
+echo "   Stop service:  gcloud run services update $SERVICE_NAME --region=$REGION --max-instances=0"
+echo "   Start service: gcloud run services update $SERVICE_NAME --region=$REGION --max-instances=5"
 echo "   Use cost-management.sh script for easy start/stop operations"
 echo ""
 echo "💰 Cost Benefits:"
