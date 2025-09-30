@@ -34,7 +34,7 @@ steps:
     args: [
       'run', 'deploy', 'sbg-with-aqi',
       '--image', 'gcr.io/$PROJECT_ID/sbg-with-aqi:$BUILD_ID',
-      '--region', '${_REGION:-us-central1}',
+      '--region', 'us-central1',
       '--platform', 'managed',
       '--allow-unauthenticated',
       '--port', '5000',
@@ -55,7 +55,7 @@ steps:
       - '-c'
       - |
         SERVICE_URL=$$(gcloud run services describe sbg-with-aqi \
-          --region=${_REGION:-us-central1} --format="value(status.url)")
+          --region=us-central1 --format="value(status.url)")
         echo "Service deployed at: $$SERVICE_URL"
         sleep 30
         curl -f "$$SERVICE_URL/api/health" || exit 1
