@@ -96,7 +96,14 @@ app.use(requestLoggingMiddleware);
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
-    serveStatic(app);
+    console.log('[Startup] Setting up static file serving for production...');
+    try {
+      serveStatic(app);
+      console.log('[Startup] Static file serving configured successfully');
+    } catch (error) {
+      console.error('[Startup] Failed to configure static file serving:', error);
+      throw error;
+    }
   }
 
     // ALWAYS serve the app on the port specified in the environment variable PORT
