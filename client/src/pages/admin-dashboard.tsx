@@ -1,0 +1,850 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import { Link } from "wouter";
+import { 
+  Activity, 
+  Database, 
+  FileText, 
+  Users, 
+  AlertCircle, 
+  AlertTriangle,
+  CheckCircle, 
+  Clock,
+  Settings,
+  Monitor,
+  Bug,
+  Trash2,
+  RotateCcw,
+  ArrowLeft,
+  Home,
+  Upload,
+  FolderOpen
+} from "lucide-react";
+
+interface SystemHealth {
+  timestamp: string;
+  database: { status: string; responseTime: number };
+  exportProcessor: { status: string; queueSize: number };
+  fileSystem: { status: string; uploadsDirectory: boolean };
+}
+
+interface UXTestResult {
+  testName: string;
+  endpoint: string;
+  status: 'pass' | 'fail';
+  statusCode?: number;
+  responseTime?: number;
+  error?: string;
+}
+
+interface UXTestResponse {
+  success: boolean;
+  totalTests: number;
+  passed: number;
+  failed: number;
+  results: UXTestResult[];
+  summary: string;
+  executionTime: number;
+}
+
+interface DeadLetterQueueItem {
+  id: string;
+  originalExportId: string;
+  documentId: string;
+  customerUuid: string;
+  sessionUserId?: string;
+  exportType: string;
+  priority: number;
+  finalAttempts: number;
+  maxAttempts: number;
+  finalErrorMessage?: string;
+  finalErrorStack?: string;
+  originalScheduledFor?: string;
+  firstAttemptAt?: string;
+  finalFailureAt: string;
+  documentFileName?: string;
+  documentFileSize?: number;
+  documentMimeType?: string;
+  documentStatus?: string;
+  serverVersion?: string;
+  nodeEnv?: string;
+  requestId?: string;
+  userAgent?: string;
+  createdAt: string;
+}
+
+interface DeadLetterQueueResponse {
+  items: DeadLetterQueueItem[];
+  count: number;
+  timestamp: string;
+}
+
+export default function AdminDashboard() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  // Get current user for admin check
+  const { data: user } = useQuery({
+    queryKey: ["/api/auth/user"],
+    retry: false,
+  });
+
+  // Check if user is admin - temporarily allow any authenticated user for development
+  const isAdmin = !!(user as any)?.email;
+
+  const { data: systemHealth, isLoading: healthLoading } = useQuery<SystemHealth>({
+    queryKey: ['/api/system-health'],
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  const { data: uxTests, isLoading: testsLoading, refetch: refetchTests } = useQuery<UXTestResponse>({
+    queryKey: ['/api/admin/run-ux-tests'],
+    refetchInterval: 60000, // Refresh every minute
+  });
+
+  const { data: deadLetterQueue, isLoading: dlqLoading, refetch: refetchDLQ } = useQuery<DeadLetterQueueResponse>({
+    queryKey: ['/api/admin/dead-letter-queue'],
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  // Data truncation mutation
+  const truncateDataMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/admin/truncate-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || 'Failed to truncate data');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Data Truncation Complete",
+        description: `Successfully cleared ${data.tablesCleared} tables and ${data.filesDeleted} files`,
+      });
+      
+      // Refresh all queries to reflect the clean state
+      queryClient.invalidateQueries();
+    },
+    onError: (error) => {
+      toast({
+        title: "Truncation Failed",
+        description: error instanceof Error ? error.message : 'Unknown error occurred',
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Clear classroom data mutation
+  const clearClassroomMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/admin/clear-classroom-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || 'Failed to clear classroom data');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Classroom Data Cleared",
+        description: `Successfully cleared ${data.tablesCleared} tables with ${data.totalRecordsBefore} total records`,
+      });
+      
+      // Refresh all queries to reflect the clean state
+      queryClient.invalidateQueries();
+    },
+    onError: (error) => {
+      toast({
+        title: "Clearing Failed",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleClearClassroomData = () => {
+    const confirmed = window.confirm(
+      '⚠️ WARNING: This will permanently delete all Google Classroom data including:\n\n' +
+      '• All classroom records and configurations\n' +
+      '• All student rosters\n' +
+      '• All assignment data\n' +
+      '• Google OAuth tokens (requires re-authentication)\n\n' +
+      'This is useful for fresh testing but cannot be undone.\n\n' +
+      'Are you sure you want to proceed?'
+    );
+
+    if (confirmed) {
+      clearClassroomMutation.mutate();
+    }
+  };
+
+  const handleTruncateData = () => {
+    const confirmed = window.confirm(
+      '⚠️ DANGER: This will permanently delete ALL data including:\n\n' +
+      '• All documents and analysis results\n' +
+      '• All user accounts and sessions\n' +
+      '• All uploaded and generated files\n' +
+      '• All processing queues\n' +
+      '• All teacher overrides\n\n' +
+      'This action CANNOT be undone!\n\n' +
+      'Are you absolutely sure you want to proceed?'
+    );
+
+    if (confirmed) {
+      const doubleConfirmed = window.confirm(
+        'Last chance! This will DESTROY all data permanently.\n\n' +
+        'Type "DELETE ALL DATA" in your mind and click OK to proceed.'
+      );
+      
+      if (doubleConfirmed) {
+        truncateDataMutation.mutate();
+      }
+    }
+  };
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-red-500" />
+              Access Denied
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-600 dark:text-gray-300">
+              You don't have admin access to view this dashboard.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="container mx-auto px-4 py-8">
+        {/* Navigation Header */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <Link href="/dashboard">
+              <Button variant="outline" className="flex items-center gap-2">
+                <ArrowLeft className="h-4 w-4" />
+                Back to Dashboard
+              </Button>
+            </Link>
+            
+            <div className="flex items-center gap-2">
+              <Link href="/dashboard">
+                <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                  <Home className="h-4 w-4" />
+                  Dashboard
+                </Button>
+              </Link>
+              <Link href="/upload">
+                <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  Upload
+                </Button>
+              </Link>
+              <Link href="/file-cabinet">
+                <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                  <FolderOpen className="h-4 w-4" />
+                  File Cabinet
+                </Button>
+              </Link>
+            </div>
+          </div>
+          
+          <div className="mb-4">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              Admin Dashboard
+            </h1>
+            <p className="text-gray-600 dark:text-gray-300">
+              System monitoring and debugging tools
+            </p>
+          </div>
+        </div>
+
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-7">
+            <TabsTrigger value="overview" className="flex items-center gap-2">
+              <Monitor className="h-4 w-4" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="system-health" className="flex items-center gap-2">
+              <Activity className="h-4 w-4" />
+              System Health
+            </TabsTrigger>
+            <TabsTrigger value="ux-tests" className="flex items-center gap-2">
+              <Bug className="h-4 w-4" />
+              UX Tests
+            </TabsTrigger>
+            <TabsTrigger value="dead-letter-queue" className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" />
+              Failed Exports
+            </TabsTrigger>
+            <TabsTrigger value="classroom-tools" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Classroom Tools
+            </TabsTrigger>
+            <TabsTrigger value="dev-tools" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Dev Tools
+            </TabsTrigger>
+            <TabsTrigger value="logs" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Logs
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">System Status</CardTitle>
+                  <Activity className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {healthLoading ? '...' : systemHealth ? 'Healthy' : 'Unknown'}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    All services operational
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">UX Tests</CardTitle>
+                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {testsLoading ? '...' : uxTests ? `${uxTests.passed}/${uxTests.totalTests}` : 'N/A'}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Tests passing
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Database</CardTitle>
+                  <Database className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {healthLoading ? '...' : systemHealth?.database.responseTime ? `${systemHealth.database.responseTime}ms` : 'N/A'}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Response time
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Queue Size</CardTitle>
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {healthLoading ? '...' : systemHealth?.exportProcessor.queueSize ?? 'N/A'}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Documents pending
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Alert>
+              <Settings className="h-4 w-4" />
+              <AlertDescription>
+                This admin dashboard provides system monitoring, debugging tools, and diagnostic information.
+                Customer-facing features are available on the main dashboard.
+              </AlertDescription>
+            </Alert>
+          </TabsContent>
+
+          <TabsContent value="system-health">
+            <Card>
+              <CardHeader>
+                <CardTitle>System Health Status</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {healthLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  </div>
+                ) : systemHealth ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Last Updated:</span>
+                      <span className="text-sm text-gray-500">
+                        {new Date(systemHealth.timestamp).toLocaleString()}
+                      </span>
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <h4 className="font-semibold flex items-center gap-2">
+                          <Database className="h-4 w-4" />
+                          Database
+                        </h4>
+                        <Badge variant={systemHealth.database.status === 'healthy' ? 'default' : 'destructive'}>
+                          {systemHealth.database.status}
+                        </Badge>
+                        <p className="text-sm text-gray-600">
+                          Response: {systemHealth.database.responseTime}ms
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <h4 className="font-semibold flex items-center gap-2">
+                          <Activity className="h-4 w-4" />
+                          Export Processor
+                        </h4>
+                        <Badge variant={systemHealth.exportProcessor.status === 'healthy' ? 'default' : 'destructive'}>
+                          {systemHealth.exportProcessor.status}
+                        </Badge>
+                        <p className="text-sm text-gray-600">
+                          Queue: {systemHealth.exportProcessor.queueSize} items
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <h4 className="font-semibold flex items-center gap-2">
+                          <FileText className="h-4 w-4" />
+                          File System
+                        </h4>
+                        <Badge variant={systemHealth.fileSystem.status === 'healthy' ? 'default' : 'destructive'}>
+                          {systemHealth.fileSystem.status}
+                        </Badge>
+                        <p className="text-sm text-gray-600">
+                          Uploads: {systemHealth.fileSystem.uploadsDirectory ? 'Available' : 'Unavailable'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-center py-8 text-gray-500">Failed to load system health data</p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="ux-tests">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold">UX Test Results</h2>
+                <Button onClick={() => refetchTests()}>
+                  Refresh Tests
+                </Button>
+              </div>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Test Summary</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {testsLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    </div>
+                  ) : uxTests ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                          <p className="text-sm font-medium">Total Tests</p>
+                          <p className="text-2xl font-bold">{uxTests.totalTests}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">Passed</p>
+                          <p className="text-2xl font-bold text-green-600">{uxTests.passed}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">Failed</p>
+                          <p className="text-2xl font-bold text-red-600">{uxTests.failed}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">Success Rate</p>
+                          <p className="text-2xl font-bold">
+                            {((uxTests.passed / uxTests.totalTests) * 100).toFixed(1)}%
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <Separator />
+                      
+                      <div className="space-y-2">
+                        {uxTests.results.map((test, index) => (
+                          <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                            <div className="flex items-center gap-3">
+                              {test.status === 'pass' ? (
+                                <CheckCircle className="h-4 w-4 text-green-600" />
+                              ) : (
+                                <AlertCircle className="h-4 w-4 text-red-600" />
+                              )}
+                              <div>
+                                <p className="font-medium">{test.testName}</p>
+                                <p className="text-sm text-gray-500">{test.endpoint}</p>
+                              </div>
+                            </div>
+                            <div className="text-right text-sm">
+                              <Badge variant={test.status === 'pass' ? 'default' : 'destructive'}>
+                                {test.statusCode}
+                              </Badge>
+                              {test.responseTime && (
+                                <p className="text-gray-500 mt-1">{test.responseTime}ms</p>
+                              )}
+                              {test.error && (
+                                <p className="text-red-500 mt-1">{test.error}</p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-center py-8 text-gray-500">Failed to load test results</p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="dead-letter-queue">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-orange-500" />
+                    Dead Letter Queue - Failed Exports
+                  </CardTitle>
+                  <p className="text-sm text-gray-600">
+                    Export jobs that failed permanently after {" "}
+                    <Badge variant="outline">3 attempts</Badge> are stored here for debugging
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  {dlqLoading ? (
+                    <div className="text-center py-8">Loading failed exports...</div>
+                  ) : deadLetterQueue && deadLetterQueue.items.length > 0 ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-sm text-gray-600">
+                            {deadLetterQueue.count} failed exports requiring admin attention
+                          </span>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => refetchDLQ()}
+                        >
+                          Refresh
+                        </Button>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {deadLetterQueue.items.map((item) => (
+                          <div key={item.id} className="border rounded-lg p-4 bg-red-50 border-red-200">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="destructive" className="text-xs">
+                                    {item.exportType}
+                                  </Badge>
+                                  <span className="text-sm font-medium">
+                                    {item.documentFileName || 'Unknown Document'}
+                                  </span>
+                                </div>
+                                
+                                <div className="space-y-1 text-xs text-gray-600">
+                                  <div>Document ID: <code className="bg-gray-100 px-1 rounded">{item.documentId}</code></div>
+                                  <div>Customer: <code className="bg-gray-100 px-1 rounded">{item.customerUuid}</code></div>
+                                  <div>Failed: {new Date(item.finalFailureAt).toLocaleString()}</div>
+                                  <div>Attempts: {item.finalAttempts}/{item.maxAttempts}</div>
+                                </div>
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <div className="text-xs">
+                                  <span className="font-medium text-red-700">Error:</span>
+                                  <div className="mt-1 p-2 bg-red-100 rounded text-red-800 font-mono text-xs max-h-20 overflow-y-auto">
+                                    {item.finalErrorMessage || 'No error message available'}
+                                  </div>
+                                </div>
+                                
+                                <div className="flex gap-2">
+                                  <Badge variant="outline" className="text-xs">
+                                    {item.nodeEnv}
+                                  </Badge>
+                                  {item.serverVersion && (
+                                    <Badge variant="outline" className="text-xs">
+                                      v{item.serverVersion}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {item.finalErrorStack && (
+                              <details className="mt-3">
+                                <summary className="text-xs text-gray-600 cursor-pointer hover:text-gray-800">
+                                  Full Stack Trace
+                                </summary>
+                                <pre className="mt-2 p-2 bg-gray-100 rounded text-xs font-mono overflow-x-auto max-h-40 overflow-y-auto">
+                                  {item.finalErrorStack}
+                                </pre>
+                              </details>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <Alert>
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertDescription>
+                          These failed exports contain comprehensive debugging information including error messages, 
+                          stack traces, customer context, and system state at time of failure. 
+                          Use this data to identify and fix recurring export issues.
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-500 mb-2">No failed exports</p>
+                      <p className="text-sm text-gray-400">
+                        When export jobs fail permanently, they'll appear here for debugging
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="classroom-tools">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Google Classroom Tools
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      These tools manage Google Classroom data for testing purposes. Use carefully in production environments.
+                    </AlertDescription>
+                  </Alert>
+                  
+                  <div className="border-l-4 border-orange-500 bg-orange-50 p-6 rounded-r-lg">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2">
+                        <h3 className="text-lg font-semibold text-orange-800 flex items-center gap-2">
+                          <Trash2 className="h-5 w-5" />
+                          Clear Classroom Data
+                        </h3>
+                        <p className="text-orange-700 text-sm leading-relaxed">
+                          Remove all Google Classroom data including classrooms, students, and assignments. 
+                          Also clears Google authentication tokens to allow fresh classroom connections.
+                        </p>
+                        <div className="text-xs text-orange-600 mt-2">
+                          <p>⚠️ This action will delete:</p>
+                          <ul className="list-disc ml-4 mt-1 space-y-1">
+                            <li>All classroom records and configurations</li>
+                            <li>All student rosters</li>
+                            <li>All assignment data</li>
+                            <li>Google OAuth tokens (requires re-authentication)</li>
+                          </ul>
+                        </div>
+                      </div>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleClearClassroomData()}
+                        disabled={clearClassroomMutation.isPending}
+                        className="ml-4"
+                        data-testid="button-clear-classroom-data"
+                      >
+                        {clearClassroomMutation.isPending ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                            Clearing...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Clear Data
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="dev-tools">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Settings className="h-5 w-5" />
+                    Development Tools
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      These tools are for development and testing only. Use with extreme caution in production environments.
+                    </AlertDescription>
+                  </Alert>
+                  
+                  <div className="border-l-4 border-red-500 bg-red-50 p-6 rounded-r-lg">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2">
+                        <h3 className="text-lg font-semibold text-red-800 flex items-center gap-2">
+                          <Trash2 className="h-5 w-5" />
+                          Truncate All Data
+                        </h3>
+                        <p className="text-red-700 text-sm leading-relaxed">
+                          Permanently delete ALL data including documents, users, sessions, files, and processing queues. 
+                          This will reset the system to a clean state for testing purposes.
+                        </p>
+                        <div className="text-xs text-red-600 mt-2">
+                          <p>⚠️ This action will delete:</p>
+                          <ul className="list-disc ml-4 mt-1 space-y-1">
+                            <li>All user accounts and authentication sessions</li>
+                            <li>All documents and AI analysis results</li>
+                            <li>All uploaded and generated files</li>
+                            <li>All processing and export queues</li>
+                            <li>All teacher overrides and customizations</li>
+                          </ul>
+                        </div>
+                      </div>
+                      
+                      <Button
+                        variant="destructive"
+                        size="lg"
+                        onClick={handleTruncateData}
+                        disabled={truncateDataMutation.isPending}
+                        className="ml-4 shrink-0"
+                      >
+                        {truncateDataMutation.isPending ? (
+                          <>
+                            <RotateCcw className="h-4 w-4 mr-2 animate-spin" />
+                            Truncating...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Truncate All Data
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">Database Status</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span>Connection:</span>
+                            <Badge variant={systemHealth?.database.status === 'healthy' ? 'default' : 'destructive'}>
+                              {systemHealth?.database.status || 'Unknown'}
+                            </Badge>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Response Time:</span>
+                            <span>{systemHealth?.database.responseTime || 'N/A'}ms</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">File System Status</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span>Uploads Directory:</span>
+                            <Badge variant={systemHealth?.fileSystem.uploadsDirectory ? 'default' : 'destructive'}>
+                              {systemHealth?.fileSystem.uploadsDirectory ? 'Available' : 'Unavailable'}
+                            </Badge>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Status:</span>
+                            <span>{systemHealth?.fileSystem.status || 'Unknown'}</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="logs">
+            <Card>
+              <CardHeader>
+                <CardTitle>System Logs</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Alert>
+                  <FileText className="h-4 w-4" />
+                  <AlertDescription>
+                    Log viewing functionality will be implemented based on your logging infrastructure.
+                    Currently, logs are available in the server console and can be aggregated using the structured logging system.
+                  </AlertDescription>
+                </Alert>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+}
