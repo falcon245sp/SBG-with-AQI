@@ -45,7 +45,7 @@ steps:
       '--concurrency', '80',
       '--cpu-throttling',
       '--execution-environment', 'gen2',
-      '--set-env-vars', 'NODE_ENV=production,ENCRYPTION_KEY=production-encryption-key-32-chars-long',
+      '--set-env-vars', 'NODE_ENV=production,ENCRYPTION_KEY=production-encryption-key-32-chars-long,DATABASE_URL=${DATABASE_URL},OPENAI_API_KEY=${OPENAI_API_KEY},GOOGLE_SQL_HOST=34.171.150.214,GOOGLE_SQL_USERNAME=${GOOGLE_SQL_USERNAME},GOOGLE_SQL_PASSWORD=${GOOGLE_SQL_PASSWORD},GOOGLE_SQL_DATABASE=aqi_development,PROD_GOOGLE_CLIENT_ID=placeholder-client-id,PROD_GOOGLE_CLIENT_SECRET=placeholder-client-secret,PROD_GOOGLE_REDIRECT_URI=https://sbg-with-aqi-future-sunrise-473100-q7.a.run.app/auth/google/callback',
       '--add-cloudsql-instances', 'future-sunrise-473100-q7:us-central1:aqi-development'
     ]
     
