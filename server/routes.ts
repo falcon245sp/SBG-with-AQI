@@ -2239,7 +2239,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           googleRefreshToken: null,
           googleTokenExpiry: null,
           classroomConnected: false
-        }).where(sql`classroom_connected = true`);
+        }).where(eq(users.classroomConnected, true));
         console.log('[ClearClassroomData] Cleared Google auth tokens from users');
       } catch (error) {
         console.warn('[ClearClassroomData] Failed to clear auth tokens:', error);
