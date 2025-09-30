@@ -1,0 +1,272 @@
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { RigorBadge } from "@/components/RigorBadge";
+import { ProcessingStatus } from "@/components/ProcessingStatus";
+import { Sidebar } from "@/components/Sidebar";
+import { 
+  FileText, 
+  Upload, 
+  Eye,
+  Download,
+  Shield,
+  RefreshCw,
+  Users
+} from "lucide-react";
+
+interface DocumentResult {
+  id: string;
+  fileName: string;
+  status: string;
+  createdAt: string;
+  standardsCount: number;
+  rigorLevel: 'mild' | 'medium' | 'spicy';
+  processingTime: string;
+}
+
+export default function CustomerDashboard() {
+  const { toast } = useToast();
+
+  // Google Classroom sync mutation
+  const syncClassroomsMutation = useMutation({
+    mutationFn: () => apiRequest('POST', '/api/auth/sync-classroom', {}),
+    onSuccess: (data: any) => {
+      console.log('Sync response data:', data); // Debug logging
+      const classroomCount = data.classrooms?.length || 0;
+      const message = data.message || `Successfully synced ${classroomCount} classrooms from Google Classroom`;
+      
+      toast({
+        title: "Google Classroom Sync Successful",
+        description: message,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/classrooms'] });
+      
+      // Auto-progress to next onboarding step after successful sync
+      const progressOnboarding = async () => {
+        try {
+          await apiRequest('PUT', '/api/user/update-onboarding-step', { 
+            onboardingStep: 'role-selection'
+          });
+          queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+          window.location.href = '/onboarding/role-selection';
+        } catch (error) {
+          console.error('Failed to progress onboarding:', error);
+        }
+      };
+      
+      progressOnboarding();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Sync Failed",
+        description: error.message || "Failed to sync Google Classroom data. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Check if current user has admin access
+  const { data: user } = useQuery({
+    queryKey: ["/api/auth/user"],
+    retry: false,
+  });
+
+
+  // Environment-aware admin email configuration
+  const getAdminEmail = () => {
+    const isProduction = process.env.NODE_ENV === 'production';
+    const prefix = isProduction ? 'VITE_PROD_' : 'VITE_DEV_';
+    
+    return import.meta.env[`${prefix}ADMIN_EMAIL`] || 'admin@standardssherpa.com';
+  };
+  
+  const isAdmin = (user as any)?.email === getAdminEmail();
+
+  // Fetch recent documents with live polling for processing documents
+  const { data: documents, isLoading: documentsLoading } = useQuery<DocumentResult[]>({
+    queryKey: ["/api/documents"],
+    refetchInterval: (query) => {
+      // Poll every 2 seconds if there are any processing documents
+      const hasProcessingDocs = query.state.data?.some((doc: any) => doc.status === 'processing' || doc.status === 'pending');
+      return hasProcessingDocs ? 2000 : false;
+    },
+    refetchIntervalInBackground: true,
+    staleTime: 0, // Always treat data as stale for fresh status updates
+    gcTime: 0, // Disable cache for real-time updates
+  });
+
+  // Export functionality
+  const handleExport = async (documentId: string, format: 'student-cover-sheet') => {
+    try {
+      const response = await fetch(`/api/documents/${documentId}/export/${format}`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Export failed: ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `document-${documentId}-${format}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Export Successful",
+        description: `Document exported as ${format}`,
+      });
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast({
+        title: "Export Failed", 
+        description: error instanceof Error ? error.message : 'Unknown error occurred',
+        variant: "destructive",
+      });
+    }
+  };
+
+  return (
+    <div className="flex h-screen bg-slate-50">
+      <Sidebar />
+      
+      <div className="flex flex-col w-0 flex-1 overflow-hidden">
+        {/* Header */}
+        <div className="relative z-10 flex-shrink-0 flex h-16 bg-white shadow border-b border-slate-200">
+          <div className="flex-1 px-4 flex justify-between items-center">
+            <div className="flex items-center">
+              <FileText className="w-6 h-6 text-blue-600 mr-3" />
+              <h2 className="text-2xl font-semibold text-slate-800">
+                Dashboard
+              </h2>
+            </div>
+            
+            {isAdmin && (
+              <Link href="/admin">
+                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                  <Shield className="h-4 w-4" />
+                  Admin
+                </Button>
+              </Link>
+            )}
+          </div>
+        </div>
+        
+        {/* Main Content */}
+        <main className="flex-1 relative overflow-y-auto focus:outline-none">
+          <div className="py-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+
+
+              {/* Core Action - Upload */}
+              <div className="mb-12">
+                <Link href="/upload">
+                  <Card className="cursor-pointer hover:shadow-md transition-shadow border-2 border-dashed border-blue-200 hover:border-blue-300">
+                    <CardContent className="flex items-center justify-center py-12">
+                      <div className="text-center">
+                        <Upload className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+                        <h2 className="text-xl font-semibold text-gray-900 mb-2">Upload Document</h2>
+                        <p className="text-gray-600">Drop PDF or Word documents for AI analysis</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </div>
+
+              {/* Documents */}
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900">Your Documents</h2>
+            {(documents as DocumentResult[])?.length > 5 && (
+              <Link href="/results">
+                <Button variant="outline" size="sm">View All</Button>
+              </Link>
+            )}
+          </div>
+
+          {documentsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : (documents as DocumentResult[])?.length > 0 ? (
+            <div className="space-y-3">
+              {(documents as DocumentResult[]).slice(0, 10).map((doc: DocumentResult) => (
+                <Card key={doc.id} className="hover:shadow-sm transition-shadow">
+                  <CardContent className="flex items-center justify-between p-6">
+                    <div className="flex items-center gap-4">
+                      <FileText className="h-5 w-5 text-gray-400" />
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {doc.fileName}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {new Date(doc.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      {doc.status === 'processing' || doc.status === 'pending' ? (
+                        <ProcessingStatus status={doc.status} />
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <RigorBadge level={doc.rigorLevel} />
+                            <Badge variant="secondary">
+                              {doc.standardsCount} standards
+                            </Badge>
+                          </div>
+                          <div className="flex gap-2">
+                            <Link href={`/results/${doc.id}`}>
+                              <Button variant="outline" size="sm">
+                                <Eye className="h-4 w-4 mr-1" />
+                                View
+                              </Button>
+                            </Link>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleExport(doc.id, 'student-cover-sheet')}
+                            >
+                              <Download className="h-4 w-4 mr-1" />
+                              Export
+                            </Button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16 text-gray-500">
+              <FileText className="h-16 w-16 mx-auto mb-4 opacity-30" />
+              <h3 className="text-lg font-medium mb-2">No documents yet</h3>
+              <p className="mb-6">Upload your first document to get started</p>
+              <Link href="/upload">
+                <Button>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload Document
+                </Button>
+              </Link>
+            </div>
+              )}
+              </div>
+
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}

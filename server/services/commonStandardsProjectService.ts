@@ -1,0 +1,608 @@
+import { storage } from '../storage';
+
+// Common Standards Project API configuration
+const CSP_API_BASE = 'https://commonstandardsproject.com/api/v1';
+const CACHE_TTL_JURISDICTIONS = 30 * 24 * 60 * 60 * 1000; // 30 days
+const CACHE_TTL_STANDARD_SETS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const CACHE_TTL_STANDARDS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+// Types matching Common Standards Project API responses
+export interface CSPJurisdiction {
+  id: string;
+  title: string;
+  type?: string;
+  standardSets?: CSPStandardSet[];
+}
+
+export interface CSPStandardSet {
+  id: string;
+  title: string;
+  subject: string;
+  educationLevels: string[];
+  document: {
+    id: string;
+    valid: string;
+    title: string;
+    sourceURL?: string;
+    asnIdentifier: string;
+    publicationStatus: string;
+  };
+}
+
+export interface CSPStandard {
+  id: string;
+  asnIdentifier: string;
+  position: number;
+  depth: number;
+  statementNotation?: string;
+  statementLabel?: string;
+  description: string;
+  ancestorDescriptions?: string[];
+}
+
+export interface CSPStandardSetResponse {
+  data: {
+    id: string;
+    title: string;
+    subject: string;
+    educationLevels: string[];
+    standards: Record<string, CSPStandard>;
+    jurisdiction: {
+      id: string;
+      title: string;
+    };
+    document: {
+      id: string;
+      valid: string;
+      title: string;
+      sourceURL?: string;
+    };
+  };
+}
+
+// Organized course structure for UI display
+export interface GradeBandCourses {
+  gradeBand: string;
+  gradeLevels: string[];
+  courses: {
+    id: string;
+    title: string;
+    subject: string;
+  }[];
+}
+
+// Course mapping for Common Core State Standards to traditional course names
+const COMMON_CORE_COURSE_MAPPING: Record<string, string> = {
+  // High School Mathematics - Map domains to traditional courses
+  'High School — Algebra': 'Algebra 1',
+  'High School — Functions': 'Algebra 2', 
+  'High School — Geometry': 'Geometry',
+  'High School — Number and Quantity': 'Pre-Calculus',
+  'High School — Statistics and Probability': 'Statistics',
+  'Grades 9, 10, 11, 12': 'High School Mathematics (General)',
+  
+  // Keep elementary/middle school grade-based naming
+  'Grade K': 'Kindergarten Mathematics',
+  'Grade 1': 'Grade 1 Mathematics',
+  'Grade 2': 'Grade 2 Mathematics', 
+  'Grade 3': 'Grade 3 Mathematics',
+  'Grade 4': 'Grade 4 Mathematics',
+  'Grade 5': 'Grade 5 Mathematics',
+  'Grade 6': 'Grade 6 Mathematics',
+  'Grade 7': 'Grade 7 Mathematics',
+  'Grade 8': 'Grade 8 Mathematics',
+};
+
+class CommonStandardsProjectService {
+  private async makeApiRequest<T>(endpoint: string): Promise<T> {
+    const apiKey = process.env.COMMON_STANDARDS_PROJECT_API_KEY;
+    if (!apiKey) {
+      throw new Error('COMMON_STANDARDS_PROJECT_API_KEY environment variable is required');
+    }
+
+    const headers: Record<string, string> = {
+      'Api-Key': apiKey,
+      'Content-Type': 'application/json'
+    };
+
+    console.log(`[CommonStandardsProjectService] Making API request to: ${CSP_API_BASE}${endpoint}`);
+
+    const response = await fetch(`${CSP_API_BASE}${endpoint}`, { headers });
+    if (!response.ok) {
+      throw new Error(`Common Standards Project API error: ${response.status} ${response.statusText}`);
+    }
+    return response.json();
+  }
+
+  // Get all available jurisdictions
+  async getJurisdictions(): Promise<CSPJurisdiction[]> {
+    // Check cache first
+    const cached = await storage.getCachedJurisdictions();
+    const now = Date.now();
+    
+    if (cached.length > 0) {
+      const oldestCache = Math.min(...cached.map((j: any) => new Date(j.createdAt || 0).getTime()));
+      if (now - oldestCache < CACHE_TTL_JURISDICTIONS) {
+        console.log(`[CommonStandardsProjectService] Returning ${cached.length} cached jurisdictions`);
+        return cached.map((j: any) => j.data as CSPJurisdiction);
+      }
+    }
+
+    console.log('[CommonStandardsProjectService] Fetching fresh jurisdictions from API');
+    
+    try {
+      const response = await this.makeApiRequest<{ data: CSPJurisdiction[] }>('/jurisdictions/');
+      const jurisdictions = response.data;
+      
+      // Cache the results
+      await storage.cacheJurisdictions(jurisdictions);
+      
+      return jurisdictions;
+    } catch (error) {
+      console.error('[CommonStandardsProjectService] Error fetching jurisdictions:', error);
+      
+      // Fallback to cached jurisdictions data (if available)
+      if (cached.length > 0) {
+        console.log(`[CommonStandardsProjectService] API failed, using cached jurisdictions data (${cached.length} jurisdictions)`);
+        return cached.map((j: any) => j.data as CSPJurisdiction);
+      }
+      
+      // No cached data available - throw transparent error
+      console.error('[CommonStandardsProjectService] No cached jurisdictions available for fallback');
+      throw new Error(`Common Standards Project API unavailable and no cached data exists for jurisdictions: ${error.message}`);
+    }
+  }
+
+  // Get standard sets for a specific jurisdiction
+  async getStandardSetsForJurisdiction(jurisdictionId: string): Promise<CSPStandardSet[]> {
+    // Check cache first
+    const cached = await storage.getCachedStandardSetsForJurisdiction(jurisdictionId);
+    const now = Date.now();
+    
+    if (cached.length > 0) {
+      const oldestCache = Math.min(...cached.map((s: any) => new Date(s.createdAt || 0).getTime()));
+      if (now - oldestCache < CACHE_TTL_STANDARD_SETS) {
+        console.log(`[CommonStandardsProjectService] Returning ${cached.length} cached standard sets for jurisdiction ${jurisdictionId}`);
+        return cached.map((s: any) => s.data as CSPStandardSet);
+      }
+    }
+
+    console.log(`[CommonStandardsProjectService] Fetching fresh standard sets for jurisdiction ${jurisdictionId}`);
+    
+    try {
+      const response = await this.makeApiRequest<{ data: CSPJurisdiction }>(`/jurisdictions/${jurisdictionId}`);
+      const standardSets = response.data.standardSets || [];
+      
+      // Cache the results
+      await storage.cacheStandardSetsForJurisdiction(jurisdictionId, standardSets);
+      
+      return standardSets;
+    } catch (error) {
+      console.error(`[CommonStandardsProjectService] Error fetching standard sets for jurisdiction ${jurisdictionId}:`, error);
+      
+      // Fallback to cached data for THIS SPECIFIC JURISDICTION only
+      if (cached.length > 0) {
+        console.log(`[CommonStandardsProjectService] API failed, using cached data for jurisdiction ${jurisdictionId} (${cached.length} standard sets)`);
+        return cached.map((s: any) => s.data as CSPStandardSet);
+      }
+      
+      // No cached data available for this jurisdiction - throw transparent error
+      console.error(`[CommonStandardsProjectService] No cached data available for jurisdiction ${jurisdictionId}`);
+      throw new Error(`Common Standards Project API unavailable and no cached data exists for jurisdiction ${jurisdictionId}: ${error.message}`);
+    }
+  }
+
+  // Get standards for a specific standard set
+  async getStandardsForSet(standardSetId: string): Promise<CSPStandard[]> {
+    // Check cache first
+    const cached = await storage.getCachedStandardsForSet(standardSetId);
+    const now = Date.now();
+    
+    if (cached && now - new Date(cached.createdAt || 0).getTime() < CACHE_TTL_STANDARDS) {
+      console.log(`[CommonStandardsProjectService] Returning cached standards for set ${standardSetId}`);
+      const standardsData = cached.standardsData as Record<string, CSPStandard>;
+      return Object.values(standardsData).sort((a, b) => a.position - b.position);
+    }
+
+    console.log(`[CommonStandardsProjectService] Fetching fresh standards for set ${standardSetId}`);
+    
+    try {
+      const response = await this.makeApiRequest<CSPStandardSetResponse>(`/standard_sets/${standardSetId}`);
+      const standardsData = response.data.standards;
+      
+      // Cache the results
+      await storage.cacheStandardsForSet(standardSetId, standardsData);
+      
+      return Object.values(standardsData).sort((a, b) => a.position - b.position);
+    } catch (error) {
+      console.error(`[CommonStandardsProjectService] Error fetching standards for set ${standardSetId}:`, error);
+      
+      // Fallback to cached data for THIS SPECIFIC STANDARD SET only
+      if (cached) {
+        const standardsData = cached.standardsData as Record<string, CSPStandard>;
+        const standardsCount = Object.keys(standardsData).length;
+        console.log(`[CommonStandardsProjectService] API failed, using cached data for standard set ${standardSetId} (${standardsCount} standards)`);
+        return Object.values(standardsData).sort((a, b) => a.position - b.position);
+      }
+      
+      // No cached data available for this standard set - throw transparent error
+      console.error(`[CommonStandardsProjectService] No cached data available for standard set ${standardSetId}`);
+      throw new Error(`Common Standards Project API unavailable and no cached data exists for standard set ${standardSetId}: ${error.message}`);
+    }
+  }
+
+  // Lookup standard by code across all cached standards
+  async lookupStandardByCode(standardCode: string, jurisdictionId?: string): Promise<CSPStandard | null> {
+    console.log(`[CommonStandardsProjectService] Looking up standard: ${standardCode}`);
+    
+    try {
+      // Get all jurisdictions if none specified
+      if (!jurisdictionId) {
+        const jurisdictions = await this.getJurisdictions();
+        
+        // Try Common Core first if available
+        const commonCore = jurisdictions.find(j => 
+          j.title.toLowerCase().includes('common core') || j.title.toLowerCase().includes('ccss')
+        );
+        
+        if (commonCore) {
+          const result = await this.lookupStandardByCode(standardCode, commonCore.id);
+          if (result) return result;
+        }
+        
+        // If not found in Common Core, try other jurisdictions
+        for (const jurisdiction of jurisdictions) {
+          if (jurisdiction.id !== commonCore?.id) {
+            const result = await this.lookupStandardByCode(standardCode, jurisdiction.id);
+            if (result) return result;
+          }
+        }
+        
+        return null;
+      }
+      
+      // Search within specific jurisdiction
+      const standardSets = await this.getStandardSetsForJurisdiction(jurisdictionId);
+      
+      for (const standardSet of standardSets) {
+        try {
+          const standards = await this.getStandardsForSet(standardSet.id);
+          
+          // Look for matching statementNotation (the standard code)
+          const match = standards.find(standard => 
+            standard.statementNotation === standardCode ||
+            standard.id.includes(standardCode) ||
+            standard.description?.toLowerCase().includes(standardCode.toLowerCase())
+          );
+          
+          if (match) {
+            console.log(`[CommonStandardsProjectService] Found standard ${standardCode} in set ${standardSet.title}`);
+            return match;
+          }
+        } catch (error) {
+          console.log(`[CommonStandardsProjectService] Skipping set ${standardSet.id} due to error:`, (error as Error).message);
+          continue;
+        }
+      }
+      
+      console.log(`[CommonStandardsProjectService] Standard ${standardCode} not found in jurisdiction ${jurisdictionId}`);
+      return null;
+      
+    } catch (error) {
+      console.error(`[CommonStandardsProjectService] Error looking up standard ${standardCode}:`, error);
+      return null;
+    }
+  }
+
+  // Organize standard sets into grade bands for UI display
+  organizeCoursesByGradeBand(standardSets: CSPStandardSet[]): GradeBandCourses[] {
+    const gradeBands: Record<string, GradeBandCourses> = {};
+    
+    standardSets.forEach(set => {
+      const levels = set.educationLevels.map(level => level.padStart(2, '0')); // Normalize to 2 digits
+      const minLevel = Math.min(...levels.map(l => parseInt(l)));
+      const maxLevel = Math.max(...levels.map(l => parseInt(l)));
+      
+      let gradeBand: string;
+      let gradeLevels: string[];
+      
+      if (maxLevel <= 5) {
+        gradeBand = "Elementary (K-5)";
+        gradeLevels = ["K", "1", "2", "3", "4", "5"];
+      } else if (minLevel >= 6 && maxLevel <= 8) {
+        gradeBand = "Middle School (6-8)";
+        gradeLevels = ["6", "7", "8"];
+      } else if (minLevel >= 9) {
+        gradeBand = "High School (9-12)";
+        gradeLevels = ["9", "10", "11", "12"];
+      } else {
+        // Spans multiple bands - put in the higher band
+        if (maxLevel >= 9) {
+          gradeBand = "High School (9-12)";
+          gradeLevels = ["9", "10", "11", "12"];
+        } else {
+          gradeBand = "Middle School (6-8)";
+          gradeLevels = ["6", "7", "8"];
+        }
+      }
+      
+      if (!gradeBands[gradeBand]) {
+        gradeBands[gradeBand] = {
+          gradeBand,
+          gradeLevels,
+          courses: []
+        };
+      }
+      
+      // Apply course mapping for Common Core State Standards
+      let displayTitle = set.title;
+      if (set.title && COMMON_CORE_COURSE_MAPPING[set.title]) {
+        displayTitle = COMMON_CORE_COURSE_MAPPING[set.title];
+      }
+      
+      gradeBands[gradeBand].courses.push({
+        id: set.id,
+        title: displayTitle,
+        subject: set.subject
+      });
+    });
+    
+    // Sort courses within each grade band using custom math progression order
+    Object.values(gradeBands).forEach(band => {
+      band.courses.sort((a, b) => this.getMathCourseOrder(a.title, b.title));
+    });
+    
+    return Object.values(gradeBands);
+  }
+
+  // Custom sorting for math courses by progression level (lower to higher)
+  private getMathCourseOrder(titleA: string, titleB: string): number {
+    const mathCourseOrder: Record<string, number> = {
+      // Elementary Mathematics (K-5)
+      'Kindergarten Mathematics': 1,
+      'Grade 1 Mathematics': 2,
+      'Grade 2 Mathematics': 3,
+      'Grade 3 Mathematics': 4,
+      'Grade 4 Mathematics': 5,
+      'Grade 5 Mathematics': 6,
+      
+      // Middle School Mathematics (6-8)
+      'Grade 6 Mathematics': 7,
+      'Grade 7 Mathematics': 8,
+      'Grade 8 Mathematics': 9,
+      
+      // High School Mathematics - Traditional Progression
+      'Algebra 1': 10,
+      'Geometry': 11,
+      'Algebra 2': 12,
+      'Pre-Calculus': 13,
+      'Statistics': 14,
+      'High School Mathematics (General)': 15,
+      
+      // Additional courses (if any)
+      'Calculus': 16,
+      'AP Calculus': 17,
+      'AP Statistics': 18
+    };
+
+    const orderA = mathCourseOrder[titleA] || 999; // Unknown courses go to end
+    const orderB = mathCourseOrder[titleB] || 999;
+    
+    // If both have defined order, use math progression
+    if (orderA !== 999 && orderB !== 999) {
+      return orderA - orderB;
+    }
+    
+    // If one or both are unknown, fall back to alphabetical for non-math or unknown courses
+    return titleA.localeCompare(titleB);
+  }
+
+  // Convert CSP standards to our internal format
+  convertToInternalFormat(cspStandards: CSPStandard[]): any[] {
+    return cspStandards
+      .filter(standard => {
+        const code = standard.statementNotation || standard.asnIdentifier;
+        const description = standard.description || '';
+        
+        // Filter out domain/cluster headers and category items
+        // Keep only individual assessable standards
+        if (!code || !description) return false;
+        
+        // Filter out items that are just ID numbers (like "S1143557") without proper standard designators
+        if (/^S?\d+$/.test(code.trim())) {
+          return false; // Just an ID number, not a standard designator
+        }
+        
+        // Must contain actual standard designator patterns
+        const hasValidStandardFormat = 
+          // Common Core format: CCSS.Math.Content.HSA-SSE.A.1
+          /CCSS\..*\.\d+$/.test(code) ||
+          // NGSS format: 5-PS1-1, HS-PS1-1  
+          /^\d*-?[A-Z]{2,3}\d+-\d+$/.test(code) ||
+          // State standards with proper numbering
+          /[A-Z]+\..*\.\d+/.test(code) ||
+          // Standards with proper domain.cluster.standard format
+          /\w+\.\w+\.\d+/.test(code);
+        
+        if (!hasValidStandardFormat) {
+          return false;
+        }
+        
+        // Common Core: Filter out cluster headers (ends with single letter like .A, .B)
+        // Keep individual standards (ends with numbers like .A.1, .A.2, .B.3)
+        if (code.includes('CCSS') || code.includes('HSA') || code.includes('HSG') || code.includes('HSF')) {
+          // Must end with a number to be an individual standard
+          return /\.\d+$/.test(code);
+        }
+        
+        // NGSS: Filter out domain headers, keep performance expectations
+        if (code.includes('NGSS') || code.includes('-PS') || code.includes('-LS') || code.includes('-ESS') || code.includes('-ETS')) {
+          // NGSS performance expectations typically end with numbers
+          return /\d+-\d+$/.test(code);
+        }
+        
+        // General filters for category/domain items in descriptions
+        const isCategory = description.toLowerCase().includes('category') ||
+                          description.toLowerCase().includes('domain') ||
+                          description.toLowerCase().includes('cluster') ||
+                          description.toLowerCase().includes('this domain includes') ||
+                          description.toLowerCase().includes('students who demonstrate understanding can');
+        
+        return !isCategory;
+      })
+      .map(standard => {
+        let code = standard.statementNotation || standard.asnIdentifier;
+        
+        // Clean up CCSS codes by removing verbose prefix
+        if (code.startsWith('CCSS.Math.Content.')) {
+          code = code.replace('CCSS.Math.Content.', '');
+        } else if (code.startsWith('CCSS.ELA-Literacy.')) {
+          code = code.replace('CCSS.ELA-Literacy.', '');
+        }
+        
+        return {
+          id: standard.id,
+          code: code,
+          title: standard.statementLabel || 'Standard',
+          description: standard.description,
+          gradeLevel: 'varies', // Will be set based on standard set
+          majorDomain: standard.ancestorDescriptions?.[0] || 'General',
+          cluster: standard.ancestorDescriptions?.[1] || standard.ancestorDescriptions?.[0] || 'General'
+        };
+      });
+  }
+
+  // Get available grade levels for a jurisdiction dynamically
+  async getGradeLevelsForJurisdiction(jurisdictionId: string): Promise<string[]> {
+    console.log(`[CommonStandardsProjectService] Fetching grade levels for jurisdiction ${jurisdictionId}`);
+    
+    try {
+      const standardSets = await this.getStandardSetsForJurisdiction(jurisdictionId);
+      
+      // Extract all education levels from standard sets
+      const allEducationLevels = standardSets.flatMap(set => set.educationLevels || []);
+      
+      // Get unique grade levels and sort them
+      const uniqueGradeLevels = Array.from(new Set(allEducationLevels))
+        .filter(level => level && level.trim())
+        .sort((a, b) => {
+          // Custom sort to handle grade levels properly
+          const gradeOrder = ['K', 'Kindergarten', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', 'High School'];
+          const aIndex = gradeOrder.findIndex(grade => a.includes(grade));
+          const bIndex = gradeOrder.findIndex(grade => b.includes(grade));
+          
+          if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+          if (aIndex !== -1) return -1;
+          if (bIndex !== -1) return 1;
+          return a.localeCompare(b);
+        });
+      
+      console.log(`[CommonStandardsProjectService] Found ${uniqueGradeLevels.length} grade levels for jurisdiction ${jurisdictionId}:`, uniqueGradeLevels);
+      return uniqueGradeLevels;
+    } catch (error) {
+      console.error(`[CommonStandardsProjectService] Error fetching grade levels for jurisdiction ${jurisdictionId}:`, error);
+      throw error;
+    }
+  }
+
+  // Get available courses for a jurisdiction and selected grade levels
+  async getCoursesForJurisdiction(jurisdictionId: string, selectedGradeLevels: string[] = [], selectedSubjects: string[] = []): Promise<any[]> {
+    console.log(`[CommonStandardsProjectService] Fetching courses for jurisdiction ${jurisdictionId}, grades: ${selectedGradeLevels.join(',')}, subjects: ${selectedSubjects.join(',')}`);
+    
+    try {
+      const standardSets = await this.getStandardSetsForJurisdiction(jurisdictionId);
+      
+      // Filter standard sets based on criteria
+      let filteredSets = standardSets;
+      
+      
+      // Filter by grade levels if specified
+      if (selectedGradeLevels.length > 0) {
+        filteredSets = filteredSets.filter(set => 
+          set.educationLevels && set.educationLevels.some(level => 
+            selectedGradeLevels.some(selectedLevel => {
+              // Handle grade range format like "9-12"
+              if (selectedLevel.includes('-')) {
+                const [start, end] = selectedLevel.split('-').map(Number);
+                const levelNum = parseInt(level);
+                return !isNaN(levelNum) && levelNum >= start && levelNum <= end;
+              }
+              
+              // Handle direct level matching (handle both "9" and "09" formats)
+              const normalizedLevel = level.padStart(2, '0');
+              const normalizedSelected = selectedLevel.padStart(2, '0');
+              
+              return normalizedLevel === normalizedSelected ||
+                     level.toLowerCase().includes(selectedLevel.toLowerCase()) ||
+                     selectedLevel.toLowerCase().includes(level.toLowerCase());
+            })
+          )
+        );
+      }
+      
+      // Filter by subjects if specified
+      if (selectedSubjects.length > 0) {
+        filteredSets = filteredSets.filter(set => 
+          selectedSubjects.some(selectedSubject => {
+            // Convert underscore format to space format for comparison
+            const normalizedSelected = selectedSubject.replace(/_/g, ' ').toLowerCase();
+            const normalizedSetSubject = set.subject.toLowerCase();
+            
+            return normalizedSetSubject.includes(normalizedSelected) ||
+                   normalizedSelected.includes(normalizedSetSubject);
+          })
+        );
+      }
+      
+      // Convert standard sets to course format
+      const courses = filteredSets.map(set => ({
+        id: set.id,
+        title: this.mapToCourseName(set.title, set.subject),
+        description: `${set.subject} course covering ${set.educationLevels?.join(', ') || 'various'} grade levels`,
+        gradeLevels: set.educationLevels || [],
+        subject: set.subject,
+        standardSetId: set.id
+      }));
+      
+      // Remove duplicates by title and sort
+      const uniqueCourses = courses.filter((course, index, self) => 
+        index === self.findIndex(c => c.title === course.title)
+      ).sort((a, b) => a.title.localeCompare(b.title));
+      
+      console.log(`[CommonStandardsProjectService] Found ${uniqueCourses.length} courses for jurisdiction ${jurisdictionId}`);
+      return uniqueCourses;
+    } catch (error) {
+      console.error(`[CommonStandardsProjectService] Error fetching courses for jurisdiction ${jurisdictionId}:`, error);
+      throw error;
+    }
+  }
+
+  // Helper method to map standard set titles to user-friendly course names
+  private mapToCourseName(title: string, subject: string): string {
+    // Check if we have a mapping for this title
+    if (COMMON_CORE_COURSE_MAPPING[title]) {
+      return COMMON_CORE_COURSE_MAPPING[title];
+    }
+    
+    // For NGSS and other standards, create descriptive course names
+    if (subject.toLowerCase().includes('science')) {
+      // NGSS course naming
+      if (title.toLowerCase().includes('k-2')) return 'Elementary Science (K-2)';
+      if (title.toLowerCase().includes('3-5')) return 'Elementary Science (3-5)';
+      if (title.toLowerCase().includes('middle')) return 'Middle School Science';
+      if (title.toLowerCase().includes('high')) return 'High School Science';
+      if (title.toLowerCase().includes('physics')) return 'Physics';
+      if (title.toLowerCase().includes('chemistry')) return 'Chemistry';
+      if (title.toLowerCase().includes('biology')) return 'Biology';
+      if (title.toLowerCase().includes('earth')) return 'Earth Science';
+    }
+    
+    // Default: clean up the title for display
+    return title
+      .replace(/^\w+\s*-\s*/, '') // Remove prefix like "NGSS - "
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+}
+
+export const commonStandardsProjectService = new CommonStandardsProjectService();
