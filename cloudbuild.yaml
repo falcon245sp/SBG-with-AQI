@@ -18,13 +18,13 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: [
       'build',
-      '-t', 'gcr.io/$PROJECT_ID/${_SERVICE_NAME:-sbg-with-aqi}:$COMMIT_SHA',
+      '-t', 'gcr.io/$PROJECT_ID/${_SERVICE_NAME:-sbg-with-aqi}:${SHORT_SHA}',
       '-t', 'gcr.io/$PROJECT_ID/${_SERVICE_NAME:-sbg-with-aqi}:latest',
       '.'
     ]
     
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/${_SERVICE_NAME:-sbg-with-aqi}:$COMMIT_SHA']
+    args: ['push', 'gcr.io/$PROJECT_ID/${_SERVICE_NAME:-sbg-with-aqi}:${SHORT_SHA}']
     
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/$PROJECT_ID/${_SERVICE_NAME:-sbg-with-aqi}:latest']
@@ -33,7 +33,7 @@ steps:
     entrypoint: 'gcloud'
     args: [
       'run', 'deploy', '${_SERVICE_NAME:-sbg-with-aqi}',
-      '--image', 'gcr.io/$PROJECT_ID/${_SERVICE_NAME:-sbg-with-aqi}:$COMMIT_SHA',
+      '--image', 'gcr.io/$PROJECT_ID/${_SERVICE_NAME:-sbg-with-aqi}:${SHORT_SHA}',
       '--region', '${_REGION:-us-central1}',
       '--platform', 'managed',
       '--allow-unauthenticated',
@@ -67,5 +67,5 @@ options:
 timeout: '1200s'
 
 images:
-  - 'gcr.io/$PROJECT_ID/sbg-with-aqi:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/sbg-with-aqi:${SHORT_SHA}'
   - 'gcr.io/$PROJECT_ID/sbg-with-aqi:latest'
