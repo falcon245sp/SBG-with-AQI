@@ -49,7 +49,7 @@ import {
   type InsertGradeSubmission,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, inArray, sql, like, or } from "drizzle-orm";
+import { eq, desc, asc, and, inArray, sql, like, or } from "drizzle-orm";
 import { ProcessingStatus, TeacherReviewStatus, AssetType, ExportType, AiEngine, RigorLevel, GradeSubmissionStatus, BusinessDefaults } from "../shared/businessEnums";
 import { PIIEncryption } from "./utils/encryption";
 import crypto from "crypto";
@@ -1969,6 +1969,100 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date()
       }
     });
+  }
+  async updateDocument(documentId: string, updates: Partial<any>) {
+    return await db
+      .update(documents)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(documents.id, documentId));
+  }
+
+  async bulkCreateQuestions(questionsData: InsertQuestion[]) {
+    if (questionsData.length === 0) return [];
+    
+    return await db
+      .insert(questions)
+      .values(questionsData)
+      .returning();
+  }
+
+  async bulkCreateAiResponses(aiResponsesData: InsertAiResponse[]) {
+    if (aiResponsesData.length === 0) return [];
+    
+    return await db
+      .insert(aiResponses)
+      .values(aiResponsesData)
+      .returning();
+  }
+
+  async updateAssessment(assessmentId: string, updates: Partial<any>) {
+    return await db
+      .update(documents)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(documents.id, assessmentId));
+  }
+
+  async getAssessment(assessmentId: string) {
+    const result = await db
+      .select()
+      .from(documents)
+      .where(eq(documents.id, assessmentId))
+      .limit(1);
+    
+    return result[0] || null;
+  }
+
+  async createAssessmentItem(item: any) {
+    const result = await db
+      .insert(questions)
+      .values({
+        documentId: item.assessmentId,
+        questionNumber: item.questionNumber || 1,
+        questionText: item.instructionText || "",
+        context: item.context || "",
+      })
+      .returning();
+    
+    return result[0];
+  }
+
+  async bulkCreateAssessmentItems(items: any[]) {
+    if (items.length === 0) return [];
+    
+    const questionsData = items.map(item => ({
+      documentId: item.assessmentId,
+      questionNumber: item.questionNumber || 1,
+      questionText: item.instructionText || "",
+      context: item.context || "",
+    }));
+    
+    return await db
+      .insert(questions)
+      .values(questionsData)
+      .returning();
+  }
+
+  async getAssessmentItems(assessmentId: string) {
+    return await db
+      .select()
+      .from(questions)
+      .where(eq(questions.documentId, assessmentId))
+      .orderBy(asc(questions.questionNumber));
+  }
+
+  async getEffectiveRigorPolicy(userId: string, districtId?: string, schoolId?: string) {
+    return {
+      dok1Range: { min: 0, max: 25 },
+      dok2Range: { min: 25, max: 50 },
+      dok3Range: { min: 25, max: 50 },
+      dok4Range: { min: 0, max: 25 },
+    };
   }
 }
 
