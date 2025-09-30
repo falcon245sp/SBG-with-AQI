@@ -18,6 +18,8 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: [
       'build',
+      '--build-arg', 'VITE_PROD_WEB_SERVICE_API_KEY=placeholder-api-key',
+      '--build-arg', 'VITE_PROD_WEB_SERVICE_BASE_URL=https://sbg-with-aqi-$PROJECT_ID.a.run.app',
       '-t', 'gcr.io/$PROJECT_ID/sbg-with-aqi:$BUILD_ID',
       '-t', 'gcr.io/$PROJECT_ID/sbg-with-aqi:latest',
       '.'

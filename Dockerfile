@@ -16,6 +16,14 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Accept build arguments for Vite environment variables
+ARG VITE_PROD_WEB_SERVICE_API_KEY
+ARG VITE_PROD_WEB_SERVICE_BASE_URL
+
+# Set environment variables for Vite build
+ENV VITE_PROD_WEB_SERVICE_API_KEY=$VITE_PROD_WEB_SERVICE_API_KEY
+ENV VITE_PROD_WEB_SERVICE_BASE_URL=$VITE_PROD_WEB_SERVICE_BASE_URL
+
 # Build the application
 RUN npm run build
 
