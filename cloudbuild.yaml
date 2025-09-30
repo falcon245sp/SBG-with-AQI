@@ -45,7 +45,7 @@ steps:
       '--concurrency', '80',
       '--cpu-throttling',
       '--execution-environment', 'gen2',
-      '--set-env-vars', 'NODE_ENV=production,ENCRYPTION_KEY=production-encryption-key-32-chars-long,GOOGLE_SQL_HOST=34.171.150.214,GOOGLE_SQL_DATABASE=aqi_development,PROD_GOOGLE_CLIENT_ID=placeholder-client-id,PROD_GOOGLE_CLIENT_SECRET=placeholder-client-secret,PROD_GOOGLE_REDIRECT_URI=https://sbg-with-aqi-future-sunrise-473100-q7.a.run.app/auth/google/callback,PROD_SESSION_SECRET=production-session-secret-change-me,PROD_WEB_SERVICE_BASE_URL=https://sbg-with-aqi-future-sunrise-473100-q7.a.run.app,PROD_WEB_SERVICE_API_KEY=dps_demo_key_development_only,DATABASE_URL=postgresql://postgres:${GOOGLE_SQL_PASSWORD}@34.171.150.214:5432/aqi_development',
+      '--set-env-vars', 'NODE_ENV=production,ENCRYPTION_KEY=production-encryption-key-32-chars-long,GOOGLE_SQL_HOST=34.171.150.214,GOOGLE_SQL_DATABASE=aqi_development,PROD_GOOGLE_CLIENT_ID=placeholder-client-id,PROD_GOOGLE_CLIENT_SECRET=placeholder-client-secret,PROD_GOOGLE_REDIRECT_URI=https://sbg-with-aqi-future-sunrise-473100-q7.a.run.app/auth/google/callback,PROD_SESSION_SECRET=production-session-secret-change-me,PROD_WEB_SERVICE_BASE_URL=https://sbg-with-aqi-future-sunrise-473100-q7.a.run.app,PROD_WEB_SERVICE_API_KEY=dps_demo_key_development_only,DATABASE_URL=postgresql://postgres:placeholder-password@34.171.150.214:5432/aqi_development',
       '--add-cloudsql-instances', 'future-sunrise-473100-q7:us-central1:aqi-development'
     ]
     
