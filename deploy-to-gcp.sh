@@ -30,12 +30,7 @@ echo ""
 
 gcloud config set project $PROJECT_ID
 
-echo "🔧 Enabling required Google Cloud APIs..."
-gcloud services enable cloudbuild.googleapis.com
-gcloud services enable run.googleapis.com
-gcloud services enable sqladmin.googleapis.com
-gcloud services enable containerregistry.googleapis.com
-
+echo "🔧 Skipping API enabling (using service account with limited permissions)..."
 echo "🏗️  Building and deploying with Cloud Build (Cost-Optimized Settings)..."
 echo "   - Scales to zero when not in use (no idle costs)"
 echo "   - 1GB memory, 1 CPU (efficient resource allocation)"

@@ -42,14 +42,30 @@ app.use(session({
 app.use(requestLoggingMiddleware);
 
 (async () => {
-  const server = await registerRoutes(app);
+  console.log('[Startup] Starting SBG with AQI server initialization...');
+  console.log('[Startup] Environment:', process.env.NODE_ENV);
+  console.log('[Startup] Port:', process.env.PORT || config.defaultPort);
+  console.log('[Startup] Database URL configured:', !!process.env.DATABASE_URL);
   
-  // Start automatic session cleanup
-  SessionCleanup.startAutomaticCleanup();
-  
-  // Start materialized view manager for document relationships
-  const { materializedViewManager } = await import('./services/materializedViewManager');
-  materializedViewManager.start();
+  try {
+    console.log('[Startup] Testing database connection...');
+    const testPool = new Pool({ connectionString: process.env.DATABASE_URL });
+    await testPool.query('SELECT 1');
+    await testPool.end();
+    console.log('[Startup] Database connection test successful');
+    
+    console.log('[Startup] Registering routes...');
+    const server = await registerRoutes(app);
+    console.log('[Startup] Routes registered successfully');
+    
+    console.log('[Startup] Starting session cleanup...');
+    SessionCleanup.startAutomaticCleanup();
+    console.log('[Startup] Session cleanup started');
+    
+    console.log('[Startup] Starting materialized view manager...');
+    const { materializedViewManager } = await import('./services/materializedViewManager');
+    materializedViewManager.start();
+    console.log('[Startup] Materialized view manager started');
 
   app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -79,16 +95,26 @@ app.use(requestLoggingMiddleware);
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || config.defaultPort.toString(), 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    console.log(`Standards Sherpa server started on port ${port}`);
-  });
+    // ALWAYS serve the app on the port specified in the environment variable PORT
+    // Other ports are firewalled. Default to 5000 if not specified.
+    // this serves both the API and the client.
+    // It is the only port that is not firewalled.
+    const port = parseInt(process.env.PORT || config.defaultPort.toString(), 10);
+    console.log('[Startup] Starting server on port', port);
+    server.listen({
+      port,
+      host: "0.0.0.0",
+      reusePort: true,
+    }, () => {
+      console.log(`[Startup] ✅ SBG with AQI server successfully started on port ${port}`);
+      console.log(`[Startup] Server is ready to accept connections`);
+    });
+  } catch (error) {
+    console.error('[Startup] ❌ Server startup failed:', error);
+    if (error instanceof Error) {
+      console.error('[Startup] Error details:', error.message);
+      console.error('[Startup] Stack trace:', error.stack);
+    }
+    process.exit(1);
+  }
 })();
