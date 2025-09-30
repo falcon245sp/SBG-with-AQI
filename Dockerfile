@@ -33,6 +33,9 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 
+# Ensure the dist/public directory exists for static file serving
+RUN mkdir -p /app/dist/public
+
 # Service account credentials will be provided via environment variables
 
 USER nextjs
