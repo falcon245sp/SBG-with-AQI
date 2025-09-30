@@ -53,9 +53,9 @@ app.use(requestLoggingMiddleware);
     console.log('[Startup] GOOGLE_CLOUD_PROJECT:', process.env.GOOGLE_CLOUD_PROJECT);
     console.log('[Startup] GOOGLE_SQL_INSTANCE:', process.env.GOOGLE_SQL_INSTANCE);
     
-    const testPool = new Pool({ connectionString: process.env.DATABASE_URL });
-    await testPool.query('SELECT 1');
-    await testPool.end();
+    const { createDatabaseConnection } = await import('./config/database');
+    const testDb = await createDatabaseConnection();
+    await testDb.execute('SELECT 1');
     console.log('[Startup] Database connection test successful');
     
     console.log('[Startup] Registering routes...');
