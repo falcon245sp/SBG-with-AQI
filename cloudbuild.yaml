@@ -57,6 +57,14 @@ steps:
           --set-env-vars "OPENAI_API_KEY=${_OPENAI_API_KEY},GOOGLE_SQL_PASSWORD=${_GOOGLE_SQL_PASSWORD}" \
           --add-cloudsql-instances $PROJECT_ID:us-central1:aqi-development
     
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "Creating missing export_queue table..."
+        gcloud sql connect aqi-development --user=postgres --project=$PROJECT_ID --quiet < create-export-queue.sql || echo "Table creation completed or already exists"
+        
   - name: 'gcr.io/cloud-builders/curl'
     entrypoint: 'bash'
     args:
