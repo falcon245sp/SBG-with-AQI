@@ -1140,12 +1140,12 @@ export class DatabaseStorage implements IStorage {
     const result = await db.execute(sql`
       SELECT 
         id,
-        file_name,
-        asset_type,
-        created_at
+        ${documents.fileName} as file_name,
+        ${documents.assetType} as asset_type,
+        ${documents.createdAt} as created_at
       FROM ${documents}
-      WHERE parent_document_id = ${documentId}
-      ORDER BY created_at ASC
+      WHERE ${documents.parentDocumentId} = ${documentId}
+      ORDER BY ${documents.createdAt} ASC
     `);
     
     console.log(`[DocumentRelationships] Found ${result.rows.length} child documents`);
