@@ -19,7 +19,7 @@ steps:
     args: [
       'build',
       '--build-arg', 'VITE_PROD_WEB_SERVICE_API_KEY=placeholder-api-key',
-      '--build-arg', 'VITE_PROD_WEB_SERVICE_BASE_URL=https://sbg-with-aqi-$PROJECT_ID.a.run.app',
+      '--build-arg', 'VITE_PROD_WEB_SERVICE_BASE_URL=https://sbg-with-aqi-1027784478102.us-central1.run.app',
       '-t', 'gcr.io/$PROJECT_ID/sbg-with-aqi:$BUILD_ID',
       '-t', 'gcr.io/$PROJECT_ID/sbg-with-aqi:latest',
       '.'
@@ -36,7 +36,7 @@ steps:
     args:
       - '-c'
       - |
-        SERVICE_URL="https://sbg-with-aqi-$PROJECT_ID.a.run.app"
+        SERVICE_URL="https://sbg-with-aqi-1027784478102.us-central1.run.app"
         gcloud run deploy sbg-with-aqi \
           --image gcr.io/$PROJECT_ID/sbg-with-aqi:$BUILD_ID \
           --region us-central1 \
