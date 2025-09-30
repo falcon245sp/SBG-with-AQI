@@ -17,31 +17,26 @@ class UnifiedAnalysisService {
         throw new Error("Document not found");
       }
 
-      let analysisResults;
-      let aqiScores;
+      console.log("Processing document through both AQI and DocProcServ analysis pipelines");
+      
+      const [aqiResults, docProcResults] = await Promise.all([
+        this.performAQIAnalysis(documentId, filePath, document),
+        this.performDocProcServAnalysis(documentId, filePath, document)
+      ]);
 
-      if (this.isAssessmentDocument(document)) {
-        console.log("Processing as assessment document with AQI analysis");
-        analysisResults = await this.performAQIAnalysis(documentId, filePath, document);
-        aqiScores = await aqiScoringService.calculateAQIScores(documentId);
-      } else {
-        console.log("Processing as general document with DocProcServ analysis");
-        analysisResults = await this.performDocProcServAnalysis(documentId, filePath, document);
-        aqiScores = null;
-      }
+      const aqiScores = await aqiScoringService.calculateAQIScores(documentId);
+
+      const analysisResults = this.combineAnalysisResults(aqiResults, docProcResults, document);
 
       const updateData: any = {
         processingStatus: "completed",
         analysisResults,
+        designQualityScore: aqiScores.designQuality.toString(),
+        measurementQualityScore: aqiScores.measurementQuality.toString(),
+        standardsAlignmentScore: aqiScores.standardsAlignment.toString(),
+        overallAqiScore: aqiScores.overall.toString(),
+        status: "completed"
       };
-
-      if (aqiScores) {
-        updateData.designQualityScore = aqiScores.designQuality.toString();
-        updateData.measurementQualityScore = aqiScores.measurementQuality.toString();
-        updateData.standardsAlignmentScore = aqiScores.standardsAlignment.toString();
-        updateData.overallAqiScore = aqiScores.overall.toString();
-        updateData.status = "completed";
-      }
 
       await storage.updateDocument(documentId, updateData);
 
@@ -244,6 +239,35 @@ class UnifiedAnalysisService {
     if (rigor <= 2) return "mild";
     if (rigor <= 4) return "medium";
     return "spicy";
+  }
+
+  private combineAnalysisResults(aqiResults: any, docProcResults: any, document: any) {
+    const isAssessment = this.isAssessmentDocument(document);
+    
+    return {
+      totalItems: Math.max(aqiResults.totalItems, docProcResults.totalItems),
+      
+      rigorDistribution: aqiResults.rigorDistribution.dok1 > 0 ? 
+        aqiResults.rigorDistribution : docProcResults.rigorDistribution,
+      
+      legacyRigorDistribution: {
+        low: Math.round((aqiResults.legacyRigorDistribution.low + docProcResults.legacyRigorDistribution.low) / 2),
+        medium: Math.round((aqiResults.legacyRigorDistribution.medium + docProcResults.legacyRigorDistribution.medium) / 2),
+        high: Math.round((aqiResults.legacyRigorDistribution.high + docProcResults.legacyRigorDistribution.high) / 2)
+      },
+      
+      standardsCoverage: Array.from(new Set([...aqiResults.standardsCoverage, ...docProcResults.standardsCoverage])),
+      
+      recommendations: [
+        ...(isAssessment ? aqiResults.recommendations : []),
+        ...docProcResults.recommendations,
+        `Document processed through ${isAssessment ? 'AQI assessment analysis and' : ''} DocProcServ analysis pipelines`
+      ],
+      
+      analysisType: isAssessment ? "assessment_and_document" : "document_with_assessment_features",
+      aqiAnalysis: aqiResults,
+      docProcServAnalysis: docProcResults
+    };
   }
 }
 
