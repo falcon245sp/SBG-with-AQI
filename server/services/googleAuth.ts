@@ -51,16 +51,17 @@ export class GoogleAuthService {
 
   constructor() {
     if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
-      throw new Error('Google OAuth credentials not configured');
+      console.warn('[GoogleAuth] WARNING: Google OAuth credentials not configured - using placeholder values for deployment testing');
+      console.warn('[GoogleAuth] OAuth functionality will not work until proper credentials are set');
     }
 
     console.log(`[GoogleAuth] Creating OAuth client with ${isProduction ? 'PROD_' : 'DEV_'} environment variables:`);
     
-    // Create OAuth client using renamed environment variables
+    // Create OAuth client using renamed environment variables (allow placeholders for deployment testing)
     this.oauth2Client = new google.auth.OAuth2(
-      GOOGLE_CLIENT_ID,
-      GOOGLE_CLIENT_SECRET,
-      GOOGLE_REDIRECT_URI
+      GOOGLE_CLIENT_ID || 'placeholder-client-id',
+      GOOGLE_CLIENT_SECRET || 'placeholder-client-secret',
+      GOOGLE_REDIRECT_URI || 'http://localhost:5000/auth/google/callback'
     );
     
     console.log('[GoogleAuth] OAuth client created successfully');

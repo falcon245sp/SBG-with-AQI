@@ -45,7 +45,7 @@ steps:
       '--concurrency', '80',
       '--cpu-throttling',
       '--execution-environment', 'gen2',
-      '--set-env-vars', 'NODE_ENV=production',
+      '--set-env-vars', 'NODE_ENV=production,ENCRYPTION_KEY=production-encryption-key-32-chars-long',
       '--add-cloudsql-instances', 'future-sunrise-473100-q7:us-central1:aqi-development'
     ]
     
