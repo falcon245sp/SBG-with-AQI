@@ -1074,10 +1074,10 @@ export class DatabaseStorage implements IStorage {
     const result = await db.execute(sql`
       SELECT 
         d.id,
-        d.${documents.customerUuid} as customer_uuid,
-        d.${documents.fileName} as file_name,
-        d.${documents.assetType} as asset_type,
-        d.${documents.parentDocumentId} as parent_document_id,
+        d.${documents.customerUuid},
+        d.${documents.fileName},
+        d.${documents.assetType},
+        d.${documents.parentDocumentId},
         CASE WHEN d.${documents.parentDocumentId} IS NULL THEN 0 ELSE 1 END as depth,
         (SELECT count(*) FROM ${documents} children WHERE children.${documents.parentDocumentId} = d.id) as child_count,
         (SELECT count(*) FROM ${questions} WHERE ${questions.documentId} = d.id) as question_count,
@@ -1125,8 +1125,8 @@ export class DatabaseStorage implements IStorage {
       if (doc) {
         documentsData.push({
           id: doc.id,
-          file_name: doc.fileName,
-          asset_type: doc.assetType,
+          fileName: doc.fileName,
+          assetType: doc.assetType,
           depth: doc.parentDocumentId ? 1 : 0
         });
       }
@@ -1140,9 +1140,9 @@ export class DatabaseStorage implements IStorage {
     const result = await db.execute(sql`
       SELECT 
         id,
-        ${documents.fileName} as file_name,
-        ${documents.assetType} as asset_type,
-        ${documents.createdAt} as created_at
+        ${documents.fileName},
+        ${documents.assetType},
+        ${documents.createdAt}
       FROM ${documents}
       WHERE ${documents.parentDocumentId} = ${documentId}
       ORDER BY ${documents.createdAt} ASC
