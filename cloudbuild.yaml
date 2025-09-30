@@ -45,7 +45,7 @@ steps:
       '--concurrency', '80',
       '--cpu-throttling',
       '--execution-environment', 'gen2',
-      '--set-env-vars', 'NODE_ENV=production,PROD_SESSION_SECRET=production-session-secret-change-me,PROD_GOOGLE_CLIENT_ID=placeholder-client-id,PROD_GOOGLE_CLIENT_SECRET=placeholder-client-secret,PROD_GOOGLE_REDIRECT_URI=https://sbg-with-aqi-future-sunrise-473100-q7.a.run.app/auth/google/callback',
+      '--set-env-vars', 'NODE_ENV=production',
       '--add-cloudsql-instances', 'future-sunrise-473100-q7:us-central1:aqi-development'
     ]
     
