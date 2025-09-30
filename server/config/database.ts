@@ -12,15 +12,11 @@ export async function createDatabaseConnection() {
     const instanceConnectionName = `${process.env.GOOGLE_CLOUD_PROJECT}:${process.env.GOOGLE_SQL_REGION || 'us-central1'}:${process.env.GOOGLE_SQL_INSTANCE || 'aqi-development'}`;
     console.log('[Database] Instance connection name:', instanceConnectionName);
     
-    const clientOpts = await connector.getOptions({
-      instanceConnectionName,
-      ipType: 'PUBLIC' as any,
-    });
-
-    console.log('[Database] Cloud SQL connector options:', JSON.stringify(clientOpts, null, 2));
+    const socketPath = `/cloudsql/${instanceConnectionName}`;
+    console.log('[Database] Using Unix socket path:', socketPath);
     
     const sql = postgres({
-      ...clientOpts,
+      host: socketPath,
       database: process.env.GOOGLE_SQL_DATABASE,
       username: process.env.GOOGLE_SQL_USERNAME,
       password: process.env.GOOGLE_SQL_PASSWORD,
