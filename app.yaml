@@ -1,0 +1,23 @@
+runtime: nodejs20
+instance_class: F1
+automatic_scaling:
+  min_instances: 0
+  max_instances: 5
+  target_cpu_utilization: 0.6
+
+env_variables:
+  NODE_ENV: production
+  PORT: 8080
+  STABLE_DEFAULT_PORT: 8080
+  ENCRYPTION_KEY: production-encryption-key-32-chars-long
+  GOOGLE_SQL_HOST: 34.171.150.214
+  GOOGLE_SQL_DATABASE: aqi_development
+  PROD_GOOGLE_CLIENT_ID: placeholder-client-id
+  PROD_GOOGLE_CLIENT_SECRET: placeholder-client-secret
+  PROD_GOOGLE_REDIRECT_URI: https://future-sunrise-473100-q7.uc.r.appspot.com/auth/google/callback
+  PROD_SESSION_SECRET: production-session-secret-change-me
+  PROD_WEB_SERVICE_BASE_URL: https://future-sunrise-473100-q7.uc.r.appspot.com
+  PROD_WEB_SERVICE_API_KEY: dps_demo_key_development_only
+
+beta_settings:
+  cloud_sql_instances: future-sunrise-473100-q7:us-central1:aqi-development
