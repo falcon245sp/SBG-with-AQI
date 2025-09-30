@@ -33,11 +33,7 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 
-# Copy SSL certificates if they exist
-COPY --from=builder /app/certs ./certs 2>/dev/null || true
-
-# Copy service account credentials
-COPY --from=builder /app/gcp-service-account.json ./gcp-service-account.json
+# Service account credentials will be provided via environment variables
 
 USER nextjs
 
