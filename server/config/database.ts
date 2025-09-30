@@ -14,7 +14,7 @@ export async function createDatabaseConnection() {
     
     const clientOpts = await connector.getOptions({
       instanceConnectionName,
-      ipType: 'PRIVATE' as any,
+      ipType: 'PUBLIC' as any,
     });
 
     const sql = postgres({
