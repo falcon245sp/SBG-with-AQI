@@ -45,8 +45,7 @@ steps:
       '--concurrency', '80',
       '--cpu-throttling',
       '--execution-environment', 'gen2',
-      '--set-env-vars', 'NODE_ENV=production,ENCRYPTION_KEY=production-encryption-key-32-chars-long,GOOGLE_SQL_HOST=34.171.150.214,GOOGLE_SQL_DATABASE=aqi_development,PROD_GOOGLE_CLIENT_ID=placeholder-client-id,PROD_GOOGLE_CLIENT_SECRET=placeholder-client-secret,PROD_GOOGLE_REDIRECT_URI=https://sbg-with-aqi-future-sunrise-473100-q7.a.run.app/auth/google/callback',
-      '--set-secrets', 'DATABASE_URL=DATABASE_URL:latest,OPENAI_API_KEY=OPENAI_API_KEY:latest,GOOGLE_SQL_USERNAME=GOOGLE_SQL_USERNAME:latest,GOOGLE_SQL_PASSWORD=GOOGLE_SQL_PASSWORD:latest',
+      '--set-env-vars', 'NODE_ENV=production,ENCRYPTION_KEY=production-encryption-key-32-chars-long,GOOGLE_SQL_HOST=34.171.150.214,GOOGLE_SQL_DATABASE=aqi_development,PROD_GOOGLE_CLIENT_ID=placeholder-client-id,PROD_GOOGLE_CLIENT_SECRET=placeholder-client-secret,PROD_GOOGLE_REDIRECT_URI=https://sbg-with-aqi-future-sunrise-473100-q7.a.run.app/auth/google/callback,DATABASE_URL=postgresql://placeholder:placeholder@34.171.150.214:5432/aqi_development,OPENAI_API_KEY=placeholder-openai-key,GOOGLE_SQL_USERNAME=placeholder-username,GOOGLE_SQL_PASSWORD=placeholder-password',
       '--add-cloudsql-instances', 'future-sunrise-473100-q7:us-central1:aqi-development'
     ]
     
