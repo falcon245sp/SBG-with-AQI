@@ -364,7 +364,7 @@ export async function getUserClassrooms(req: Request, res: Response) {
     // });
     
     // Log specifically configured classrooms
-    const configuredClassrooms = classrooms.filter(c => c.course_configuration_completed || c.courseConfigurationCompleted);
+    const configuredClassrooms = classrooms.filter(c => c.courseConfigurationCompleted);
     // console.log('🔍 [CLASSROOMS-API] Configured classrooms found:', {
     //   count: configuredClassrooms.length,
     //   configured: configuredClassrooms.map(c => ({
@@ -379,17 +379,16 @@ export async function getUserClassrooms(req: Request, res: Response) {
     //   responseSize: JSON.stringify(classrooms).length
     // });
     
-    // Transform field names from snake_case to camelCase for frontend
+    // Transform field names to ensure consistent camelCase for frontend
     const transformedClassrooms = classrooms.map(classroom => ({
       ...classroom,
-      courseTitle: classroom.course_title || classroom.courseTitle,
-      courseConfigurationCompleted: classroom.course_configuration_completed || classroom.courseConfigurationCompleted,
-      sbgEnabled: classroom.sbg_enabled || classroom.sbgEnabled,
-      detectedSubjectArea: classroom.detected_subject_area || classroom.detectedSubjectArea,
-      standardsJurisdiction: classroom.standards_jurisdiction || classroom.standardsJurisdiction,
-      enabledStandards: classroom.enabled_standards || classroom.enabledStandards,
-      classroomConnected: classroom.classroom_connected || classroom.classroomConnected,
-      googleClassroomId: classroom.google_classroom_id || classroom.googleClassroomId
+      courseTitle: classroom.courseTitle,
+      courseConfigurationCompleted: classroom.courseConfigurationCompleted,
+      sbgEnabled: classroom.sbgEnabled,
+      detectedSubjectArea: classroom.detectedSubjectArea,
+      standardsJurisdiction: classroom.standardsJurisdiction,
+      enabledStandards: classroom.enabledStandards,
+      googleClassroomId: classroom.googleClassId
     }));
 
     res.json(transformedClassrooms);

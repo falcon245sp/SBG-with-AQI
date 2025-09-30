@@ -558,6 +558,11 @@ export class DatabaseStorage implements IStorage {
         googleRefreshToken: userData.googleRefreshToken,
         googleTokenExpiry: userData.googleTokenExpiry,
         classroomConnected: !!userData.googleAccessToken,
+        onboardingCompleted: false,
+        onboardingStep: 'role-selection',
+        selectedRole: 'teacher',
+        onboardingRoleSelected: false,
+        standardsConfigurationCompleted: false,
         createdAt: new Date(),
         updatedAt: new Date(),
       })
