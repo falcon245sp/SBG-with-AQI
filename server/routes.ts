@@ -108,8 +108,13 @@ async function verifyPassword(password: string, hash: string): Promise<boolean> 
 import { setupAuth } from './replitAuth';
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup Replit Auth first
-  await setupAuth(app);
+  // Setup Replit Auth only if running on Replit (REPL_ID is set)
+  if (process.env.REPL_ID) {
+    console.log('[Auth] Setting up Replit authentication');
+    await setupAuth(app);
+  } else {
+    console.log('[Auth] Skipping Replit authentication (not running on Replit)');
+  }
 
   // Get current user route - uses session-based authentication
   app.get('/api/auth/user', async (req: any, res) => {
