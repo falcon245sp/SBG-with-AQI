@@ -11,6 +11,8 @@ const googleAuth = new GoogleAuthService();
 // Initiate basic Google authentication (profile + email only)
 export async function initiateGoogleAuth(req: Request, res: Response) {
   try {
+    const requestId = crypto.randomUUID();
+
     console.log('- Method:', req.method);
     console.log('- URL:', req.url);
     console.log('- Host:', req.headers.host);
