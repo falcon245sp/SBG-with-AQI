@@ -65,7 +65,7 @@ steps:
         echo "Creating missing export_queue table..."
         gcloud sql connect aqi-development --user=postgres --project=$PROJECT_ID --quiet < create-export-queue.sql || echo "Table creation completed or already exists"
         
-  - name: 'gcr.io/cloud-builders/curl'
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'bash'
     args:
       - '-c'
