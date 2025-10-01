@@ -69,3 +69,8 @@ Thumbs.db
 
 # Application data
 appdata/
+
+# Local development files
+check-db.ts
+cloud_sql_proxy
+ssl/
