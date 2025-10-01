@@ -3,6 +3,8 @@
 ## Overview
 This document provides comprehensive instructions for deploying the SBG with AQI platform to Google Cloud Run using Google Cloud Build. The platform combines Standards-Based Grading document processing with Assessment Quality Index analysis capabilities.
 
+<!-- CI/CD Test: This comment was added to test automated Cloud Build triggers on PR creation -->
+
 ## Architecture
 - **Frontend**: React + TypeScript + Vite
 - **Backend**: Node.js + Express + TypeScript
