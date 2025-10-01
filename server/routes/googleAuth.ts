@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { GoogleAuthService } from "../services/googleAuth";
 import { storage } from "../storage";
 import { CustomerLookupService } from "../services/customerLookupService";
+import crypto from "crypto";
 import { ActiveUserService } from "../services/activeUserService";
 
 // Initialize Google Auth service with renamed environment variables
@@ -21,14 +22,19 @@ export async function initiateGoogleAuth(req: Request, res: Response) {
     const isProduction = process.env.NODE_ENV === 'production';
     const envPrefix = isProduction ? 'PROD_' : 'DEV_';
 
-    console.log(`- Environment: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}`);
-    console.log(`- ${envPrefix}GOOGLE_CLIENT_ID exists:`, !!process.env[`${envPrefix}GOOGLE_CLIENT_ID`]);
-    console.log(`- ${envPrefix}GOOGLE_CLIENT_SECRET exists:`, !!process.env[`${envPrefix}GOOGLE_CLIENT_SECRET`]);
-    console.log(`- ${envPrefix}GOOGLE_REDIRECT_URI:`, process.env[`${envPrefix}GOOGLE_REDIRECT_URI`]);
-    console.log('- REPLIT_DOMAINS:', process.env.REPLIT_DOMAINS);
-    console.log('- NODE_ENV:', process.env.NODE_ENV);
+    console.log(`[OAuth-${requestId}] Environment configuration:`, {
+      environment: isProduction ? 'PRODUCTION' : 'DEVELOPMENT',
+      envPrefix,
+      clientIdExists: !!process.env[`${envPrefix}GOOGLE_CLIENT_ID`],
+      clientIdLength: process.env[`${envPrefix}GOOGLE_CLIENT_ID`]?.length || 0,
+      clientSecretExists: !!process.env[`${envPrefix}GOOGLE_CLIENT_SECRET`],
+      clientSecretLength: process.env[`${envPrefix}GOOGLE_CLIENT_SECRET`]?.length || 0,
+      redirectUri: process.env[`${envPrefix}GOOGLE_REDIRECT_URI`],
+      replitDomains: process.env.REPLIT_DOMAINS,
+      nodeEnv: process.env.NODE_ENV
+    });
     
-    console.log('\n[OAuth] Initiating basic Google authentication');
+    console.log(`[OAuth-${requestId}] Initiating token exchange with Google API...`);
     
     // Check if this is a direct browser request or API call
     const acceptHeader = req.get('Accept');
@@ -106,32 +112,98 @@ export async function initiateClassroomAuth(req: Request, res: Response) {
 
 // Handle Google OAuth callback with renamed environment variables
 export async function handleGoogleCallback(req: Request, res: Response) {
+  const startTime = Date.now();
+  const requestId = crypto.randomUUID();
+  
+  console.log(`\n=== [OAuth-${requestId}] GOOGLE OAUTH CALLBACK RECEIVED ===`);
+  console.log(`[OAuth-${requestId}] Callback context:`, {
+    url: req.url,
+    method: req.method,
+    hasCode: !!req.query.code,
+    codeLength: req.query.code ? (req.query.code as string).length : 0,
+    oauthError: req.query.error,
+    state: req.query.state,
+    sessionId: (req as any).session?.id,
+    sessionExists: !!(req as any).session,
+    sessionData: (req as any).session ? Object.keys((req as any).session) : [],
+    headers: {
+      userAgent: req.headers['user-agent'],
+      referer: req.headers.referer,
+      accept: req.headers.accept,
+      host: req.headers.host,
+      origin: req.headers.origin,
+    },
+    clientInfo: {
+      ip: req.ip,
+      ips: req.ips,
+      protocol: req.protocol,
+      secure: req.secure,
+    },
+    timestamp: new Date().toISOString()
+  });
+  
   try {
     const { code, error: oauthError, state } = req.query;
     
-    console.log('[OAuth] Callback received with code:', !!code);
-    console.log('[OAuth] OAuth error:', oauthError);
-    console.log('[OAuth] State:', state);
+    console.log(`[OAuth-${requestId}] Callback received with code:`, !!code);
+    console.log(`[OAuth-${requestId}] OAuth error:`, oauthError);
+    console.log(`[OAuth-${requestId}] State:`, state);
     
     if (oauthError) {
-      console.error('[OAuth] OAuth error in callback:', oauthError);
+      console.error(`[OAuth-${requestId}] OAuth error in callback:`, {
+        error: oauthError,
+        description: req.query.error_description,
+        uri: req.query.error_uri,
+        state,
+        processingTime: Date.now() - startTime
+      });
       return res.redirect(`/auth/error?error=${oauthError}&description=Google OAuth error`);
     }
 
     if (!code || typeof code !== 'string') {
-      console.error('[OAuth] No authorization code received');
+      console.error(`[OAuth-${requestId}] No authorization code received:`, {
+        queryParams: req.query,
+        processingTime: Date.now() - startTime
+      });
       return res.redirect('/auth/error?error=no_code&description=No authorization code received');
     }
 
     // Exchange code for tokens using renamed environment variables
+    const tokenExchangeStart = Date.now();
+    console.log(`[OAuth-${requestId}] Exchanging authorization code for tokens...`);
     const tokens = await googleAuth.exchangeCodeForTokens(code);
-    console.log('[OAuth] Tokens received, access token present:', !!tokens.access_token);
+    const tokenExchangeTime = Date.now() - tokenExchangeStart;
+    console.log(`[OAuth-${requestId}] Tokens received:`, {
+      hasAccessToken: !!tokens.access_token,
+      accessTokenLength: tokens.access_token?.length || 0,
+      hasRefreshToken: !!tokens.refresh_token,
+      refreshTokenLength: tokens.refresh_token?.length || 0,
+      expiryDate: tokens.expiry_date,
+      scope: tokens.scope,
+      tokenType: tokens.token_type,
+      exchangeTime: tokenExchangeTime
+    });
 
     // Get user profile from Google
+    const profileFetchStart = Date.now();
+    console.log(`[OAuth-${requestId}] Fetching user profile from Google API...`);
     const userProfile = await googleAuth.getUserProfile(tokens.access_token!);
-    console.log('[OAuth] User profile retrieved:', userProfile.email);
+    const profileFetchTime = Date.now() - profileFetchStart;
+    console.log(`[OAuth-${requestId}] User profile retrieved:`, {
+      email: userProfile.email,
+      googleId: userProfile.id,
+      name: userProfile.name,
+      givenName: userProfile.given_name,
+      familyName: userProfile.family_name,
+      picture: userProfile.picture,
+      verifiedEmail: userProfile.verified_email,
+      locale: userProfile.locale,
+      fetchTime: profileFetchTime
+    });
 
     // Create or update user in database
+    const dbUpsertStart = Date.now();
+    console.log(`[OAuth-${requestId}] Upserting user in database...`);
     const user = await storage.upsertGoogleUser({
       googleId: userProfile.id!,
       email: userProfile.email!,
@@ -142,20 +214,41 @@ export async function handleGoogleCallback(req: Request, res: Response) {
       googleRefreshToken: tokens.refresh_token || undefined,
       googleTokenExpiry: tokens.expiry_date ? new Date(tokens.expiry_date) : undefined,
     });
+    const dbUpsertTime = Date.now() - dbUpsertStart;
+    console.log(`[OAuth-${requestId}] User upserted successfully:`, {
+      userId: user.id,
+      email: user.email,
+      customerUuid: user.customerUuid,
+      googleId: user.googleId,
+      upsertTime: dbUpsertTime
+    });
 
     // Set session
+    console.log(`[OAuth-${requestId}] Setting session:`, {
+      userId: user.id,
+      userEmail: user.email,
+      sessionIdBefore: (req as any).session?.id,
+      sessionExists: !!(req as any).session
+    });
     (req as any).session.userId = user.id;
     (req as any).session.userEmail = user.email;
+    console.log(`[OAuth-${requestId}] Session set successfully:`, {
+      sessionIdAfter: (req as any).session?.id,
+      sessionUserId: (req as any).session?.userId,
+      totalProcessingTime: Date.now() - startTime
+    });
     
-    console.log('🔐 [AUTH-COMPLETE] User authenticated successfully:', user.email);
-    console.log('🔐 [AUTH-COMPLETE] Session userId set to:', user.id);
-    console.log('🔐 [AUTH-COMPLETE] User onboarding status:', {
+    console.log(`[OAuth-${requestId}] 🔐 User authenticated successfully:`, {
+      email: user.email,
+      userId: user.id,
+      sessionUserId: (req as any).session?.userId,
       onboardingCompleted: user.onboardingCompleted,
       onboardingStep: user.onboardingStep,
       standardsConfigurationCompleted: user.standardsConfigurationCompleted,
       onboardingRoleSelected: user.onboardingRoleSelected,
       selectedRole: user.selectedRole,
-      customerUuid: user.customerUuid
+      customerUuid: user.customerUuid,
+      totalDuration: Date.now() - startTime
     });
     
     // Check if user is in onboarding flow and redirect appropriately
@@ -231,8 +324,27 @@ export async function handleGoogleCallback(req: Request, res: Response) {
         res.redirect('/onboarding');
       }
     }
-  } catch (error) {
-    console.error('[OAuth] Error in Google callback:', error);
+  } catch (error: any) {
+    const errorProcessingTime = Date.now() - startTime;
+    console.error(`[OAuth-${requestId}] ERROR - OAuth callback failed:`, {
+      error_type: 'OAUTH_CALLBACK_ERROR',
+      error_name: error.name,
+      error_message: error.message,
+      error_code: error.code,
+      error_statusCode: error.statusCode,
+      error_status: error.status,
+      error_response: error.response?.data,
+      stack: error.stack,
+      requestContext: {
+        hasCode: !!req.query.code,
+        hasOauthError: !!req.query.error,
+        sessionExists: !!(req as any).session,
+        sessionId: (req as any).session?.id,
+      },
+      processingTime: errorProcessingTime,
+      timestamp: new Date().toISOString(),
+      fullError: JSON.stringify(error, Object.getOwnPropertyNames(error), 2)
+    });
     res.redirect('/auth/error?error=auth_failed&description=Authentication process failed');
   }
 }
