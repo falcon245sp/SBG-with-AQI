@@ -5,11 +5,31 @@ export default function AuthCallback() {
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    console.log('AuthCallback - OAuth callback completed, backend should have stored session');
+    const startTime = Date.now();
+    const callbackId = `callback-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    
+    console.log(`[AuthCallback-${callbackId}] OAuth callback component mounted:`, {
+      currentUrl: window.location.href,
+      pathname: window.location.pathname,
+      search: window.location.search,
+      hash: window.location.hash,
+      referrer: document.referrer,
+      sessionStorageKeys: Object.keys(sessionStorage),
+      localStorageKeys: Object.keys(localStorage),
+      cookiesEnabled: navigator.cookieEnabled,
+      timestamp: new Date().toISOString()
+    });
     
     // The backend OAuth callback sets the session, just redirect to classroom setup
     // No need to handle URL parameters or localStorage anymore
-    setLocation('/auth/classroom-setup');
+    setTimeout(() => {
+      console.log(`[AuthCallback-${callbackId}] Redirecting to classroom setup:`, {
+        processingTime: Date.now() - startTime,
+        targetUrl: '/auth/classroom-setup',
+        timestamp: new Date().toISOString()
+      });
+      setLocation('/auth/classroom-setup');
+    }, 100);
   }, [setLocation]);
 
   return (

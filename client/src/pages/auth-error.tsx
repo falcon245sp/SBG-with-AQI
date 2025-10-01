@@ -10,6 +10,30 @@ export default function AuthError() {
   const urlParams = new URLSearchParams(window.location.search);
   const error = urlParams.get('error');
   const description = urlParams.get('description');
+  
+  const errorId = `auth-error-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+  console.error(`[AuthError-${errorId}] OAuth error page loaded:`, {
+    error,
+    description,
+    fullUrl: window.location.href,
+    pathname: window.location.pathname,
+    search: window.location.search,
+    referrer: document.referrer,
+    userAgent: navigator.userAgent,
+    sessionStorageKeys: Object.keys(sessionStorage),
+    localStorageKeys: Object.keys(localStorage),
+    cookiesEnabled: navigator.cookieEnabled,
+    timestamp: new Date().toISOString()
+  });
+  
+  try {
+    const authContext = sessionStorage.getItem('auth-context');
+    if (authContext) {
+      console.error(`[AuthError-${errorId}] Auth context from session storage:`, JSON.parse(authContext));
+    }
+  } catch (e) {
+    console.error(`[AuthError-${errorId}] Could not parse auth context from session storage`);
+  }
 
   const getErrorMessage = () => {
     switch (error) {
