@@ -585,6 +585,11 @@ export class DatabaseStorage implements IStorage {
         googleRefreshToken: userData.googleRefreshToken,
         googleTokenExpiry: userData.googleTokenExpiry,
         classroomConnected: !!userData.googleAccessToken,
+        onboardingCompleted: false,
+        onboardingStep: 'role-selection',
+        selectedRole: 'teacher',
+        onboardingRoleSelected: false,
+        standardsConfigurationCompleted: false,
         createdAt: new Date(),
         updatedAt: new Date(),
       })
@@ -1096,22 +1101,22 @@ export class DatabaseStorage implements IStorage {
   async getDocumentRelationships(documentId: string): Promise<any> {
     console.log(`[DocumentRelationships] Getting relationships for document: ${documentId}`);
     
-    // Get the document with parent info
+    // Get the document with parent info using proper Drizzle ORM column references
     const result = await db.execute(sql`
       SELECT 
         d.id,
-        d.customer_uuid,
-        d.file_name,
-        d.asset_type,
-        d.parent_document_id,
-        CASE WHEN d.parent_document_id IS NULL THEN 0 ELSE 1 END as depth,
-        (SELECT count(*) FROM ${documents} children WHERE children.parent_document_id = d.id) as child_count,
+        d.${documents.customerUuid},
+        d.${documents.fileName},
+        d.${documents.assetType},
+        d.${documents.parentDocumentId},
+        CASE WHEN d.${documents.parentDocumentId} IS NULL THEN 0 ELSE 1 END as depth,
+        (SELECT count(*) FROM ${documents} children WHERE children.${documents.parentDocumentId} = d.id) as child_count,
         (SELECT count(*) FROM ${questions} WHERE ${questions.documentId} = d.id) as question_count,
         (SELECT count(*) FROM ${gradeSubmissions} WHERE ${gradeSubmissions.originalDocumentId} = d.id) as submission_count,
-        parent.file_name as parent_file_name,
-        parent.asset_type as parent_asset_type
+        parent.${documents.fileName} as parent_file_name,
+        parent.${documents.assetType} as parent_asset_type
       FROM ${documents} d
-      LEFT JOIN ${documents} parent ON d.parent_document_id = parent.id
+      LEFT JOIN ${documents} parent ON d.${documents.parentDocumentId} = parent.id
       WHERE d.id = ${documentId}
       LIMIT 1
     `);
@@ -1151,8 +1156,8 @@ export class DatabaseStorage implements IStorage {
       if (doc) {
         documentsData.push({
           id: doc.id,
-          file_name: doc.fileName,
-          asset_type: doc.assetType,
+          fileName: doc.fileName,
+          assetType: doc.assetType,
           depth: doc.parentDocumentId ? 1 : 0
         });
       }
@@ -1166,12 +1171,12 @@ export class DatabaseStorage implements IStorage {
     const result = await db.execute(sql`
       SELECT 
         id,
-        file_name,
-        asset_type,
-        created_at
+        ${documents.fileName},
+        ${documents.assetType},
+        ${documents.createdAt}
       FROM ${documents}
-      WHERE parent_document_id = ${documentId}
-      ORDER BY created_at ASC
+      WHERE ${documents.parentDocumentId} = ${documentId}
+      ORDER BY ${documents.createdAt} ASC
     `);
     
     console.log(`[DocumentRelationships] Found ${result.rows.length} child documents`);
