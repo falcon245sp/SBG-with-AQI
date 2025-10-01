@@ -1,5 +1,6 @@
 import { google } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
+import crypto from 'crypto';
 
 // Google OAuth configuration with renamed environment variables to avoid Replit conflicts
 // Environment-specific Google OAuth configuration
@@ -50,8 +51,33 @@ export class GoogleAuthService {
   private oauth2Client: OAuth2Client;
 
   constructor() {
+    console.log(`[GoogleAuth] Constructor called - validating environment:`, {
+      nodeEnv: process.env.NODE_ENV,
+      isProduction,
+      envPrefix: isProduction ? 'PROD_' : 'DEV_',
+      clientIdPresent: !!GOOGLE_CLIENT_ID,
+      clientIdLength: GOOGLE_CLIENT_ID ? GOOGLE_CLIENT_ID.length : 0,
+      clientIdPrefix: GOOGLE_CLIENT_ID ? GOOGLE_CLIENT_ID.substring(0, 20) + '...' : 'missing',
+      clientSecretPresent: !!GOOGLE_CLIENT_SECRET,
+      clientSecretLength: GOOGLE_CLIENT_SECRET ? GOOGLE_CLIENT_SECRET.length : 0,
+      redirectUri: GOOGLE_REDIRECT_URI,
+      redirectUriValid: GOOGLE_REDIRECT_URI ? GOOGLE_REDIRECT_URI.startsWith('http') : false,
+      replitDomains: process.env.REPLIT_DOMAINS,
+      availableGoogleEnvVars: Object.keys(process.env).filter(key => key.includes('GOOGLE')),
+      timestamp: new Date().toISOString()
+    });
+    
     if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
-      throw new Error('Google OAuth credentials not configured');
+      const errorDetails = {
+        missingClientId: !GOOGLE_CLIENT_ID,
+        missingClientSecret: !GOOGLE_CLIENT_SECRET,
+        envPrefix: isProduction ? 'PROD_' : 'DEV_',
+        nodeEnv: process.env.NODE_ENV,
+        expectedVars: [`${isProduction ? 'PROD_' : 'DEV_'}GOOGLE_CLIENT_ID`, `${isProduction ? 'PROD_' : 'DEV_'}GOOGLE_CLIENT_SECRET`],
+        availableEnvVars: Object.keys(process.env).filter(key => key.includes('GOOGLE'))
+      };
+      console.error('[GoogleAuth] Environment validation failed:', errorDetails);
+      throw new Error('Google OAuth credentials not configured: ' + JSON.stringify(errorDetails));
     }
 
     console.log(`[GoogleAuth] Creating OAuth client with ${isProduction ? 'PROD_' : 'DEV_'} environment variables:`);
@@ -117,25 +143,59 @@ export class GoogleAuthService {
 
   // Exchange authorization code for tokens
   async exchangeCodeForTokens(code: string) {
-    console.log('[GoogleAuth] Exchanging authorization code for tokens, code length:', code.length);
+    const operationId = crypto.randomUUID();
+    const startTime = Date.now();
+    
+    console.log(`[GoogleAuth-${operationId}] Exchanging authorization code for tokens:`, {
+      codeLength: code.length,
+      codePrefix: code.substring(0, 20) + '...',
+      clientIdPresent: !!GOOGLE_CLIENT_ID,
+      redirectUri: GOOGLE_REDIRECT_URI,
+      timestamp: new Date().toISOString()
+    });
+    
     try {
       const { tokens } = await this.oauth2Client.getToken(code);
-      console.log('[GoogleAuth] Google token exchange successful:', {
-        has_access_token: !!tokens.access_token,
-        has_refresh_token: !!tokens.refresh_token,
-        token_type: tokens.token_type,
-        expires_in: tokens.expiry_date,
-        scope: tokens.scope
+      const exchangeTime = Date.now() - startTime;
+      
+      console.log(`[GoogleAuth-${operationId}] Tokens retrieved successfully:`, {
+        hasAccessToken: !!tokens.access_token,
+        accessTokenLength: tokens.access_token?.length || 0,
+        hasRefreshToken: !!tokens.refresh_token,
+        refreshTokenLength: tokens.refresh_token?.length || 0,
+        hasIdToken: !!tokens.id_token,
+        expiryDate: tokens.expiry_date,
+        scope: tokens.scope,
+        tokenType: tokens.token_type,
+        exchangeTime,
+        timestamp: new Date().toISOString()
       });
+      
       return tokens;
     } catch (error: any) {
-      console.error('[GoogleAuth] ERROR - Google token exchange failed:', {
-        error_type: 'GOOGLE_API_ERROR',
+      const failureTime = Date.now() - startTime;
+      
+      console.error(`[GoogleAuth-${operationId}] ERROR - Token exchange failed:`, {
+        error_type: 'GOOGLE_TOKEN_EXCHANGE_ERROR',
+        error_name: error.name,
         error_code: error.code,
         error_message: error.message,
         error_status: error.status,
-        error_response_data: error.response?.data,
-        full_error: JSON.stringify(error, Object.getOwnPropertyNames(error), 2)
+        error_statusText: error.statusText,
+        error_response: error.response?.data,
+        error_response_status: error.response?.status,
+        error_response_statusText: error.response?.statusText,
+        request_context: {
+          codeLength: code.length,
+          clientIdPresent: !!GOOGLE_CLIENT_ID,
+          clientSecretPresent: !!GOOGLE_CLIENT_SECRET,
+          redirectUri: GOOGLE_REDIRECT_URI,
+          environment: isProduction ? 'PRODUCTION' : 'DEVELOPMENT'
+        },
+        failureTime,
+        timestamp: new Date().toISOString(),
+        stack: error.stack,
+        fullError: JSON.stringify(error, Object.getOwnPropertyNames(error), 2)
       });
       throw error;
     }
@@ -143,26 +203,57 @@ export class GoogleAuthService {
 
   // Get user profile from Google
   async getUserProfile(accessToken: string) {
-    console.log('[GoogleAuth] Fetching user info from Google API with access token length:', accessToken.length);
+    const operationId = crypto.randomUUID();
+    const startTime = Date.now();
+    
+    console.log(`[GoogleAuth-${operationId}] Fetching user profile from Google API:`, {
+      accessTokenLength: accessToken.length,
+      accessTokenPrefix: accessToken.substring(0, 20) + '...',
+      timestamp: new Date().toISOString()
+    });
+    
     try {
       const oauth2 = google.oauth2({ version: 'v2', auth: this.oauth2Client });
       this.oauth2Client.setCredentials({ access_token: accessToken });
       
       const response = await oauth2.userinfo.get();
-      console.log('[GoogleAuth] Google userinfo API successful:', {
-        user_id: response.data.id,
+      const fetchTime = Date.now() - startTime;
+      
+      console.log(`[GoogleAuth-${operationId}] User profile fetched successfully:`, {
+        googleId: response.data.id,
         email: response.data.email,
-        name: `${response.data.given_name} ${response.data.family_name}`,
-        verified_email: response.data.verified_email,
-        has_picture: !!response.data.picture
+        name: response.data.name,
+        givenName: response.data.given_name,
+        familyName: response.data.family_name,
+        picture: response.data.picture,
+        verifiedEmail: response.data.verified_email,
+        locale: response.data.locale,
+        hd: response.data.hd,
+        fetchTime,
+        timestamp: new Date().toISOString()
       });
+      
       return response.data;
     } catch (error: any) {
-      console.error('[GoogleAuth] ERROR - Google userinfo API failed:', {
-        error_type: 'GOOGLE_API_ERROR',
+      const failureTime = Date.now() - startTime;
+      
+      console.error(`[GoogleAuth-${operationId}] ERROR - Failed to fetch user profile:`, {
+        error_type: 'GOOGLE_USERINFO_ERROR',
+        error_name: error.name,
         error_code: error.code,
         error_message: error.message,
-        error_details: error.response?.data || error.details || 'No additional details'
+        error_status: error.status,
+        error_statusText: error.statusText,
+        error_response: error.response?.data,
+        error_response_status: error.response?.status,
+        request_context: {
+          accessTokenLength: accessToken.length,
+          hasAccessToken: !!accessToken
+        },
+        failureTime,
+        timestamp: new Date().toISOString(),
+        stack: error.stack,
+        fullError: JSON.stringify(error, Object.getOwnPropertyNames(error), 2)
       });
       throw error;
     }

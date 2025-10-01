@@ -538,14 +538,41 @@ export class DatabaseStorage implements IStorage {
     googleRefreshToken?: string;
     googleTokenExpiry?: Date;
   }): Promise<User> {
+    const operationId = crypto.randomUUID();
+    const startTime = Date.now();
+    
+    console.log(`[DB-${operationId}] Starting upsertGoogleUser:`, {
+      googleId: userData.googleId,
+      email: userData.email,
+      hasFirstName: !!userData.firstName,
+      hasLastName: !!userData.lastName,
+      hasProfileImage: !!userData.profileImageUrl,
+      hasAccessToken: !!userData.googleAccessToken,
+      accessTokenLength: userData.googleAccessToken?.length || 0,
+      hasRefreshToken: !!userData.googleRefreshToken,
+      refreshTokenLength: userData.googleRefreshToken?.length || 0,
+      hasTokenExpiry: !!userData.googleTokenExpiry,
+      tokenExpiry: userData.googleTokenExpiry?.toISOString(),
+      timestamp: new Date().toISOString()
+    });
+    
     // Check if user already exists
+    const lookupStart = Date.now();
     const existing = await this.getUserByGoogleId(userData.googleId);
-    console.log('👤 [USER-UPSERT] Processing user:', {
+    const lookupTime = Date.now() - lookupStart;
+    console.log(`[DB-${operationId}] User lookup result:`, {
+      userExists: !!existing,
+      existingUserId: existing?.id,
+      existingEmail: existing?.email,
+      existingCustomerUuid: existing?.customerUuid,
+      existingGoogleId: existing?.googleId,
+      lookupTime,
       email: userData.email,
       googleId: userData.googleId.substring(0, 10) + '...',
       isExistingUser: !!existing
     });
     
+    const upsertStart = Date.now();
     const [user] = await db
       .insert(users)
       .values({
@@ -577,14 +604,18 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     
-    console.log('👤 [USER-UPSERT] User operation completed:', {
+    const upsertTime = Date.now() - upsertStart;
+    console.log(`[DB-${operationId}] User operation completed:`, {
+      operation: existing ? 'UPDATE' : 'CREATE',
       userId: user.id,
       email: user.email,
       customerUuid: user.customerUuid,
       onboardingCompleted: user.onboardingCompleted,
       onboardingStep: user.onboardingStep,
       standardsConfigurationCompleted: user.standardsConfigurationCompleted,
-      classroomConnected: user.classroomConnected
+      classroomConnected: user.classroomConnected,
+      upsertTime,
+      totalTime: Date.now() - startTime
     });
     
     return user;

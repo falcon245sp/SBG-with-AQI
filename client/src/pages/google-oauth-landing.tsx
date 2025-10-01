@@ -36,59 +36,108 @@ export default function GoogleOAuthLanding() {
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
+    const sessionId = `oauth-init-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    const startTime = Date.now();
     
-    console.log('\n=== CLIENT-SIDE OAUTH DEBUG ===');
-    console.log('Current URL:', window.location.href);
-    console.log('Current host:', window.location.host);
-    console.log('Current protocol:', window.location.protocol);
-    console.log('User Agent:', navigator.userAgent);
-    console.log('Cookies enabled:', navigator.cookieEnabled);
+    console.log(`\n=== [OAuth-Client-${sessionId}] CLIENT-SIDE OAUTH INITIATION ===`);
+    console.log(`[OAuth-Client-${sessionId}] Auth initiation context:`, {
+      currentUrl: window.location.href,
+      currentHost: window.location.host,
+      currentProtocol: window.location.protocol,
+      pathname: window.location.pathname,
+      userAgent: navigator.userAgent,
+      cookieEnabled: navigator.cookieEnabled,
+      sessionStorageAvailable: !!window.sessionStorage,
+      localStorageAvailable: !!window.localStorage,
+      onLine: navigator.onLine,
+      timestamp: new Date().toISOString()
+    });
     
     try {
-      console.log('\nTesting OAuth endpoint availability...');
+      console.log(`\n[OAuth-Client-${sessionId}] Testing OAuth endpoint availability...`);
+      const fetchStart = Date.now();
       const testResponse = await fetch('/api/auth/google', {
         method: 'GET',
         headers: {
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
         }
       });
+      const fetchTime = Date.now() - fetchStart;
       
-      console.log('OAuth endpoint status:', testResponse.status);
-      console.log('OAuth endpoint headers:', Object.fromEntries(testResponse.headers.entries()));
+      console.log(`[OAuth-Client-${sessionId}] OAuth endpoint response:`, {
+        status: testResponse.status,
+        statusText: testResponse.statusText,
+        ok: testResponse.ok,
+        redirected: testResponse.redirected,
+        url: testResponse.url,
+        type: testResponse.type,
+        headers: Object.fromEntries(testResponse.headers.entries()),
+        fetchTime
+      });
       
       if (testResponse.ok) {
         const data = await testResponse.json();
-        console.log('OAuth endpoint returned authUrl:', data.authUrl);
+        console.log(`[OAuth-Client-${sessionId}] OAuth endpoint returned authUrl:`, {
+          hasAuthUrl: !!data.authUrl,
+          authUrlLength: data.authUrl?.length || 0,
+          authUrl: data.authUrl
+        });
         
         // Parse the Google URL to verify it's correct
         try {
           const googleUrl = new URL(data.authUrl);
-          console.log('\nGoogle OAuth URL Analysis:');
-          console.log('- Host:', googleUrl.host);
-          console.log('- Client ID:', googleUrl.searchParams.get('client_id'));
-          console.log('- Redirect URI:', decodeURIComponent(googleUrl.searchParams.get('redirect_uri') || ''));
-          console.log('- Scope:', decodeURIComponent(googleUrl.searchParams.get('scope') || ''));
+          console.log(`[OAuth-Client-${sessionId}] Google OAuth URL Analysis:`, {
+            protocol: googleUrl.protocol,
+            host: googleUrl.host,
+            pathname: googleUrl.pathname,
+            clientId: googleUrl.searchParams.get('client_id'),
+            clientIdLength: googleUrl.searchParams.get('client_id')?.length || 0,
+            redirectUri: decodeURIComponent(googleUrl.searchParams.get('redirect_uri') || ''),
+            scope: decodeURIComponent(googleUrl.searchParams.get('scope') || ''),
+            responseType: googleUrl.searchParams.get('response_type'),
+            accessType: googleUrl.searchParams.get('access_type'),
+            state: googleUrl.searchParams.get('state'),
+            allParams: Array.from(googleUrl.searchParams.keys())
+          });
           
-          console.log('\nAttempting redirect to Google OAuth...');
-          // Try different redirect methods to diagnose browser refusal
-          console.log('Method 1: window.location.href');
+          console.log(`[OAuth-Client-${sessionId}] Initiating redirect to Google OAuth:`, {
+            method: 'window.location.href',
+            targetUrl: data.authUrl.substring(0, 100) + '...',
+            totalTime: Date.now() - startTime,
+            timestamp: new Date().toISOString()
+          });
+          
           window.location.href = data.authUrl;
           
-        } catch (urlError) {
-          console.error('Error parsing Google OAuth URL:', urlError);
+        } catch (urlError: any) {
+          console.error(`[OAuth-Client-${sessionId}] Error parsing Google OAuth URL:`, {
+            error: urlError.message,
+            stack: urlError.stack,
+            authUrl: data.authUrl
+          });
         }
         
       } else {
-        console.error('OAuth endpoint failed:', testResponse.status, testResponse.statusText);
+        console.error(`[OAuth-Client-${sessionId}] OAuth endpoint failed:`, {
+          status: testResponse.status,
+          statusText: testResponse.statusText,
+          headers: Object.fromEntries(testResponse.headers.entries())
+        });
       }
       
-    } catch (fetchError) {
-      console.error('OAuth endpoint fetch error:', fetchError);
-      console.log('Falling back to direct navigation...');
+    } catch (fetchError: any) {
+      console.error(`[OAuth-Client-${sessionId}] OAuth endpoint fetch error:`, {
+        errorName: fetchError.name,
+        errorMessage: fetchError.message,
+        stack: fetchError.stack,
+        timestamp: new Date().toISOString()
+      });
+      console.log(`[OAuth-Client-${sessionId}] Falling back to direct navigation...`);
       window.location.assign('/api/auth/google');
     }
     
-    console.log('=== END CLIENT OAUTH DEBUG ===\n');
+    console.log(`=== [OAuth-Client-${sessionId}] END CLIENT OAUTH INITIATION ===\n`);
   };
 
   return (
