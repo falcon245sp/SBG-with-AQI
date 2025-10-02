@@ -47,6 +47,11 @@ import {
   type InsertConfirmedAnalysis,
   type InsertQrSequenceNumber,
   type InsertGradeSubmission,
+  districts,
+  type District,
+  rigorPolicies,
+  type RigorPolicy,
+  type InsertRigorPolicy,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, inArray, sql, like, or } from "drizzle-orm";
@@ -173,6 +178,20 @@ export interface IStorage {
   cacheStandardSetsForJurisdiction(jurisdictionId: string, standardSets: any[]): Promise<void>;
   getCachedStandardsForSet(standardSetId: string): Promise<any | null>;
   cacheStandardsForSet(standardSetId: string, standardsData: any): Promise<void>;
+
+  // District operations
+  getDistrict(id: string): Promise<District | undefined>;
+  getDistrictByName(name: string): Promise<District | undefined>;
+  createDistrict(name: string): Promise<District>;
+  getAllDistricts(): Promise<District[]>;
+
+  // Rigor policy operations
+  createRigorPolicy(policy: InsertRigorPolicy): Promise<RigorPolicy>;
+  getRigorPolicy(id: string): Promise<RigorPolicy | undefined>;
+  getRigorPolicies(filters?: { scopeType?: string; scopeId?: string; subject?: string; gradeLevel?: string }): Promise<RigorPolicy[]>;
+  updateRigorPolicy(id: string, updates: Partial<InsertRigorPolicy>): Promise<RigorPolicy>;
+  deleteRigorPolicy(id: string): Promise<void>;
+  getEffectiveRigorPolicy(scopeType: string, scopeId: string, subject?: string, gradeLevel?: string, assessmentType?: string): Promise<{ low: number; medium: number; high: number } | null>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2087,13 +2106,135 @@ export class DatabaseStorage implements IStorage {
       .orderBy(asc(questions.questionNumber));
   }
 
-  async getEffectiveRigorPolicy(userId: string, districtId?: string, schoolId?: string) {
-    return {
-      dok1Range: { min: 0, max: 25 },
-      dok2Range: { min: 25, max: 50 },
-      dok3Range: { min: 25, max: 50 },
-      dok4Range: { min: 0, max: 25 },
+  // ============================================================================
+  // ============================================================================
+
+  async getDistrict(id: string): Promise<District | undefined> {
+    const [district] = await db.select().from(districts).where(eq(districts.id, id));
+    return district;
+  }
+
+  async getDistrictByName(name: string): Promise<District | undefined> {
+    const [district] = await db.select().from(districts).where(eq(districts.name, name));
+    return district;
+  }
+
+  async createDistrict(name: string): Promise<District> {
+    const [district] = await db.insert(districts).values({ name }).returning();
+    return district;
+  }
+
+  async getAllDistricts(): Promise<District[]> {
+    return db.select().from(districts).orderBy(asc(districts.name));
+  }
+
+  // ============================================================================
+  // ============================================================================
+
+  async createRigorPolicy(policy: InsertRigorPolicy): Promise<RigorPolicy> {
+    const policyData = {
+      ...policy,
+      id: crypto.randomUUID()
     };
+    const [created] = await db.insert(rigorPolicies).values(policyData as any).returning();
+    return created;
+  }
+
+  async getRigorPolicy(id: string): Promise<RigorPolicy | undefined> {
+    const [policy] = await db.select().from(rigorPolicies).where(eq(rigorPolicies.id, id));
+    return policy;
+  }
+
+  async getRigorPolicies(filters?: { 
+    scopeType?: string; 
+    scopeId?: string; 
+    subject?: string; 
+    gradeLevel?: string;
+  }): Promise<RigorPolicy[]> {
+    const conditions = [eq(rigorPolicies.isActive, true)];
+    
+    if (filters?.scopeType) {
+      conditions.push(eq(rigorPolicies.scopeType, filters.scopeType));
+    }
+    if (filters?.scopeId) {
+      conditions.push(eq(rigorPolicies.scopeId, filters.scopeId));
+    }
+    if (filters?.subject) {
+      conditions.push(eq(rigorPolicies.subject, filters.subject));
+    }
+    if (filters?.gradeLevel) {
+      conditions.push(eq(rigorPolicies.gradeLevel, filters.gradeLevel));
+    }
+    
+    return db.select().from(rigorPolicies).where(and(...conditions));
+  }
+
+  async updateRigorPolicy(id: string, updates: Partial<InsertRigorPolicy>): Promise<RigorPolicy> {
+    const [updated] = await db.update(rigorPolicies)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(rigorPolicies.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteRigorPolicy(id: string): Promise<void> {
+    await db.update(rigorPolicies)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(rigorPolicies.id, id));
+  }
+
+  async getEffectiveRigorPolicy(
+    scopeType: string,
+    scopeId: string,
+    subject?: string,
+    gradeLevel?: string,
+    assessmentType?: string
+  ): Promise<{ low: number; medium: number; high: number } | null> {
+    const scopeHierarchy = ['assessment', 'course', 'school', 'district', 'platform'];
+    const startIndex = scopeHierarchy.indexOf(scopeType);
+    
+    if (startIndex === -1) {
+      console.warn(`[getEffectiveRigorPolicy] Invalid scope type: ${scopeType}`);
+      return null;
+    }
+    
+    for (let i = startIndex; i < scopeHierarchy.length; i++) {
+      const currentScope = scopeHierarchy[i];
+      
+      const filters: any = { scopeType: currentScope };
+      
+      if (currentScope !== 'platform') {
+        filters.scopeId = scopeId;
+      }
+      
+      if (subject) filters.subject = subject;
+      if (gradeLevel) filters.gradeLevel = gradeLevel;
+      if (assessmentType) filters.assessmentType = assessmentType;
+      
+      const policies = await this.getRigorPolicies(filters);
+      
+      if (policies.length > 0) {
+        const policy = policies[0];
+        const expectations = policy.rigorExpectations as { low: number; medium: number; high: number };
+        return expectations;
+      }
+      
+      if (i < scopeHierarchy.length - 1) {
+        const policiesWithoutOptionalFilters = await this.getRigorPolicies({
+          scopeType: currentScope,
+          scopeId: currentScope !== 'platform' ? scopeId : undefined
+        });
+        
+        if (policiesWithoutOptionalFilters.length > 0) {
+          const policy = policiesWithoutOptionalFilters[0];
+          const expectations = policy.rigorExpectations as { low: number; medium: number; high: number };
+          return expectations;
+        }
+      }
+    }
+    
+    console.warn('[getEffectiveRigorPolicy] No policies found, using hardcoded defaults');
+    return { low: 30, medium: 50, high: 20 };
   }
 }
 

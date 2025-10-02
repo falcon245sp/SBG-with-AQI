@@ -37,6 +37,7 @@ export default function OnboardingCheck() {
     const onboardingRoleSelected = userData.onboardingRoleSelected || userData.onboarding_role_selected;
     const selectedRole = userData.selectedRole || userData.selected_role;
     const standardsConfigurationCompleted = userData.standardsConfigurationCompleted || userData.standards_configuration_completed;
+    const districtId = userData.districtId || userData.district_id;
 
     console.log('[OnboardingCheck] User onboarding status:', {
       onboardingCompleted,
@@ -47,7 +48,8 @@ export default function OnboardingCheck() {
       selectedCourses,
       onboardingRoleSelected,
       selectedRole,
-      standardsConfigurationCompleted
+      standardsConfigurationCompleted,
+      districtId
     });
 
     // If ALL onboarding is complete, go to course selection first
@@ -59,6 +61,22 @@ export default function OnboardingCheck() {
 
     // Route user to their next onboarding step
     console.log('🟡 [ONBOARDING-STEP-0] Routing user based on onboardingStep:', onboardingStep);
+    
+    if (selectedRole === 'district_admin' || selectedRole === 'curriculum_lead') {
+      switch (onboardingStep) {
+        case 'district-setup':
+          setLocation('/onboarding/district-setup');
+          break;
+        case 'rigor-policy-config':
+          setLocation('/onboarding/rigor-policy-config');
+          break;
+        default:
+          setLocation('/onboarding/district-setup');
+          break;
+      }
+      return;
+    }
+    
     switch (onboardingStep) {
       case 'jurisdiction':
         console.log('🟡 [ONBOARDING-STEP-0] → Redirecting to jurisdiction selection');

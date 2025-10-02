@@ -48,7 +48,9 @@ import {
   sessions,
   classrooms,
   students,
-  assignments
+  assignments,
+  districts,
+  rigorPolicies
 } from "@shared/schema";
 import { TeacherReviewStatus } from "@shared/businessEnums";
 import { z } from "zod";
@@ -2029,6 +2031,150 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Test export failed' });
     }
   });
+
+  // ============================================================================
+  // ============================================================================
+
+  app.get("/api/districts", withSessionHandling, async (req: Request, res: Response) => {
+    try {
+      const districts = await storage.getAllDistricts();
+      res.json(districts);
+    } catch (error: any) {
+      console.error("[/api/districts] Error:", error);
+      res.status(500).json({ error: "Failed to fetch districts" });
+    }
+  });
+
+  app.get("/api/districts/search", withSessionHandling, async (req: Request, res: Response) => {
+    try {
+      const { name } = req.query;
+      if (!name || typeof name !== 'string') {
+        return res.status(400).json({ error: "District name required" });
+      }
+      
+      const district = await storage.getDistrictByName(name);
+      res.json({ exists: !!district, district });
+    } catch (error: any) {
+      console.error("[/api/districts/search] Error:", error);
+      res.status(500).json({ error: "Failed to search district" });
+    }
+  });
+
+  app.post("/api/districts", withSessionHandling, async (req: Request, res: Response) => {
+    try {
+      const { user } = await ActiveUserService.requireActiveUserAndCustomerUuid(req);
+      const { name } = req.body;
+      
+      if (!name || typeof name !== 'string') {
+        return res.status(400).json({ error: "District name required" });
+      }
+      
+      let district = await storage.getDistrictByName(name);
+      
+      if (!district) {
+        district = await storage.createDistrict(name);
+      }
+      
+      await storage.updateUserPreferences(user.id, { districtId: district.id });
+      
+      res.json(district);
+    } catch (error: any) {
+      console.error("[/api/districts] Error:", error);
+      res.status(500).json({ error: "Failed to create/confirm district" });
+    }
+  });
+
+  app.get("/api/admin/rigor-policies", requireAdmin, withSessionHandling, async (req: Request, res: Response) => {
+    try {
+      const { scopeType, scopeId, subject, gradeLevel } = req.query;
+      
+      const policies = await storage.getRigorPolicies({
+        scopeType: scopeType as string | undefined,
+        scopeId: scopeId as string | undefined,
+        subject: subject as string | undefined,
+        gradeLevel: gradeLevel as string | undefined
+      });
+      
+      res.json(policies);
+    } catch (error: any) {
+      console.error("[/api/admin/rigor-policies] Error:", error);
+      res.status(500).json({ error: "Failed to fetch rigor policies" });
+    }
+  });
+
+  app.post("/api/admin/rigor-policies", requireAdmin, withSessionHandling, async (req: Request, res: Response) => {
+    try {
+      const policyData = req.body;
+      
+      const { low, medium, high } = policyData.rigorExpectations;
+      if (low + medium + high !== 100) {
+        return res.status(400).json({ error: "Rigor percentages must sum to 100%" });
+      }
+      
+      const policy = await storage.createRigorPolicy(policyData);
+      res.json(policy);
+    } catch (error: any) {
+      console.error("[/api/admin/rigor-policies] Error:", error);
+      res.status(500).json({ error: "Failed to create rigor policy" });
+    }
+  });
+
+  app.put("/api/admin/rigor-policies/:id", requireAdmin, withSessionHandling, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      if (updates.rigorExpectations) {
+        const { low, medium, high } = updates.rigorExpectations;
+        if (low + medium + high !== 100) {
+          return res.status(400).json({ error: "Rigor percentages must sum to 100%" });
+        }
+      }
+      
+      const policy = await storage.updateRigorPolicy(id, updates);
+      res.json(policy);
+    } catch (error: any) {
+      console.error("[/api/admin/rigor-policies/:id] Error:", error);
+      res.status(500).json({ error: "Failed to update rigor policy" });
+    }
+  });
+
+  app.delete("/api/admin/rigor-policies/:id", requireAdmin, withSessionHandling, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteRigorPolicy(id);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("[/api/admin/rigor-policies/:id] Error:", error);
+      res.status(500).json({ error: "Failed to delete rigor policy" });
+    }
+  });
+
+  app.get("/api/admin/rigor-policies/effective", withSessionHandling, async (req: Request, res: Response) => {
+    try {
+      const { scopeType, scopeId, subject, gradeLevel, assessmentType } = req.query;
+      
+      if (!scopeType || !scopeId) {
+        return res.status(400).json({ error: "scopeType and scopeId required" });
+      }
+      
+      const policy = await storage.getEffectiveRigorPolicy(
+        scopeType as string,
+        scopeId as string,
+        subject as string | undefined,
+        gradeLevel as string | undefined,
+        assessmentType as string | undefined
+      );
+      
+      res.json(policy);
+    } catch (error: any) {
+      console.error("[/api/admin/rigor-policies/effective] Error:", error);
+      res.status(500).json({ error: "Failed to fetch effective rigor policy" });
+    }
+  });
+
+  // ============================================================================
+  // ============================================================================
 
   app.get('/api/system-health', async (req, res) => {
     try {
