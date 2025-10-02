@@ -19,7 +19,7 @@ class AQIScoringService {
     // Get effective rigor policy for comparison
     const effectivePolicy = await storage.getEffectiveRigorPolicy(
       "district",
-      assessment.districtId || "",
+      assessment.districtId || "platform",
       assessment.subject,
       assessment.gradeLevel
     );

@@ -61,6 +61,25 @@ export const schools = pgTable("schools", {
   index("idx_schools_district_id").on(table.districtId)
 ]);
 
+export const rigorPolicies = pgTable("rigor_policies", {
+  id: varchar("id").primaryKey(),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  scopeType: varchar("scope_type").notNull(),
+  scopeId: varchar("scope_id"),
+  subject: varchar("subject"),
+  gradeLevel: varchar("grade_level"),
+  assessmentType: varchar("assessment_type"),
+  rigorExpectations: jsonb("rigor_expectations").notNull(),
+  rigorDistribution: jsonb("rigor_distribution"),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_rigor_policies_scope").on(table.scopeType, table.scopeId),
+  index("idx_rigor_policies_active").on(table.isActive)
+]);
+
 // User storage table - supports both OAuth and username/password auth
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -76,6 +95,7 @@ export const users = pgTable("users", {
   googleTokenExpiry: timestamp("google_token_expiry"), // Token expiration
   googleCredentials: text("google_credentials"), // JSON string of service account credentials
   classroomConnected: boolean("classroom_connected").default(false), // Classroom authorization status
+  districtId: varchar("district_id").references(() => districts.id),
   
   // V1.0 Onboarding and Preferences
   onboardingCompleted: boolean("onboarding_completed").default(false),
@@ -852,3 +872,19 @@ export const insertSbgGradebookEntrySchema = createInsertSchema(sbgGradebookEntr
 // V1.0 Insert Types
 export type InsertAccountabilityMatrixEntry = z.infer<typeof insertAccountabilityMatrixEntrySchema>;
 export type InsertSbgGradebookEntry = z.infer<typeof insertSbgGradebookEntrySchema>;
+
+export const insertRigorPolicySchema = createInsertSchema(rigorPolicies).pick({
+  name: true,
+  description: true,
+  scopeType: true,
+  scopeId: true,
+  subject: true,
+  gradeLevel: true,
+  assessmentType: true,
+  rigorExpectations: true,
+  isActive: true,
+});
+
+export type InsertRigorPolicy = z.infer<typeof insertRigorPolicySchema>;
+export type RigorPolicy = typeof rigorPolicies.$inferSelect;
+export type District = typeof districts.$inferSelect;
